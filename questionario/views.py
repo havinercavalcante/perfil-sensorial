@@ -70,7 +70,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import Paciente, Avaliacao, Resposta, PerfilMedico
-from .data import (SECOES, PERGUNTAS, OPCOES, QUADRANTES_CONFIG, SECOES_CONFIG,
+from .data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                    calcular_pontuacao, classificar)
 import json
 import uuid
@@ -334,7 +334,8 @@ def questionario_view(request, avaliacao_id, pagina):
         respostas_salvas.update(respostas_novas)
 
     perguntas_pagina = [
-        {"numero": item, "texto": PERGUNTAS.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
+        {"numero": item, "texto": PERGUNTAS.get(item, ""), "resposta_salva": respostas_salvas.get(item),
+         "quadrante": QUADRANTE.get(item)}
         for item in itens_secao
     ]
     return render(request, "questionario/questionario.html", {

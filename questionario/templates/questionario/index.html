@@ -53,7 +53,7 @@
     <br><span class="btn btn-primary btn-sm">Iniciar</span>
   </a>
   <a href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
-    <div class="card-title">👤 Meus Pacientes</div>
+    <div class="card-title">👥 Meus Pacientes</div>
     <p style="color:var(--text-muted); font-size:.88rem;">Veja o histórico e os dashboards de cada paciente.</p>
     <br><span class="btn btn-secondary btn-sm">Ver pacientes</span>
   </a>
@@ -87,7 +87,7 @@
 </div>
 {% else %}
 <div class="card" style="text-align:center; padding:3rem;">
-  <p style="font-size:2rem; margin-bottom:.5rem;">👤</p>
+  <p style="font-size:2rem; margin-bottom:.5rem;">👥</p>
   <p style="color:var(--text-muted); margin-bottom:1.5rem;">Você ainda não tem pacientes cadastrados.</p>
   <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Cadastrar primeiro paciente</a>
 </div>

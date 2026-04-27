@@ -2,86 +2,174 @@
 {% block title %}{{ secao.nome }} - Avaliação{% endblock %}
 {% block extra_css %}
 <style>
-  .progress-header { margin-bottom:1.5rem; }
-  .progress-info { display:flex; justify-content:space-between; font-size:.85rem; color:var(--text-muted); margin-bottom:.4rem; }
-  .secao-header { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color:#fff; border-radius:12px; padding:1.2rem 1.5rem; margin-bottom:1.5rem; }
-  .secao-header h2 { font-size:1.2rem; margin-bottom:.2rem; }
-  .secao-header p { font-size:.85rem; opacity:.8; }
-  .pergunta-card { border:1.5px solid var(--border); border-radius:10px; padding:1.2rem; margin-bottom:1rem; background:#fff; transition:border-color .2s; }
-  .pergunta-card:has(input:checked) { border-color:var(--primary); background:#F0F9F6; }
-  .pergunta-num { font-size:.75rem; font-weight:700; color:var(--text-muted); margin-bottom:.4rem; }
-  .pergunta-texto { font-size:.95rem; color:var(--text); line-height:1.5; margin-bottom:1rem; }
-  .opcoes-wrap { display:flex; flex-direction:column; gap:.5rem; }
-  .opcoes-principais { display:grid; grid-template-columns:repeat(5, 1fr); gap:.5rem; }
-  .opcao-label { display:flex; flex-direction:column; align-items:center; gap:.3rem; cursor:pointer; padding:.5rem .3rem; border-radius:8px; border:1.5px solid var(--border); background:#fff; transition:all .15s; font-size:.78rem; text-align:center; line-height:1.2; }
-  .opcao-label:hover { border-color:var(--primary-light); background:#F0F9F6; }
-  .opcao-label input { display:none; }
+  /* ── Cores por quadrante ── */
+  :root {
+    --ev: #7980ff; --ev-t: #fff;
+    --sn: #ade467; --sn-t: #1a2b22;
+    --ob: hsl(320,100%,77%); --ob-t: #3a003a;
+    --ex: #fe9d41; --ex-t: #3a1a00;
+  }
+  .pergunta-card[data-quad="EV"] { --qc: var(--ev); --qt: var(--ev-t); }
+  .pergunta-card[data-quad="SN"] { --qc: var(--sn); --qt: var(--sn-t); }
+  .pergunta-card[data-quad="OB"] { --qc: var(--ob); --qt: var(--ob-t); }
+  .pergunta-card[data-quad="EX"] { --qc: var(--ex); --qt: var(--ex-t); }
 
-  .opcao-label:has(input:checked) { border-color:var(--primary); background:var(--primary); color:#fff; font-weight:600; }
-  .opcao-num { font-size:1.1rem; font-weight:800; }
-  .nav-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-top:1.5rem; }
-  .steps-bar { display:flex; gap:4px; margin-bottom:1rem; flex-wrap:wrap; }
-  .step-dot { width:28px; height:6px; border-radius:3px; background:var(--border); transition:background .3s; }
-  .step-dot.done { background:var(--primary); }
-  .step-dot.active { background:var(--primary-light); }
-  .opcao-label.nsa { flex-direction:row; justify-content:center; gap:.4rem; padding:.4rem .8rem; border-style:dashed; color:var(--text-muted); font-size:.8rem; }
-  .opcao-label.nsa:has(input:checked) { border-color:#9CA3AF; background:#F3F4F6; color:#374151; border-style:solid; font-weight:600; }
-  @media(max-width:600px) { .opcoes-principais { grid-template-columns:1fr 1fr; } .secao-header { padding:.9rem 1rem; } }
-  @media(max-width:400px) { .opcoes-principais { grid-template-columns:1fr; } }
+  /* ── Progresso ── */
+  .progress-header { margin-bottom: 1.5rem; }
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-muted); margin-bottom: .4rem; }
+  .steps-bar { display: flex; gap: 4px; margin-top: .6rem; flex-wrap: wrap; }
+  .step-dot { height: 6px; flex: 1; min-width: 20px; border-radius: 3px; background: var(--border); transition: background .3s; }
+  .step-dot.done { background: var(--primary); }
+  .step-dot.active { background: var(--primary-light); }
+
+  /* ── Cabeçalho da seção ── */
+  .secao-header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .secao-header h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: .25rem; line-height: 1.3; }
+  .secao-header p { font-size: .82rem; opacity: .8; }
+
+  /* ── Instruções ── */
+  .instrucoes {
+    background: #FEF9EC; border: 1px solid #F0C830; border-radius: 10px;
+    padding: .75rem 1rem; margin-bottom: 1.2rem; font-size: .83rem; color: #7A5800;
+  }
+
+  /* ── Card de pergunta ── */
+  .pergunta-card {
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1.1rem 1.2rem; margin-bottom: .85rem; background: #fff;
+    transition: border-color .2s, background .2s;
+    --qc: var(--primary); --qt: #fff;
+  }
+  .pergunta-card:has(input:checked) {
+    border-color: var(--qc);
+    background: color-mix(in srgb, var(--qc) 7%, #fff);
+  }
+
+  /* ── Linha de número + badge ── */
+  .pergunta-meta {
+    display: flex; align-items: center; gap: .45rem;
+    margin-bottom: .4rem;
+  }
+  .pergunta-num { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+  .quad-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--qc); color: var(--qt);
+    font-size: .65rem; font-weight: 800; letter-spacing: .6px;
+    padding: 2px 7px; border-radius: 5px; line-height: 1.4;
+  }
+
+  /* ── Texto da pergunta ── */
+  .pergunta-texto { font-size: .92rem; color: var(--text); line-height: 1.55; margin-bottom: 1rem; }
+
+  /* ── Opções ── */
+  .opcoes-principais { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .opcao-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem;
+    cursor: pointer; padding: .6rem .3rem; border-radius: 9px;
+    border: 1.5px solid var(--border); background: #fff;
+    transition: all .15s; font-size: .75rem; text-align: center; line-height: 1.2;
+    user-select: none; -webkit-user-select: none;
+  }
+  .opcao-label:hover { border-color: var(--qc); background: color-mix(in srgb, var(--qc) 10%, #fff); }
+  .opcao-label input { display: none; }
+  .opcao-label:has(input:checked) {
+    border-color: var(--qc); background: var(--qc);
+    color: var(--qt); font-weight: 700;
+  }
+  .opcao-num { font-size: 1.15rem; font-weight: 800; }
+
+  /* NSA — mesmo tamanho, borda tracejada e cor neutra */
+  .opcao-label.nsa { border-style: dashed; color: var(--text-muted); }
+
+  /* ── Rodapé de navegação ── */
+  .nav-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem;
+    padding-top: 1rem; border-top: 1px solid var(--border);
+  }
+
+  /* ── Responsivo ── */
+  @media (max-width: 600px) {
+    .opcoes-principais { grid-template-columns: repeat(3, 1fr); gap: .35rem; }
+    .opcao-label { padding: .65rem .3rem; font-size: .72rem; }
+    .opcao-num { font-size: 1rem; }
+    .secao-header { padding: .9rem 1rem; }
+    .pergunta-card { padding: .9rem 1rem; }
+    .pergunta-texto { font-size: .88rem; }
+  }
 </style>
 {% endblock %}
+
 {% block content %}
-{% if publico %}
+
+{% if publico and pagina == 1 or publico and pagina == total %}
 <div class="alert alert-info" style="margin-bottom:1.5rem;">
   <strong>Preenchimento pelo responsável:</strong> Este questionário está sendo respondido pelo responsável da criança. Ao finalizar, as respostas serão enviadas automaticamente para o terapeuta.
 </div>
 {% endif %}
+
+<!-- Progresso -->
 <div class="progress-header">
   <div class="progress-info">
     <span>Seção {{ pagina }} de {{ total }}</span>
     <span>{{ progresso }}% concluído</span>
   </div>
-  <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{{ progresso }}%"></div></div>
-  <div class="steps-bar" style="margin-top:.6rem;">
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%"></div>
+  </div>
+  <div class="steps-bar">
     {% for i, nome in paginas_secoes %}
     <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
     {% endfor %}
   </div>
 </div>
 
+<!-- Cabeçalho da seção -->
 <div class="secao-header">
   <h2>{{ secao.nome }}</h2>
   <p>{{ avaliacao.paciente.nome }} · {{ perguntas|length }} perguntas nesta seção</p>
 </div>
 
-<div style="background:#FEF9EC; border:1px solid #F0C830; border-radius:8px; padding:.8rem 1rem; margin-bottom:1.2rem; font-size:.85rem; color:#7A5800;">
+<!-- Instruções -->
+<div class="instrucoes">
   <strong>Instruções:</strong> Para cada item, selecione a frequência com que a criança apresenta o comportamento descrito.
 </div>
+
 
 <form method="post" id="form-questionario">
   {% csrf_token %}
   {% for p in perguntas %}
-  <div class="pergunta-card" id="card-{{ p.numero }}">
-    <div class="pergunta-num">Item {{ p.numero }}</div>
+  <div class="pergunta-card" id="card-{{ p.numero }}" {% if p.quadrante %}data-quad="{{ p.quadrante }}"{% endif %}>
+
+    <div class="pergunta-meta">
+      <span class="pergunta-num">Item {{ p.numero }}</span>
+      {% if p.quadrante %}
+      <span class="quad-badge">{{ p.quadrante }}</span>
+      {% endif %}
+    </div>
+
     <div class="pergunta-texto">{{ p.texto }}</div>
-    <div class="opcoes-wrap">
-      <div class="opcoes-principais">
-        {% for valor, rotulo in opcoes %}{% if valor > 0 %}
-        <label class="opcao-label">
-          <input type="radio" name="item_{{ p.numero }}" value="{{ valor }}"
-            {% if p.resposta_salva == valor %}checked{% endif %}
-            onchange="marcarRespondida({{ p.numero }})">
-          <span class="opcao-num">{{ valor }}</span>
-          <span>{{ rotulo|truncatechars:22 }}</span>
-        </label>
-        {% endif %}{% endfor %}
-      </div>
+
+    <div class="opcoes-principais">
+      {% for valor, rotulo in opcoes %}{% if valor > 0 %}
+      <label class="opcao-label">
+        <input type="radio" name="item_{{ p.numero }}" value="{{ valor }}"
+          {% if p.resposta_salva == valor %}checked{% endif %}
+          onchange="marcarRespondida({{ p.numero }})">
+        <span class="opcao-num">{{ valor }}</span>
+        <span>{{ rotulo }}</span>
+      </label>
+      {% endif %}{% endfor %}
       {% for valor, rotulo in opcoes %}{% if valor == 0 %}
       <label class="opcao-label nsa">
         <input type="radio" name="item_{{ p.numero }}" value="0"
           {% if p.resposta_salva == 0 %}checked{% endif %}
           onchange="marcarRespondida({{ p.numero }})">
-        <span>⊘ {{ rotulo }}</span>
+        <span class="opcao-num">0</span>
+        <span>{{ rotulo }}</span>
       </label>
       {% endif %}{% endfor %}
     </div>
@@ -91,7 +179,8 @@
   <div class="nav-footer">
     <div>
       {% if pagina_anterior %}
-      <a href="{% url 'questionario' avaliacao.id pagina_anterior %}" class="btn btn-secondary">← Anterior</a>
+      <a href="{% if publico %}{% url 'questionario_publico' avaliacao.token pagina_anterior %}{% else %}{% url 'questionario' avaliacao.id pagina_anterior %}{% endif %}"
+         class="btn btn-secondary">← Anterior</a>
       {% endif %}
     </div>
     <button type="submit" class="btn btn-primary">
@@ -103,24 +192,24 @@
 <script>
 function marcarRespondida(num) {
   const card = document.getElementById('card-' + num);
-  if (card) card.style.borderColor = 'var(--primary)';
-}
-document.getElementById('form-questionario').addEventListener('submit', function(e) {
-  const perguntas = {{ perguntas|length }};
-  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
-  let faltando = [];
-  for (let item of itens) {
-    if (!document.querySelector(`input[name="item_${item}"]:checked`)) {
-      faltando.push(item);
-    }
+  if (card) {
+    const qc = getComputedStyle(card).getPropertyValue('--qc').trim();
+    card.style.borderColor = qc || 'var(--primary)';
   }
+}
+
+document.getElementById('form-questionario').addEventListener('submit', function(e) {
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
   if (faltando.length > 0) {
     e.preventDefault();
     alert(`Por favor, responda todos os itens antes de continuar.\nItens sem resposta: ${faltando.join(', ')}`);
     const card = document.getElementById('card-' + faltando[0]);
-    if (card) card.scrollIntoView({behavior:'smooth', block:'center'});
-    card.style.borderColor = '#EF4444';
-    card.style.background = '#FFF5F5';
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.borderColor = '#EF4444';
+      card.style.background = '#FFF5F5';
+    }
   }
 });
 </script>

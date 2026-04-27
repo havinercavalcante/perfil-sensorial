@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}CeciSys{% endblock %}</title>
+<link rel="icon" type="image/png" href="{% static 'logotop.png' %}">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
@@ -42,7 +44,7 @@
   .nav-backdrop.open { display: block; }
   .mobile-user-header { display: none; }
   .mobile-profile { display: none; }
-  .mobile-logout-btn { background: none; border: none; color: rgba(255,255,255,.6); cursor: pointer; width: 100%; text-align: left; font-size: .9rem; padding: .75rem 1rem; display: flex; align-items: center; gap: .75rem; transition: background .15s, color .15s; border-radius: 10px; }
+  .mobile-logout-btn { background: none; border: none; color: rgba(255,255,255,.6); cursor: pointer; width: 100%; text-align: left; font-size: .9rem; padding: .75rem 1rem; display: flex; align-items: center; gap: 0.3rem; transition: background .15s, color .15s; border-radius: 10px; white-space: nowrap; overflow: hidden; }
   .mobile-logout-btn:hover { background: rgba(255,255,255,.06); color: #F87171; }
 
   main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
@@ -133,20 +135,21 @@
     .mobile-user-name { font-size: .9rem; font-weight: 700; color: #fff; line-height: 1.3; }
     .mobile-user-email { font-size: .74rem; color: rgba(255,255,255,.42); margin-top: 3px; }
 
-    .drawer-section { padding: .75rem .75rem 0; flex: 1; }
+    .drawer-section { padding: .75rem .75rem 0; flex: 1; margin-right: 150px; }
     .user-menu { display: none; }
     nav a.nav-link {
       display: flex; align-items: center; gap: .75rem;
       padding: .8rem 1rem; font-size: .93rem; border-radius: 10px;
       color: rgba(255,255,255,.72); margin-bottom: .15rem;
-      transition: background .15s, color .15s;
+      transition: background .15s, color .15s; white-space: nowrap;
     }
     nav a.nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
 
     .mobile-profile {
       display: flex; flex-direction: column;
       padding: .5rem .75rem 2rem; flex-shrink: 0;
-      border-top: 1px solid rgba(255,255,255,.07); margin-top: auto;
+      border-top: none; margin-top: auto;
+      width: 100%;
     }
     .mobile-profile .nav-link { color: rgba(255,255,255,.6); }
 
@@ -177,7 +180,7 @@
 
     <div class="drawer-section">
     <a href="{% url 'index' %}" class="nav-link">🏠 Início</a>
-    <a href="{% url 'lista_pacientes' %}" class="nav-link">👤 Pacientes</a>
+    <a href="{% url 'lista_pacientes' %}" class="nav-link">👥 Pacientes</a>
     <a href="{% url 'novo_paciente' %}" class="nav-link">➕ Nova Avaliação</a>
     </div>
 
@@ -205,7 +208,7 @@
       <a href="{% url 'meu_perfil' %}" class="nav-link">⚙️ Meu Perfil</a>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit" class="mobile-logout-btn">🚪 Sair da conta</button>
+        <button type="submit" class="mobile-logout-btn"><span style="color:#F87171">⏻</span> Sair da conta</button>
       </form>
     </div>
     {% endif %}
