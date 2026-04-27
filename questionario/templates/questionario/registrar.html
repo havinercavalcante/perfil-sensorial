@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar Conta – CeciSys</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #1A5C4D 0%, #2E7D6B 60%, #4CAF93 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+  .box { background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .logo { text-align: center; margin-bottom: 1.8rem; }
+  .logo h1 { font-size: 1.2rem; color: #1A5C4D; font-weight: 800; }
+  .logo p { color: #6B8878; font-size: .85rem; }
+  .section-label { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #2E7D6B; border-bottom: 2px solid #D8E8E2; padding-bottom: .4rem; margin: 1.2rem 0 .8rem; }
+  .form-group { margin-bottom: .9rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media(max-width:600px) { .form-row { grid-template-columns: 1fr; } .box { padding: 1.5rem 1.2rem; } }
+  label { display: block; font-size: .8rem; font-weight: 700; color: #6B8878; margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .3px; }
+  label .req { color: #DC2626; }
+  input { width: 100%; padding: .65rem .9rem; border: 1.5px solid #D8E8E2; border-radius: 8px; font-size: .92rem; color: #1A2B22; transition: border-color .2s; }
+  input:focus { outline: none; border-color: #2E7D6B; box-shadow: 0 0 0 3px rgba(46,125,107,.1); }
+  .btn { width: 100%; padding: .75rem; border: none; border-radius: 8px; background: #2E7D6B; color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: .5rem; transition: background .2s; }
+  .btn:hover { background: #1A5C4D; }
+  .link-row { text-align: center; margin-top: 1rem; font-size: .87rem; color: #6B8878; }
+  .link-row a { color: #2E7D6B; font-weight: 600; text-decoration: none; }
+  .alert { padding: .7rem 1rem; border-radius: 8px; margin-bottom: .7rem; font-size: .85rem; background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">
+    <h1>🧠 Criar Conta</h1>
+    <p>Preencha os dados para acessar o sistema</p>
+  </div>
+  {% for msg in messages %}<div class="alert">{{ msg }}</div>{% endfor %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="section-label">Dados Pessoais</div>
+    <div class="form-group">
+      <label>Nome completo <span class="req">*</span></label>
+      <input type="text" name="nome" value="{{ post.nome|default:'' }}" required placeholder="Dr(a). Nome Sobrenome">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>CRM</label>
+        <input type="text" name="crm" value="{{ post.crm|default:'' }}" placeholder="CRM/UF 00000">
+      </div>
+      <div class="form-group">
+        <label>Especialidade</label>
+        <input type="text" name="especialidade" value="{{ post.especialidade|default:'' }}" placeholder="Ex: Terapia Ocupacional">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" name="email" value="{{ post.email|default:'' }}" placeholder="email@clinica.com">
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="tel" name="telefone" value="{{ post.telefone|default:'' }}" placeholder="(00) 00000-0000">
+      </div>
+    </div>
+
+    <div class="section-label">Acesso ao Sistema</div>
+    <div class="form-group">
+      <label>Nome de usuário <span class="req">*</span></label>
+      <input type="text" name="username" value="{{ post.username|default:'' }}" required placeholder="Ex: dra.ana (sem espaços)">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Senha <span class="req">*</span></label>
+        <input type="password" name="password" required placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>Confirmar senha <span class="req">*</span></label>
+        <input type="password" name="password2" required placeholder="Repita a senha">
+      </div>
+    </div>
+
+    <button type="submit" class="btn">Criar Conta →</button>
+  </form>
+  <div class="link-row">
+    Já tem conta? <a href="{% url 'login' %}">Fazer login</a>
+  </div>
+</div>
+</body>
+</html>

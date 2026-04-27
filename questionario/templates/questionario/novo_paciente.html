@@ -1,0 +1,75 @@
+{% extends "questionario/base.html" %}
+{% block title %}Novo Paciente{% endblock %}
+{% block extra_css %}
+<style>
+  @media (max-width: 600px) {
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; justify-content: center; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div style="max-width:600px; margin:0 auto;">
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;">👤 Dados do Paciente</h2>
+  <div class="card">
+    {% if link %}
+      <div class="alert alert-success" style="margin-bottom:1.5rem;">
+        <strong>Link gerado para envio ao responsável:</strong><br>
+        <input id="linkInput" type="text" value="{{ link }}" readonly style="width:100%;margin-top:0.5rem;">
+        <div style="margin:0.7rem 0 0.3rem 0; display:flex; gap:0.7rem; flex-wrap:wrap;">
+          <button type="button" class="btn btn-success" onclick="copiarLinkNovo()">
+            <i data-lucide="copy" style="width:14px;height:14px;"></i> <span id="copiarTexto">Copiar link</span>
+          </button>
+          {% if email_responsavel %}
+          <form method="post" action="{% url 'enviar_email_link' avaliacao_id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+              <i data-lucide="mail" style="width:14px;height:14px;"></i> Enviar por E-mail
+            </button>
+          </form>
+          {% else %}
+          <span style="font-size:.83rem;color:var(--text-muted);align-self:center;">Nenhum e-mail cadastrado para o responsável.</span>
+          {% endif %}
+        </div>
+        <small>Copie ou envie este link para o responsável responder o questionário.</small>
+      </div>
+      <script>
+        function copiarLinkNovo() {
+          navigator.clipboard.writeText(document.getElementById('linkInput').value);
+          document.getElementById('copiarTexto').textContent = 'Copiado!';
+          setTimeout(() => document.getElementById('copiarTexto').textContent = 'Copiar link', 1500);
+        }
+      </script>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Nome completo da criança *</label>
+        <input type="text" name="nome" value="{{ post.nome|default:'' }}" required placeholder="Nome da criança">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data de nascimento *</label>
+          <input type="date" name="data_nascimento" value="{{ post.data_nascimento|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="tel" name="telefone" value="{{ post.telefone|default:'' }}" placeholder="(00) 00000-0000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nome do responsável *</label>
+        <input type="text" name="responsavel" value="{{ post.responsavel|default:'' }}" required placeholder="Nome do pai/mãe/responsável">
+      </div>
+      <div class="form-group">
+        <label>E-mail do responsável</label>
+        <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:'' }}" placeholder="email@exemplo.com">
+      </div>
+      <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+        <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Iniciar Questionário →</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

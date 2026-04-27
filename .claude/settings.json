@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(convert \"/home/haviner/Projetos/PERFIL SENSORIAL/perfil_sensorial/questionario/static/logonav.png\" -resize 300x \"/tmp/logo_email.png\")",
+      "Read(//tmp/**)",
+      "Bash(python3 -)"
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+{% extends "questionario/base.html" %}
+{% block title %}Dashboard - {{ paciente.nome }}{% endblock %}
+{% block extra_css %}
+<style>
+  .dashboard-header { background:linear-gradient(135deg, var(--primary-dark), var(--primary)); color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .dashboard-header h1 { font-size:1.4rem; margin-bottom:.3rem; }
+  .dashboard-header p { opacity:.85; font-size:.9rem; }
+  .quadrantes-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .quad-card { border-radius:12px; padding:1.2rem 1rem; color:#fff; text-align:center; }
+  .quad-card .quad-nome { font-size:.78rem; font-weight:700; text-transform:uppercase; opacity:.85; margin-bottom:.3rem; }
+  .quad-card .quad-valor { font-size:2rem; font-weight:800; line-height:1; }
+  .quad-card .quad-max { font-size:.78rem; opacity:.7; }
+  .quad-card .quad-class { font-size:.8rem; font-weight:600; background:rgba(255,255,255,.2); border-radius:20px; padding:2px 10px; margin-top:.5rem; display:inline-block; }
+  .secoes-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+  .secao-item { display:flex; flex-direction:column; gap:.4rem; }
+  .secao-nome { font-size:.85rem; font-weight:600; color:var(--text); display:flex; justify-content:space-between; }
+  .secao-valor { font-size:.78rem; color:var(--text-muted); }
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+  canvas { max-width:100%; }
+  .legenda { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.8rem; font-size:.78rem; }
+  .legenda-item { display:flex; align-items:center; gap:.3rem; }
+  .legenda-cor { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+  @media(max-width:700px) { .quadrantes-grid{grid-template-columns:1fr 1fr;} .secoes-grid{grid-template-columns:1fr;} .charts-row{grid-template-columns:1fr;} }
+  @media(max-width:480px) { .quadrantes-grid{grid-template-columns:1fr 1fr;} .quad-card .quad-valor{font-size:1.5rem;} }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="dashboard-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1>📊 {{ paciente.nome }}</h1>
+      <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}
+        <!-- Terapeuta removido da visualização -->
+      </p>
+    </div>
+    <div style="display:flex; gap:.8rem; flex-wrap:wrap;">
+      <a href="{% url 'detalhe_paciente' paciente.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;">← Voltar</a>
+      <a href="{% url 'nova_avaliacao' paciente.id %}" class="btn btn-accent">+ Nova Avaliação</a>
+    </div>
+  </div>
+</div>
+
+<!-- QUADRANTES -->
+<div class="quadrantes-grid">
+  {% for q in quadrantes %}
+  <div class="quad-card" style="background:{{ q.cor }};">
+    <div class="quad-nome">{{ q.id }} · {{ q.nome }}</div>
+    <div class="quad-subtitulo" style="font-size:.75rem; opacity:.75; margin-bottom:.4rem;">{{ q.subtitulo }}</div>
+    <div class="quad-valor">{{ q.valor }}</div>
+    <div class="quad-max">de {{ q.maximo }}</div>
+    <div class="quad-class">{{ q.classificacao }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- GRÁFICOS -->
+<div class="charts-row">
+  <div class="card">
+    <div class="card-title">🕸 Perfil por Seção Sensorial</div>
+    <canvas id="radarChart" height="260"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Quadrantes</div>
+    <canvas id="quadChart" height="260"></canvas>
+  </div>
+</div>
+
+<!-- SEÇÕES DETALHADAS -->
+<div class="card">
+  <div class="card-title">📋 Pontuações por Seção</div>
+  <div class="secoes-grid">
+    {% for s in secoes %}
+    <div class="secao-item">
+      <div class="secao-nome">
+        <span>{{ s.nome }}</span>
+        <span class="chip {{ s.classe_css }}">{{ s.classificacao }}</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:{{ s.pct }}%;
+          background:{% if s.classe_css == 'tipico' %}var(--primary){% elif s.classe_css == 'muito-mais' %}#DC2626{% elif s.classe_css == 'mais' %}#D97706{% elif s.classe_css == 'menos' %}#059669{% else %}#1D4ED8{% endif %};"></div>
+      </div>
+      <div class="secao-valor">{{ s.valor }} / {{ s.maximo }} pontos ({{ s.pct }}%)</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- LEGENDA -->
+<div class="card">
+  <div class="card-title">📖 Legenda de Classificação</div>
+  <div class="legenda">
+    <div class="legenda-item"><div class="legenda-cor" style="background:#1D4ED8"></div><span class="chip muito-menos">Muito menos que outros</span><span style="font-size:.78rem; color:var(--text-muted); margin-left:.3rem;">Baixa resposta ao estímulo</span></div>
+    <div class="legenda-item"><div class="legenda-cor" style="background:#059669"></div><span class="chip menos">Menos que outros</span><span style="font-size:.78rem; color:var(--text-muted); margin-left:.3rem;">Resposta abaixo do esperado</span></div>
+    <div class="legenda-item"><div class="legenda-cor" style="background:#047857"></div><span class="chip tipico">Típico</span><span style="font-size:.78rem; color:var(--text-muted); margin-left:.3rem;">Dentro do esperado para a faixa etária</span></div>
+    <div class="legenda-item"><div class="legenda-cor" style="background:#D97706"></div><span class="chip mais">Mais que outros</span><span style="font-size:.78rem; color:var(--text-muted); margin-left:.3rem;">Resposta acima do esperado</span></div>
+    <div class="legenda-item"><div class="legenda-cor" style="background:#DC2626"></div><span class="chip muito-mais">Muito mais que outros</span><span style="font-size:.78rem; color:var(--text-muted); margin-left:.3rem;">Alta resposta ao estímulo</span></div>
+  </div>
+</div>
+
+{% if outras_avaliacoes %}
+<div class="card">
+  <div class="card-title">📅 Outras Avaliações do Paciente</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Data</th><th>EX</th><th>EV</th><th>SN</th><th>OB</th><th></th></tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td>{{ av.pont_ex|default:"—" }}</td>
+      <td>{{ av.pont_ev|default:"—" }}</td>
+      <td>{{ av.pont_sn|default:"—" }}</td>
+      <td>{{ av.pont_ob|default:"—" }}</td>
+      <td><a href="{% url 'dashboard' av.id %}" class="btn btn-sm btn-secondary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const radarLabels = {{ radar_labels|safe }};
+const radarValores = {{ radar_valores|safe }};
+const quadLabels = {{ quad_labels|safe }};
+const quadValores = {{ quad_valores|safe }};
+const quadCores = {{ quad_cores|safe }};
+
+// Radar chart
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: radarLabels,
+    datasets: [{
+      label: 'Pontuação (%)',
+      data: radarValores,
+      backgroundColor: 'rgba(46,125,107,.2)',
+      borderColor: '#2E7D6B',
+      pointBackgroundColor: '#2E7D6B',
+      borderWidth: 2,
+      pointRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font:{size:10} }, pointLabels:{font:{size:11}} }},
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Bar chart quadrantes
+new Chart(document.getElementById('quadChart'), {
+  type: 'bar',
+  data: {
+    labels: quadLabels,
+    datasets: [{
+      label: 'Pontuação (%)',
+      data: quadValores,
+      backgroundColor: quadCores,
+      borderRadius: 8,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+    }
+  }
+});
+</script>
+{% endblock %}

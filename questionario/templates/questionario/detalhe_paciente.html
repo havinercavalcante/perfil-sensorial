@@ -1,0 +1,122 @@
+{% extends "questionario/base.html" %}
+{% block title %}{{ paciente.nome }}{% endblock %}
+{% block extra_css %}
+<style>
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:#fff; border-radius:12px; padding:2rem; max-width:400px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.18); }
+  .modal-box h3 { margin:0 0 .75rem; font-size:1.1rem; color:var(--primary-dark); }
+  .modal-box p { color:var(--text-muted); margin:0 0 1.5rem; font-size:.95rem; }
+  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; }
+  @media (max-width: 600px) {
+    .btn-nova-avaliacao { width: 100%; justify-content: center; }
+
+    .avaliacoes-table thead { display: none; }
+    .avaliacoes-table tr {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .75rem;
+      margin-bottom: .75rem;
+      gap: .4rem;
+    }
+    .avaliacoes-table td { border: none; padding: 0; }
+    .avaliacoes-table td:nth-child(1) { flex: 0 0 auto; font-size: .85rem; color: var(--text-muted); }
+    .avaliacoes-table td:nth-child(2) { flex: 1 1 auto; }
+    .acoes-td { flex: 0 0 100%; display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .25rem; }
+    .acoes-td .btn { flex: 1 1 auto; justify-content: center; margin-left: 0 !important; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.75rem;">
+    <div>
+      <div class="card-title">{{ paciente.nome }}</div>
+      <p style="color:var(--text-muted); font-size:.9rem;">
+        📅 {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp;
+        👤 Responsável: {{ paciente.responsavel }}
+        <!-- Terapeuta removido da visualização -->
+      </p>
+    </div>
+    <a href="{% url 'nova_avaliacao' paciente.id %}" class="btn btn-primary btn-nova-avaliacao">+ Nova Avaliação</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">📋 Histórico de Avaliações</div>
+  {% if avaliacoes %}
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'dashboard' av.obj.id %}" class="btn btn-sm btn-primary"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Dashboard</a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link</button>
+        {% if av.obj.paciente.email_responsavel %}
+        <form method="post" action="{% url 'enviar_email_link' av.obj.id %}" style="display:inline;margin-left:0.3rem;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-primary"><i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail</button>
+        </form>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:0.3rem;" onclick="abrirModalDeletar({{ av.obj.id }})"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir</button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p style="color:var(--text-muted);">Nenhuma avaliação ainda.</p>
+  {% endif %}
+</div>
+
+<!-- Modal de confirmação de exclusão -->
+<div class="modal-overlay" id="modalDeletar">
+  <div class="modal-box">
+    <h3>Excluir avaliação</h3>
+    <p>Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalDeletar()"><i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar</button>
+      <form id="formDeletar" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const deletarBaseUrl = "{% url 'deletar_avaliacao' 0 %}";
+  function abrirModalDeletar(id) {
+    document.getElementById('formDeletar').action = deletarBaseUrl.replace('/0/', '/' + id + '/');
+    document.getElementById('modalDeletar').classList.add('active');
+  }
+  function fecharModalDeletar() {
+    document.getElementById('modalDeletar').classList.remove('active');
+  }
+  document.getElementById('modalDeletar').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalDeletar();
+  });
+  function copiarLink(btn, url) {
+    navigator.clipboard.writeText(url);
+    const span = btn.querySelector('span') || btn;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Copiado!';
+    lucide.createIcons();
+    setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 1500);
+  }
+</script>
+{% endblock %}

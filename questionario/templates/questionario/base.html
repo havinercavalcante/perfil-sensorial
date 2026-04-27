@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CeciSys{% endblock %}</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --primary: #2E7D6B; --primary-light: #4CAF93; --primary-dark: #1A5C4D;
+    --accent: #F0A500; --bg: #F4F7F5; --card: #FFFFFF;
+    --text: #1A2B22; --text-muted: #6B8878; --border: #D8E8E2;
+    --ex: #E8793A; --ev: #6B8DD6; --sn: #E8B84B; --ob: #7DB87D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  nav { background: var(--primary-dark); color: #fff; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2); overflow: visible; }
+  nav .brand { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; text-decoration: none; color: #fff; }
+  nav .brand span { background: var(--accent); color: var(--primary-dark); padding: 2px 8px; border-radius: 4px; font-size: .82rem; font-weight: 800; }
+  nav .nav-links { display: flex; align-items: center; gap: 1.2rem; }
+  nav a.nav-link { color: rgba(255,255,255,.8); text-decoration: none; font-size: .88rem; transition: color .2s; padding: .3rem .5rem; border-radius: 6px; }
+  nav a.nav-link:hover { color: #fff; background: rgba(255,255,255,.1); }
+
+  .user-menu { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff; padding: .4rem .9rem; border-radius: 8px; cursor: pointer; font-size: .87rem; font-weight: 600; transition: background .2s; }
+  .user-btn:hover { background: rgba(255,255,255,.2); }
+  .user-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 800; color: var(--primary-dark); flex-shrink: 0; }
+  .dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,.12); min-width: 220px; overflow: hidden; z-index: 200; }
+  .dropdown.open { display: block; }
+  .dropdown-header { padding: .9rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .dropdown-header strong { display: block; font-size: .9rem; color: var(--text); }
+  .dropdown-header span { font-size: .78rem; color: var(--text-muted); }
+  .dropdown a, .dropdown button { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .65rem 1rem; text-decoration: none; color: var(--text); font-size: .88rem; background: none; border: none; cursor: pointer; text-align: left; transition: background .15s; }
+  .dropdown a:hover, .dropdown button:hover { background: var(--bg); }
+  .dropdown .divider { height: 1px; background: var(--border); margin: .3rem 0; }
+  .dropdown .logout-btn { color: #DC2626; }
+
+  /* drawer lateral */
+  .nav-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 98; }
+  .nav-backdrop.open { display: block; }
+  .mobile-user-header { display: none; }
+  .mobile-profile { display: none; }
+  .mobile-logout-btn { background: none; border: none; color: rgba(255,255,255,.6); cursor: pointer; width: 100%; text-align: left; font-size: .9rem; padding: .75rem 1rem; display: flex; align-items: center; gap: .75rem; transition: background .15s, color .15s; border-radius: 10px; }
+  .mobile-logout-btn:hover { background: rgba(255,255,255,.06); color: #F87171; }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .card-title { font-size: 1.05rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+
+  .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.4rem; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; transition: all .2s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-secondary:hover { background: var(--primary); color: #fff; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { filter: brightness(.9); }
+  .btn-sm { padding: .35rem .85rem; font-size: .8rem; }
+  .btn-danger { background: #dc3545; color: #fff; }
+  .btn-danger:hover { background: #b02a37; }
+  .btn-success { background: #198754; color: #fff; }
+  .btn-success:hover { background: #146c43; }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: .76rem; font-weight: 600; }
+  .badge-concluida { background: #D4EDDA; color: #155724; }
+  .badge-emandamento { background: #FFF3CD; color: #856404; }
+
+  .alert { padding: .85rem 1.2rem; border-radius: 8px; margin-bottom: 1rem; font-size: .88rem; }
+  .alert-error { background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444; }
+  .alert-warning { background: #FEF3C7; color: #92400E; border-left: 4px solid #F59E0B; }
+  .alert-success { background: #D1FAE5; color: #065F46; border-left: 4px solid #10B981; }
+
+  .form-group { margin-bottom: 1.1rem; }
+  label { display: block; font-size: .85rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
+  input[type=text], input[type=email], input[type=date], input[type=tel], input[type=password], select, textarea {
+    width: 100%; padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: .93rem; color: var(--text); background: #fff; transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,107,.1); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .chip { padding: 3px 12px; border-radius: 20px; font-size: .78rem; font-weight: 600; }
+  .chip.muito-menos { background: #DBEAFE; color: #1D4ED8; }
+  .chip.menos { background: #D1FAE5; color: #065F46; }
+  .chip.tipico { background: #DCFCE7; color: #166534; }
+  .chip.mais { background: #FEF3C7; color: #D97706; }
+  .chip.muito-mais { background: #FEE2E2; color: #DC2626; }
+
+  .progress-bar-wrap { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width .4s; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th { text-align: left; padding: .6rem .9rem; background: var(--bg); color: var(--text-muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; border-bottom: 2px solid var(--border); }
+  td { padding: .65rem .9rem; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #F8FAF9; }
+
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .hamburger { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: .3rem .5rem; line-height: 1; flex-shrink: 0; }
+
+  @media (max-width: 768px) {
+    nav { height: auto; padding: .6rem 1rem; }
+    .hamburger { display: flex; align-items: center; }
+
+    nav .nav-links {
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 300px; max-width: 85vw;
+      background: #0e3427;
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      z-index: 99; overflow-y: auto;
+      box-shadow: -4px 0 32px rgba(0,0,0,.4);
+    }
+    nav .nav-links.mobile-open { transform: translateX(0); }
+
+    .mobile-user-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 2.5rem 1.25rem 1.25rem;
+      background: linear-gradient(160deg, #1a5c4d 0%, #0e3427 100%);
+      border-bottom: 1px solid rgba(255,255,255,.07); flex-shrink: 0;
+    }
+    .mobile-user-avatar {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--accent); color: var(--primary-dark);
+      font-size: 1.05rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      box-shadow: 0 0 0 3px rgba(240,165,0,.3);
+    }
+    .mobile-user-name { font-size: .9rem; font-weight: 700; color: #fff; line-height: 1.3; }
+    .mobile-user-email { font-size: .74rem; color: rgba(255,255,255,.42); margin-top: 3px; }
+
+    .drawer-section { padding: .75rem .75rem 0; flex: 1; }
+    .user-menu { display: none; }
+    nav a.nav-link {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .8rem 1rem; font-size: .93rem; border-radius: 10px;
+      color: rgba(255,255,255,.72); margin-bottom: .15rem;
+      transition: background .15s, color .15s;
+    }
+    nav a.nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+
+    .mobile-profile {
+      display: flex; flex-direction: column;
+      padding: .5rem .75rem 2rem; flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,.07); margin-top: auto;
+    }
+    .mobile-profile .nav-link { color: rgba(255,255,255,.6); }
+
+    main { padding: 1rem .75rem; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav>
+  <a href="{% url 'index' %}" class="brand" style="gap:0.7rem;">
+    <img src="/static/logonav.png" alt="Logo" style="height:50px; width:auto; display:inline; vertical-align:middle; border-radius:10px; padding:2px;">
+  </a>
+  {% if user.is_authenticated %}
+  <button class="hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+  {% endif %}
+  <div class="nav-links" id="navLinks">
+    {% if user.is_authenticated %}
+
+    <div class="mobile-user-header">
+      <div class="mobile-user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+      <div>
+        <div class="mobile-user-name">{{ user.get_full_name|default:user.username }}</div>
+        <div class="mobile-user-email">{{ user.email }}</div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+    <a href="{% url 'index' %}" class="nav-link">🏠 Início</a>
+    <a href="{% url 'lista_pacientes' %}" class="nav-link">👤 Pacientes</a>
+    <a href="{% url 'novo_paciente' %}" class="nav-link">➕ Nova Avaliação</a>
+    </div>
+
+    <div class="user-menu" id="userMenu">
+      <div class="user-btn" onclick="toggleDropdown()">
+        <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+        <span style="font-size:.7rem; opacity:.7;">▾</span>
+      </div>
+      <div class="dropdown" id="dropdown">
+        <div class="dropdown-header">
+          <strong>{{ user.get_full_name|default:user.username }}</strong>
+          <span>{{ user.email }}</span>
+        </div>
+        <a href="{% url 'meu_perfil' %}">⚙️ Meu Perfil</a>
+        <div class="divider"></div>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">🚪 Sair</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="mobile-profile">
+      <a href="{% url 'meu_perfil' %}" class="nav-link">⚙️ Meu Perfil</a>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="mobile-logout-btn">🚪 Sair da conta</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</nav>
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNav()"></div>
+
+<main>
+  {% for msg in messages %}
+  <div class="alert alert-{{ msg.tags|default:'error' }}">{{ msg }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<script>
+function toggleDropdown() {
+  document.getElementById('dropdown').classList.toggle('open');
+}
+function openNav() {
+  document.getElementById('navLinks').classList.add('mobile-open');
+  document.getElementById('navBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeNav() {
+  document.getElementById('navLinks').classList.remove('mobile-open');
+  document.getElementById('navBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function toggleNav() {
+  const isOpen = document.getElementById('navLinks').classList.contains('mobile-open');
+  isOpen ? closeNav() : openNav();
+}
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('userMenu');
+  if (menu && !menu.contains(e.target)) {
+    const dd = document.getElementById('dropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeNav();
+});
+lucide.createIcons();
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{% extends "questionario/base.html" %}
+{% block title %}Pacientes{% endblock %}
+{% block extra_css %}
+<style>
+  .search-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; }
+  .search-bar input { flex:1; }
+  .search-bar button { flex-shrink:0; }
+  .pagination { display:flex; align-items:center; justify-content:center; gap:.4rem; margin-top:1.25rem; flex-wrap:wrap; }
+  .pagination a, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:2rem; height:2rem; padding:0 .6rem; border-radius:6px; font-size:.82rem; font-weight:600; text-decoration:none; border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; }
+  .pagination a:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .pagination span.current { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .pagination span.disabled { opacity:.4; cursor:default; }
+  @media (max-width: 600px) {
+    .page-header h2 { font-size: 1rem !important; }
+    .table-responsive table { font-size: .72rem; }
+    .table-responsive th, .table-responsive td { padding: .4rem .4rem; }
+    .table-responsive th:nth-child(2), .table-responsive td:nth-child(2),
+    .table-responsive th:nth-child(3), .table-responsive td:nth-child(3),
+    .table-responsive th:nth-child(4), .table-responsive td:nth-child(4) { display: none; }
+    .table-responsive .btn-sm { padding: .4rem .7rem; font-size: .76rem; }
+    .table-responsive td:last-child { display: flex; gap: .3rem; align-items: center; white-space: nowrap; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1.25rem;">
+  <h2 style="font-size:1.4rem; color:var(--primary-dark);">👤 Pacientes Cadastrados</h2>
+  <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Nova Avaliação</a>
+</div>
+
+<form method="get" class="search-bar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nome…">
+  <button type="submit" class="btn btn-primary">Buscar</button>
+  {% if q %}<a href="?" class="btn btn-secondary">✕</a>{% endif %}
+</form>
+
+{% if pacientes %}
+<div class="card">
+  <div class="table-responsive"><table>
+    <thead><tr><th>Nome</th><th>Responsável</th><th>Avaliações</th><th>Concluídas</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pacientes %}
+    <tr>
+      <td><strong>{{ p.nome }}</strong></td>
+      <td>{{ p.responsavel }}</td>
+      <td style="text-align:center;">{{ p.avaliacoes.count }}</td>
+      <td style="text-align:center;">{{ p.avaliacoes.all|length }}</td>
+      <td>
+        <a href="{% url 'detalhe_paciente' p.id %}" class="btn btn-sm btn-secondary">Detalhes</a>
+        <a href="{% url 'nova_avaliacao' p.id %}" class="btn btn-sm btn-primary" style="margin-left:.4rem;">+ Avaliar</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+
+  {% if pacientes.paginator.num_pages > 1 %}
+  <div class="pagination">
+    {% if pacientes.has_previous %}
+      <a href="?q={{ q }}&page=1">«</a>
+      <a href="?q={{ q }}&page={{ pacientes.previous_page_number }}">‹</a>
+    {% else %}
+      <span class="disabled">«</span>
+      <span class="disabled">‹</span>
+    {% endif %}
+
+    {% for num in pacientes.paginator.page_range %}
+      {% if num == pacientes.number %}
+        <span class="current">{{ num }}</span>
+      {% elif num >= pacientes.number|add:"-2" and num <= pacientes.number|add:"2" %}
+        <a href="?q={{ q }}&page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if pacientes.has_next %}
+      <a href="?q={{ q }}&page={{ pacientes.next_page_number }}"›</a>
+      <a href="?q={{ q }}&page={{ pacientes.paginator.num_pages }}">»</a>
+    {% else %}
+      <span class="disabled">›</span>
+      <span class="disabled">»</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:3rem;">
+  {% if q %}
+  <p style="color:var(--text-muted); margin-bottom:1.5rem;">Nenhum paciente encontrado para "<strong>{{ q }}</strong>".</p>
+  <a href="?" class="btn btn-secondary">Limpar busca</a>
+  {% else %}
+  <p style="color:var(--text-muted); margin-bottom:1.5rem;">Nenhum paciente cadastrado ainda.</p>
+  <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Cadastrar primeiro paciente</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

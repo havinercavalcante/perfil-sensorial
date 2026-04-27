@@ -1,0 +1,127 @@
+{% extends "questionario/base.html" %}
+{% block title %}{{ secao.nome }} - Avaliação{% endblock %}
+{% block extra_css %}
+<style>
+  .progress-header { margin-bottom:1.5rem; }
+  .progress-info { display:flex; justify-content:space-between; font-size:.85rem; color:var(--text-muted); margin-bottom:.4rem; }
+  .secao-header { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color:#fff; border-radius:12px; padding:1.2rem 1.5rem; margin-bottom:1.5rem; }
+  .secao-header h2 { font-size:1.2rem; margin-bottom:.2rem; }
+  .secao-header p { font-size:.85rem; opacity:.8; }
+  .pergunta-card { border:1.5px solid var(--border); border-radius:10px; padding:1.2rem; margin-bottom:1rem; background:#fff; transition:border-color .2s; }
+  .pergunta-card:has(input:checked) { border-color:var(--primary); background:#F0F9F6; }
+  .pergunta-num { font-size:.75rem; font-weight:700; color:var(--text-muted); margin-bottom:.4rem; }
+  .pergunta-texto { font-size:.95rem; color:var(--text); line-height:1.5; margin-bottom:1rem; }
+  .opcoes-wrap { display:flex; flex-direction:column; gap:.5rem; }
+  .opcoes-principais { display:grid; grid-template-columns:repeat(5, 1fr); gap:.5rem; }
+  .opcao-label { display:flex; flex-direction:column; align-items:center; gap:.3rem; cursor:pointer; padding:.5rem .3rem; border-radius:8px; border:1.5px solid var(--border); background:#fff; transition:all .15s; font-size:.78rem; text-align:center; line-height:1.2; }
+  .opcao-label:hover { border-color:var(--primary-light); background:#F0F9F6; }
+  .opcao-label input { display:none; }
+
+  .opcao-label:has(input:checked) { border-color:var(--primary); background:var(--primary); color:#fff; font-weight:600; }
+  .opcao-num { font-size:1.1rem; font-weight:800; }
+  .nav-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-top:1.5rem; }
+  .steps-bar { display:flex; gap:4px; margin-bottom:1rem; flex-wrap:wrap; }
+  .step-dot { width:28px; height:6px; border-radius:3px; background:var(--border); transition:background .3s; }
+  .step-dot.done { background:var(--primary); }
+  .step-dot.active { background:var(--primary-light); }
+  .opcao-label.nsa { flex-direction:row; justify-content:center; gap:.4rem; padding:.4rem .8rem; border-style:dashed; color:var(--text-muted); font-size:.8rem; }
+  .opcao-label.nsa:has(input:checked) { border-color:#9CA3AF; background:#F3F4F6; color:#374151; border-style:solid; font-weight:600; }
+  @media(max-width:600px) { .opcoes-principais { grid-template-columns:1fr 1fr; } .secao-header { padding:.9rem 1rem; } }
+  @media(max-width:400px) { .opcoes-principais { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+{% block content %}
+{% if publico %}
+<div class="alert alert-info" style="margin-bottom:1.5rem;">
+  <strong>Preenchimento pelo responsável:</strong> Este questionário está sendo respondido pelo responsável da criança. Ao finalizar, as respostas serão enviadas automaticamente para o terapeuta.
+</div>
+{% endif %}
+<div class="progress-header">
+  <div class="progress-info">
+    <span>Seção {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{{ progresso }}%"></div></div>
+  <div class="steps-bar" style="margin-top:.6rem;">
+    {% for i, nome in paginas_secoes %}
+    <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="secao-header">
+  <h2>{{ secao.nome }}</h2>
+  <p>{{ avaliacao.paciente.nome }} · {{ perguntas|length }} perguntas nesta seção</p>
+</div>
+
+<div style="background:#FEF9EC; border:1px solid #F0C830; border-radius:8px; padding:.8rem 1rem; margin-bottom:1.2rem; font-size:.85rem; color:#7A5800;">
+  <strong>Instruções:</strong> Para cada item, selecione a frequência com que a criança apresenta o comportamento descrito.
+</div>
+
+<form method="post" id="form-questionario">
+  {% csrf_token %}
+  {% for p in perguntas %}
+  <div class="pergunta-card" id="card-{{ p.numero }}">
+    <div class="pergunta-num">Item {{ p.numero }}</div>
+    <div class="pergunta-texto">{{ p.texto }}</div>
+    <div class="opcoes-wrap">
+      <div class="opcoes-principais">
+        {% for valor, rotulo in opcoes %}{% if valor > 0 %}
+        <label class="opcao-label">
+          <input type="radio" name="item_{{ p.numero }}" value="{{ valor }}"
+            {% if p.resposta_salva == valor %}checked{% endif %}
+            onchange="marcarRespondida({{ p.numero }})">
+          <span class="opcao-num">{{ valor }}</span>
+          <span>{{ rotulo|truncatechars:22 }}</span>
+        </label>
+        {% endif %}{% endfor %}
+      </div>
+      {% for valor, rotulo in opcoes %}{% if valor == 0 %}
+      <label class="opcao-label nsa">
+        <input type="radio" name="item_{{ p.numero }}" value="0"
+          {% if p.resposta_salva == 0 %}checked{% endif %}
+          onchange="marcarRespondida({{ p.numero }})">
+        <span>⊘ {{ rotulo }}</span>
+      </label>
+      {% endif %}{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div>
+      {% if pagina_anterior %}
+      <a href="{% url 'questionario' avaliacao.id pagina_anterior %}" class="btn btn-secondary">← Anterior</a>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">
+      {% if pagina == total %}✅ Concluir Questionário{% else %}Próxima Seção →{% endif %}
+    </button>
+  </div>
+</form>
+
+<script>
+function marcarRespondida(num) {
+  const card = document.getElementById('card-' + num);
+  if (card) card.style.borderColor = 'var(--primary)';
+}
+document.getElementById('form-questionario').addEventListener('submit', function(e) {
+  const perguntas = {{ perguntas|length }};
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  let faltando = [];
+  for (let item of itens) {
+    if (!document.querySelector(`input[name="item_${item}"]:checked`)) {
+      faltando.push(item);
+    }
+  }
+  if (faltando.length > 0) {
+    e.preventDefault();
+    alert(`Por favor, responda todos os itens antes de continuar.\nItens sem resposta: ${faltando.join(', ')}`);
+    const card = document.getElementById('card-' + faltando[0]);
+    if (card) card.scrollIntoView({behavior:'smooth', block:'center'});
+    card.style.borderColor = '#EF4444';
+    card.style.background = '#FFF5F5';
+  }
+});
+</script>
+{% endblock %}

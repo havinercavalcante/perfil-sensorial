@@ -1,0 +1,95 @@
+{% extends "questionario/base.html" %}
+{% block title %}Início – CeciSys{% endblock %}
+{% block extra_css %}
+<style>
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .date-short { display: none; }
+  .date-full { display: inline; }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .actions-grid { grid-template-columns: 1fr; }
+    .actions-grid .btn-sm { padding: .6rem 1.4rem; font-size: .9rem; width: 100%; justify-content: center; }
+    .table-responsive table { font-size: .72rem; }
+    .table-responsive th, .table-responsive td { padding: .4rem .4rem; }
+    .table-responsive .btn-sm { padding: .4rem .7rem; font-size: .76rem; }
+    .table-responsive td:last-child { display: flex; gap: .3rem; align-items: center; white-space: nowrap; }
+    .table-responsive th:nth-child(2), .table-responsive td:nth-child(2),
+    .table-responsive th:nth-child(3), .table-responsive td:nth-child(3) { display: none; }
+    .date-full { display: none; }
+    .date-short { display: inline; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+  <h1 style="font-size:1.4rem; color:var(--primary-dark);">
+    Olá, {{ user.get_full_name|default:user.username }}
+  </h1>
+  <p style="color:var(--text-muted); font-size:.9rem;">
+    {% if user.perfil.especialidade %}{{ user.perfil.especialidade }}{% if user.perfil.crm %} · CRM {{ user.perfil.crm }}{% endif %}{% endif %}
+  </p>
+</div>
+
+<div class="stats-grid">
+  <div class="card" style="text-align:center; border-top:4px solid var(--primary); margin-bottom:0;">
+    <div style="font-size:2rem; font-weight:800; color:var(--primary);">{{ pacientes.count }}</div>
+    <div style="color:var(--text-muted); font-size:.85rem;">Pacientes</div>
+  </div>
+  <div class="card" style="text-align:center; border-top:4px solid var(--accent); margin-bottom:0;">
+    <div style="font-size:2rem; font-weight:800; color:var(--accent);">{{ total_avaliacoes }}</div>
+    <div style="color:var(--text-muted); font-size:.85rem;">Avaliações totais</div>
+  </div>
+  <div class="card" style="text-align:center; border-top:4px solid #10B981; margin-bottom:0;">
+    <div style="font-size:2rem; font-weight:800; color:#10B981;">{{ concluidas }}</div>
+    <div style="color:var(--text-muted); font-size:.85rem;">Concluídas</div>
+  </div>
+</div>
+
+<div class="actions-grid">
+  <a href="{% url 'novo_paciente' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
+    <div class="card-title">➕ Nova Avaliação</div>
+    <p style="color:var(--text-muted); font-size:.88rem;">Cadastre um paciente e inicie o questionário CeciSys.</p>
+    <br><span class="btn btn-primary btn-sm">Iniciar</span>
+  </a>
+  <a href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
+    <div class="card-title">👤 Meus Pacientes</div>
+    <p style="color:var(--text-muted); font-size:.88rem;">Veja o histórico e os dashboards de cada paciente.</p>
+    <br><span class="btn btn-secondary btn-sm">Ver pacientes</span>
+  </a>
+</div>
+
+{% if pacientes %}
+<div class="card">
+  <div class="card-title">📋 Pacientes Recentes</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Paciente</th><th>Responsável</th><th>Avaliações</th><th>Última</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pacientes|slice:":6" %}
+    <tr>
+      <td><strong>{{ p.nome }}</strong></td>
+      <td>{{ p.responsavel }}</td>
+      <td style="text-align:center;">{{ p.avaliacoes.count }}</td>
+      <td>{% with ul=p.avaliacoes.first %}{% if ul %}<span class="date-full">{{ ul.data|date:"d/m/Y" }}</span><span class="date-short">{{ ul.data|date:"d/m" }}</span>{% else %}—{% endif %}{% endwith %}</td>
+      <td>
+        <a href="{% url 'detalhe_paciente' p.id %}" class="btn btn-sm btn-secondary">Ver</a>
+        <a href="{% url 'nova_avaliacao' p.id %}" class="btn btn-sm btn-primary" style="margin-left:.3rem;">+ Avaliar</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% if pacientes.count > 6 %}
+  <div style="text-align:center; margin-top:1rem;">
+    <a href="{% url 'lista_pacientes' %}" class="btn btn-secondary btn-sm">Ver todos os {{ pacientes.count }} pacientes</a>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:3rem;">
+  <p style="font-size:2rem; margin-bottom:.5rem;">👤</p>
+  <p style="color:var(--text-muted); margin-bottom:1.5rem;">Você ainda não tem pacientes cadastrados.</p>
+  <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Cadastrar primeiro paciente</a>
+</div>
+{% endif %}
+{% endblock %}
