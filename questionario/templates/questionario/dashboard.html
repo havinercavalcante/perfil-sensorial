@@ -24,6 +24,7 @@
   @media(max-width:480px) { .quadrantes-grid{grid-template-columns:1fr 1fr;} .quad-card .quad-valor{font-size:1.5rem;} }
 </style>
 {% endblock %}
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.id %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
 {% block content %}
 
 <div class="dashboard-header">
@@ -36,7 +37,6 @@
     </div>
     <div style="display:flex; gap:.8rem; flex-wrap:wrap;">
       <a href="{% url 'detalhe_paciente' paciente.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;">← Voltar</a>
-      <a href="{% url 'nova_avaliacao' paciente.id %}" class="btn btn-accent">+ Nova Avaliação</a>
     </div>
   </div>
 </div>
