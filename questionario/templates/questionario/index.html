@@ -19,6 +19,20 @@
     .date-full { display: none; }
     .date-short { display: inline; }
   }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:#fff; border-radius:14px; padding:2rem; max-width:480px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,.2); }
+  .modal-box h3 { margin:0 0 .4rem; font-size:1.1rem; color:var(--primary-dark); }
+  .modal-box .modal-sub { color:var(--text-muted); font-size:.88rem; margin-bottom:1.5rem; }
+  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; }
+  .escolha-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+  .escolha-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.55rem; text-align:center; padding:1.4rem 1rem; border-radius:12px; border:2px solid var(--border); background:#fff; cursor:pointer; text-decoration:none; transition:border-color .2s,background .2s,transform .15s; }
+  .escolha-card:hover { border-color:var(--qc,var(--primary)); background:color-mix(in srgb,var(--qc,var(--primary)) 7%,#fff); transform:translateY(-2px); }
+  .escolha-card .ec-icon { font-size:2rem; line-height:1; }
+  .escolha-card .ec-titulo { font-size:.88rem; font-weight:700; color:var(--text); line-height:1.3; }
+  .escolha-card .ec-desc { font-size:.75rem; color:var(--text-muted); line-height:1.35; }
+  .escolha-card.sensorial { --qc:var(--primary); }
+  .escolha-card.vineland  { --qc:#3E73D1; }
 </style>
 {% endblock %}
 {% block content %}
@@ -69,11 +83,25 @@
     <tr>
       <td><strong>{{ p.nome }}</strong></td>
       <td>{{ p.responsavel }}</td>
-      <td style="text-align:center;">{{ p.avaliacoes.count }}</td>
-      <td>{% with ul=p.avaliacoes.first %}{% if ul %}<span class="date-full">{{ ul.data|date:"d/m/Y" }}</span><span class="date-short">{{ ul.data|date:"d/m" }}</span>{% else %}—{% endif %}{% endwith %}</td>
+      <td style="text-align:center;">{{ p.avaliacoes.count|add:p.avaliacoes_vineland.count }}</td>
+      <td>
+        {% with ul=p.avaliacoes.first %}
+          {% if ul %}
+            <span class="date-full">{{ ul.data|date:"d/m/Y" }}</span>
+            <span class="date-short">{{ ul.data|date:"d/m" }}</span>
+          {% else %}
+            {% with ulv=p.avaliacoes_vineland.first %}
+              {% if ulv %}
+                <span class="date-full">{{ ulv.data|date:"d/m/Y" }}</span>
+                <span class="date-short">{{ ulv.data|date:"d/m" }}</span>
+              {% else %}—{% endif %}
+            {% endwith %}
+          {% endif %}
+        {% endwith %}
+      </td>
       <td>
         <a href="{% url 'detalhe_paciente' p.id %}" class="btn btn-sm btn-secondary">Ver</a>
-        <a href="{% url 'nova_avaliacao' p.id %}" class="btn btn-sm btn-primary" style="margin-left:.3rem;">+ Avaliar</a>
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.3rem;" onclick="abrirModalAvaliar({{ p.id }}, '{{ p.nome }}')">+ Avaliar</button>
       </td>
     </tr>
     {% endfor %}
@@ -92,4 +120,50 @@
   <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Cadastrar primeiro paciente</a>
 </div>
 {% endif %}
+
+<!-- Modal: Escolha de questionário -->
+<div class="modal-overlay" id="modalAvaliar">
+  <div class="modal-box">
+    <h3>Nova Avaliação</h3>
+    <p class="modal-sub">Selecione o questionário para <strong id="modalNomePaciente"></strong>:</p>
+    <div class="escolha-grid">
+      <a id="linkSensorial" href="#" class="escolha-card sensorial">
+        <span class="ec-icon">🧠</span>
+        <span class="ec-titulo">Perfil Sensorial</span>
+        <span class="ec-desc">Questionário de processamento sensorial com 86 itens</span>
+      </a>
+      <a id="linkVineland" href="#" class="escolha-card vineland">
+        <span class="ec-icon">🧩</span>
+        <span class="ec-titulo">Escala Vineland</span>
+        <span class="ec-desc">Escala de Maturidade Social com 116 itens por faixa etária</span>
+      </a>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalAvaliar()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const baseUrlSensorial = "{% url 'nova_avaliacao' 0 %}";
+  const baseUrlVineland  = "{% url 'nova_avaliacao_vineland' 0 %}";
+
+  function abrirModalAvaliar(id, nome) {
+    document.getElementById('linkSensorial').href = baseUrlSensorial.replace('/0/', '/' + id + '/');
+    document.getElementById('linkVineland').href  = baseUrlVineland.replace('/0/', '/' + id + '/');
+    document.getElementById('modalNomePaciente').textContent = nome;
+    document.getElementById('modalAvaliar').classList.add('active');
+  }
+  function fecharModalAvaliar() {
+    document.getElementById('modalAvaliar').classList.remove('active');
+  }
+  document.getElementById('modalAvaliar').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalAvaliar();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') fecharModalAvaliar();
+  });
+</script>
 {% endblock %}
