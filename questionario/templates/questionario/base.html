@@ -37,7 +37,7 @@
   .dropdown a, .dropdown button { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .65rem 1rem; text-decoration: none; color: var(--text); font-size: .88rem; background: none; border: none; cursor: pointer; text-align: left; transition: background .15s; }
   .dropdown a:hover, .dropdown button:hover { background: var(--bg); }
   .dropdown .divider { height: 1px; background: var(--border); margin: .3rem 0; }
-  .dropdown .logout-btn { color: #DC2626; }
+  .dropdown .logout-btn { color: #111; gap: .25rem; }
 
   /* drawer lateral */
   .nav-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 98; }
@@ -52,7 +52,7 @@
   .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
   .card-title { font-size: 1.05rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
 
-  .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.4rem; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; transition: all .2s; }
+  .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.4rem; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; text-decoration: none; border: 2px solid transparent; transition: all .2s; box-sizing: border-box; }
   .btn-primary { background: var(--primary); color: #fff; }
   .btn-primary:hover { background: var(--primary-dark); }
   .btn-secondary { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
@@ -100,6 +100,8 @@
   tr:hover td { background: #F8FAF9; }
 
   .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .btn-back { display:inline-flex; align-items:center; gap:.35rem; color:var(--text-muted); font-size:.82rem; font-weight:600; text-decoration:none; margin-bottom:1rem; padding:.3rem .1rem; border-radius:6px; transition:color .2s; }
+  .btn-back:hover { color:var(--primary); }
 
   .hamburger { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: .3rem .5rem; line-height: 1; flex-shrink: 0; }
 
@@ -199,7 +201,7 @@
         <div class="divider"></div>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
-          <button type="submit" class="logout-btn">🚪 Sair</button>
+          <button type="submit" class="logout-btn"><i data-lucide="log-out" style="width:15px;height:15px;color:#DC2626;"></i> Sair</button>
         </form>
       </div>
     </div>
@@ -217,6 +219,7 @@
 <div class="nav-backdrop" id="navBackdrop" onclick="closeNav()"></div>
 
 <main>
+  {% block back_button %}{% endblock %}
   {% for msg in messages %}
   <div class="alert alert-{{ msg.tags|default:'error' }}">{{ msg }}</div>
   {% endfor %}

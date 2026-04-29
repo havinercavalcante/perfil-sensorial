@@ -91,3 +91,69 @@ class Resposta(models.Model):
 
     def __str__(self):
         return f"Item {self.numero_item}: {self.valor}"
+
+
+class AvaliacaoVineland(models.Model):
+    RESPOSTA_CHOICES = [
+        ("sim_sempre", "Sim, sempre"),
+        ("sim_as_vezes", "Sim, às vezes"),
+        ("nao_nunca", "Não, nunca"),
+        ("nao_oportunidade", "Não teve oportunidade"),
+        ("nao_sei", "Não sei"),
+    ]
+    STATUS_CHOICES = [
+        ("em_andamento", "Em andamento"),
+        ("concluida", "Concluída"),
+    ]
+
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vineland")
+    token = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data = models.DateField("Data da avaliação", default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual = models.IntegerField(default=1)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    # Pontuação total e por categoria
+    pont_total = models.FloatField(null=True, blank=True)
+    pont_comunicacao = models.FloatField(null=True, blank=True)
+    pont_locomocao = models.FloatField(null=True, blank=True)
+    pont_ocupacao = models.FloatField(null=True, blank=True)
+    pont_socializacao = models.FloatField(null=True, blank=True)
+    pont_autogoverno = models.FloatField(null=True, blank=True)
+    pont_age = models.FloatField(null=True, blank=True)
+    pont_ac = models.FloatField(null=True, blank=True)
+    pont_av = models.FloatField(null=True, blank=True)
+
+    # Idade Social (IS) em meses — inserida manualmente pelo profissional
+    idade_social_meses = models.IntegerField("Idade Social (meses)", null=True, blank=True)
+    quociente_social = models.FloatField("Quociente Social (QS)", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Avaliação Vineland"
+        verbose_name_plural = "Avaliações Vineland"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Vineland — {self.paciente.nome} — {self.data}"
+
+
+class RespostaVineland(models.Model):
+    RESPOSTA_CHOICES = [
+        ("sim_sempre", "Sim, sempre"),
+        ("sim_as_vezes", "Sim, às vezes"),
+        ("nao_nunca", "Não, nunca"),
+        ("nao_oportunidade", "Não teve oportunidade"),
+        ("nao_sei", "Não sei"),
+    ]
+
+    avaliacao = models.ForeignKey(AvaliacaoVineland, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField("Número do item")
+    resposta = models.CharField(max_length=20, choices=RESPOSTA_CHOICES)
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+    def __str__(self):
+        return f"Item {self.numero_item}: {self.resposta}"

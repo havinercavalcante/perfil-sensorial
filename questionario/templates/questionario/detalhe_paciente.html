@@ -1,27 +1,54 @@
 {% extends "questionario/base.html" %}
 {% block title %}{{ paciente.nome }}{% endblock %}
+
 {% block extra_css %}
 <style>
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; }
-  .modal-overlay.active { display:flex; }
-  .modal-box { background:#fff; border-radius:12px; padding:2rem; max-width:400px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.18); }
-  .modal-box h3 { margin:0 0 .75rem; font-size:1.1rem; color:var(--primary-dark); }
-  .modal-box p { color:var(--text-muted); margin:0 0 1.5rem; font-size:.95rem; }
-  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; }
+  /* ── Modais ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 14px; padding: 2rem;
+    max-width: 480px; width: 92%;
+    box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  }
+  .modal-box h3 { margin: 0 0 .4rem; font-size: 1.1rem; color: var(--primary-dark); }
+  .modal-box .modal-sub { color: var(--text-muted); font-size: .88rem; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+
+  /* ── Cards de escolha de questionário ── */
+  .escolha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .escolha-card {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .55rem; text-align: center;
+    padding: 1.4rem 1rem; border-radius: 12px;
+    border: 2px solid var(--border); background: #fff;
+    cursor: pointer; text-decoration: none;
+    transition: border-color .2s, background .2s, transform .15s;
+  }
+  .escolha-card:hover {
+    border-color: var(--qc, var(--primary));
+    background: color-mix(in srgb, var(--qc, var(--primary)) 7%, #fff);
+    transform: translateY(-2px);
+  }
+  .escolha-card .ec-icon { font-size: 2rem; line-height: 1; }
+  .escolha-card .ec-titulo { font-size: .88rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .escolha-card .ec-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.35; }
+  .escolha-card.sensorial { --qc: var(--primary); }
+  .escolha-card.vineland  { --qc: #3E73D1; }
+
+  /* ── Tabelas ── */
   @media (max-width: 600px) {
     .btn-nova-avaliacao { width: 100%; justify-content: center; }
-
+    .escolha-grid { grid-template-columns: 1fr; }
     .avaliacoes-table thead { display: none; }
     .avaliacoes-table tr {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: .75rem;
-      margin-bottom: .75rem;
-      gap: .4rem;
+      display: flex; flex-direction: row; flex-wrap: wrap;
+      align-items: center; border: 1px solid var(--border);
+      border-radius: 10px; padding: .75rem; margin-bottom: .75rem; gap: .4rem;
     }
     .avaliacoes-table td { border: none; padding: 0; }
     .avaliacoes-table td:nth-child(1) { flex: 0 0 auto; font-size: .85rem; color: var(--text-muted); }
@@ -31,7 +58,11 @@
   }
 </style>
 {% endblock %}
+
+{% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back">← Pacientes</a>{% endblock %}
 {% block content %}
+
+<!-- Cabeçalho do paciente -->
 <div class="card">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.75rem;">
     <div>
@@ -39,15 +70,17 @@
       <p style="color:var(--text-muted); font-size:.9rem;">
         📅 {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp;
         👥 Responsável: {{ paciente.responsavel }}
-        <!-- Terapeuta removido da visualização -->
       </p>
     </div>
-    <a href="{% url 'nova_avaliacao' paciente.id %}" class="btn btn-primary btn-nova-avaliacao">+ Nova Avaliação</a>
+    <button type="button" class="btn btn-primary btn-nova-avaliacao" onclick="abrirModalEscolha()">
+      + Nova Avaliação
+    </button>
   </div>
 </div>
 
+<!-- Perfil Sensorial -->
 <div class="card">
-  <div class="card-title">📋 Histórico de Avaliações</div>
+  <div class="card-title">🧠 Perfil Sensorial</div>
   {% if avaliacoes %}
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -60,45 +93,163 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'dashboard' av.obj.id %}" class="btn btn-sm btn-primary"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Dashboard</a>
+        <a href="{% url 'dashboard' av.obj.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link</button>
+        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
+        </button>
         {% if av.obj.paciente.email_responsavel %}
-        <form method="post" action="{% url 'enviar_email_link' av.obj.id %}" style="display:inline;margin-left:0.3rem;">
+        <form method="post" action="{% url 'enviar_email_link' av.obj.id %}" style="display:inline;margin-left:.3rem;">
           {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-primary"><i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail</button>
+          <button type="submit" class="btn btn-sm btn-primary">
+            <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+          </button>
         </form>
         {% endif %}
         {% endif %}
         {% endif %}
-        <button type="button" class="btn btn-sm btn-danger" style="margin-left:0.3rem;" onclick="abrirModalDeletar({{ av.obj.id }})"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir</button>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletar({{ av.obj.id }})">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
       </td>
     </tr>
     {% endfor %}
     </tbody>
   </table></div>
   {% else %}
-  <p style="color:var(--text-muted);">Nenhuma avaliação ainda.</p>
+  <p style="color:var(--text-muted);">Nenhuma avaliação de Perfil Sensorial ainda.</p>
   {% endif %}
 </div>
 
-<!-- Modal de confirmação de exclusão -->
+<!-- Escala Vineland -->
+<div class="card">
+  <div class="card-title">🧩 Escala Vineland</div>
+  {% if avaliacoes_vineland %}
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_vineland %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'vineland_resultado' av.obj.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
+        </button>
+        {% if av.obj.paciente.email_responsavel %}
+        <form method="post" action="{% url 'enviar_email_link_vineland' av.obj.id %}" style="display:inline;margin-left:.3rem;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-primary">
+            <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+          </button>
+        </form>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarVineland({{ av.obj.id }})">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p style="color:var(--text-muted);">Nenhuma avaliação Vineland ainda.</p>
+  {% endif %}
+</div>
+
+<!-- ══ Modal: Escolha de questionário ══ -->
+<div class="modal-overlay" id="modalEscolha">
+  <div class="modal-box">
+    <h3>Nova Avaliação</h3>
+    <p class="modal-sub">Selecione o questionário que deseja aplicar para <strong>{{ paciente.nome }}</strong>:</p>
+
+    <div class="escolha-grid">
+      <a href="{% url 'nova_avaliacao' paciente.id %}" class="escolha-card sensorial">
+        <span class="ec-icon">🧠</span>
+        <span class="ec-titulo">Perfil Sensorial</span>
+        <span class="ec-desc">Questionário de processamento sensorial com 86 itens</span>
+      </a>
+      <a href="{% url 'nova_avaliacao_vineland' paciente.id %}" class="escolha-card vineland">
+        <span class="ec-icon">🧩</span>
+        <span class="ec-titulo">Escala Vineland</span>
+        <span class="ec-desc">Escala de Maturidade Social com 116 itens por faixa etária</span>
+      </a>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalEscolha()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal: Excluir Perfil Sensorial ══ -->
 <div class="modal-overlay" id="modalDeletar">
   <div class="modal-box">
     <h3>Excluir avaliação</h3>
-    <p>Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.</p>
+    <p class="modal-sub">Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.</p>
     <div class="modal-actions">
-      <button type="button" class="btn btn-secondary" onclick="fecharModalDeletar()"><i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar</button>
+      <button type="button" class="btn btn-secondary" onclick="fecharModalDeletar()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
       <form id="formDeletar" method="post" style="display:inline;">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir</button>
+        <button type="submit" class="btn btn-danger">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal: Excluir Vineland ══ -->
+<div class="modal-overlay" id="modalDeletarVineland">
+  <div class="modal-box">
+    <h3>Excluir avaliação Vineland</h3>
+    <p class="modal-sub">Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalDeletarVineland()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
+      <form id="formDeletarVineland" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
       </form>
     </div>
   </div>
 </div>
 
 <script>
+  /* ── Modal de escolha ── */
+  function abrirModalEscolha() {
+    document.getElementById('modalEscolha').classList.add('active');
+  }
+  function fecharModalEscolha() {
+    document.getElementById('modalEscolha').classList.remove('active');
+  }
+  document.getElementById('modalEscolha').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalEscolha();
+  });
+
+  /* ── Modal de exclusão — Perfil Sensorial ── */
   const deletarBaseUrl = "{% url 'deletar_avaliacao' 0 %}";
   function abrirModalDeletar(id) {
     document.getElementById('formDeletar').action = deletarBaseUrl.replace('/0/', '/' + id + '/');
@@ -110,13 +261,36 @@
   document.getElementById('modalDeletar').addEventListener('click', function(e) {
     if (e.target === this) fecharModalDeletar();
   });
+
+  /* ── Modal de exclusão — Vineland ── */
+  const deletarVinelandBaseUrl = "{% url 'vineland_deletar' 0 %}";
+  function abrirModalDeletarVineland(id) {
+    document.getElementById('formDeletarVineland').action = deletarVinelandBaseUrl.replace('/0/', '/' + id + '/');
+    document.getElementById('modalDeletarVineland').classList.add('active');
+  }
+  function fecharModalDeletarVineland() {
+    document.getElementById('modalDeletarVineland').classList.remove('active');
+  }
+  document.getElementById('modalDeletarVineland').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalDeletarVineland();
+  });
+
+  /* ── Copiar link ── */
   function copiarLink(btn, url) {
     navigator.clipboard.writeText(url);
-    const span = btn.querySelector('span') || btn;
     const orig = btn.innerHTML;
     btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Copiado!';
     lucide.createIcons();
     setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 1500);
   }
+
+  /* fechar qualquer modal com Escape */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      fecharModalEscolha();
+      fecharModalDeletar();
+      fecharModalDeletarVineland();
+    }
+  });
 </script>
 {% endblock %}

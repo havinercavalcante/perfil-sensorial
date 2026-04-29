@@ -69,7 +69,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Paciente, Avaliacao, Resposta, PerfilMedico
+from .models import Paciente, Avaliacao, Resposta, PerfilMedico, AvaliacaoVineland
 from .data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                    calcular_pontuacao, classificar)
 import json
@@ -180,8 +180,14 @@ def meu_perfil(request):
 @login_required
 def index(request):
     pacientes = Paciente.objects.filter(medico=request.user).order_by("nome")
-    total_avaliacoes = Avaliacao.objects.filter(paciente__medico=request.user).count()
-    concluidas = Avaliacao.objects.filter(paciente__medico=request.user, status="concluida").count()
+    total_avaliacoes = (
+        Avaliacao.objects.filter(paciente__medico=request.user).count()
+        + AvaliacaoVineland.objects.filter(paciente__medico=request.user).count()
+    )
+    concluidas = (
+        Avaliacao.objects.filter(paciente__medico=request.user, status="concluida").count()
+        + AvaliacaoVineland.objects.filter(paciente__medico=request.user, status="concluida").count()
+    )
     return render(request, "questionario/index.html", {
         "pacientes": pacientes,
         "total_avaliacoes": total_avaliacoes,
@@ -262,8 +268,18 @@ def enviar_email_link(request, avaliacao_id):
 @login_required
 def lista_pacientes(request):
     from django.core.paginator import Paginator
+    from django.db.models import Count, Q
     q = request.GET.get("q", "").strip()
-    qs = Paciente.objects.filter(medico=request.user).prefetch_related("avaliacoes").order_by("nome")
+    qs = (
+        Paciente.objects.filter(medico=request.user)
+        .annotate(
+            sens_total=Count("avaliacoes", distinct=True),
+            vinel_total=Count("avaliacoes_vineland", distinct=True),
+            sens_conc=Count("avaliacoes", filter=Q(avaliacoes__status="concluida"), distinct=True),
+            vinel_conc=Count("avaliacoes_vineland", filter=Q(avaliacoes_vineland__status="concluida"), distinct=True),
+        )
+        .order_by("nome")
+    )
     if q:
         qs = qs.filter(nome__icontains=q)
     paginator = Paginator(qs, 10)
@@ -283,8 +299,15 @@ def detalhe_paciente(request, paciente_id):
         if av.token and av.status != "concluida":
             link_publico = request.build_absolute_uri(f"/questionario/publico/{av.token}/{av.pagina_atual}/")
         avaliacoes.append({"obj": av, "link_publico": link_publico})
+    avaliacoes_vineland = []
+    for av in paciente.avaliacoes_vineland.all():
+        link_publico = None
+        if av.token and av.status != "concluida":
+            link_publico = request.build_absolute_uri(f"/vineland/publico/{av.token}/1/")
+        avaliacoes_vineland.append({"obj": av, "link_publico": link_publico})
     return render(request, "questionario/detalhe_paciente.html", {
         "paciente": paciente, "avaliacoes": avaliacoes,
+        "avaliacoes_vineland": avaliacoes_vineland,
     })
 
 
@@ -430,3 +453,302 @@ def dashboard(request, avaliacao_id):
 def _classe_css(classificacao):
     return {"Muito menos": "muito-menos", "Menos": "menos", "Típico": "tipico",
             "Mais": "mais", "Muito mais": "muito-mais"}.get(classificacao, "")
+
+
+# ─── VINELAND ─────────────────────────────────────────────────────────────────
+
+from .models import RespostaVineland
+from .vineland_data import (
+    VINELAND_GRUPOS, VINELAND_PERGUNTAS, VINELAND_CATEGORIA,
+    VINELAND_OPCOES, VINELAND_CATEGORIAS_CONFIG,
+    calcular_pontuacao_vineland, classificar_qs,
+)
+
+VINELAND_TOTAL_PAGINAS = len(VINELAND_GRUPOS)
+
+
+@login_required
+def nova_avaliacao_vineland(request, paciente_id):
+    paciente = get_object_or_404(Paciente, id=paciente_id, medico=request.user)
+    av = AvaliacaoVineland.objects.create(paciente=paciente, token=uuid.uuid4().hex)
+    return redirect("vineland_form", avaliacao_id=av.id, pagina=1)
+
+
+@login_required
+def vineland_form(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
+    if avaliacao.status == "concluida":
+        return redirect("vineland_resultado", avaliacao_id=avaliacao_id)
+
+    if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
+        return redirect("vineland_form", avaliacao_id=avaliacao_id, pagina=1)
+
+    grupo = VINELAND_GRUPOS[pagina - 1]
+    itens = grupo["itens"]
+    respostas_salvas = {
+        r.numero_item: r.resposta
+        for r in avaliacao.respostas.filter(numero_item__in=itens)
+    }
+
+    if request.method == "POST":
+        erros = []
+        novas = {}
+        for item in itens:
+            val = request.POST.get(f"item_{item}")
+            opcoes_validas = [o[0] for o in VINELAND_OPCOES]
+            if val not in opcoes_validas:
+                erros.append(item)
+            else:
+                novas[item] = val
+
+        if erros:
+            messages.error(request, "Por favor, responda todos os itens antes de continuar.")
+            respostas_salvas.update(novas)
+        else:
+            for item, valor in novas.items():
+                RespostaVineland.objects.update_or_create(
+                    avaliacao=avaliacao, numero_item=item, defaults={"resposta": valor}
+                )
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, VINELAND_TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > VINELAND_TOTAL_PAGINAS:
+                return redirect("vineland_concluir", avaliacao_id=avaliacao_id)
+            return redirect("vineland_form", avaliacao_id=avaliacao_id, pagina=proxima)
+
+    perguntas = [
+        {
+            "numero": item,
+            "texto": VINELAND_PERGUNTAS.get(item, ""),
+            "categoria": VINELAND_CATEGORIA.get(item, ""),
+            "resposta_salva": respostas_salvas.get(item),
+        }
+        for item in itens
+    ]
+
+    return render(request, "questionario/vineland_form.html", {
+        "avaliacao": avaliacao,
+        "grupo": grupo,
+        "perguntas": perguntas,
+        "opcoes": VINELAND_OPCOES,
+        "pagina": pagina,
+        "total": VINELAND_TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
+        "paginas_grupos": [(i + 1, VINELAND_GRUPOS[i]["nome"]) for i in range(VINELAND_TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+    })
+
+
+@login_required
+def vineland_concluir(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
+    total_itens = sum(len(g["itens"]) for g in VINELAND_GRUPOS)
+    if avaliacao.respostas.count() < total_itens:
+        messages.warning(request, "Ainda há itens sem resposta.")
+        return redirect("vineland_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
+
+    respostas = {r.numero_item: r.resposta for r in avaliacao.respostas.all()}
+    p = calcular_pontuacao_vineland(respostas)
+
+    avaliacao.pont_total = p["total"]
+    avaliacao.pont_comunicacao = p["C"]
+    avaliacao.pont_locomocao = p["L"]
+    avaliacao.pont_ocupacao = p["O"]
+    avaliacao.pont_socializacao = p["S"]
+    avaliacao.pont_autogoverno = p["AG"]
+    avaliacao.pont_age = p["AGE"]
+    avaliacao.pont_ac = p["AC"]
+    avaliacao.pont_av = p["AV"]
+    avaliacao.status = "concluida"
+    avaliacao.save()
+    return redirect("vineland_resultado", avaliacao_id=avaliacao_id)
+
+
+@login_required
+def vineland_resultado(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+
+    if avaliacao.status != "concluida":
+        return redirect("vineland_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
+
+    if avaliacao.pont_total is None:
+        respostas_dict = {r.numero_item: r.resposta for r in avaliacao.respostas.all()}
+        p = calcular_pontuacao_vineland(respostas_dict)
+        avaliacao.pont_total = p["total"]
+        avaliacao.pont_comunicacao = p["C"]
+        avaliacao.pont_locomocao = p["L"]
+        avaliacao.pont_ocupacao = p["O"]
+        avaliacao.pont_socializacao = p["S"]
+        avaliacao.pont_autogoverno = p["AG"]
+        avaliacao.pont_age = p["AGE"]
+        avaliacao.pont_ac = p["AC"]
+        avaliacao.pont_av = p["AV"]
+        avaliacao.save(update_fields=[
+            "pont_total", "pont_comunicacao", "pont_locomocao", "pont_ocupacao",
+            "pont_socializacao", "pont_autogoverno", "pont_age", "pont_ac", "pont_av",
+        ])
+
+    if request.method == "POST":
+        try:
+            is_meses = int(request.POST.get("idade_social_meses", "").strip())
+            if is_meses <= 0:
+                raise ValueError
+        except (ValueError, AttributeError):
+            messages.error(request, "Digite um valor válido para a Idade Social (número inteiro de meses).")
+            is_meses = None
+
+        if is_meses:
+            from django.utils import timezone as tz
+            hoje = tz.now().date()
+            b = paciente.data_nascimento
+            ic_meses = (hoje.year - b.year) * 12 + (hoje.month - b.month)
+            if ic_meses > 0:
+                qs = round(is_meses / ic_meses * 100, 1)
+            else:
+                qs = None
+            avaliacao.idade_social_meses = is_meses
+            avaliacao.quociente_social = qs
+            avaliacao.save(update_fields=["idade_social_meses", "quociente_social"])
+            messages.success(request, "Quociente Social calculado com sucesso.")
+            return redirect("vineland_resultado", avaliacao_id=avaliacao_id)
+
+    from django.utils import timezone as tz
+    hoje = tz.now().date()
+    b = paciente.data_nascimento
+    ic_meses = (hoje.year - b.year) * 12 + (hoje.month - b.month)
+
+    categorias = [
+        {
+            "cod": cod,
+            "nome": cfg["nome"],
+            "max": cfg["max"],
+            "valor": getattr(avaliacao, {
+                "C": "pont_comunicacao", "L": "pont_locomocao",
+                "O": "pont_ocupacao", "S": "pont_socializacao",
+                "AG": "pont_autogoverno", "AGE": "pont_age",
+                "AC": "pont_ac", "AV": "pont_av",
+            }[cod]) or 0,
+        }
+        for cod, cfg in VINELAND_CATEGORIAS_CONFIG.items()
+    ]
+
+    qs_class = classificar_qs(avaliacao.quociente_social) if avaliacao.quociente_social else None
+
+    return render(request, "questionario/vineland_resultado.html", {
+        "avaliacao": avaliacao,
+        "paciente": paciente,
+        "ic_meses": ic_meses,
+        "categorias": categorias,
+        "qs_classificacao": qs_class,
+    })
+
+
+@login_required
+def vineland_deletar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
+    paciente_id = avaliacao.paciente_id
+    if request.method == "POST":
+        avaliacao.delete()
+        messages.success(request, "Avaliação Vineland excluída com sucesso.")
+    return redirect("detalhe_paciente", paciente_id=paciente_id)
+
+
+def vineland_publico_view(request, token, pagina):
+    avaliacao = get_object_or_404(AvaliacaoVineland, token=token)
+    if avaliacao.status == "concluida":
+        return render(request, "questionario/concluido.html")
+
+    if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
+        pagina = 1
+
+    grupo = VINELAND_GRUPOS[pagina - 1]
+    itens = grupo["itens"]
+    respostas_salvas = {
+        r.numero_item: r.resposta
+        for r in avaliacao.respostas.filter(numero_item__in=itens)
+    }
+
+    if request.method == "POST":
+        erros = []
+        novas = {}
+        for item in itens:
+            val = request.POST.get(f"item_{item}")
+            opcoes_validas = [o[0] for o in VINELAND_OPCOES]
+            if val not in opcoes_validas:
+                erros.append(item)
+            else:
+                novas[item] = val
+
+        if erros:
+            messages.error(request, "Por favor, responda todos os itens antes de continuar.")
+            respostas_salvas.update(novas)
+        else:
+            for item, valor in novas.items():
+                RespostaVineland.objects.update_or_create(
+                    avaliacao=avaliacao, numero_item=item, defaults={"resposta": valor}
+                )
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, VINELAND_TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > VINELAND_TOTAL_PAGINAS:
+                respostas_dict = {r.numero_item: r.resposta for r in avaliacao.respostas.all()}
+                p = calcular_pontuacao_vineland(respostas_dict)
+                avaliacao.pont_total = p["total"]
+                avaliacao.pont_comunicacao = p["C"]
+                avaliacao.pont_locomocao = p["L"]
+                avaliacao.pont_ocupacao = p["O"]
+                avaliacao.pont_socializacao = p["S"]
+                avaliacao.pont_autogoverno = p["AG"]
+                avaliacao.pont_age = p["AGE"]
+                avaliacao.pont_ac = p["AC"]
+                avaliacao.pont_av = p["AV"]
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                return render(request, "questionario/concluido.html")
+            return redirect("vineland_publico", token=token, pagina=proxima)
+
+    perguntas = [
+        {
+            "numero": item,
+            "texto": VINELAND_PERGUNTAS.get(item, ""),
+            "categoria": VINELAND_CATEGORIA.get(item, ""),
+            "resposta_salva": respostas_salvas.get(item),
+        }
+        for item in itens
+    ]
+
+    return render(request, "questionario/vineland_form.html", {
+        "avaliacao": avaliacao,
+        "grupo": grupo,
+        "perguntas": perguntas,
+        "opcoes": VINELAND_OPCOES,
+        "pagina": pagina,
+        "total": VINELAND_TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
+        "paginas_grupos": [(i + 1, VINELAND_GRUPOS[i]["nome"]) for i in range(VINELAND_TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "publico": True,
+        "token": token,
+    })
+
+
+@login_required
+def enviar_email_link_vineland(request, avaliacao_id):
+    from django.core.mail import send_mail
+    avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    email_dest = paciente.email_responsavel
+    if not email_dest:
+        messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
+        return redirect("detalhe_paciente", paciente_id=paciente.id)
+    link = request.build_absolute_uri(f"/vineland/publico/{avaliacao.token}/1/")
+    send_mail(
+        subject="Escala Vineland — CeciSys",
+        message=f"Olá, {paciente.responsavel}!\n\nResponda a Escala Vineland no link: {link}",
+        from_email=None,
+        recipient_list=[email_dest],
+        fail_silently=False,
+    )
+    messages.success(request, f"E-mail enviado para {email_dest}.")
+    return redirect("detalhe_paciente", paciente_id=paciente.id)
