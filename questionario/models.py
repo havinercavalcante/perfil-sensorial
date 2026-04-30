@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -19,6 +20,7 @@ class PerfilMedico(models.Model):
 
 
 class Paciente(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     medico = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pacientes")
     nome = models.CharField("Nome completo", max_length=200)
     data_nascimento = models.DateField("Data de nascimento")
