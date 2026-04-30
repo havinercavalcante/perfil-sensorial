@@ -3,11 +3,11 @@ Description=Gunicorn - Perfil Sensorial
 After=network.target
 
 [Service]
-User=ubuntu
+User=root
 Group=www-data
-WorkingDirectory=/home/ubuntu/perfil_sensorial
-EnvironmentFile=/home/ubuntu/perfil_sensorial/.env
-ExecStart=/home/ubuntu/perfil_sensorial/venv/bin/gunicorn \
+WorkingDirectory=/root/perfil_sensorial
+EnvironmentFile=/root/perfil_sensorial/.env
+ExecStart=/root/perfil_sensorial/venv/bin/gunicorn \
     --workers 3 \
     --bind unix:/run/gunicorn.sock \
     perfil_sensorial.wsgi:application

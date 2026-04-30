@@ -2,14 +2,14 @@
 # Execute na VPS: bash setup_vps.sh
 set -e
 
-PROJECT_DIR=/home/ubuntu/perfil_sensorial
+PROJECT_DIR=/root/perfil_sensorial
 REPO_URL=https://github.com/havinercavalcante/perfil-sensorial.git
 
 echo "==> Atualizando sistema..."
-sudo apt update && sudo apt upgrade -y
+apt update && apt upgrade -y
 
 echo "==> Instalando dependencias..."
-sudo apt install -y python3-pip python3-venv git nginx certbot python3-certbot-nginx
+apt install -y python3-pip python3-venv git nginx certbot python3-certbot-nginx
 
 echo "==> Clonando repositório..."
 git clone $REPO_URL $PROJECT_DIR
@@ -22,7 +22,7 @@ source venv/bin/activate
 echo "==> Instalando pacotes Python..."
 pip install -r requirements.txt gunicorn
 
-echo "==> Configurando .env (edite o arquivo antes de continuar)..."
+echo "==> Configurando .env..."
 cp deploy/.env.example .env
 echo ""
 echo "*** EDITE o arquivo .env agora: nano $PROJECT_DIR/.env ***"
@@ -34,19 +34,19 @@ python manage.py migrate
 python manage.py collectstatic --noinput
 
 echo "==> Configurando Gunicorn como servico..."
-sudo cp deploy/gunicorn.service /etc/systemd/system/gunicorn.service
-sudo systemctl daemon-reload
-sudo systemctl enable gunicorn
-sudo systemctl start gunicorn
+cp deploy/gunicorn.service /etc/systemd/system/gunicorn.service
+systemctl daemon-reload
+systemctl enable gunicorn
+systemctl start gunicorn
 
 echo "==> Configurando Nginx..."
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/cecisys.com
-sudo ln -sf /etc/nginx/sites-available/cecisys.com /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl restart nginx
+cp deploy/nginx.conf /etc/nginx/sites-available/cecisys.com
+ln -sf /etc/nginx/sites-available/cecisys.com /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && systemctl restart nginx
 
 echo "==> Configurando HTTPS com Certbot..."
-sudo certbot --nginx -d cecisys.com -d www.cecisys.com
+certbot --nginx -d cecisys.com -d www.cecisys.com
 
 echo ""
-echo "✓ Deploy concluido! Acesse: https://cecisys.com"
+echo "Deploy concluido! Acesse: https://cecisys.com"
