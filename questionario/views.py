@@ -208,14 +208,11 @@ def novo_paciente(request):
             messages.error(request, "Preencha os campos obrigatórios.")
             return render(request, "questionario/novo_paciente.html", {"post": request.POST})
 
-        import uuid
         paciente = Paciente.objects.create(
             medico=request.user,
             nome=nome, data_nascimento=data_nascimento,
             responsavel=responsavel, email_responsavel=email, telefone=telefone,
         )
-        token = uuid.uuid4().hex
-        Avaliacao.objects.create(paciente=paciente, token=token)
         messages.success(request, "Paciente cadastrado com sucesso.")
         return redirect("detalhe_paciente", paciente_id=paciente.id)
 
