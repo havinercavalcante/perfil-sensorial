@@ -40,6 +40,21 @@
   .escolha-card.sensorial { --qc: var(--primary); }
   .escolha-card.vineland  { --qc: #3E73D1; }
 
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000;
+    color: #fff; padding: .85rem 1.4rem; border-radius: 10px;
+    font-size: .88rem; font-weight: 500;
+    box-shadow: 0 6px 24px rgba(0,0,0,.18);
+    display: flex; align-items: center; gap: .6rem;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+  }
+  #toast.visible { opacity: 1; transform: translateY(0); }
+  #toast.success { background: #065F46; }
+  #toast.error   { background: #991B1B; }
+
   /* ── Tabelas ── */
   @media (max-width: 600px) {
     .btn-nova-avaliacao { width: 100%; justify-content: center; }
@@ -102,17 +117,15 @@
           <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
         </button>
         {% if av.obj.paciente.email_responsavel %}
-        <form method="post" action="{% url 'enviar_email_link' av.obj.id %}" style="display:inline;margin-left:.3rem;">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-primary">
-            <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
-          </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_link' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+        </button>
         {% endif %}
         {% endif %}
         {% endif %}
         <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
-                onclick="abrirModalDeletar({{ av.obj.id }})">
+                onclick="abrirModalDeletar({{ av.obj.id }}, this)">
           <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
         </button>
       </td>
@@ -149,17 +162,15 @@
           <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
         </button>
         {% if av.obj.paciente.email_responsavel %}
-        <form method="post" action="{% url 'enviar_email_link_vineland' av.obj.id %}" style="display:inline;margin-left:.3rem;">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-primary">
-            <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
-          </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_link_vineland' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+        </button>
         {% endif %}
         {% endif %}
         {% endif %}
         <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarVineland({{ av.obj.id }})">
+                onclick="abrirModalDeletarVineland({{ av.obj.id }}, this)">
           <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
         </button>
       </td>
@@ -179,16 +190,16 @@
     <p class="modal-sub">Selecione o questionário que deseja aplicar para <strong>{{ paciente.nome }}</strong>:</p>
 
     <div class="escolha-grid">
-      <a href="{% url 'nova_avaliacao' paciente.id %}" class="escolha-card sensorial">
+      <button type="button" class="escolha-card sensorial" onclick="criarAvaliacao('sensorial')">
         <span class="ec-icon">🧠</span>
         <span class="ec-titulo">Perfil Sensorial</span>
         <span class="ec-desc">Questionário de processamento sensorial com 86 itens</span>
-      </a>
-      <a href="{% url 'nova_avaliacao_vineland' paciente.id %}" class="escolha-card vineland">
+      </button>
+      <button type="button" class="escolha-card vineland" onclick="criarAvaliacao('vineland')">
         <span class="ec-icon">🧩</span>
         <span class="ec-titulo">Escala Vineland</span>
         <span class="ec-desc">Escala de Maturidade Social com 116 itens por faixa etária</span>
-      </a>
+      </button>
     </div>
 
     <div class="modal-actions">
@@ -208,12 +219,9 @@
       <button type="button" class="btn btn-secondary" onclick="fecharModalDeletar()">
         <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
       </button>
-      <form id="formDeletar" method="post" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">
-          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
-        </button>
-      </form>
+      <button type="button" class="btn btn-danger" onclick="confirmarDeletar()">
+        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+      </button>
     </div>
   </div>
 </div>
@@ -227,17 +235,59 @@
       <button type="button" class="btn btn-secondary" onclick="fecharModalDeletarVineland()">
         <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
       </button>
-      <form id="formDeletarVineland" method="post" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">
-          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
-        </button>
-      </form>
+      <button type="button" class="btn btn-danger" onclick="confirmarDeletarVineland()">
+        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+      </button>
     </div>
   </div>
 </div>
 
+
+<div id="toast">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-texto"></span>
+</div>
+
 <script>
+  const csrfToken = '{{ csrf_token }}';
+
+  /* ── Toast ── */
+  let _toastTimer;
+  function mostrarAlerta(texto, tipo) {
+    const el = document.getElementById('toast');
+    document.getElementById('toast-texto').textContent = texto;
+    el.className = tipo === 'error' ? 'error' : 'success';
+    el.classList.add('visible');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('visible'), 3000);
+  }
+
+  /* ── Fetch AJAX helper ── */
+  function ajaxPost(url) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken },
+    }).then(r => r.json());
+  }
+
+  /* ── Nova avaliação ── */
+  const urlSensorial = "{% url 'nova_avaliacao' paciente.uuid %}";
+  const urlVineland  = "{% url 'nova_avaliacao_vineland' paciente.uuid %}";
+
+  function criarAvaliacao(tipo) {
+    const url = tipo === 'sensorial' ? urlSensorial : urlVineland;
+    const label = tipo === 'sensorial' ? 'Perfil Sensorial' : 'Escala Vineland';
+    fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          fecharModalEscolha();
+          mostrarAlerta('Avaliação ' + label + ' criada com sucesso.');
+          setTimeout(() => location.reload(), 1800);
+        }
+      });
+  }
+
   /* ── Modal de escolha ── */
   function abrirModalEscolha() {
     document.getElementById('modalEscolha').classList.add('active');
@@ -249,31 +299,60 @@
     if (e.target === this) fecharModalEscolha();
   });
 
-  /* ── Modal de exclusão — Perfil Sensorial ── */
+  /* ── Excluir Perfil Sensorial ── */
   const deletarBaseUrl = "{% url 'deletar_avaliacao' 0 %}";
-  function abrirModalDeletar(id) {
-    document.getElementById('formDeletar').action = deletarBaseUrl.replace('/0/', '/' + id + '/');
+  let _deletarUrl, _deletarLinha;
+
+  function abrirModalDeletar(id, btn) {
+    _deletarUrl = deletarBaseUrl.replace('/0/', '/' + id + '/');
+    _deletarLinha = btn.closest('tr');
     document.getElementById('modalDeletar').classList.add('active');
   }
   function fecharModalDeletar() {
     document.getElementById('modalDeletar').classList.remove('active');
   }
+  function confirmarDeletar() {
+    ajaxPost(_deletarUrl).then(data => {
+      fecharModalDeletar();
+      mostrarAlerta(data.message, data.ok ? 'success' : 'error');
+      if (data.ok && _deletarLinha) _deletarLinha.remove();
+    });
+  }
   document.getElementById('modalDeletar').addEventListener('click', function(e) {
     if (e.target === this) fecharModalDeletar();
   });
 
-  /* ── Modal de exclusão — Vineland ── */
+  /* ── Excluir Vineland ── */
   const deletarVinelandBaseUrl = "{% url 'vineland_deletar' 0 %}";
-  function abrirModalDeletarVineland(id) {
-    document.getElementById('formDeletarVineland').action = deletarVinelandBaseUrl.replace('/0/', '/' + id + '/');
+  let _deletarVinelandUrl, _deletarVinelandLinha;
+
+  function abrirModalDeletarVineland(id, btn) {
+    _deletarVinelandUrl = deletarVinelandBaseUrl.replace('/0/', '/' + id + '/');
+    _deletarVinelandLinha = btn.closest('tr');
     document.getElementById('modalDeletarVineland').classList.add('active');
   }
   function fecharModalDeletarVineland() {
     document.getElementById('modalDeletarVineland').classList.remove('active');
   }
+  function confirmarDeletarVineland() {
+    ajaxPost(_deletarVinelandUrl).then(data => {
+      fecharModalDeletarVineland();
+      mostrarAlerta(data.message, data.ok ? 'success' : 'error');
+      if (data.ok && _deletarVinelandLinha) _deletarVinelandLinha.remove();
+    });
+  }
   document.getElementById('modalDeletarVineland').addEventListener('click', function(e) {
     if (e.target === this) fecharModalDeletarVineland();
   });
+
+  /* ── Enviar e-mail ── */
+  function enviarEmail(url, btn) {
+    btn.disabled = true;
+    ajaxPost(url).then(data => {
+      btn.disabled = false;
+      mostrarAlerta(data.message, data.ok ? 'success' : 'error');
+    });
+  }
 
   /* ── Copiar link ── */
   function copiarLink(btn, url) {
@@ -284,7 +363,7 @@
     setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 1500);
   }
 
-  /* fechar qualquer modal com Escape */
+  /* ── Fechar modais com Escape ── */
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       fecharModalEscolha();

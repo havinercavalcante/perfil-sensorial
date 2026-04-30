@@ -61,8 +61,7 @@
       <td style="text-align:center;">{{ p.sens_total|add:p.vinel_total }}</td>
       <td style="text-align:center;">{{ p.sens_conc|add:p.vinel_conc }}</td>
       <td>
-        <a href="{% url 'detalhe_paciente' p.id %}" class="btn btn-sm btn-secondary">Detalhes</a>
-        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.4rem;" onclick="abrirModalAvaliar({{ p.id }}, '{{ p.nome }}')">+ Avaliar</button>
+        <a href="{% url 'detalhe_paciente' p.uuid %}" class="btn btn-sm btn-primary" style="margin-left:.4rem;">Detalhes</a>
       </td>
     </tr>
     {% endfor %}
@@ -135,12 +134,9 @@
 </div>
 
 <script>
-  const baseUrlSensorial = "{% url 'nova_avaliacao' 0 %}";
-  const baseUrlVineland  = "{% url 'nova_avaliacao_vineland' 0 %}";
-
-  function abrirModalAvaliar(id, nome) {
-    document.getElementById('linkSensorial').href = baseUrlSensorial.replace('/0/', '/' + id + '/');
-    document.getElementById('linkVineland').href  = baseUrlVineland.replace('/0/', '/' + id + '/');
+  function abrirModalAvaliar(uuid, nome) {
+    document.getElementById('linkSensorial').href = '/pacientes/' + uuid + '/nova-avaliacao/';
+    document.getElementById('linkVineland').href  = '/pacientes/' + uuid + '/nova-avaliacao-vineland/';
     document.getElementById('modalNomePaciente').textContent = nome;
     document.getElementById('modalAvaliar').classList.add('active');
   }
