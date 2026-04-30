@@ -48,5 +48,9 @@ nginx -t && systemctl restart nginx
 echo "==> Configurando HTTPS com Certbot..."
 certbot --nginx -d cecisys.com -d www.cecisys.com
 
+echo "==> Configurando backup automatico do banco de dados..."
+chmod +x deploy/backup.sh
+bash deploy/backup.sh --install-cron
+
 echo ""
 echo "Deploy concluido! Acesse: https://cecisys.com"
