@@ -10,7 +10,7 @@ def questionario_publico_view(request, token, pagina):
     itens_secao = secao_atual["itens"]
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens_secao)}
 
-    from .data import PERGUNTAS, OPCOES, QUADRANTE
+    from .data import PERGUNTAS, OPCOES, QUADRANTE, calcular_pontuacao
 
     def _build_perguntas(itens, respostas):
         return [
@@ -46,6 +46,21 @@ def questionario_publico_view(request, token, pagina):
             if pagina < TOTAL_PAGINAS:
                 return redirect("questionario_publico", token=token, pagina=pagina+1)
             else:
+                respostas_finais = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+                p = calcular_pontuacao(respostas_finais)
+                avaliacao.pont_auditiva = p.get("auditiva", 0)
+                avaliacao.pont_visual = p.get("visual", 0)
+                avaliacao.pont_tato = p.get("tato", 0)
+                avaliacao.pont_movimento = p.get("movimento", 0)
+                avaliacao.pont_posicao = p.get("posicao", 0)
+                avaliacao.pont_oral = p.get("oral", 0)
+                avaliacao.pont_conduta = p.get("conduta", 0)
+                avaliacao.pont_socioemocional = p.get("socioemocional", 0)
+                avaliacao.pont_atencao = p.get("atencao", 0)
+                avaliacao.pont_ex = p.get("EX", 0)
+                avaliacao.pont_ev = p.get("EV", 0)
+                avaliacao.pont_sn = p.get("SN", 0)
+                avaliacao.pont_ob = p.get("OB", 0)
                 avaliacao.status = "concluida"
                 avaliacao.save()
                 return render(request, "questionario/concluido.html")
@@ -214,26 +229,32 @@ def novo_paciente(request):
             responsavel=responsavel, email_responsavel=email, telefone=telefone,
         )
         messages.success(request, "Paciente cadastrado com sucesso.")
-        return redirect("detalhe_paciente", paciente_id=paciente.id)
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
     return render(request, "questionario/novo_paciente.html")
 
 
 @login_required
 def nova_avaliacao(request, paciente_id):
-    paciente = get_object_or_404(Paciente, id=paciente_id, medico=request.user)
-    avaliacao = Avaliacao.objects.create(paciente=paciente, token=uuid.uuid4().hex)
+    from django.http import JsonResponse
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    avaliacao = Avaliacao.objects.create(paciente=paciente, token=str(uuid.uuid4()))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "id": avaliacao.id})
     return redirect("questionario", avaliacao_id=avaliacao.id, pagina=1)
 
 
 @login_required
 def deletar_avaliacao(request, avaliacao_id):
+    from django.http import JsonResponse
     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
-    paciente_id = avaliacao.paciente_id
+    paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "message": "Avaliação excluída com sucesso."})
         messages.success(request, "Avaliação excluída com sucesso.")
-    return redirect("detalhe_paciente", paciente_id=paciente_id)
+    return redirect("detalhe_paciente", paciente_id=paciente_uuid)
 
 
 @login_required
@@ -243,9 +264,13 @@ def enviar_email_link(request, avaliacao_id):
     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if not email_dest:
+        if is_ajax:
+            from django.http import JsonResponse
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
         messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
-        return redirect("detalhe_paciente", paciente_id=paciente.id)
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     link = request.build_absolute_uri(f"/questionario/publico/{avaliacao.token}/1/")
     html = render_to_string("questionario/email_link_avaliacao.html", {
         "paciente": paciente, "link": link,
@@ -258,8 +283,11 @@ def enviar_email_link(request, avaliacao_id):
         html_message=html,
         fail_silently=False,
     )
+    if is_ajax:
+        from django.http import JsonResponse
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
     messages.success(request, f"E-mail enviado para {email_dest}.")
-    return redirect("detalhe_paciente", paciente_id=paciente.id)
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
 
 @login_required
@@ -286,11 +314,11 @@ def lista_pacientes(request):
 
 @login_required
 def detalhe_paciente(request, paciente_id):
-    paciente = get_object_or_404(Paciente, id=paciente_id, medico=request.user)
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
     avaliacoes = []
     for av in paciente.avaliacoes.all():
         if not av.token and av.status != "concluida":
-            av.token = uuid.uuid4().hex
+            av.token = str(uuid.uuid4())
             av.save(update_fields=["token"])
         link_publico = None
         if av.token and av.status != "concluida":
@@ -466,8 +494,11 @@ VINELAND_TOTAL_PAGINAS = len(VINELAND_GRUPOS)
 
 @login_required
 def nova_avaliacao_vineland(request, paciente_id):
-    paciente = get_object_or_404(Paciente, id=paciente_id, medico=request.user)
-    av = AvaliacaoVineland.objects.create(paciente=paciente, token=uuid.uuid4().hex)
+    from django.http import JsonResponse
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    av = AvaliacaoVineland.objects.create(paciente=paciente, token=str(uuid.uuid4()))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "id": av.id})
     return redirect("vineland_form", avaliacao_id=av.id, pagina=1)
 
 
@@ -643,12 +674,15 @@ def vineland_resultado(request, avaliacao_id):
 
 @login_required
 def vineland_deletar(request, avaliacao_id):
+    from django.http import JsonResponse
     avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
-    paciente_id = avaliacao.paciente_id
+    paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "message": "Avaliação Vineland excluída com sucesso."})
         messages.success(request, "Avaliação Vineland excluída com sucesso.")
-    return redirect("detalhe_paciente", paciente_id=paciente_id)
+    return redirect("detalhe_paciente", paciente_id=paciente_uuid)
 
 
 def vineland_publico_view(request, token, pagina):
@@ -736,9 +770,13 @@ def enviar_email_link_vineland(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
+    from django.http import JsonResponse
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if not email_dest:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
         messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
-        return redirect("detalhe_paciente", paciente_id=paciente.id)
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     link = request.build_absolute_uri(f"/vineland/publico/{avaliacao.token}/1/")
     send_mail(
         subject="Escala Vineland — CeciSys",
@@ -747,5 +785,7 @@ def enviar_email_link_vineland(request, avaliacao_id):
         recipient_list=[email_dest],
         fail_silently=False,
     )
+    if is_ajax:
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
     messages.success(request, f"E-mail enviado para {email_dest}.")
-    return redirect("detalhe_paciente", paciente_id=paciente.id)
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)

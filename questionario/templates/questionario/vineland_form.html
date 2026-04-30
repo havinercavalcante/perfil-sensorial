@@ -208,7 +208,7 @@
         <a href="{% url 'vineland_form' avaliacao.id pagina_anterior %}" class="btn btn-secondary">← Anterior</a>
         {% endif %}
       {% elif not publico %}
-      <a href="{% url 'detalhe_paciente' avaliacao.paciente.id %}" class="btn btn-secondary">← Paciente</a>
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Paciente</a>
       {% endif %}
     </div>
     <button type="submit" class="btn btn-primary">
