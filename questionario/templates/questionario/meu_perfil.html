@@ -12,7 +12,7 @@
     <div style="font-size:1.2rem; font-weight:700; color:var(--primary-dark);">{{ user.get_full_name|default:user.username }}</div>
     <div style="color:var(--text-muted); font-size:.9rem;">
       {% if perfil.especialidade %}{{ perfil.especialidade }}{% endif %}
-      {% if perfil.crm %} · CRM {{ perfil.crm }}{% endif %}
+      {% if perfil.registro_profissional %} · {{ perfil.registro_profissional }}{% endif %}
     </div>
     <div style="margin-top:1rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
       <div style="background:var(--bg); border-radius:8px; padding:.5rem 1.2rem; text-align:center;">
@@ -32,8 +32,8 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>CRM</label>
-          <input type="text" name="crm" value="{{ perfil.crm }}">
+          <label>Registro Profissional</label>
+          <input type="text" name="registro_profissional" value="{{ perfil.registro_profissional }}" placeholder="CRM, CRP, CREFITO... 00000/UF">
         </div>
         <div class="form-group">
           <label>Especialidade</label>
