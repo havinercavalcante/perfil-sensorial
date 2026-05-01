@@ -27,4 +27,4 @@ class AvaliacaoAdmin(admin.ModelAdmin):
 
 @admin.register(PerfilMedico)
 class PerfilMedicoAdmin(admin.ModelAdmin):
-    list_display = ["user", "crm", "especialidade", "telefone"]
+    list_display = ["user", "registro_profissional", "especialidade", "telefone"]

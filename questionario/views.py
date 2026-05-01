@@ -121,7 +121,7 @@ def registrar_view(request):
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
-        crm = request.POST.get("crm", "").strip()
+        registro_profissional = request.POST.get("registro_profissional", "").strip()
         especialidade = request.POST.get("especialidade", "").strip()
         telefone = request.POST.get("telefone", "").strip()
 
@@ -147,7 +147,7 @@ def registrar_view(request):
             username=username, email=email, password=password,
             first_name=partes[0], last_name=partes[1] if len(partes) > 1 else ""
         )
-        PerfilMedico.objects.create(user=user, crm=crm, especialidade=especialidade, telefone=telefone)
+        PerfilMedico.objects.create(user=user, registro_profissional=registro_profissional, especialidade=especialidade, telefone=telefone)
         login(request, user)
         messages.success(request, f"Bem-vindo(a), {user.first_name}! Conta criada com sucesso.")
         return redirect("index")
@@ -165,7 +165,7 @@ def meu_perfil(request):
         u.last_name = nome[1] if len(nome) > 1 else ""
         u.email = request.POST.get("email", "").strip()
         u.save()
-        perfil.crm = request.POST.get("crm", "").strip()
+        perfil.registro_profissional = request.POST.get("registro_profissional", "").strip()
         perfil.especialidade = request.POST.get("especialidade", "").strip()
         perfil.telefone = request.POST.get("telefone", "").strip()
         perfil.save()

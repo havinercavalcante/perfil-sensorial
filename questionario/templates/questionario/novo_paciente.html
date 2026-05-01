@@ -14,8 +14,8 @@
   <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;">👥 Dados do Paciente</h2>
   <div class="card">
     {% if link %}
-      <div class="alert alert-success" style="margin-bottom:1.5rem;">
-        <strong>Link gerado para envio ao responsável:</strong><br>
+      <div style="margin-bottom:1.5rem; padding:1.1rem 1.2rem; border-radius:10px; background:#D1FAE5; border-left:4px solid #10B981;">
+        <strong style="color:#065F46;">Link gerado para envio ao responsável:</strong><br>
         <input id="linkInput" type="text" value="{{ link }}" readonly style="width:100%;margin-top:0.5rem;">
         <div style="margin:0.7rem 0 0.3rem 0; display:flex; gap:0.7rem; flex-wrap:wrap;">
           <button type="button" class="btn btn-success" onclick="copiarLinkNovo()">
@@ -32,7 +32,7 @@
           <span style="font-size:.83rem;color:var(--text-muted);align-self:center;">Nenhum e-mail cadastrado para o responsável.</span>
           {% endif %}
         </div>
-        <small>Copie ou envie este link para o responsável responder o questionário.</small>
+        <small style="color:#065F46;">Copie ou envie este link para o responsável responder o questionário.</small>
       </div>
       <script>
         function copiarLinkNovo() {
