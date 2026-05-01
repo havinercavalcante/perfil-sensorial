@@ -41,7 +41,7 @@
     Olá, {{ user.get_full_name|default:user.username }}
   </h1>
   <p style="color:var(--text-muted); font-size:.9rem;">
-    {% if user.perfil.especialidade %}{{ user.perfil.especialidade }}{% if user.perfil.crm %} · CRM {{ user.perfil.crm }}{% endif %}{% endif %}
+    {% if user.perfil.especialidade %}{{ user.perfil.especialidade }}{% if user.perfil.registro_profissional %} · {{ user.perfil.registro_profissional }}{% endif %}{% endif %}
   </p>
 </div>
 
