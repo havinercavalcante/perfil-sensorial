@@ -40,21 +40,6 @@
   .escolha-card.sensorial { --qc: var(--primary); }
   .escolha-card.vineland  { --qc: #3E73D1; }
 
-  /* ── Toast ── */
-  #toast {
-    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000;
-    color: #fff; padding: .85rem 1.4rem; border-radius: 10px;
-    font-size: .88rem; font-weight: 500;
-    box-shadow: 0 6px 24px rgba(0,0,0,.18);
-    display: flex; align-items: center; gap: .6rem;
-    opacity: 0; transform: translateY(12px);
-    transition: opacity .25s, transform .25s;
-    pointer-events: none;
-  }
-  #toast.visible { opacity: 1; transform: translateY(0); }
-  #toast.success { background: #065F46; }
-  #toast.error   { background: #991B1B; }
-
   /* ── Tabelas ── */
   @media (max-width: 600px) {
     .btn-nova-avaliacao { width: 100%; justify-content: center; }
@@ -243,24 +228,8 @@
 </div>
 
 
-<div id="toast">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-  <span id="toast-texto"></span>
-</div>
-
 <script>
   const csrfToken = '{{ csrf_token }}';
-
-  /* ── Toast ── */
-  let _toastTimer;
-  function mostrarAlerta(texto, tipo) {
-    const el = document.getElementById('toast');
-    document.getElementById('toast-texto').textContent = texto;
-    el.className = tipo === 'error' ? 'error' : 'success';
-    el.classList.add('visible');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => el.classList.remove('visible'), 3000);
-  }
 
   /* ── Fetch AJAX helper ── */
   function ajaxPost(url) {
@@ -282,7 +251,7 @@
       .then(data => {
         if (data.ok) {
           fecharModalEscolha();
-          mostrarAlerta('Avaliação ' + label + ' criada com sucesso.');
+          mostrarAlerta('Avaliação ' + label + ' criada com sucesso.', 'success');
           setTimeout(() => location.reload(), 1800);
         }
       });

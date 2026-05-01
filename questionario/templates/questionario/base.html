@@ -74,6 +74,21 @@
   .alert-warning { background: #FEF3C7; color: #92400E; border-left: 4px solid #F59E0B; }
   .alert-success { background: #D1FAE5; color: #065F46; border-left: 4px solid #10B981; }
 
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000;
+    color: #fff; padding: .85rem 1.4rem; border-radius: 10px;
+    font-size: .88rem; font-weight: 500;
+    box-shadow: 0 6px 24px rgba(0,0,0,.18);
+    display: flex; align-items: center; gap: .6rem;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none; max-width: 340px;
+  }
+  #toast.visible { opacity: 1; transform: translateY(0); }
+  #toast.success { background: #065F46; }
+  #toast.error   { background: #991B1B; }
+  #toast.warning { background: #92400E; }
+
   .form-group { margin-bottom: 1.1rem; }
   label { display: block; font-size: .85rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
   input[type=text], input[type=email], input[type=date], input[type=tel], input[type=password], select, textarea {
@@ -220,13 +235,34 @@
 
 <main>
   {% block back_button %}{% endblock %}
-  {% for msg in messages %}
-  <div class="alert alert-{{ msg.tags|default:'error' }}">{{ msg }}</div>
-  {% endfor %}
+  {% if messages %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      {% for msg in messages %}
+      mostrarAlerta("{{ msg|escapejs }}", "{{ msg.tags|default:'error' }}");
+      {% endfor %}
+    });
+  </script>
+  {% endif %}
   {% block content %}{% endblock %}
 </main>
 
+<div id="toast">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-texto"></span>
+</div>
+
 <script>
+let _toastTimer;
+function mostrarAlerta(texto, tipo) {
+  tipo = tipo || 'success';
+  const el = document.getElementById('toast');
+  document.getElementById('toast-texto').textContent = texto;
+  el.className = (tipo === 'error' || tipo.includes('error')) ? 'error' : (tipo === 'warning' || tipo.includes('warning')) ? 'warning' : 'success';
+  el.classList.add('visible');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('visible'), 4000);
+}
 function toggleDropdown() {
   document.getElementById('dropdown').classList.toggle('open');
 }

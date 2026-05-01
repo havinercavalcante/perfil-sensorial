@@ -6,14 +6,14 @@ from django.utils import timezone
 
 class PerfilMedico(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")
-    crm = models.CharField("CRM", max_length=20, blank=True)
+    registro_profissional = models.CharField("Registro Profissional", max_length=30, blank=True)
     especialidade = models.CharField("Especialidade", max_length=100, blank=True)
     telefone = models.CharField("Telefone", max_length=20, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Perfil do Médico"
-        verbose_name_plural = "Perfis dos Médicos"
+        verbose_name = "Perfil do Profissional"
+        verbose_name_plural = "Perfis dos Profissionais"
 
     def __str__(self):
         return f"Dr(a). {self.user.get_full_name() or self.user.username}"
