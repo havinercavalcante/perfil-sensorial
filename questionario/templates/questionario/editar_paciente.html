@@ -1,0 +1,47 @@
+{% extends "questionario/base.html" %}
+{% block title %}Editar Paciente — {{ paciente.nome }}{% endblock %}
+{% block extra_css %}
+<style>
+  @media (max-width: 600px) {
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; justify-content: center; }
+  }
+</style>
+{% endblock %}
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+{% block content %}
+<div style="max-width:600px; margin:0 auto;">
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;">✏️ Editar Dados do Paciente</h2>
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Nome completo da criança *</label>
+        <input type="text" name="nome" value="{{ post.nome|default:paciente.nome }}" required placeholder="Nome da criança">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data de nascimento *</label>
+          <input type="date" name="data_nascimento" value="{{ post.data_nascimento|default:paciente.data_nascimento|date:'Y-m-d' }}" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="tel" name="telefone" value="{{ post.telefone|default:paciente.telefone }}" placeholder="(00) 00000-0000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nome do responsável *</label>
+        <input type="text" name="responsavel" value="{{ post.responsavel|default:paciente.responsavel }}" required placeholder="Nome do pai/mãe/responsável">
+      </div>
+      <div class="form-group">
+        <label>E-mail do responsável</label>
+        <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:paciente.email_responsavel }}" placeholder="email@exemplo.com">
+      </div>
+      <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+        <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

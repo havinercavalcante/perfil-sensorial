@@ -1,0 +1,174 @@
+{% extends "questionario/base.html" %}
+{% block title %}Questionário Escolar — {{ secao.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --escolar: #E67E22;
+    --escolar-dark: #B8620F;
+  }
+  .progress-header { margin-bottom: 1.5rem; }
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-muted); margin-bottom: .4rem; }
+  .steps-bar { display: flex; gap: 3px; margin-top: .6rem; flex-wrap: wrap; }
+  .step-dot { height: 6px; flex: 1; min-width: 14px; border-radius: 3px; background: var(--border); }
+  .step-dot.done   { background: var(--escolar); }
+  .step-dot.active { background: color-mix(in srgb, var(--escolar) 55%, #fff); }
+
+  .secao-header {
+    background: linear-gradient(135deg, #7D3A00, #E67E22);
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .secao-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .2rem; }
+  .secao-header p  { font-size: .82rem; opacity: .8; }
+
+  .instrucoes {
+    background: #FFF8F0; border: 1px solid #F5CBA7;
+    border-radius: 10px; padding: .75rem 1rem; margin-bottom: 1.2rem;
+  }
+  .instrucoes-titulo { display: block; font-weight: 700; margin-bottom: .5rem; color: #7D3A00; font-size: .85rem; }
+  .instrucoes-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .instrucao-chip {
+    display: inline-flex; align-items: center;
+    padding: .3rem .75rem; border-radius: 20px;
+    font-size: .78rem; font-weight: 600;
+    background: linear-gradient(135deg, #7D3A00, #E67E22); color: #fff;
+  }
+
+  .pergunta-card {
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1.1rem 1.2rem; margin-bottom: .9rem; background: #fff;
+    transition: border-color .2s, background .2s;
+  }
+  .pergunta-card.respondida {
+    border-color: var(--escolar);
+    background: color-mix(in srgb, var(--escolar) 6%, #fff);
+  }
+  .pergunta-meta { display: flex; align-items: center; gap: .45rem; margin-bottom: .5rem; }
+  .pergunta-num  { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+  .pergunta-texto { font-size: .91rem; color: var(--text); line-height: 1.55; margin-bottom: 1rem; }
+
+  .opcoes-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem;
+  }
+  .opcao-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .15rem; cursor: pointer; padding: .6rem .2rem; border-radius: 9px;
+    border: 1.5px solid var(--border); background: #fff;
+    transition: all .15s; font-size: .72rem; text-align: center; line-height: 1.2;
+    user-select: none;
+  }
+  .opcao-label:hover { border-color: var(--escolar); background: color-mix(in srgb, var(--escolar) 10%, #fff); }
+  .opcao-label input { display: none; }
+  .opcao-label.selected { border-color: var(--escolar); background: var(--escolar); color: #fff; font-weight: 700; }
+  .opcao-num { font-size: 1.1rem; font-weight: 800; }
+
+  .nav-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem;
+    padding-top: 1rem; border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .opcoes-grid { grid-template-columns: repeat(3, 1fr); }
+    .secao-header { padding: .9rem 1rem; }
+    .pergunta-card { padding: .9rem 1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Progresso -->
+<div class="progress-header">
+  <div class="progress-info">
+    <span>Seção {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%; background:var(--escolar);"></div>
+  </div>
+  <div class="steps-bar">
+    {% for i, nome in paginas_secoes %}
+    <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Cabeçalho da seção -->
+<div class="secao-header">
+  <h2>📋 {{ secao.nome }}</h2>
+  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens nesta seção</p>
+</div>
+
+<!-- Instrução -->
+<div class="instrucoes">
+  <span class="instrucoes-titulo">📋 Instruções: Com que frequência o aluno apresenta o comportamento descrito?</span>
+  <div class="instrucoes-chips">
+    {% for val, label in opcoes %}
+    <span class="instrucao-chip"><b>{{ val }}</b>&nbsp;— {{ label }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post" id="form-escolar">
+  {% csrf_token %}
+  {% for p in perguntas %}
+  <div class="pergunta-card{% if p.resposta_salva is not None %} respondida{% endif %}" id="card-{{ p.numero }}">
+    <div class="pergunta-meta">
+      <span class="pergunta-num">Item {{ p.numero }}</span>
+    </div>
+    <div class="pergunta-texto">{{ p.texto }}</div>
+    <div class="opcoes-grid">
+      {% for val, label in opcoes %}
+      <label class="opcao-label {% if p.resposta_salva == val %}selected{% endif %}"
+             id="label-{{ p.numero }}-{{ val }}">
+        <input type="radio" name="item_{{ p.numero }}" value="{{ val }}"
+               {% if p.resposta_salva == val %}checked{% endif %}
+               onchange="marcarRespondida({{ p.numero }}, this)">
+        <span class="opcao-num">{{ val }}</span>
+        <span>{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div>
+      {% if pagina_anterior %}
+      <a href="{% url 'escolar_form' avaliacao.id pagina_anterior %}" class="btn btn-secondary">← Anterior</a>
+      {% else %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Paciente</a>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary" style="background:var(--escolar); border-color:var(--escolar);">
+      {% if pagina == total %}✅ Concluir Questionário{% else %}Próxima Seção →{% endif %}
+    </button>
+  </div>
+</form>
+
+<script>
+function marcarRespondida(num, input) {
+  const card = document.getElementById('card-' + num);
+  if (!card) return;
+  card.classList.add('respondida');
+  card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
+  input.closest('.opcao-label').classList.add('selected');
+}
+
+document.getElementById('form-escolar').addEventListener('submit', function(e) {
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+  if (faltando.length > 0) {
+    e.preventDefault();
+    const card = document.getElementById('card-' + faltando[0]);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.borderColor = '#EF4444';
+      card.style.background = '#FFF5F5';
+    }
+    alert(`Responda todos os itens antes de continuar.\nItens sem resposta: ${faltando.join(', ')}`);
+  }
+});
+</script>
+{% endblock %}

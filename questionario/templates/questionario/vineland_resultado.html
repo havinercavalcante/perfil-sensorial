@@ -81,8 +81,18 @@
   @media (max-width: 480px) {
     .cat-grid { grid-template-columns: repeat(2, 1fr); }
   }
+  @media print {
+    nav, .btn-back, .no-print, .is-form form button { display: none !important; }
+    body { background: #fff; }
+    main { max-width: 100%; padding: 1rem; }
+    .card, .qs-section { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    .resultado-header { background: #0F274F !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cat-sigla { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 {% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
 
 {% block content %}
 
@@ -94,6 +104,9 @@
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        🖨️ Exportar PDF
+      </button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
   </div>
@@ -213,5 +226,41 @@
     (−) Não, nunca / NTO / NS = 0 pt
   </p>
 </div>
+
+<!-- OBSERVAÇÕES CLÍNICAS -->
+<div class="card">
+  <div class="card-title">📝 Observações Clínicas</div>
+  <form id="formObsVin" method="post" action="{% url 'salvar_observacoes_vineland' avaliacao.id %}">
+    {% csrf_token %}
+    <div class="form-group" style="margin-bottom:.75rem;">
+      <textarea name="observacoes" id="obsVinTextarea" rows="5"
+        placeholder="Registre aqui suas observações clínicas, interpretação do QS e recomendações..."
+        style="resize:vertical;">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" onclick="salvarObsVin()">
+        💾 Salvar Observações
+      </button>
+      <span id="obs-vin-status" style="font-size:.82rem; color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+<script>
+function salvarObsVin() {
+  const form = document.getElementById('formObsVin');
+  const status = document.getElementById('obs-vin-status');
+  const data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
 
 {% endblock %}
