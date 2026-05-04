@@ -1,0 +1,192 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado PEDI — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --pedi: #16A085; --pedi-dark: #0E6655; }
+  .resultado-header {
+    background: linear-gradient(135deg, #0E6655, #16A085);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.35rem; margin-bottom: .3rem; }
+  .resultado-header p  { opacity: .85; font-size: .9rem; }
+
+  .seccao-titulo {
+    font-size: .95rem; font-weight: 700; color: var(--pedi-dark);
+    padding: .6rem 1rem; border-left: 4px solid var(--pedi);
+    background: #E8F8F5; border-radius: 0 8px 8px 0; margin-bottom: 1rem;
+  }
+
+  .dominios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .dominio-card { border-radius: 10px; padding: 1rem; border: 1.5px solid var(--border); background: #fff; }
+  .dom-nome  { font-size: .78rem; font-weight: 700; color: var(--text-muted); margin-bottom: .25rem; }
+  .dom-raw   { font-size: .8rem; color: var(--text-muted); }
+  .dom-escala{ font-size: 1.8rem; font-weight: 800; color: var(--pedi-dark); }
+  .dom-bar   { margin-top: .5rem; }
+
+  @media (max-width: 700px) {
+    .dominios-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    nav, .btn-back, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+    .resultado-header { background: #0E6655 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1>♿ PEDI — {{ paciente.nome }}</h1>
+      <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <a href="{% url 'pedi_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">✏️ Editar</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">🖨️ Exportar PDF</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- FS -->
+<div class="card">
+  <div class="seccao-titulo">🎯 Habilidades Funcionais (FS)</div>
+  <div class="dominios-grid">
+    {% for d in dominios_fs %}
+    <div class="dominio-card">
+      <div class="dom-nome">{{ d.nome }}</div>
+      {% if d.raw is not None %}
+      <div class="dom-escala">{% if d.escala is not None %}{{ d.escala|floatformat:1 }}{% else %}—{% endif %}</div>
+      <div class="dom-raw">Bruto: {{ d.raw }} / {{ d.max }}</div>
+      {% if d.escala is not None %}
+      <div class="dom-bar">
+        <div class="progress-bar-wrap" style="height:6px;">
+          <div class="progress-bar-fill" style="width:{{ d.escala|floatformat:0 }}%; background:var(--pedi);"></div>
+        </div>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="dom-escala" style="color:var(--text-muted);">—</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- CA -->
+<div class="card">
+  <div class="seccao-titulo">🤝 Assistência do Cuidador (CA)</div>
+  <div class="dominios-grid">
+    {% for d in dominios_ca %}
+    <div class="dominio-card">
+      <div class="dom-nome">{{ d.nome }}</div>
+      {% if d.raw is not None %}
+      <div class="dom-escala">{% if d.escala is not None %}{{ d.escala|floatformat:1 }}{% else %}—{% endif %}</div>
+      <div class="dom-raw">Bruto: {{ d.raw }} / {{ d.max }}</div>
+      {% if d.escala is not None %}
+      <div class="dom-bar">
+        <div class="progress-bar-wrap" style="height:6px;">
+          <div class="progress-bar-fill" style="width:{{ d.escala|floatformat:0 }}%; background:#16A085CC;"></div>
+        </div>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="dom-escala" style="color:var(--text-muted);">—</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Gráfico -->
+<div class="card">
+  <div class="card-title">📈 Comparativo FS vs CA por Domínio</div>
+  <canvas id="chartPEDI" height="120"></canvas>
+</div>
+
+<!-- Legenda -->
+<div class="card" style="font-size:.85rem;">
+  <div class="card-title">📖 Interpretação</div>
+  <p style="color:var(--text-muted); line-height:1.6;">
+    <strong>FS (Habilidades Funcionais):</strong> Avalia o repertório de habilidades funcionais em três domínios.<br>
+    <strong>CA (Assistência do Cuidador):</strong> Avalia o nível de ajuda fornecida pelo cuidador (0=dependência total, máx=independência).<br>
+    <strong>Escala 0–100:</strong> Calculada por aproximação (pontuação bruta ÷ máximo × 100).
+  </p>
+</div>
+
+<!-- Observações clínicas -->
+<div class="card">
+  <div class="card-title">📝 Observações Clínicas</div>
+  <form id="formObsPEDI" method="post" action="{% url 'salvar_observacoes_pedi' avaliacao.id %}">
+    {% csrf_token %}
+    <div class="form-group" style="margin-bottom:.75rem;">
+      <textarea name="observacoes" rows="5" placeholder="Registre observações clínicas e recomendações..."
+        style="resize:vertical;">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" style="background:var(--pedi);border-color:var(--pedi);"
+              onclick="salvarObs()">💾 Salvar Observações</button>
+      <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const dados = {{ chart_json|safe }};
+new Chart(document.getElementById('chartPEDI'), {
+  type: 'bar',
+  data: {
+    labels: dados.labels,
+    datasets: [
+      {
+        label: 'FS — Habilidades Funcionais',
+        data: dados.fs,
+        backgroundColor: '#16A085CC',
+        borderColor: '#16A085',
+        borderWidth: 1.5,
+        borderRadius: 5,
+      },
+      {
+        label: 'CA — Assistência do Cuidador',
+        data: dados.ca,
+        backgroundColor: '#1ABC9CCC',
+        borderColor: '#1ABC9C',
+        borderWidth: 1.5,
+        borderRadius: 5,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+    },
+    plugins: {
+      legend: { position: 'top' },
+    },
+  },
+});
+
+function salvarObs() {
+  const form = document.getElementById('formObsPEDI');
+  const status = document.getElementById('obs-status');
+  const data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
+{% endblock %}

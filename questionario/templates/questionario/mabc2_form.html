@@ -1,0 +1,158 @@
+{% extends "questionario/base.html" %}
+{% block title %}MABC-2 — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --mabc: #8E44AD; --mabc-dark: #5B2C6F; }
+  .form-header {
+    background: linear-gradient(135deg, #5B2C6F, #8E44AD);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.25rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .9rem; }
+
+  .componente-card {
+    border: 1.5px solid var(--border); border-radius: 10px; padding: 1.1rem 1.2rem;
+    background: #fff; margin-bottom: 1rem;
+  }
+  .componente-titulo { font-weight: 700; color: var(--mabc-dark); margin-bottom: .75rem; font-size: .95rem; }
+  .tarefas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; }
+  .tarefa-label { font-size: .82rem; font-weight: 600; color: var(--text); display: block; margin-bottom: .3rem; }
+  .escore-destacado { margin-top: .75rem; padding-top: .75rem; border-top: 1px solid var(--border); }
+  .escore-destacado label { font-weight: 700; font-size: .88rem; color: var(--mabc); }
+  .escore-destacado input { font-size: 1.15rem; font-weight: 700; max-width: 120px; }
+
+  .info-box {
+    background: #F3E8FF; border: 1px solid #D8B4FE; border-radius: 10px;
+    padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: .85rem; color: #5B2C6F;
+  }
+  .info-box strong { display: block; margin-bottom: .3rem; }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="form-header">
+  <h1>🎯 MABC-2 — Movement Assessment Battery for Children</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
+</div>
+
+<div class="info-box">
+  <strong>Instruções:</strong>
+  Insira os escores brutos (tempos, contagens) e os escores padrão correspondentes conforme o manual do MABC-2.
+  Os escores padrão (1–19) são obtidos nas tabelas normativas por faixa etária.
+  O sistema calculará o escore total e o percentil estimado.
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <!-- Faixa etária -->
+  <div class="card">
+    <div class="card-title">📅 Faixa Etária</div>
+    <div class="form-group" style="max-width:280px;">
+      <select name="faixa_etaria" class="form-control">
+        {% for val, label in faixa_choices %}
+        <option value="{{ val }}" {% if avaliacao.faixa_etaria == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Destreza Manual -->
+  <div class="componente-card">
+    <div class="componente-titulo">✋ Destreza Manual (DM)</div>
+    <div class="tarefas-grid">
+      <div>
+        <label class="tarefa-label" for="md1_raw">DM1 — Encaixar Pinos (seg.)</label>
+        <input type="number" step="0.1" id="md1_raw" name="md1_raw" min="0"
+               value="{% if avaliacao.md1_raw %}{{ avaliacao.md1_raw }}{% endif %}"
+               placeholder="Segundos" class="form-control">
+      </div>
+      <div>
+        <label class="tarefa-label" for="md2_raw">DM2 — Enfiar Cordão (seg.)</label>
+        <input type="number" step="0.1" id="md2_raw" name="md2_raw" min="0"
+               value="{% if avaliacao.md2_raw %}{{ avaliacao.md2_raw }}{% endif %}"
+               placeholder="Segundos" class="form-control">
+      </div>
+      <div>
+        <label class="tarefa-label" for="md3_raw">DM3 — Trilha de Bicicleta (erros)</label>
+        <input type="number" step="0.1" id="md3_raw" name="md3_raw" min="0"
+               value="{% if avaliacao.md3_raw %}{{ avaliacao.md3_raw }}{% endif %}"
+               placeholder="Erros/seg." class="form-control">
+      </div>
+    </div>
+    <div class="escore-destacado">
+      <label for="md_escore">Escore Padrão DM (1–19):</label>
+      <input type="number" id="md_escore" name="md_escore" min="1" max="19"
+             value="{% if avaliacao.md_escore %}{{ avaliacao.md_escore }}{% endif %}"
+             placeholder="1–19" class="form-control">
+    </div>
+  </div>
+
+  <!-- Arremesso / Recepção -->
+  <div class="componente-card">
+    <div class="componente-titulo">⚽ Arremesso e Recepção (AR)</div>
+    <div class="tarefas-grid">
+      <div>
+        <label class="tarefa-label" for="ac1_raw">AR1 — Arremessar saco de feijão (acertos)</label>
+        <input type="number" step="0.1" id="ac1_raw" name="ac1_raw" min="0"
+               value="{% if avaliacao.ac1_raw %}{{ avaliacao.ac1_raw }}{% endif %}"
+               placeholder="Acertos" class="form-control">
+      </div>
+      <div>
+        <label class="tarefa-label" for="ac2_raw">AR2 — Pegar bola (acertos)</label>
+        <input type="number" step="0.1" id="ac2_raw" name="ac2_raw" min="0"
+               value="{% if avaliacao.ac2_raw %}{{ avaliacao.ac2_raw }}{% endif %}"
+               placeholder="Acertos" class="form-control">
+      </div>
+    </div>
+    <div class="escore-destacado">
+      <label for="ac_escore">Escore Padrão AR (1–19):</label>
+      <input type="number" id="ac_escore" name="ac_escore" min="1" max="19"
+             value="{% if avaliacao.ac_escore %}{{ avaliacao.ac_escore }}{% endif %}"
+             placeholder="1–19" class="form-control">
+    </div>
+  </div>
+
+  <!-- Equilíbrio -->
+  <div class="componente-card">
+    <div class="componente-titulo">⚖️ Equilíbrio (EQ)</div>
+    <div class="tarefas-grid">
+      <div>
+        <label class="tarefa-label" for="eq1_raw">EQ1 — Equilíbrio estático (seg.)</label>
+        <input type="number" step="0.1" id="eq1_raw" name="eq1_raw" min="0"
+               value="{% if avaliacao.eq1_raw %}{{ avaliacao.eq1_raw }}{% endif %}"
+               placeholder="Segundos" class="form-control">
+      </div>
+      <div>
+        <label class="tarefa-label" for="eq2_raw">EQ2 — Caminhar ponta–calcanhar (erros)</label>
+        <input type="number" step="0.1" id="eq2_raw" name="eq2_raw" min="0"
+               value="{% if avaliacao.eq2_raw %}{{ avaliacao.eq2_raw }}{% endif %}"
+               placeholder="Erros" class="form-control">
+      </div>
+      <div>
+        <label class="tarefa-label" for="eq3_raw">EQ3 — Saltar em quadrados (erros)</label>
+        <input type="number" step="0.1" id="eq3_raw" name="eq3_raw" min="0"
+               value="{% if avaliacao.eq3_raw %}{{ avaliacao.eq3_raw }}{% endif %}"
+               placeholder="Erros" class="form-control">
+      </div>
+    </div>
+    <div class="escore-destacado">
+      <label for="eq_escore">Escore Padrão EQ (1–19):</label>
+      <input type="number" id="eq_escore" name="eq_escore" min="1" max="19"
+             value="{% if avaliacao.eq_escore %}{{ avaliacao.eq_escore }}{% endif %}"
+             placeholder="1–19" class="form-control">
+    </div>
+  </div>
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--mabc); border-color:var(--mabc);">
+      💾 Salvar e Ver Resultado
+    </button>
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

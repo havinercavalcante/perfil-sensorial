@@ -1,0 +1,122 @@
+{% extends "questionario/base.html" %}
+{% block title %}EDM — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --edm: #27AE60; --edm-dark: #1A6B3C; }
+  .form-header {
+    background: linear-gradient(135deg, #1A6B3C, #27AE60);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.25rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .9rem; }
+
+  .dominios-form-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .dominio-input-card {
+    border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem; background: #fff;
+  }
+  .dominio-input-card label { font-weight: 700; font-size: .88rem; color: var(--text); display: block; margin-bottom: .4rem; }
+  .dominio-input-card small { font-size: .75rem; color: var(--text-muted); display: block; margin-bottom: .5rem; }
+  .dominio-input-card input[type="number"] { font-size: 1.1rem; }
+
+  .info-box {
+    background: #E8F8EE; border: 1px solid #A7DFBE; border-radius: 10px;
+    padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: .85rem; color: #1A6B3C;
+  }
+  .info-box strong { display: block; margin-bottom: .3rem; }
+
+  @media (max-width: 600px) {
+    .dominios-form-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="form-header">
+  <h1>🏃 EDM — Escala de Desenvolvimento Motor</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
+</div>
+
+<div class="info-box">
+  <strong>Instruções de preenchimento:</strong>
+  Insira a Idade Motora (em meses) para cada domínio conforme os resultados obtidos na aplicação do EDM.
+  O sistema calculará automaticamente a Idade Motora Geral (IMG) e o Quociente Motor (QM).
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="card">
+    <div class="card-title">📐 Idades Motoras por Domínio (em meses)</div>
+    <div class="dominios-form-grid">
+      <div class="dominio-input-card">
+        <label for="motricidade_fina">Motricidade Fina</label>
+        <small>Habilidades manuais finas</small>
+        <input type="number" id="motricidade_fina" name="motricidade_fina" min="0" max="999"
+               value="{% if avaliacao.idade_motricidade_fina %}{{ avaliacao.idade_motricidade_fina }}{% endif %}"
+               placeholder="Meses" class="form-control">
+      </div>
+      <div class="dominio-input-card">
+        <label for="motricidade_ampla">Motricidade Ampla</label>
+        <small>Habilidades motoras globais</small>
+        <input type="number" id="motricidade_ampla" name="motricidade_ampla" min="0" max="999"
+               value="{% if avaliacao.idade_motricidade_ampla %}{{ avaliacao.idade_motricidade_ampla }}{% endif %}"
+               placeholder="Meses" class="form-control">
+      </div>
+      <div class="dominio-input-card">
+        <label for="equilibrio">Equilíbrio</label>
+        <small>Estático e dinâmico</small>
+        <input type="number" id="equilibrio" name="equilibrio" min="0" max="999"
+               value="{% if avaliacao.idade_equilibrio %}{{ avaliacao.idade_equilibrio }}{% endif %}"
+               placeholder="Meses" class="form-control">
+      </div>
+      <div class="dominio-input-card">
+        <label for="esquema_corporal">Esquema Corporal</label>
+        <small>Consciência e imagem corporal</small>
+        <input type="number" id="esquema_corporal" name="esquema_corporal" min="0" max="999"
+               value="{% if avaliacao.idade_esquema_corporal %}{{ avaliacao.idade_esquema_corporal }}{% endif %}"
+               placeholder="Meses" class="form-control">
+      </div>
+      <div class="dominio-input-card">
+        <label for="organizacao_espacial">Organização Espacial</label>
+        <small>Percepção do espaço</small>
+        <input type="number" id="organizacao_espacial" name="organizacao_espacial" min="0" max="999"
+               value="{% if avaliacao.idade_organizacao_espacial %}{{ avaliacao.idade_organizacao_espacial }}{% endif %}"
+               placeholder="Meses" class="form-control">
+      </div>
+      <div class="dominio-input-card">
+        <label for="organizacao_temporal">Organização Temporal</label>
+        <small>Noção de ritmo e tempo</small>
+        <input type="number" id="organizacao_temporal" name="organizacao_temporal" min="0" max="999"
+               value="{% if avaliacao.idade_organizacao_temporal %}{{ avaliacao.idade_organizacao_temporal }}{% endif %}"
+               placeholder="Meses" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 Lateralidade</div>
+    <div class="form-group">
+      <select name="lateralidade" class="form-control" style="max-width:320px;">
+        <option value="">— Selecione —</option>
+        <option value="definida_direita" {% if avaliacao.lateralidade == "definida_direita" %}selected{% endif %}>Definida Direita</option>
+        <option value="definida_esquerda" {% if avaliacao.lateralidade == "definida_esquerda" %}selected{% endif %}>Definida Esquerda</option>
+        <option value="cruzada" {% if avaliacao.lateralidade == "cruzada" %}selected{% endif %}>Cruzada</option>
+        <option value="indefinida" {% if avaliacao.lateralidade == "indefinida" %}selected{% endif %}>Indefinida</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--edm); border-color:var(--edm);">
+      💾 Salvar e Ver Resultado
+    </button>
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
