@@ -7,7 +7,11 @@
   .date-short { display: none; }
   .date-full { display: inline; }
   @media (max-width: 600px) {
-    .stats-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr) !important; gap: .4rem; }
+    .stats-grid .card { padding: .6rem .3rem; }
+    .stats-grid .card > div:first-child { font-size: 1.3rem !important; }
+    .stats-grid .card > div:nth-child(2) { font-size: .68rem !important; }
+    .stats-grid .card > div:nth-child(3) { font-size: .62rem !important; }
     .actions-grid { grid-template-columns: 1fr; }
     .actions-grid .btn-sm { padding: .6rem 1.4rem; font-size: .9rem; width: 100%; justify-content: center; }
     .table-responsive table { font-size: .72rem; }
@@ -45,20 +49,32 @@
   </p>
 </div>
 
-<div class="stats-grid">
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
   <div class="card" style="text-align:center; border-top:4px solid var(--primary); margin-bottom:0;">
-    <div style="font-size:2rem; font-weight:800; color:var(--primary);">{{ pacientes.count }}</div>
+    <div style="font-size:2rem; font-weight:800; color:var(--primary);">{{ total_pacientes }}</div>
     <div style="color:var(--text-muted); font-size:.85rem;">Pacientes</div>
   </div>
   <div class="card" style="text-align:center; border-top:4px solid var(--accent); margin-bottom:0;">
     <div style="font-size:2rem; font-weight:800; color:var(--accent);">{{ total_avaliacoes }}</div>
     <div style="color:var(--text-muted); font-size:.85rem;">Avaliações totais</div>
+    <div style="font-size:.72rem; color:var(--text-muted); margin-top:.2rem;">🧠 {{ total_sens }} &nbsp;·&nbsp; 🧩 {{ total_vinel }}</div>
   </div>
   <div class="card" style="text-align:center; border-top:4px solid #10B981; margin-bottom:0;">
     <div style="font-size:2rem; font-weight:800; color:#10B981;">{{ concluidas }}</div>
     <div style="color:var(--text-muted); font-size:.85rem;">Concluídas</div>
   </div>
+  <div class="card" style="text-align:center; border-top:4px solid #F59E0B; margin-bottom:0;">
+    <div style="font-size:2rem; font-weight:800; color:#F59E0B;">{{ novas_mes }}</div>
+    <div style="color:var(--text-muted); font-size:.85rem;">Novas este mês</div>
+  </div>
 </div>
+
+{% if em_andamento > 0 %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem;">
+  ⏳ Você tem <strong>{{ em_andamento }}</strong> avaliação{{ em_andamento|pluralize:",ões" }} em andamento aguardando conclusão.
+  <a href="{% url 'lista_pacientes' %}" style="color:#92400E; font-weight:600;">Ver pacientes →</a>
+</div>
+{% endif %}
 
 <div class="actions-grid">
   <a href="{% url 'novo_paciente' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
@@ -117,6 +133,28 @@
   <p style="font-size:2rem; margin-bottom:.5rem;">👥</p>
   <p style="color:var(--text-muted); margin-bottom:1.5rem;">Você ainda não tem pacientes cadastrados.</p>
   <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Cadastrar primeiro paciente</a>
+</div>
+{% endif %}
+
+{% if ultimas_avaliacoes %}
+<div class="card">
+  <div class="card-title">✅ Últimas Avaliações Concluídas</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Paciente</th><th>Data</th><th>EX</th><th>EV</th><th>SN</th><th>OB</th><th></th></tr></thead>
+    <tbody>
+    {% for av in ultimas_avaliacoes %}
+    <tr>
+      <td><strong>{{ av.paciente.nome }}</strong></td>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td>{{ av.pont_ex|default:"—" }}</td>
+      <td>{{ av.pont_ev|default:"—" }}</td>
+      <td>{{ av.pont_sn|default:"—" }}</td>
+      <td>{{ av.pont_ob|default:"—" }}</td>
+      <td><a href="{% url 'dashboard' av.id %}" class="btn btn-sm btn-primary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
 </div>
 {% endif %}
 
