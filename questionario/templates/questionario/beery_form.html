@@ -1,0 +1,154 @@
+{% extends "questionario/base.html" %}
+{% block title %}Beery VMI — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --beery: #2980B9; --beery-dark: #1A5276; }
+  .form-header {
+    background: linear-gradient(135deg, #1A5276, #2980B9);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.25rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .9rem; }
+
+  .subteste-card {
+    border: 1.5px solid var(--border); border-radius: 10px; padding: 1.1rem 1.2rem;
+    background: #fff; margin-bottom: 1rem;
+  }
+  .subteste-titulo { font-weight: 700; color: var(--beery-dark); margin-bottom: .75rem; font-size: .95rem; }
+  .subteste-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+  .info-box {
+    background: #EBF5FB; border: 1px solid #AED6F1; border-radius: 10px;
+    padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: .85rem; color: #1A5276;
+  }
+  .info-box strong { display: block; margin-bottom: .3rem; }
+
+  .ref-table { width: 100%; border-collapse: collapse; font-size: .78rem; margin-top: .5rem; }
+  .ref-table th, .ref-table td { padding: .3rem .6rem; border: 1px solid var(--border); text-align: center; }
+  .ref-table th { background: var(--beery); color: #fff; }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="form-header">
+  <h1>👁️ Beery VMI — Desenvolvimento da Integração Visuomotora</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
+</div>
+
+<div class="info-box">
+  <strong>Instruções:</strong>
+  Insira o escore bruto (número de itens corretos) e o escore padrão (obtido nas tabelas do manual) para cada subteste.
+  O sistema calculará o percentil automaticamente com base no escore padrão.
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <!-- Idade -->
+  <div class="card">
+    <div class="card-title">📅 Idade na Aplicação</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem; max-width:360px;">
+      <div class="form-group">
+        <label>Anos</label>
+        <input type="number" name="idade_anos" min="2" max="18"
+               value="{% if avaliacao.idade_anos %}{{ avaliacao.idade_anos }}{% endif %}"
+               placeholder="Ex.: 7" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Meses complementares</label>
+        <input type="number" name="idade_meses" min="0" max="11"
+               value="{% if avaliacao.idade_meses %}{{ avaliacao.idade_meses }}{% endif %}"
+               placeholder="0–11" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- VMI -->
+  <div class="subteste-card">
+    <div class="subteste-titulo">✏️ VMI — Integração Visuomotora</div>
+    <div class="subteste-grid">
+      <div class="form-group">
+        <label>Escore Bruto</label>
+        <input type="number" name="vmi_raw" min="0" max="30"
+               value="{% if avaliacao.vmi_raw %}{{ avaliacao.vmi_raw }}{% endif %}"
+               placeholder="Acertos" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Escore Padrão</label>
+        <input type="number" name="vmi_escore" min="55" max="145"
+               value="{% if avaliacao.vmi_escore %}{{ avaliacao.vmi_escore }}{% endif %}"
+               placeholder="55–145" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- Percepção Visual -->
+  <div class="subteste-card">
+    <div class="subteste-titulo">👁️ VP — Percepção Visual</div>
+    <div class="subteste-grid">
+      <div class="form-group">
+        <label>Escore Bruto</label>
+        <input type="number" name="vp_raw" min="0" max="30"
+               value="{% if avaliacao.vp_raw %}{{ avaliacao.vp_raw }}{% endif %}"
+               placeholder="Acertos" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Escore Padrão</label>
+        <input type="number" name="vp_escore" min="55" max="145"
+               value="{% if avaliacao.vp_escore %}{{ avaliacao.vp_escore }}{% endif %}"
+               placeholder="55–145" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- Coordenação Motora -->
+  <div class="subteste-card">
+    <div class="subteste-titulo">✋ MC — Coordenação Motora</div>
+    <div class="subteste-grid">
+      <div class="form-group">
+        <label>Escore Bruto</label>
+        <input type="number" name="mc_raw" min="0" max="30"
+               value="{% if avaliacao.mc_raw %}{{ avaliacao.mc_raw }}{% endif %}"
+               placeholder="Acertos" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Escore Padrão</label>
+        <input type="number" name="mc_escore" min="55" max="145"
+               value="{% if avaliacao.mc_escore %}{{ avaliacao.mc_escore }}{% endif %}"
+               placeholder="55–145" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela de referência -->
+  <div class="card" style="font-size:.82rem;">
+    <div class="card-title">📖 Tabela de Referência: Escore Padrão → Percentil</div>
+    <div style="overflow-x:auto;">
+      <table class="ref-table">
+        <thead><tr>
+          <th>Escore</th><th>55</th><th>65</th><th>70</th><th>75</th><th>80</th><th>85</th>
+          <th>90</th><th>95</th><th>100</th><th>105</th><th>110</th><th>115</th>
+          <th>120</th><th>125</th><th>130</th><th>135</th><th>140</th>
+        </tr></thead>
+        <tbody><tr>
+          <td><strong>Percentil</strong></td>
+          <td>&lt;1</td><td>1</td><td>2</td><td>5</td><td>9</td><td>16</td>
+          <td>25</td><td>37</td><td>50</td><td>63</td><td>75</td><td>84</td>
+          <td>91</td><td>95</td><td>98</td><td>99</td><td>99,6</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--beery); border-color:var(--beery);">
+      💾 Salvar e Ver Resultado
+    </button>
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

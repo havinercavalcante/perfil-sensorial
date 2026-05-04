@@ -1,0 +1,127 @@
+{% extends "questionario/base.html" %}
+{% block title %}PEDI — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --pedi: #16A085; --pedi-dark: #0E6655; }
+  .form-header {
+    background: linear-gradient(135deg, #0E6655, #16A085);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.25rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .9rem; }
+
+  .seccao-titulo {
+    font-size: 1rem; font-weight: 700; color: var(--pedi-dark);
+    padding: .75rem 1.2rem; border-left: 4px solid var(--pedi);
+    background: #E8F8F5; border-radius: 0 8px 8px 0; margin-bottom: 1rem;
+  }
+  .dominios-pedi-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .dominio-pedi-card {
+    border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem; background: #fff;
+  }
+  .dominio-pedi-card label { font-weight: 700; font-size: .85rem; display: block; margin-bottom: .3rem; }
+  .dominio-pedi-card small { font-size: .73rem; color: var(--text-muted); display: block; margin-bottom: .4rem; }
+
+  .info-box {
+    background: #E8F8F5; border: 1px solid #A2D9CE; border-radius: 10px;
+    padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: .85rem; color: #0E6655;
+  }
+  .info-box strong { display: block; margin-bottom: .3rem; }
+
+  @media (max-width: 700px) {
+    .dominios-pedi-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="form-header">
+  <h1>♿ PEDI — Pediatric Evaluation of Disability Inventory</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
+</div>
+
+<div class="info-box">
+  <strong>Instruções:</strong>
+  Insira as pontuações brutas das escalas de Habilidades Funcionais (FS) e Assistência do Cuidador (CA)
+  para cada domínio. O sistema calculará automaticamente os escores na escala 0–100.
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <!-- Habilidades Funcionais (FS) -->
+  <div class="card">
+    <div class="seccao-titulo">🎯 Habilidades Funcionais (FS)</div>
+    <div class="dominios-pedi-grid">
+      <div class="dominio-pedi-card">
+        <label for="fs_autocuidado">Autocuidado</label>
+        <small>0 a {{ fs_max.autocuidado }} pontos</small>
+        <input type="number" id="fs_autocuidado" name="fs_autocuidado"
+               min="0" max="{{ fs_max.autocuidado }}"
+               value="{% if avaliacao.fs_autocuidado is not None %}{{ avaliacao.fs_autocuidado }}{% endif %}"
+               placeholder="0–{{ fs_max.autocuidado }}" class="form-control">
+      </div>
+      <div class="dominio-pedi-card">
+        <label for="fs_mobilidade">Mobilidade</label>
+        <small>0 a {{ fs_max.mobilidade }} pontos</small>
+        <input type="number" id="fs_mobilidade" name="fs_mobilidade"
+               min="0" max="{{ fs_max.mobilidade }}"
+               value="{% if avaliacao.fs_mobilidade is not None %}{{ avaliacao.fs_mobilidade }}{% endif %}"
+               placeholder="0–{{ fs_max.mobilidade }}" class="form-control">
+      </div>
+      <div class="dominio-pedi-card">
+        <label for="fs_funcao_social">Função Social</label>
+        <small>0 a {{ fs_max.funcao_social }} pontos</small>
+        <input type="number" id="fs_funcao_social" name="fs_funcao_social"
+               min="0" max="{{ fs_max.funcao_social }}"
+               value="{% if avaliacao.fs_funcao_social is not None %}{{ avaliacao.fs_funcao_social }}{% endif %}"
+               placeholder="0–{{ fs_max.funcao_social }}" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- Assistência do Cuidador (CA) -->
+  <div class="card">
+    <div class="seccao-titulo">🤝 Assistência do Cuidador (CA)</div>
+    <div class="dominios-pedi-grid">
+      <div class="dominio-pedi-card">
+        <label for="ca_autocuidado">Autocuidado</label>
+        <small>0 a {{ ca_max.autocuidado }} pontos</small>
+        <input type="number" id="ca_autocuidado" name="ca_autocuidado"
+               min="0" max="{{ ca_max.autocuidado }}"
+               value="{% if avaliacao.ca_autocuidado is not None %}{{ avaliacao.ca_autocuidado }}{% endif %}"
+               placeholder="0–{{ ca_max.autocuidado }}" class="form-control">
+      </div>
+      <div class="dominio-pedi-card">
+        <label for="ca_mobilidade">Mobilidade</label>
+        <small>0 a {{ ca_max.mobilidade }} pontos</small>
+        <input type="number" id="ca_mobilidade" name="ca_mobilidade"
+               min="0" max="{{ ca_max.mobilidade }}"
+               value="{% if avaliacao.ca_mobilidade is not None %}{{ avaliacao.ca_mobilidade }}{% endif %}"
+               placeholder="0–{{ ca_max.mobilidade }}" class="form-control">
+      </div>
+      <div class="dominio-pedi-card">
+        <label for="ca_funcao_social">Função Social</label>
+        <small>0 a {{ ca_max.funcao_social }} pontos</small>
+        <input type="number" id="ca_funcao_social" name="ca_funcao_social"
+               min="0" max="{{ ca_max.funcao_social }}"
+               value="{% if avaliacao.ca_funcao_social is not None %}{{ avaliacao.ca_funcao_social }}{% endif %}"
+               placeholder="0–{{ ca_max.funcao_social }}" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--pedi); border-color:var(--pedi);">
+      💾 Salvar e Ver Resultado
+    </button>
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

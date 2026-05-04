@@ -20,14 +20,15 @@
   .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
 
   /* ── Cards de escolha de questionário ── */
-  .escolha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .escolha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: stretch; }
   .escolha-card {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: .55rem; text-align: center;
-    padding: 1.4rem 1rem; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    gap: .45rem; text-align: center;
+    padding: 1rem .75rem; border-radius: 12px;
     border: 2px solid var(--border); background: #fff;
     cursor: pointer; text-decoration: none;
     transition: border-color .2s, background .2s, transform .15s;
+    height: 100%;
   }
   .escolha-card:hover {
     border-color: var(--qc, var(--primary));
@@ -36,14 +37,32 @@
   }
   .escolha-card .ec-icon { font-size: 2rem; line-height: 1; }
   .escolha-card .ec-titulo { font-size: .88rem; font-weight: 700; color: var(--text); line-height: 1.3; }
-  .escolha-card .ec-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.35; }
+  .escolha-card .ec-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.35; word-break: break-word; }
   .escolha-card.sensorial { --qc: var(--primary); }
   .escolha-card.vineland  { --qc: #3E73D1; }
+  .escolha-card.escolar   { --qc: #E67E22; }
+  .escolha-card.bebe      { --qc: #E91E8C; }
+  .escolha-card.edm       { --qc: #27AE60; }
+  .escolha-card.mabc2     { --qc: #8E44AD; }
+  .escolha-card.beery     { --qc: #2980B9; }
+  .escolha-card.pedi      { --qc: #16A085; }
+  .bebe-faixa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .3rem; }
+  .bebe-faixa-btn {
+    padding: .4rem .5rem; border-radius: 8px; border: 1.5px solid #E91E8C;
+    background: #fff; color: #9C0F5F; font-size: .75rem; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+  }
+  .bebe-faixa-btn:hover { background: #E91E8C; color: #fff; }
 
   /* ── Tabelas ── */
+  .cabecalho-acoes { display: flex; gap: .6rem; flex-wrap: wrap; }
   @media (max-width: 600px) {
+    .cabecalho-acoes { width: 100%; }
+    .cabecalho-acoes .btn { flex: 1 1 0; justify-content: center; }
     .btn-nova-avaliacao { width: 100%; justify-content: center; }
-    .escolha-grid { grid-template-columns: 1fr; }
+    .escolha-grid { grid-template-columns: repeat(2, 1fr); }
+    .ec-titulo { font-size: .75rem !important; }
+    .ec-desc { font-size: .65rem !important; }
     .avaliacoes-table thead { display: none; }
     .avaliacoes-table tr {
       display: flex; flex-direction: row; flex-wrap: wrap;
@@ -68,22 +87,29 @@
     <div>
       <div class="card-title">{{ paciente.nome }}</div>
       <p style="color:var(--text-muted); font-size:.9rem;">
-        📅 {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp;
+        📅 {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos &nbsp;·&nbsp;
         👥 Responsável: {{ paciente.responsavel }}
+        {% if paciente.email_responsavel %} &nbsp;·&nbsp; ✉️ {{ paciente.email_responsavel }}{% endif %}
+        {% if paciente.telefone %} &nbsp;·&nbsp; 📞 {{ paciente.telefone }}{% endif %}
       </p>
     </div>
-    <button type="button" class="btn btn-primary btn-nova-avaliacao" onclick="abrirModalEscolha()">
-      + Nova Avaliação
-    </button>
+    <div class="cabecalho-acoes">
+      <a href="{% url 'editar_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar
+      </a>
+      <button type="button" class="btn btn-primary btn-nova-avaliacao" onclick="abrirModalEscolha()">
+        + Nova Avaliação
+      </button>
+    </div>
   </div>
 </div>
 
 <!-- Perfil Sensorial -->
+{% if avaliacoes %}
 <div class="card">
   <div class="card-title">🧠 Perfil Sensorial</div>
-  {% if avaliacoes %}
   <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Data</th><th>Status</th><th>Link</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes %}
     <tr>
@@ -91,6 +117,13 @@
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
       </span></td>
+      <td style="font-size:.78rem; color:var(--text-muted);">
+        {% if av.obj.email_enviado_em %}
+          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+        {% elif av.obj.status != "concluida" %}
+          —
+        {% endif %}
+      </td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'dashboard' av.obj.id %}" class="btn btn-sm btn-primary">
@@ -118,17 +151,15 @@
     {% endfor %}
     </tbody>
   </table></div>
-  {% else %}
-  <p style="color:var(--text-muted);">Nenhuma avaliação de Perfil Sensorial ainda.</p>
-  {% endif %}
 </div>
+{% endif %}
 
 <!-- Escala Vineland -->
+{% if avaliacoes_vineland %}
 <div class="card">
   <div class="card-title">🧩 Escala Vineland</div>
-  {% if avaliacoes_vineland %}
   <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Data</th><th>Status</th><th>Link</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_vineland %}
     <tr>
@@ -136,6 +167,13 @@
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
       </span></td>
+      <td style="font-size:.78rem; color:var(--text-muted);">
+        {% if av.obj.email_enviado_em %}
+          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+        {% elif av.obj.status != "concluida" %}
+          —
+        {% endif %}
+      </td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'vineland_resultado' av.obj.id %}" class="btn btn-sm btn-primary">
@@ -163,28 +201,266 @@
     {% endfor %}
     </tbody>
   </table></div>
-  {% else %}
-  <p style="color:var(--text-muted);">Nenhuma avaliação Vineland ainda.</p>
-  {% endif %}
 </div>
+{% endif %}
+
+<!-- ══ Seções das novas avaliações (exibidas apenas quando existirem registros) ══ -->
+
+{% if avaliacoes_escolar %}
+<div class="card">
+  <div class="card-title" style="color:#E67E22;">🏫 Questionário Sensorial Escolar</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th>Link</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_escolar %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+      </span></td>
+      <td style="font-size:.78rem; color:var(--text-muted);">
+        {% if av.obj.email_enviado_em %}
+          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+        {% elif av.obj.status != "concluida" %}—{% endif %}
+      </td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'escolar_resultado' av.obj.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
+        </button>
+        {% if av.obj.paciente.email_responsavel %}
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_escolar' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+        </button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'escolar_deletar' av.obj.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_bebe %}
+<div class="card">
+  <div class="card-title" style="color:#E91E8C;">👶 Perfil Sensorial Bebê / Criança Pequena</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Faixa</th><th>Status</th><th>Link</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_bebe %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_faixa_display }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+      </span></td>
+      <td style="font-size:.78rem; color:var(--text-muted);">
+        {% if av.obj.email_enviado_em %}
+          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+        {% elif av.obj.status != "concluida" %}—{% endif %}
+      </td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'bebe_resultado' av.obj.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
+        </button>
+        {% if av.obj.paciente.email_responsavel %}
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_bebe' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+        </button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'bebe_deletar' av.obj.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_edm %}
+<div class="card">
+  <div class="card-title" style="color:#27AE60;">🏃 EDM — Escala de Desenvolvimento Motor</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Quociente Motor</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_edm %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td style="font-size:.85rem;">{% if av.quociente_motor %}{{ av.quociente_motor|floatformat:1 }}{% else %}—{% endif %}</td>
+      <td class="acoes-td">
+        <a href="{% url 'edm_resultado' av.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'edm_deletar' av.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_mabc2 %}
+<div class="card">
+  <div class="card-title" style="color:#8E44AD;">⚽ MABC-2 — Bateria de Avaliação do Movimento</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Faixa</th><th>Percentil</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_mabc2 %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td style="font-size:.8rem; color:var(--text-muted);">{{ av.get_faixa_etaria_display }}</td>
+      <td style="font-size:.85rem;">{% if av.percentil %}≤{{ av.percentil }}%{% else %}—{% endif %}</td>
+      <td class="acoes-td">
+        <a href="{% url 'mabc2_resultado' av.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'mabc2_deletar' av.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_beery %}
+<div class="card">
+  <div class="card-title" style="color:#2980B9;">✏️ Beery VMI — Integração Visomotora</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Escore VMI</th><th>Percentil VMI</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_beery %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td style="font-size:.85rem;">{% if av.vmi_escore %}{{ av.vmi_escore }}{% else %}—{% endif %}</td>
+      <td style="font-size:.85rem;">{% if av.vmi_percentil %}{{ av.vmi_percentil }}%{% else %}—{% endif %}</td>
+      <td class="acoes-td">
+        <a href="{% url 'beery_resultado' av.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'beery_deletar' av.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_pedi %}
+<div class="card">
+  <div class="card-title" style="color:#16A085;">♿ PEDI — Inventário de Avaliação Pediátrica</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>FS Autocuidado</th><th>FS Mobilidade</th><th>FS F. Social</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_pedi %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td style="font-size:.85rem;">{% if av.fs_autocuidado_escala %}{{ av.fs_autocuidado_escala|floatformat:1 }}{% else %}—{% endif %}</td>
+      <td style="font-size:.85rem;">{% if av.fs_mobilidade_escala %}{{ av.fs_mobilidade_escala|floatformat:1 }}{% else %}—{% endif %}</td>
+      <td style="font-size:.85rem;">{% if av.fs_funcao_social_escala %}{{ av.fs_funcao_social_escala|floatformat:1 }}{% else %}—{% endif %}</td>
+      <td class="acoes-td">
+        <a href="{% url 'pedi_resultado' av.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
 
 <!-- ══ Modal: Escolha de questionário ══ -->
 <div class="modal-overlay" id="modalEscolha">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:640px;">
     <h3>Nova Avaliação</h3>
-    <p class="modal-sub">Selecione o questionário que deseja aplicar para <strong>{{ paciente.nome }}</strong>:</p>
+    <p class="modal-sub">Selecione o instrumento para <strong>{{ paciente.nome }}</strong>:</p>
 
-    <div class="escolha-grid">
+    <div class="escolha-grid" style="grid-template-columns:repeat(3,1fr);">
       <button type="button" class="escolha-card sensorial" onclick="criarAvaliacao('sensorial')">
         <span class="ec-icon">🧠</span>
         <span class="ec-titulo">Perfil Sensorial</span>
-        <span class="ec-desc">Questionário de processamento sensorial com 86 itens</span>
+        <span class="ec-desc">86 itens, 9 domínios sensoriais</span>
       </button>
       <button type="button" class="escolha-card vineland" onclick="criarAvaliacao('vineland')">
         <span class="ec-icon">🧩</span>
         <span class="ec-titulo">Escala Vineland</span>
-        <span class="ec-desc">Escala de Maturidade Social com 116 itens por faixa etária</span>
+        <span class="ec-desc">Maturidade social, 116 itens</span>
       </button>
+      <button type="button" class="escolha-card escolar" onclick="criarAvaliacao('escolar')">
+        <span class="ec-icon">🏫</span>
+        <span class="ec-titulo">Sensorial Escolar</span>
+        <span class="ec-desc">35 itens, contexto escolar</span>
+      </button>
+      <button type="button" class="escolha-card bebe" onclick="criarAvaliacao('bebe_bebe')">
+        <span class="ec-icon">👶</span>
+        <span class="ec-titulo">Bebê (0–6 meses)</span>
+        <span class="ec-desc">Perfil Sensorial Bebê</span>
+      </button>
+      <button type="button" class="escolha-card bebe" onclick="criarAvaliacao('bebe_pequena')">
+        <span class="ec-icon">🧒</span>
+        <span class="ec-titulo">Criança Pequena (7–36m)</span>
+        <span class="ec-desc">Perfil Sensorial Toddler</span>
+      </button>
+      <a href="{% url 'nova_avaliacao_edm' paciente.uuid %}" class="escolha-card edm">
+        <span class="ec-icon">🏃</span>
+        <span class="ec-titulo">EDM Figueiredo</span>
+        <span class="ec-desc">Desenvolvimento motor, 7 domínios</span>
+      </a>
+      <a href="{% url 'nova_avaliacao_mabc2' paciente.uuid %}" class="escolha-card mabc2">
+        <span class="ec-icon">⚽</span>
+        <span class="ec-titulo">MABC-2</span>
+        <span class="ec-desc">Habilidades motoras, 3 componentes</span>
+      </a>
+      <a href="{% url 'nova_avaliacao_beery' paciente.uuid %}" class="escolha-card beery">
+        <span class="ec-icon">✏️</span>
+        <span class="ec-titulo">Beery VMI</span>
+        <span class="ec-desc">Integração visomotora, 3 subtestes</span>
+      </a>
+      <a href="{% url 'nova_avaliacao_pedi' paciente.uuid %}" class="escolha-card pedi">
+        <span class="ec-icon">♿</span>
+        <span class="ec-titulo">PEDI</span>
+        <span class="ec-desc">Independência funcional, 3 domínios</span>
+      </a>
     </div>
 
     <div class="modal-actions">
@@ -227,6 +503,22 @@
   </div>
 </div>
 
+<!-- ══ Modal: Excluir genérico (novas avaliações) ══ -->
+<div class="modal-overlay" id="modalDeletarGenerico">
+  <div class="modal-box">
+    <h3>Excluir avaliação</h3>
+    <p class="modal-sub">Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalDeletarGenerico()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
+      <button type="button" class="btn btn-danger" onclick="confirmarDeletarGenerico()">
+        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+      </button>
+    </div>
+  </div>
+</div>
+
 
 <script>
   const csrfToken = '{{ csrf_token }}';
@@ -242,10 +534,17 @@
   /* ── Nova avaliação ── */
   const urlSensorial = "{% url 'nova_avaliacao' paciente.uuid %}";
   const urlVineland  = "{% url 'nova_avaliacao_vineland' paciente.uuid %}";
+  const urlEscolar   = "{% url 'nova_avaliacao_escolar' paciente.uuid %}";
+  const urlBebe      = "{% url 'nova_avaliacao_bebe' paciente.uuid %}";
 
   function criarAvaliacao(tipo) {
-    const url = tipo === 'sensorial' ? urlSensorial : urlVineland;
-    const label = tipo === 'sensorial' ? 'Perfil Sensorial' : 'Escala Vineland';
+    let url, label;
+    if (tipo === 'sensorial')    { url = urlSensorial; label = 'Perfil Sensorial'; }
+    else if (tipo === 'vineland'){ url = urlVineland;  label = 'Escala Vineland'; }
+    else if (tipo === 'escolar') { url = urlEscolar;   label = 'Sensorial Escolar'; }
+    else if (tipo === 'bebe_bebe')    { url = urlBebe + '?faixa=bebe';           label = 'Perfil Sensorial Bebê'; }
+    else if (tipo === 'bebe_pequena') { url = urlBebe + '?faixa=crianca_pequena'; label = 'Perfil Sensorial Criança Pequena'; }
+    else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())
       .then(data => {
@@ -332,12 +631,35 @@
     setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 1500);
   }
 
+  /* ── Excluir genérico (novas avaliações) ── */
+  let _deletarGenUrl, _deletarGenLinha;
+
+  function abrirModalDeletarGenerico(url, btn) {
+    _deletarGenUrl = url;
+    _deletarGenLinha = btn.closest('tr');
+    document.getElementById('modalDeletarGenerico').classList.add('active');
+  }
+  function fecharModalDeletarGenerico() {
+    document.getElementById('modalDeletarGenerico').classList.remove('active');
+  }
+  function confirmarDeletarGenerico() {
+    ajaxPost(_deletarGenUrl).then(data => {
+      fecharModalDeletarGenerico();
+      mostrarAlerta(data.message, data.ok ? 'success' : 'error');
+      if (data.ok && _deletarGenLinha) _deletarGenLinha.remove();
+    });
+  }
+  document.getElementById('modalDeletarGenerico').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalDeletarGenerico();
+  });
+
   /* ── Fechar modais com Escape ── */
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       fecharModalEscolha();
       fecharModalDeletar();
       fecharModalDeletarVineland();
+      fecharModalDeletarGenerico();
     }
   });
 </script>
