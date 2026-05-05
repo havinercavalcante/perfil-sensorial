@@ -77,10 +77,10 @@
 {% endif %}
 
 <div class="actions-grid">
-  <a href="{% url 'novo_paciente' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
-    <div class="card-title">➕ Nova Avaliação</div>
-    <p style="color:var(--text-muted); font-size:.88rem;">Cadastre um paciente e inicie o questionário CeciSys.</p>
-    <br><span class="btn btn-primary btn-sm">Iniciar</span>
+  <a href="{% url 'gerar_link' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
+    <div class="card-title">🔗 Gerar Link de Questionário</div>
+    <p style="color:var(--text-muted); font-size:.88rem;">Gere um link e envie pelo WhatsApp ou e-mail — o responsável preenche os dados.</p>
+    <br><span class="btn btn-primary btn-sm">Gerar link</span>
   </a>
   <a href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
     <div class="card-title">👥 Meus Pacientes</div>
@@ -132,7 +132,7 @@
 <div class="card" style="text-align:center; padding:3rem;">
   <p style="font-size:2rem; margin-bottom:.5rem;">👥</p>
   <p style="color:var(--text-muted); margin-bottom:1.5rem;">Você ainda não tem pacientes cadastrados.</p>
-  <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Cadastrar primeiro paciente</a>
+  <a href="{% url 'gerar_link' %}" class="btn btn-primary">🔗 Gerar primeiro link</a>
 </div>
 {% endif %}
 

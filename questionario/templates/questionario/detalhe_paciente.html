@@ -82,7 +82,13 @@
 {% block content %}
 
 <!-- Cabeçalho do paciente -->
-<div class="card">
+<div class="card" style="position:relative;">
+  <button type="button" onclick="abrirModalDeletarPaciente()" title="Excluir paciente"
+    style="position:absolute; top:.75rem; right:.75rem; background:#FEE2E2; border:1.5px solid #FECACA; cursor:pointer; color:#DC2626; padding:.35rem .45rem; border-radius:8px; line-height:1; transition:background .2s, border-color .2s;"
+    onmouseover="this.style.background='#DC2626';this.style.color='#fff';this.style.borderColor='#DC2626'"
+    onmouseout="this.style.background='#FEE2E2';this.style.color='#DC2626';this.style.borderColor='#FECACA'">
+    <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+  </button>
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.75rem;">
     <div>
       <div class="card-title">{{ paciente.nome }}</div>
@@ -471,6 +477,25 @@
   </div>
 </div>
 
+<!-- ══ Modal: Excluir Paciente ══ -->
+<div class="modal-overlay" id="modalDeletarPaciente">
+  <div class="modal-box">
+    <h3>Excluir paciente</h3>
+    <p class="modal-sub">Tem certeza que deseja excluir <strong>{{ paciente.nome }}</strong>? Todas as avaliações vinculadas também serão removidas. Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalDeletarPaciente()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
+      <form method="post" action="{% url 'deletar_paciente' paciente.uuid %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir paciente
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Modal: Excluir Perfil Sensorial ══ -->
 <div class="modal-overlay" id="modalDeletar">
   <div class="modal-box">
@@ -653,6 +678,17 @@
     if (e.target === this) fecharModalDeletarGenerico();
   });
 
+  /* ── Modal: Excluir Paciente ── */
+  function abrirModalDeletarPaciente() {
+    document.getElementById('modalDeletarPaciente').classList.add('active');
+  }
+  function fecharModalDeletarPaciente() {
+    document.getElementById('modalDeletarPaciente').classList.remove('active');
+  }
+  document.getElementById('modalDeletarPaciente').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalDeletarPaciente();
+  });
+
   /* ── Fechar modais com Escape ── */
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
@@ -660,6 +696,7 @@
       fecharModalDeletar();
       fecharModalDeletarVineland();
       fecharModalDeletarGenerico();
+      fecharModalDeletarPaciente();
     }
   });
 </script>
