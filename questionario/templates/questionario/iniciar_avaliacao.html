@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% if tipo_label %}{{ tipo_label }} — {% endif %}CeciSys</title>
+<link rel="icon" type="image/png" href="{% static 'logotop.png' %}">
+<style>
+  :root {
+    --primary: #2E7D6B; --primary-dark: #1A5C4D;
+    --accent: #F0A500; --bg: #F4F7F5; --card: #FFFFFF;
+    --text: #1A2B22; --text-muted: #6B8878; --border: #D8E8E2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .topo {
+    background: var(--primary-dark); padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .topo img { height: 44px; border-radius: 8px; }
+  .topo-texto { color: #fff; }
+  .topo-texto .tipo-nome { font-size: .95rem; font-weight: 700; }
+  .topo-texto .tipo-sub { font-size: .78rem; color: rgba(255,255,255,.65); }
+
+  main { max-width: 560px; margin: 0 auto; padding: 2rem 1.25rem; }
+
+  .card { background: var(--card); border-radius: 14px; border: 1px solid var(--border);
+    padding: 1.75rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 1.5rem; }
+  .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 1.2rem; }
+
+  .form-group { margin-bottom: 1.1rem; }
+  label { display: block; font-size: .84rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
+  .required { color: #EF4444; }
+  input[type=text], input[type=email], input[type=date], input[type=tel] {
+    width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: .95rem; color: var(--text); background: #fff; transition: border-color .2s;
+    font-family: inherit;
+  }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,107,.12); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .75rem 1.6rem; border-radius: 9px; font-size: .93rem; font-weight: 700;
+    cursor: pointer; text-decoration: none; border: none; width: 100%;
+    transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  .alert-error {
+    background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444;
+    padding: .85rem 1.1rem; border-radius: 8px; font-size: .88rem; margin-bottom: 1rem;
+  }
+  .alert-success {
+    background: #D1FAE5; color: #065F46; border-left: 4px solid #10B981;
+    padding: .85rem 1.1rem; border-radius: 8px; font-size: .88rem; margin-bottom: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    main { padding: 1.25rem .9rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <img src="{% static 'logonav.png' %}" alt="Logo CeciSys">
+  <div class="topo-texto">
+    {% if tipo_label %}
+    <div class="tipo-nome">{{ tipo_icon }} {{ tipo_label }}</div>
+    <div class="tipo-sub">Preencha seus dados para iniciar</div>
+    {% elif ja_utilizado %}
+    <div class="tipo-nome">{{ convite.get_tipo_display }}</div>
+    <div class="tipo-sub">Link de questionário</div>
+    {% elif cadastrado %}
+    <div class="tipo-nome">{{ convite.get_tipo_display }}</div>
+    <div class="tipo-sub">Cadastro realizado</div>
+    {% endif %}
+  </div>
+</div>
+
+<main>
+
+{% if ja_utilizado %}
+  <div class="card" style="text-align:center; padding: 2.5rem 1.5rem;">
+    <div style="font-size:2.5rem; margin-bottom:1rem;">🔒</div>
+    <h2 style="color:var(--primary-dark); margin-bottom:.75rem;">Link já utilizado</h2>
+    <p style="color:var(--text-muted); font-size:.93rem;">
+      Este link já foi usado para iniciar um questionário.<br>
+      Se precisar de um novo link, entre em contato com o profissional responsável.
+    </p>
+  </div>
+
+{% elif cadastrado %}
+  <div class="card" style="text-align:center; padding: 2.5rem 1.5rem;">
+    <div style="font-size:2.5rem; margin-bottom:1rem;">✅</div>
+    <h2 style="color:var(--primary-dark); margin-bottom:.75rem;">Dados recebidos!</h2>
+    <p style="color:var(--text-muted); font-size:.93rem;">
+      Seus dados foram cadastrados com sucesso.<br>
+      O profissional responsável realizará a avaliação presencialmente e entrará em contato.
+    </p>
+  </div>
+
+{% else %}
+  {% if erro %}
+  <div class="alert-error">{{ erro }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-title">👥 Dados do Paciente</div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Nome completo da criança <span class="required">*</span></label>
+        <input type="text" name="nome" value="{{ post.nome|default:'' }}"
+               required placeholder="Nome da criança" autocomplete="name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data de nascimento <span class="required">*</span></label>
+          <input type="date" name="data_nascimento" value="{{ post.data_nascimento|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="tel" name="telefone" value="{{ post.telefone|default:'' }}"
+                 placeholder="(00) 00000-0000" autocomplete="tel">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nome do responsável <span class="required">*</span></label>
+        <input type="text" name="responsavel" value="{{ post.responsavel|default:'' }}"
+               required placeholder="Nome do pai/mãe/responsável" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>E-mail do responsável</label>
+        <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:'' }}"
+               placeholder="email@exemplo.com" autocomplete="email">
+      </div>
+      <div style="margin-top:1.5rem;">
+        <button type="submit" class="btn btn-primary">
+          Iniciar Questionário →
+        </button>
+      </div>
+    </form>
+  </div>
+{% endif %}
+
+</main>
+</body>
+</html>
