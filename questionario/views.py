@@ -90,7 +90,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import (Paciente, Avaliacao, Resposta, PerfilMedico, AvaliacaoVineland,
                      AvaliacaoEscolar, RespostaEscolar, AvaliacaoBebe, RespostaBebe,
-                     AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI)
+                     AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI,
+                     LinkConvite)
 from .data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                    calcular_pontuacao, classificar)
 import json
@@ -282,6 +283,16 @@ def deletar_avaliacao(request, avaliacao_id):
             return JsonResponse({"ok": True, "message": "Avaliação excluída com sucesso."})
         messages.success(request, "Avaliação excluída com sucesso.")
     return redirect("detalhe_paciente", paciente_id=paciente_uuid)
+
+
+@login_required
+def deletar_paciente(request, paciente_id):
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if request.method == "POST":
+        paciente.delete()
+        messages.success(request, "Paciente excluído com sucesso.")
+        return redirect("lista_pacientes")
+    return redirect("detalhe_paciente", paciente_id=paciente_id)
 
 
 @login_required
@@ -2042,4 +2053,101 @@ def salvar_observacoes_pedi(request, avaliacao_id):
             return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas com sucesso.")
         return redirect("pedi_resultado", avaliacao_id=avaliacao_id)
+
+
+# ─── GERAR LINK DE CONVITE ────────────────────────────────────────────────────
+
+_TIPO_INFO = {
+    "sensorial":       ("Perfil Sensorial",               "🧠"),
+    "vineland":        ("Escala Vineland",                 "🧩"),
+    "escolar":         ("Questionário Sensorial Escolar",  "🏫"),
+    "bebe":            ("Bebê (0–6 meses)",                "👶"),
+    "crianca_pequena": ("Criança Pequena (7–36 meses)",    "🧒"),
+    "edm":             ("EDM Figueiredo",                  "🏃"),
+    "mabc2":           ("MABC-2",                          "⚽"),
+    "beery":           ("Beery VMI",                       "✏️"),
+    "pedi":            ("PEDI",                            "♿"),
+}
+
+
+@login_required
+def gerar_link(request):
+    from django.http import JsonResponse
+    if request.method == "POST":
+        tipo = request.POST.get("tipo", "")
+        tipos_validos = [t[0] for t in LinkConvite.TIPO_CHOICES]
+        if tipo not in tipos_validos:
+            return JsonResponse({"ok": False, "message": "Tipo inválido."})
+        convite = LinkConvite.objects.create(medico=request.user, tipo=tipo)
+        link = request.build_absolute_uri(f"/iniciar/{convite.token}/")
+        return JsonResponse({"ok": True, "link": link, "tipo_display": convite.get_tipo_display()})
+    return render(request, "questionario/gerar_link.html")
+
+
+def iniciar_avaliacao(request, token):
+    from django.utils import timezone as tz
+    convite = get_object_or_404(LinkConvite, token=token)
+
+    if convite.usado_em:
+        return render(request, "questionario/iniciar_avaliacao.html", {
+            "convite": convite,
+            "ja_utilizado": True,
+        })
+
+    if request.method == "POST":
+        nome = request.POST.get("nome", "").strip()
+        data_nascimento = request.POST.get("data_nascimento", "")
+        responsavel = request.POST.get("responsavel", "").strip()
+        email = request.POST.get("email_responsavel", "").strip()
+        telefone = request.POST.get("telefone", "").strip()
+
+        if not nome or not data_nascimento or not responsavel:
+            return render(request, "questionario/iniciar_avaliacao.html", {
+                "convite": convite,
+                "post": request.POST,
+                "erro": "Preencha os campos obrigatórios (nome, data de nascimento e responsável).",
+            })
+
+        paciente = Paciente.objects.create(
+            medico=convite.medico,
+            nome=nome,
+            data_nascimento=data_nascimento,
+            responsavel=responsavel,
+            email_responsavel=email,
+            telefone=telefone,
+        )
+        convite.usado_em = tz.now()
+        convite.save()
+
+        t = str(uuid.uuid4())
+        tipo = convite.tipo
+
+        if tipo == "sensorial":
+            Avaliacao.objects.create(paciente=paciente, token=t)
+            return redirect("questionario_publico", token=t, pagina=1)
+        elif tipo == "vineland":
+            AvaliacaoVineland.objects.create(paciente=paciente, token=t)
+            return redirect("vineland_publico", token=t, pagina=1)
+        elif tipo == "escolar":
+            AvaliacaoEscolar.objects.create(paciente=paciente, token=t)
+            return redirect("escolar_publico", token=t, pagina=1)
+        elif tipo == "bebe":
+            AvaliacaoBebe.objects.create(paciente=paciente, token=t, faixa="bebe")
+            return redirect("bebe_publico", token=t, pagina=1)
+        elif tipo == "crianca_pequena":
+            AvaliacaoBebe.objects.create(paciente=paciente, token=t, faixa="crianca_pequena")
+            return redirect("bebe_publico", token=t, pagina=1)
+        else:
+            # EDM, MABC-2, Beery, PEDI — avaliação presencial, só cadastra o paciente
+            return render(request, "questionario/iniciar_avaliacao.html", {
+                "convite": convite,
+                "cadastrado": True,
+            })
+
+    label, icon = _TIPO_INFO.get(convite.tipo, (convite.get_tipo_display(), ""))
+    return render(request, "questionario/iniciar_avaliacao.html", {
+        "convite": convite,
+        "tipo_label": label,
+        "tipo_icon": icon,
+    })
     return redirect("pedi_resultado", avaliacao_id=avaliacao_id)

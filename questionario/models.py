@@ -364,3 +364,32 @@ class AvaliacaoPEDI(models.Model):
 
     def __str__(self):
         return f"PEDI — {self.paciente.nome} — {self.data}"
+
+
+# ── Link de Convite para Questionário ─────────────────────────────────────────
+
+class LinkConvite(models.Model):
+    TIPO_CHOICES = [
+        ("sensorial", "Perfil Sensorial"),
+        ("vineland", "Escala Vineland"),
+        ("escolar", "Questionário Sensorial Escolar"),
+        ("bebe", "Bebê (0–6 meses)"),
+        ("crianca_pequena", "Criança Pequena (7–36 meses)"),
+        ("edm", "EDM Figueiredo"),
+        ("mabc2", "MABC-2"),
+        ("beery", "Beery VMI"),
+        ("pedi", "PEDI"),
+    ]
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    medico = models.ForeignKey(User, on_delete=models.CASCADE, related_name="links_convite")
+    criado_em = models.DateTimeField(auto_now_add=True)
+    usado_em = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Link de Convite"
+        verbose_name_plural = "Links de Convite"
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} — {self.medico.username} — {self.criado_em.date()}"

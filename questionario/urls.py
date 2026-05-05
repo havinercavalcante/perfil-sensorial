@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Link de Convite (gerado pelo médico, preenchido pelo paciente)
+    path("gerar-link/", views.gerar_link, name="gerar_link"),
+    path("iniciar/<uuid:token>/", views.iniciar_avaliacao, name="iniciar_avaliacao"),
     # Auth
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
@@ -21,6 +24,7 @@ urlpatterns = [
     path("avaliacao/<int:avaliacao_id>/enviar-link/", views.enviar_email_link, name="enviar_email_link"),
     path("avaliacao/<int:avaliacao_id>/observacoes/", views.salvar_observacoes, name="salvar_observacoes"),
     path("pacientes/<uuid:paciente_id>/editar/", views.editar_paciente, name="editar_paciente"),
+    path("pacientes/<uuid:paciente_id>/deletar/", views.deletar_paciente, name="deletar_paciente"),
     # Vineland
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-vineland/", views.nova_avaliacao_vineland, name="nova_avaliacao_vineland"),
     path("vineland/<int:avaliacao_id>/pagina/<int:pagina>/", views.vineland_form, name="vineland_form"),
