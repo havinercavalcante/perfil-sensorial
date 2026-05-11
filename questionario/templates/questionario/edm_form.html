@@ -38,7 +38,7 @@
 {% block content %}
 
 <div class="form-header">
-  <h1>🏃 EDM — Escala de Desenvolvimento Motor</h1>
+  <h1><i data-lucide="activity" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>EDM — Escala de Desenvolvimento Motor</h1>
   <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
 </div>
 
@@ -52,7 +52,7 @@
   {% csrf_token %}
 
   <div class="card">
-    <div class="card-title">📐 Idades Motoras por Domínio (em meses)</div>
+    <div class="card-title"><i data-lucide="ruler" style="width:18px;height:18px;"></i> Idades Motoras por Domínio (em meses)</div>
     <div class="dominios-form-grid">
       <div class="dominio-input-card">
         <label for="motricidade_fina">Motricidade Fina</label>
@@ -100,7 +100,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title">🎯 Lateralidade</div>
+    <div class="card-title"><i data-lucide="target" style="width:18px;height:18px;"></i> Lateralidade</div>
     <div class="form-group">
       <select name="lateralidade" class="form-control" style="max-width:320px;">
         <option value="">— Selecione —</option>
@@ -114,7 +114,7 @@
 
   <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
     <button type="submit" class="btn btn-primary" style="background:var(--edm); border-color:var(--edm);">
-      💾 Salvar e Ver Resultado
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar e Ver Resultado
     </button>
     <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
   </div>

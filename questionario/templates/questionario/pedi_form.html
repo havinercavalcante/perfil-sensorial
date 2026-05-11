@@ -42,7 +42,7 @@
 {% block content %}
 
 <div class="form-header">
-  <h1>♿ PEDI — Pediatric Evaluation of Disability Inventory</h1>
+  <h1><i data-lucide="accessibility" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>PEDI — Pediatric Evaluation of Disability Inventory</h1>
   <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
 </div>
 
@@ -57,7 +57,7 @@
 
   <!-- Habilidades Funcionais (FS) -->
   <div class="card">
-    <div class="seccao-titulo">🎯 Habilidades Funcionais (FS)</div>
+    <div class="seccao-titulo"><i data-lucide="target" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>Habilidades Funcionais (FS)</div>
     <div class="dominios-pedi-grid">
       <div class="dominio-pedi-card">
         <label for="fs_autocuidado">Autocuidado</label>
@@ -88,7 +88,7 @@
 
   <!-- Assistência do Cuidador (CA) -->
   <div class="card">
-    <div class="seccao-titulo">🤝 Assistência do Cuidador (CA)</div>
+    <div class="seccao-titulo"><i data-lucide="helping-hand" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>Assistência do Cuidador (CA)</div>
     <div class="dominios-pedi-grid">
       <div class="dominio-pedi-card">
         <label for="ca_autocuidado">Autocuidado</label>
@@ -119,7 +119,7 @@
 
   <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
     <button type="submit" class="btn btn-primary" style="background:var(--pedi); border-color:var(--pedi);">
-      💾 Salvar e Ver Resultado
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar e Ver Resultado
     </button>
     <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
   </div>

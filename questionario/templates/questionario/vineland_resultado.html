@@ -28,14 +28,15 @@
     margin-bottom: 1.5rem;
   }
   .cat-card {
-    border-radius: 10px; padding: 1rem; text-align: center;
-    border: 1.5px solid var(--border); background: #fff;
+    border-radius: 12px; padding: 1.1rem 1rem; text-align: center; color: #fff;
   }
-  .cat-sigla { font-size: .75rem; font-weight: 800; color: #fff; padding: 2px 8px; border-radius: 5px; display: inline-block; margin-bottom: .45rem; }
-  .cat-nome  { font-size: .72rem; color: var(--text-muted); margin-bottom: .5rem; }
-  .cat-valor { font-size: 1.5rem; font-weight: 800; color: var(--text); }
-  .cat-max   { font-size: .72rem; color: var(--text-muted); }
+  .cat-sigla { font-size: .75rem; font-weight: 800; opacity: .8; display: inline-block; margin-bottom: .45rem; letter-spacing: .05em; }
+  .cat-nome  { font-size: .72rem; opacity: .7; margin-bottom: .5rem; }
+  .cat-valor { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1; }
+  .cat-max   { font-size: .72rem; opacity: .7; }
   .cat-bar   { margin-top: .5rem; }
+  .cat-card .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .cat-card .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
 
   /* cores das categorias */
   .bg-C   { background: #3E73D1; }
@@ -100,12 +101,12 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1>📊 Escala Vineland — {{ paciente.nome }}</h1>
+      <h1><i data-lucide="bar-chart-2" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Escala Vineland — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
-        🖨️ Exportar PDF
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
       </button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
@@ -123,7 +124,7 @@
     <div class="progress-bar-wrap" style="height:12px;">
       <div class="progress-bar-fill" style="width:{% widthratio avaliacao.pont_total 116 100 %}%; background:#3E73D1;"></div>
     </div>
-    <div style="font-size:.78rem; color:rgba(255,255,255,.7); margin-top:.35rem;">
+    <div style="font-size:.78rem; color:var(--text-muted); margin-top:.35rem;">
       {% widthratio avaliacao.pont_total 116 100 %}% do máximo
     </div>
   </div>
@@ -131,11 +132,11 @@
 
 <!-- Grade de categorias -->
 <div class="card">
-  <div class="card-title">📂 Pontuação por Categoria</div>
+  <div class="card-title"><i data-lucide="folder-open" style="width:18px;height:18px;"></i> Pontuação por Categoria</div>
   <div class="cat-grid">
     {% for cat in categorias %}
-    <div class="cat-card">
-      <span class="cat-sigla bg-{{ cat.cod }}">{{ cat.cod }}</span>
+    <div class="cat-card bg-{{ cat.cod }}">
+      <span class="cat-sigla">{{ cat.cod }}</span>
       <div class="cat-nome">{{ cat.nome }}</div>
       <div class="cat-valor">{{ cat.valor|floatformat:1 }}</div>
       <div class="cat-max">de {{ cat.max }}</div>
@@ -151,7 +152,7 @@
 
 <!-- Quociente Social -->
 <div class="qs-section">
-  <div class="qs-title">🧮 Quociente Social (QS)</div>
+  <div class="qs-title"><i data-lucide="calculator" style="width:16px;height:16px;vertical-align:middle;"></i> Quociente Social (QS)</div>
 
   <div class="qs-info-grid">
     <div class="qs-info-box">
@@ -212,7 +213,7 @@
 
 <!-- Legenda categorias -->
 <div class="card" style="font-size:.83rem;">
-  <div class="card-title">📖 Legenda das Categorias</div>
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Legenda das Categorias</div>
   <div style="display:flex; flex-wrap:wrap; gap:.5rem .75rem;">
     {% for cat in categorias %}
     <span>
@@ -229,7 +230,7 @@
 
 <!-- OBSERVAÇÕES CLÍNICAS -->
 <div class="card">
-  <div class="card-title">📝 Observações Clínicas</div>
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form id="formObsVin" method="post" action="{% url 'salvar_observacoes_vineland' avaliacao.id %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
@@ -239,7 +240,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
       <button type="button" class="btn btn-primary btn-sm" onclick="salvarObsVin()">
-        💾 Salvar Observações
+        <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações
       </button>
       <span id="obs-vin-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>

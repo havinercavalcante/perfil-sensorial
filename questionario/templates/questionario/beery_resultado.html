@@ -13,12 +13,16 @@
 
   .subtestes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
   .subteste-card {
-    border-radius: 10px; padding: 1.2rem; border: 1.5px solid var(--border); background: #fff;
+    border-radius: 12px; padding: 1.2rem 1rem; text-align: center; color: #fff;
+    background: linear-gradient(135deg, var(--beery-dark), var(--beery));
   }
-  .sub-nome       { font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: .3rem; }
-  .sub-escore     { font-size: 2rem; font-weight: 800; color: var(--beery-dark); }
-  .sub-info       { font-size: .75rem; color: var(--text-muted); margin-bottom: .3rem; }
-  .sub-percentil  { font-size: 1.2rem; font-weight: 700; color: var(--beery); }
+  .sub-nome       { font-size: .8rem; font-weight: 700; opacity: .8; margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .04em; }
+  .sub-escore     { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
+  .sub-info       { font-size: .75rem; opacity: .7; margin-bottom: .3rem; }
+  .sub-percentil  { font-size: 1.2rem; font-weight: 700; opacity: .9; }
+  .subteste-card .badge { background: rgba(255,255,255,.22) !important; color: #fff !important; }
+  .subteste-card .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .subteste-card .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
 
   .badge-tipico       { background: #D1FAE5; color: #065F46; }
   .badge-acima        { background: #DBEAFE; color: #1E40AF; }
@@ -45,14 +49,14 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1>👁️ Beery VMI — {{ paciente.nome }}</h1>
+      <h1><i data-lucide="eye" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Beery VMI — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }}
         {% if avaliacao.idade_anos %} &nbsp;·&nbsp; {{ avaliacao.idade_anos }} anos e {{ avaliacao.idade_meses|default:0 }} meses{% endif %}
       </p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <a href="{% url 'beery_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">✏️ Editar</a>
-      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">🖨️ Exportar PDF</button>
+      <a href="{% url 'beery_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Editar</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
   </div>
@@ -60,7 +64,7 @@
 
 <!-- Subtestes -->
 <div class="card">
-  <div class="card-title">📊 Resultados por Subteste</div>
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Resultados por Subteste</div>
   <div class="subtestes-grid">
     {% for s in subtestes %}
     <div class="subteste-card">
@@ -98,13 +102,13 @@
 
 <!-- Gráfico -->
 <div class="card">
-  <div class="card-title">📈 Comparação dos Subtestes</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Comparação dos Subtestes</div>
   <canvas id="chartBeery" height="100"></canvas>
 </div>
 
 <!-- Legenda -->
 <div class="card" style="font-size:.85rem;">
-  <div class="card-title">📖 Classificação (Escore Padrão)</div>
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Classificação (Escore Padrão)</div>
   <div style="display:flex; flex-wrap:wrap; gap:.5rem .75rem;">
     <span class="badge badge-superior">Superior (&gt;130)</span>
     <span class="badge badge-acima">Acima da média (116–130)</span>
@@ -119,7 +123,7 @@
 
 <!-- Observações clínicas -->
 <div class="card">
-  <div class="card-title">📝 Observações Clínicas</div>
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form id="formObsBeery" method="post" action="{% url 'salvar_observacoes_beery' avaliacao.id %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
@@ -128,7 +132,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
       <button type="button" class="btn btn-primary btn-sm" style="background:var(--beery);border-color:var(--beery);"
-              onclick="salvarObs()">💾 Salvar Observações</button>
+              onclick="salvarObs()"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações</button>
       <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>
   </form>

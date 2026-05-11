@@ -18,11 +18,14 @@
   }
 
   .dominios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .dominio-card { border-radius: 10px; padding: 1rem; border: 1.5px solid var(--border); background: #fff; }
-  .dom-nome  { font-size: .78rem; font-weight: 700; color: var(--text-muted); margin-bottom: .25rem; }
-  .dom-raw   { font-size: .8rem; color: var(--text-muted); }
-  .dom-escala{ font-size: 1.8rem; font-weight: 800; color: var(--pedi-dark); }
+  .dominio-card { border-radius: 12px; padding: 1.2rem 1rem; color: #fff; text-align: center;
+    background: linear-gradient(135deg, var(--pedi-dark), var(--pedi)); }
+  .dom-nome  { font-size: .78rem; font-weight: 700; opacity: .8; margin-bottom: .25rem; text-transform: uppercase; letter-spacing: .04em; }
+  .dom-raw   { font-size: .8rem; opacity: .7; }
+  .dom-escala{ font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
   .dom-bar   { margin-top: .5rem; }
+  .dominio-card .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .dominio-card .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
 
   @media (max-width: 700px) {
     .dominios-grid { grid-template-columns: 1fr; }
@@ -43,12 +46,12 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1>♿ PEDI — {{ paciente.nome }}</h1>
+      <h1><i data-lucide="accessibility" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>PEDI — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <a href="{% url 'pedi_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">✏️ Editar</a>
-      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">🖨️ Exportar PDF</button>
+      <a href="{% url 'pedi_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Editar</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
   </div>
@@ -56,7 +59,7 @@
 
 <!-- FS -->
 <div class="card">
-  <div class="seccao-titulo">🎯 Habilidades Funcionais (FS)</div>
+  <div class="seccao-titulo"><i data-lucide="target" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>Habilidades Funcionais (FS)</div>
   <div class="dominios-grid">
     {% for d in dominios_fs %}
     <div class="dominio-card">
@@ -81,7 +84,7 @@
 
 <!-- CA -->
 <div class="card">
-  <div class="seccao-titulo">🤝 Assistência do Cuidador (CA)</div>
+  <div class="seccao-titulo"><i data-lucide="helping-hand" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>Assistência do Cuidador (CA)</div>
   <div class="dominios-grid">
     {% for d in dominios_ca %}
     <div class="dominio-card">
@@ -106,13 +109,13 @@
 
 <!-- Gráfico -->
 <div class="card">
-  <div class="card-title">📈 Comparativo FS vs CA por Domínio</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Comparativo FS vs CA por Domínio</div>
   <canvas id="chartPEDI" height="120"></canvas>
 </div>
 
 <!-- Legenda -->
 <div class="card" style="font-size:.85rem;">
-  <div class="card-title">📖 Interpretação</div>
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Interpretação</div>
   <p style="color:var(--text-muted); line-height:1.6;">
     <strong>FS (Habilidades Funcionais):</strong> Avalia o repertório de habilidades funcionais em três domínios.<br>
     <strong>CA (Assistência do Cuidador):</strong> Avalia o nível de ajuda fornecida pelo cuidador (0=dependência total, máx=independência).<br>
@@ -122,7 +125,7 @@
 
 <!-- Observações clínicas -->
 <div class="card">
-  <div class="card-title">📝 Observações Clínicas</div>
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form id="formObsPEDI" method="post" action="{% url 'salvar_observacoes_pedi' avaliacao.id %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
@@ -131,7 +134,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
       <button type="button" class="btn btn-primary btn-sm" style="background:var(--pedi);border-color:var(--pedi);"
-              onclick="salvarObs()">💾 Salvar Observações</button>
+              onclick="salvarObs()"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações</button>
       <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>
   </form>

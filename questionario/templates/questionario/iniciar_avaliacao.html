@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% if tipo_label %}{{ tipo_label }} — {% endif %}CeciSys</title>
 <link rel="icon" type="image/png" href="{% static 'logotop.png' %}">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
     --primary: #2E7D6B; --primary-dark: #1A5C4D;
@@ -73,7 +74,7 @@
   <img src="{% static 'logonav.png' %}" alt="Logo CeciSys">
   <div class="topo-texto">
     {% if tipo_label %}
-    <div class="tipo-nome">{{ tipo_icon }} {{ tipo_label }}</div>
+    <div class="tipo-nome">{{ tipo_icon|safe }} {{ tipo_label }}</div>
     <div class="tipo-sub">Preencha seus dados para iniciar</div>
     {% elif ja_utilizado %}
     <div class="tipo-nome">{{ convite.get_tipo_display }}</div>
@@ -89,7 +90,7 @@
 
 {% if ja_utilizado %}
   <div class="card" style="text-align:center; padding: 2.5rem 1.5rem;">
-    <div style="font-size:2.5rem; margin-bottom:1rem;">🔒</div>
+    <div style="margin-bottom:1rem;"><i data-lucide="lock" style="width:2.5rem;height:2.5rem;color:var(--text-muted);"></i></div>
     <h2 style="color:var(--primary-dark); margin-bottom:.75rem;">Link já utilizado</h2>
     <p style="color:var(--text-muted); font-size:.93rem;">
       Este link já foi usado para iniciar um questionário.<br>
@@ -99,7 +100,7 @@
 
 {% elif cadastrado %}
   <div class="card" style="text-align:center; padding: 2.5rem 1.5rem;">
-    <div style="font-size:2.5rem; margin-bottom:1rem;">✅</div>
+    <div style="margin-bottom:1rem;"><i data-lucide="check-circle" style="width:2.5rem;height:2.5rem;color:#10B981;"></i></div>
     <h2 style="color:var(--primary-dark); margin-bottom:.75rem;">Dados recebidos!</h2>
     <p style="color:var(--text-muted); font-size:.93rem;">
       Seus dados foram cadastrados com sucesso.<br>
@@ -113,7 +114,7 @@
   {% endif %}
 
   <div class="card">
-    <div class="card-title">👥 Dados do Paciente</div>
+    <div class="card-title"><i data-lucide="users" style="width:18px;height:18px;"></i> Dados do Paciente</div>
     <form method="post">
       {% csrf_token %}
       <div class="form-group">
@@ -152,5 +153,6 @@
 {% endif %}
 
 </main>
+<script>lucide.createIcons();</script>
 </body>
 </html>
