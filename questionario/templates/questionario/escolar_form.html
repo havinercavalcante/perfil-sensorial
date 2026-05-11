@@ -96,13 +96,13 @@
 
 <!-- Cabeçalho da seção -->
 <div class="secao-header">
-  <h2>📋 {{ secao.nome }}</h2>
+  <h2><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.3rem;"></i>{{ secao.nome }}</h2>
   <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens nesta seção</p>
 </div>
 
 <!-- Instrução -->
 <div class="instrucoes">
-  <span class="instrucoes-titulo">📋 Instruções: Com que frequência o aluno apresenta o comportamento descrito?</span>
+  <span class="instrucoes-titulo"><i data-lucide="clipboard-list" style="width:14px;height:14px;vertical-align:middle;"></i> Instruções: Com que frequência o aluno apresenta o comportamento descrito?</span>
   <div class="instrucoes-chips">
     {% for val, label in opcoes %}
     <span class="instrucao-chip"><b>{{ val }}</b>&nbsp;— {{ label }}</span>
@@ -142,7 +142,7 @@
       {% endif %}
     </div>
     <button type="submit" class="btn btn-primary" style="background:var(--escolar); border-color:var(--escolar);">
-      {% if pagina == total %}✅ Concluir Questionário{% else %}Próxima Seção →{% endif %}
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Questionário{% else %}Próxima Seção →{% endif %}
     </button>
   </div>
 </form>

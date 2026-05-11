@@ -11,7 +11,7 @@
 {% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
 {% block content %}
 <div style="max-width:600px; margin:0 auto;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;">✏️ Editar Dados do Paciente</h2>
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="pencil" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Editar Dados do Paciente</h2>
   <div class="card">
     <form method="post">
       {% csrf_token %}
@@ -39,7 +39,7 @@
       </div>
       <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
         <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+        <button type="submit" class="btn btn-primary"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Alterações</button>
       </div>
     </form>
   </div>

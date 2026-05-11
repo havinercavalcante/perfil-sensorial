@@ -3,7 +3,7 @@
 {% block back_button %}<a href="{% url 'index' %}" class="btn-back">← Início</a>{% endblock %}
 {% block content %}
 <div style="max-width:600px; margin:0 auto;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;">⚙️ Meu Perfil</h2>
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="settings" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Meu Perfil</h2>
 
   <div class="card" style="text-align:center; padding:2rem;">
     <div style="width:72px; height:72px; border-radius:50%; background:var(--primary); color:#fff; font-size:1.8rem; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
@@ -52,7 +52,7 @@
       </div>
 
       <div style="border-top:1px solid var(--border); margin:1.2rem 0; padding-top:1.2rem;">
-        <div class="card-title" style="margin-bottom:.8rem;">🔒 Alterar Senha <span style="font-size:.78rem; font-weight:400; color:var(--text-muted);">(deixe em branco para manter a atual)</span></div>
+        <div class="card-title" style="margin-bottom:.8rem;"><i data-lucide="lock" style="width:16px;height:16px;"></i> Alterar Senha <span style="font-size:.78rem; font-weight:400; color:var(--text-muted);">(deixe em branco para manter a atual)</span></div>
         <div class="form-row">
           <div class="form-group">
             <label>Nova senha</label>
@@ -67,7 +67,7 @@
 
       <div style="display:flex; flex-wrap:wrap; gap:1rem;">
         <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+        <button type="submit" class="btn btn-primary"><i data-lucide="save" style="width:16px;height:16px;"></i> Salvar Alterações</button>
       </div>
     </form>
   </div>

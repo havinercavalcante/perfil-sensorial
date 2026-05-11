@@ -20,10 +20,13 @@
   .score-label  { font-size: .85rem; color: var(--mabc); font-weight: 600; }
 
   .comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .comp-card { border-radius: 10px; padding: 1rem; border: 1.5px solid var(--border); background: #fff; text-align: center; }
-  .comp-nome  { font-size: .78rem; font-weight: 700; color: var(--text-muted); margin-bottom: .3rem; }
-  .comp-escore{ font-size: 1.8rem; font-weight: 800; color: var(--mabc-dark); }
-  .comp-max   { font-size: .72rem; color: var(--text-muted); }
+  .comp-card { border-radius: 12px; padding: 1.2rem 1rem; text-align: center; color: #fff;
+    background: linear-gradient(135deg, var(--mabc-dark), var(--mabc)); }
+  .comp-nome  { font-size: .78rem; font-weight: 700; opacity: .8; margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .04em; }
+  .comp-escore{ font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
+  .comp-max   { font-size: .72rem; opacity: .7; }
+  .comp-card .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .comp-card .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
 
   .percentil-badge {
     display: inline-block; padding: .4rem 1.4rem; border-radius: 20px;
@@ -52,12 +55,12 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1>🎯 MABC-2 — {{ paciente.nome }}</h1>
+      <h1><i data-lucide="target" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>MABC-2 — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; {{ faixa_label }}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <a href="{% url 'mabc2_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">✏️ Editar</a>
-      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">🖨️ Exportar PDF</button>
+      <a href="{% url 'mabc2_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Editar</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
   </div>
@@ -87,7 +90,7 @@
 
 <!-- Componentes -->
 <div class="card">
-  <div class="card-title">📊 Escores por Componente</div>
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Escores por Componente</div>
   <div class="comp-grid">
     {% for c in componentes %}
     <div class="comp-card">
@@ -108,13 +111,13 @@
 
 <!-- Gráfico -->
 <div class="card">
-  <div class="card-title">📈 Visualização</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Visualização</div>
   <canvas id="chartMABC" height="100"></canvas>
 </div>
 
 <!-- Legenda -->
 <div class="card" style="font-size:.85rem;">
-  <div class="card-title">📖 Critérios de Classificação (MABC-2)</div>
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Critérios de Classificação (MABC-2)</div>
   <div style="display:flex; flex-wrap:wrap; gap:.5rem .75rem;">
     <span class="badge badge-tipico">Típico (percentil &gt;15°)</span>
     <span class="badge badge-risco">Risco (percentil 6°–15°)</span>
@@ -127,7 +130,7 @@
 
 <!-- Observações clínicas -->
 <div class="card">
-  <div class="card-title">📝 Observações Clínicas</div>
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form id="formObsMABC" method="post" action="{% url 'salvar_observacoes_mabc2' avaliacao.id %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
@@ -136,7 +139,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
       <button type="button" class="btn btn-primary btn-sm" style="background:var(--mabc);border-color:var(--mabc);"
-              onclick="salvarObs()">💾 Salvar Observações</button>
+              onclick="salvarObs()"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações</button>
       <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>
   </form>

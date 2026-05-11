@@ -154,13 +154,13 @@
 
 <!-- Cabeçalho do grupo de idade -->
 <div class="grupo-header">
-  <h2>📋 {{ grupo.nome }}</h2>
+  <h2><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.3rem;"></i>{{ grupo.nome }}</h2>
   <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens neste grupo</p>
 </div>
 
 <!-- Instrução -->
 <div class="instrucoes">
-  <span class="instrucoes-titulo">📋 Escala Vineland — Instruções de resposta:</span>
+  <span class="instrucoes-titulo"><i data-lucide="clipboard-list" style="width:14px;height:14px;vertical-align:middle;"></i> Escala Vineland — Instruções de resposta:</span>
   <div class="instrucoes-chips">
     <span class="instrucao-chip chip-sim"><b>(+)</b>&nbsp;Sim, sempre</span>
     <span class="instrucao-chip chip-as"><b>(±)</b>&nbsp;Às vezes</span>
@@ -212,7 +212,7 @@
       {% endif %}
     </div>
     <button type="submit" class="btn btn-primary">
-      {% if pagina == total %}✅ Concluir Avaliação{% else %}Próximo Grupo →{% endif %}
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação{% else %}Próximo Grupo →{% endif %}
     </button>
   </div>
 </form>

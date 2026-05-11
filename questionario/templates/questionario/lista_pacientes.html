@@ -39,8 +39,8 @@
 {% endblock %}
 {% block content %}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1.25rem;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark);">👥 Pacientes Cadastrados</h2>
-  <a href="{% url 'novo_paciente' %}" class="btn btn-primary">+ Nova Avaliação</a>
+  <h2 style="font-size:1.4rem; color:var(--primary-dark);"><i data-lucide="users" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Pacientes Cadastrados</h2>
+  <a href="{% url 'gerar_link' %}" class="btn btn-primary">+ Nova Avaliação</a>
 </div>
 
 <form method="get" class="search-bar">
@@ -58,8 +58,8 @@
     <tr>
       <td><strong>{{ p.nome }}</strong></td>
       <td>{{ p.responsavel }}</td>
-      <td style="text-align:center;">{{ p.sens_total|add:p.vinel_total }}</td>
-      <td style="text-align:center;">{{ p.sens_conc|add:p.vinel_conc }}</td>
+      <td style="text-align:center;">{{ p.total_avals }}</td>
+      <td style="text-align:center;">{{ p.total_concs }}</td>
       <td>
         <a href="{% url 'detalhe_paciente' p.uuid %}" class="btn btn-sm btn-primary" style="margin-left:.4rem;">Detalhes</a>
       </td>
@@ -115,12 +115,12 @@
     <p class="modal-sub">Selecione o questionário para <strong id="modalNomePaciente"></strong>:</p>
     <div class="escolha-grid">
       <a id="linkSensorial" href="#" class="escolha-card sensorial">
-        <span class="ec-icon">🧠</span>
+        <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Perfil Sensorial</span>
         <span class="ec-desc">Questionário de processamento sensorial com 86 itens</span>
       </a>
       <a id="linkVineland" href="#" class="escolha-card vineland">
-        <span class="ec-icon">🧩</span>
+        <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Escala Vineland</span>
         <span class="ec-desc">Escala de Maturidade Social com 116 itens por faixa etária</span>
       </a>
