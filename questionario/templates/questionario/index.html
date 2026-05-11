@@ -70,19 +70,19 @@
 
 {% if em_andamento > 0 %}
 <div class="alert alert-warning" style="margin-bottom:1.5rem;">
-  ⏳ Você tem <strong>{{ em_andamento }}</strong> avaliação{{ em_andamento|pluralize:",ões" }} em andamento aguardando conclusão.
+  <i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle;"></i> Você tem <strong>{{ em_andamento }}</strong> avaliação{{ em_andamento|pluralize:",ões" }} em andamento aguardando conclusão.
   <a href="{% url 'lista_pacientes' %}" style="color:#92400E; font-weight:600;">Ver pacientes →</a>
 </div>
 {% endif %}
 
 <div class="actions-grid">
   <a href="{% url 'gerar_link' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
-    <div class="card-title">🔗 Gerar Link de Questionário</div>
+    <div class="card-title"><i data-lucide="link" style="width:18px;height:18px;"></i> Gerar Link de Questionário</div>
     <p style="color:var(--text-muted); font-size:.88rem;">Gere um link e envie pelo WhatsApp ou e-mail — o responsável preenche os dados.</p>
     <br><span class="btn btn-primary btn-sm">Gerar link</span>
   </a>
   <a href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
-    <div class="card-title">👥 Meus Pacientes</div>
+    <div class="card-title"><i data-lucide="users" style="width:18px;height:18px;"></i> Meus Pacientes</div>
     <p style="color:var(--text-muted); font-size:.88rem;">Veja o histórico e os dashboards de cada paciente.</p>
     <br><span class="btn btn-secondary btn-sm">Ver pacientes</span>
   </a>
@@ -90,7 +90,7 @@
 
 {% if pacientes %}
 <div class="card">
-  <div class="card-title">📋 Pacientes Recentes</div>
+  <div class="card-title"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> Pacientes Recentes</div>
   <div class="table-responsive"><table>
     <thead><tr><th>Paciente</th><th>Responsável</th><th>Avaliações</th><th>Última</th><th></th></tr></thead>
     <tbody>
@@ -98,7 +98,7 @@
     <tr>
       <td><strong>{{ p.nome }}</strong></td>
       <td>{{ p.responsavel }}</td>
-      <td style="text-align:center;">{{ p.avaliacoes.count|add:p.avaliacoes_vineland.count }}</td>
+      <td style="text-align:center;">{{ p.total_avals }}</td>
       <td>
         {% with ul=p.avaliacoes.first %}
           {% if ul %}
@@ -129,15 +129,15 @@
 </div>
 {% else %}
 <div class="card" style="text-align:center; padding:3rem;">
-  <p style="font-size:2rem; margin-bottom:.5rem;">👥</p>
+  <p style="margin-bottom:.5rem;"><i data-lucide="users" style="width:2rem;height:2rem;color:var(--text-muted);"></i></p>
   <p style="color:var(--text-muted); margin-bottom:1.5rem;">Você ainda não tem pacientes cadastrados.</p>
-  <a href="{% url 'gerar_link' %}" class="btn btn-primary">🔗 Gerar primeiro link</a>
+  <a href="{% url 'gerar_link' %}" class="btn btn-primary"><i data-lucide="link" style="width:16px;height:16px;"></i> Gerar primeiro link</a>
 </div>
 {% endif %}
 
 {% if ultimas_avaliacoes %}
 <div class="card">
-  <div class="card-title">✅ Últimas Avaliações Concluídas</div>
+  <div class="card-title"><i data-lucide="check-circle" style="width:18px;height:18px;"></i> Últimas Avaliações Concluídas</div>
   <div class="table-responsive"><table>
     <thead><tr><th>Paciente</th><th>Data</th><th>EX</th><th>EV</th><th>SN</th><th>OB</th><th></th></tr></thead>
     <tbody>
@@ -164,12 +164,12 @@
     <p class="modal-sub">Selecione o questionário para <strong id="modalNomePaciente"></strong>:</p>
     <div class="escolha-grid">
       <a id="linkSensorial" href="#" class="escolha-card sensorial">
-        <span class="ec-icon">🧠</span>
+        <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Perfil Sensorial</span>
         <span class="ec-desc">Questionário de processamento sensorial com 86 itens</span>
       </a>
       <a id="linkVineland" href="#" class="escolha-card vineland">
-        <span class="ec-icon">🧩</span>
+        <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Escala Vineland</span>
         <span class="ec-desc">Escala de Maturidade Social com 116 itens por faixa etária</span>
       </a>

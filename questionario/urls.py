@@ -52,6 +52,15 @@ urlpatterns = [
     path("bebe/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_bebe, name="salvar_observacoes_bebe"),
     path("bebe/publico/<str:token>/<int:pagina>/", views.bebe_publico_view, name="bebe_publico"),
     path("bebe/<int:avaliacao_id>/enviar-link/", views.enviar_email_bebe, name="enviar_email_bebe"),
+    # SPM — Sensory Processing Measure
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-spm/", views.nova_avaliacao_spm, name="nova_avaliacao_spm"),
+    path("spm/<int:avaliacao_id>/pagina/<int:pagina>/", views.spm_form, name="spm_form"),
+    path("spm/<int:avaliacao_id>/concluir/", views.spm_concluir, name="spm_concluir"),
+    path("spm/<int:avaliacao_id>/resultado/", views.spm_resultado, name="spm_resultado"),
+    path("spm/<int:avaliacao_id>/deletar/", views.spm_deletar, name="spm_deletar"),
+    path("spm/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_spm, name="salvar_observacoes_spm"),
+    path("spm/publico/<str:token>/<int:pagina>/", views.spm_publico_view, name="spm_publico"),
+    path("spm/<int:avaliacao_id>/enviar-link/", views.enviar_email_spm, name="enviar_email_spm"),
     # EDM
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-edm/", views.nova_avaliacao_edm, name="nova_avaliacao_edm"),
     path("edm/<int:avaliacao_id>/", views.edm_form, name="edm_form"),

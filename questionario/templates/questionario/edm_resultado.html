@@ -20,11 +20,12 @@
   .qm-label  { font-size: .85rem; color: var(--edm); font-weight: 600; }
   .qm-class  { margin-top: .3rem; }
 
-  .dominios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-  .dominio-card { border-radius: 10px; padding: 1rem; border: 1.5px solid var(--border); background: #fff; text-align: center; }
-  .dominio-nome  { font-size: .75rem; font-weight: 700; color: var(--text-muted); margin-bottom: .3rem; }
-  .dominio-valor { font-size: 1.7rem; font-weight: 800; color: var(--text); }
-  .dominio-unit  { font-size: .75rem; color: var(--text-muted); }
+  .dominios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+  .dominio-card { border-radius: 12px; padding: 1.2rem 1rem; text-align: center; color: #fff;
+    background: linear-gradient(135deg, var(--edm-dark), var(--edm)); }
+  .dominio-nome  { font-size: .75rem; font-weight: 700; opacity: .8; margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .04em; }
+  .dominio-valor { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1; }
+  .dominio-unit  { font-size: .75rem; opacity: .7; }
 
   @media print {
     nav, .btn-back, .no-print { display: none !important; }
@@ -42,12 +43,12 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1>🏃 EDM — Escala de Desenvolvimento Motor — {{ paciente.nome }}</h1>
+      <h1><i data-lucide="activity" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>EDM — Escala de Desenvolvimento Motor — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Lateralidade: {{ lat_label }}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <a href="{% url 'edm_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">✏️ Editar</a>
-      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">🖨️ Exportar PDF</button>
+      <a href="{% url 'edm_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Editar</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
   </div>
@@ -79,7 +80,7 @@
 
 <!-- Idades por domínio -->
 <div class="card">
-  <div class="card-title">📊 Idades Motoras por Domínio</div>
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Idades Motoras por Domínio</div>
   <div class="dominios-grid">
     {% for d in dominios %}
     <div class="dominio-card">
@@ -97,13 +98,13 @@
 
 <!-- Gráfico -->
 <div class="card">
-  <div class="card-title">📈 Perfil Motor</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Perfil Motor</div>
   <canvas id="chartEDM" height="100"></canvas>
 </div>
 
 <!-- Tabela de classificação QM -->
 <div class="card" style="font-size:.85rem;">
-  <div class="card-title">📖 Classificação do QM (Figueiredo, 2007)</div>
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Classificação do QM (Figueiredo, 2007)</div>
   <table style="width:100%; border-collapse:collapse;">
     <thead>
       <tr style="background:var(--edm); color:#fff;">
@@ -139,7 +140,7 @@
 
 <!-- Observações clínicas -->
 <div class="card">
-  <div class="card-title">📝 Observações Clínicas</div>
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form id="formObsEDM" method="post" action="{% url 'salvar_observacoes_edm' avaliacao.id %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
@@ -148,7 +149,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
       <button type="button" class="btn btn-primary btn-sm" style="background:var(--edm);border-color:var(--edm);"
-              onclick="salvarObs()">💾 Salvar Observações</button>
+              onclick="salvarObs()"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações</button>
       <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>
   </form>

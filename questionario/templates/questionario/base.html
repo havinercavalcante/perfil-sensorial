@@ -21,7 +21,7 @@
   nav .brand { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; text-decoration: none; color: #fff; }
   nav .brand span { background: var(--accent); color: var(--primary-dark); padding: 2px 8px; border-radius: 4px; font-size: .82rem; font-weight: 800; }
   nav .nav-links { display: flex; align-items: center; gap: 1.2rem; }
-  nav a.nav-link { color: rgba(255,255,255,.8); text-decoration: none; font-size: .88rem; transition: color .2s; padding: .3rem .5rem; border-radius: 6px; }
+  nav a.nav-link { display: inline-flex; align-items: center; gap: .4rem; color: rgba(255,255,255,.8); text-decoration: none; font-size: .88rem; transition: color .2s; padding: .3rem .5rem; border-radius: 6px; }
   nav a.nav-link:hover { color: #fff; background: rgba(255,255,255,.1); }
 
   .user-menu { position: relative; }
@@ -166,7 +166,7 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       display: flex; align-items: center; gap: 4px;
     }
-    .mobile-user-email::before { content: '✉'; font-size: .65rem; opacity: .7; }
+    .mobile-user-email { gap: 4px; }
 
     .drawer-section { padding: .75rem .75rem 0; flex: 1; margin-right: 150px; }
     .user-menu { display: none; }
@@ -198,7 +198,7 @@
     <img src="/static/logonav.png" alt="Logo" style="height:50px; width:auto; display:inline; vertical-align:middle; border-radius:10px; padding:2px;">
   </a>
   {% if user.is_authenticated %}
-  <button class="hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+  <button class="hamburger" onclick="toggleNav()" aria-label="Menu"><i data-lucide="menu" style="width:22px;height:22px;"></i></button>
   {% endif %}
   <div class="nav-links" id="navLinks">
     {% if user.is_authenticated %}
@@ -207,28 +207,28 @@
       <div class="mobile-user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
       <div class="mobile-user-info">
         <div class="mobile-user-name">{{ user.get_full_name|default:user.username }}</div>
-        <div class="mobile-user-email">{{ user.email }}</div>
+        <div class="mobile-user-email"><i data-lucide="mail" style="width:11px;height:11px;opacity:.7;flex-shrink:0;"></i> {{ user.email }}</div>
       </div>
     </div>
 
     <div class="drawer-section">
-    <a href="{% url 'index' %}" class="nav-link">🏠 Início</a>
-    <a href="{% url 'lista_pacientes' %}" class="nav-link">👥 Pacientes</a>
-    <a href="{% url 'gerar_link' %}" class="nav-link">🔗 Gerar Link</a>
+    <a href="{% url 'index' %}" class="nav-link"><i data-lucide="house" style="width:16px;height:16px;"></i> Início</a>
+    <a href="{% url 'lista_pacientes' %}" class="nav-link"><i data-lucide="users" style="width:16px;height:16px;"></i> Pacientes</a>
+    <a href="{% url 'gerar_link' %}" class="nav-link"><i data-lucide="link" style="width:16px;height:16px;"></i> Gerar Link</a>
     </div>
 
     <div class="user-menu" id="userMenu">
       <div class="user-btn" onclick="toggleDropdown()">
         <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
         <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
-        <span style="font-size:.7rem; opacity:.7;">▾</span>
+        <i data-lucide="chevron-down" style="width:13px;height:13px;opacity:.7;"></i>
       </div>
       <div class="dropdown" id="dropdown">
         <div class="dropdown-header">
           <strong>{{ user.get_full_name|default:user.username }}</strong>
           <span>{{ user.email }}</span>
         </div>
-        <a href="{% url 'meu_perfil' %}">⚙️ Meu Perfil</a>
+        <a href="{% url 'meu_perfil' %}"><i data-lucide="settings" style="width:15px;height:15px;"></i> Meu Perfil</a>
         <div class="divider"></div>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
@@ -238,10 +238,10 @@
     </div>
 
     <div class="mobile-profile">
-      <a href="{% url 'meu_perfil' %}" class="nav-link">⚙️ Meu Perfil</a>
+      <a href="{% url 'meu_perfil' %}" class="nav-link"><i data-lucide="settings" style="width:16px;height:16px;"></i> Meu Perfil</a>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit" class="mobile-logout-btn"><span style="color:#F87171">⏻</span> Sair da conta</button>
+        <button type="submit" class="mobile-logout-btn"><i data-lucide="power" style="width:14px;height:14px;color:#F87171;"></i> Sair da conta</button>
       </form>
     </div>
     {% endif %}
