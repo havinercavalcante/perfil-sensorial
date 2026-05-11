@@ -35,7 +35,7 @@
 {% block content %}
 
 <div class="form-header">
-  <h1>👁️ Beery VMI — Desenvolvimento da Integração Visuomotora</h1>
+  <h1><i data-lucide="eye" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Beery VMI — Desenvolvimento da Integração Visuomotora</h1>
   <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
 </div>
 
@@ -50,7 +50,7 @@
 
   <!-- Idade -->
   <div class="card">
-    <div class="card-title">📅 Idade na Aplicação</div>
+    <div class="card-title"><i data-lucide="calendar" style="width:16px;height:16px;"></i> Idade na Aplicação</div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem; max-width:360px;">
       <div class="form-group">
         <label>Anos</label>
@@ -69,7 +69,7 @@
 
   <!-- VMI -->
   <div class="subteste-card">
-    <div class="subteste-titulo">✏️ VMI — Integração Visuomotora</div>
+    <div class="subteste-titulo"><i data-lucide="pencil" style="width:15px;height:15px;vertical-align:middle;"></i> VMI — Integração Visuomotora</div>
     <div class="subteste-grid">
       <div class="form-group">
         <label>Escore Bruto</label>
@@ -88,7 +88,7 @@
 
   <!-- Percepção Visual -->
   <div class="subteste-card">
-    <div class="subteste-titulo">👁️ VP — Percepção Visual</div>
+    <div class="subteste-titulo"><i data-lucide="eye" style="width:15px;height:15px;vertical-align:middle;"></i> VP — Percepção Visual</div>
     <div class="subteste-grid">
       <div class="form-group">
         <label>Escore Bruto</label>
@@ -107,7 +107,7 @@
 
   <!-- Coordenação Motora -->
   <div class="subteste-card">
-    <div class="subteste-titulo">✋ MC — Coordenação Motora</div>
+    <div class="subteste-titulo"><i data-lucide="hand" style="width:15px;height:15px;vertical-align:middle;"></i> MC — Coordenação Motora</div>
     <div class="subteste-grid">
       <div class="form-group">
         <label>Escore Bruto</label>
@@ -126,7 +126,7 @@
 
   <!-- Tabela de referência -->
   <div class="card" style="font-size:.82rem;">
-    <div class="card-title">📖 Tabela de Referência: Escore Padrão → Percentil</div>
+    <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Tabela de Referência: Escore Padrão → Percentil</div>
     <div style="overflow-x:auto;">
       <table class="ref-table">
         <thead><tr>
@@ -146,7 +146,7 @@
 
   <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
     <button type="submit" class="btn btn-primary" style="background:var(--beery); border-color:var(--beery);">
-      💾 Salvar e Ver Resultado
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar e Ver Resultado
     </button>
     <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
   </div>

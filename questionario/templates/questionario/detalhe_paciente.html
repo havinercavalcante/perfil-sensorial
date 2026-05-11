@@ -42,6 +42,7 @@
   .escolha-card.vineland  { --qc: #3E73D1; }
   .escolha-card.escolar   { --qc: #E67E22; }
   .escolha-card.bebe      { --qc: #E91E8C; }
+  .escolha-card.spm       { --qc: #3E73D1; }
   .escolha-card.edm       { --qc: #27AE60; }
   .escolha-card.mabc2     { --qc: #8E44AD; }
   .escolha-card.beery     { --qc: #2980B9; }
@@ -93,10 +94,10 @@
     <div>
       <div class="card-title">{{ paciente.nome }}</div>
       <p style="color:var(--text-muted); font-size:.9rem;">
-        📅 {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos &nbsp;·&nbsp;
-        👥 Responsável: {{ paciente.responsavel }}
-        {% if paciente.email_responsavel %} &nbsp;·&nbsp; ✉️ {{ paciente.email_responsavel }}{% endif %}
-        {% if paciente.telefone %} &nbsp;·&nbsp; 📞 {{ paciente.telefone }}{% endif %}
+        <i data-lucide="calendar" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos &nbsp;·&nbsp;
+        <i data-lucide="user" style="width:14px;height:14px;vertical-align:middle;"></i> Responsável: {{ paciente.responsavel }}
+        {% if paciente.email_responsavel %} &nbsp;·&nbsp; <i data-lucide="mail" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.email_responsavel }}{% endif %}
+        {% if paciente.telefone %} &nbsp;·&nbsp; <i data-lucide="phone" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.telefone }}{% endif %}
       </p>
     </div>
     <div class="cabecalho-acoes">
@@ -113,7 +114,7 @@
 <!-- Perfil Sensorial -->
 {% if avaliacoes %}
 <div class="card">
-  <div class="card-title">🧠 Perfil Sensorial</div>
+  <div class="card-title"><i data-lucide="brain" style="width:18px;height:18px;"></i> Perfil Sensorial</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th>Link</th><th></th></tr></thead>
     <tbody>
@@ -121,11 +122,11 @@
     <tr>
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
-        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
       </span></td>
       <td style="font-size:.78rem; color:var(--text-muted);">
         {% if av.obj.email_enviado_em %}
-          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+          <i data-lucide="send-horizontal" style="width:13px;height:13px;vertical-align:middle;"></i> Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
         {% elif av.obj.status != "concluida" %}
           —
         {% endif %}
@@ -163,7 +164,7 @@
 <!-- Escala Vineland -->
 {% if avaliacoes_vineland %}
 <div class="card">
-  <div class="card-title">🧩 Escala Vineland</div>
+  <div class="card-title"><i data-lucide="puzzle" style="width:18px;height:18px;"></i> Escala Vineland</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th>Link</th><th></th></tr></thead>
     <tbody>
@@ -171,11 +172,11 @@
     <tr>
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
-        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
       </span></td>
       <td style="font-size:.78rem; color:var(--text-muted);">
         {% if av.obj.email_enviado_em %}
-          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+          <i data-lucide="send-horizontal" style="width:13px;height:13px;vertical-align:middle;"></i> Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
         {% elif av.obj.status != "concluida" %}
           —
         {% endif %}
@@ -214,7 +215,7 @@
 
 {% if avaliacoes_escolar %}
 <div class="card">
-  <div class="card-title" style="color:#E67E22;">🏫 Questionário Sensorial Escolar</div>
+  <div class="card-title" style="color:#E67E22;"><i data-lucide="school" style="width:18px;height:18px;"></i> Questionário Sensorial Escolar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th>Link</th><th></th></tr></thead>
     <tbody>
@@ -222,11 +223,11 @@
     <tr>
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
-        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
       </span></td>
       <td style="font-size:.78rem; color:var(--text-muted);">
         {% if av.obj.email_enviado_em %}
-          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+          <i data-lucide="send-horizontal" style="width:13px;height:13px;vertical-align:middle;"></i> Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
         {% elif av.obj.status != "concluida" %}—{% endif %}
       </td>
       <td class="acoes-td">
@@ -261,7 +262,7 @@
 
 {% if avaliacoes_bebe %}
 <div class="card">
-  <div class="card-title" style="color:#E91E8C;">👶 Perfil Sensorial Bebê / Criança Pequena</div>
+  <div class="card-title" style="color:#E91E8C;"><i data-lucide="baby" style="width:18px;height:18px;"></i> Perfil Sensorial Bebê / Criança Pequena</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Faixa</th><th>Status</th><th>Link</th><th></th></tr></thead>
     <tbody>
@@ -270,11 +271,11 @@
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_faixa_display }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
-        {% if av.obj.status == "concluida" %}✅ Concluída{% else %}⏳ Em andamento{% endif %}
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
       </span></td>
       <td style="font-size:.78rem; color:var(--text-muted);">
         {% if av.obj.email_enviado_em %}
-          📨 Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+          <i data-lucide="send-horizontal" style="width:13px;height:13px;vertical-align:middle;"></i> Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
         {% elif av.obj.status != "concluida" %}—{% endif %}
       </td>
       <td class="acoes-td">
@@ -307,9 +308,57 @@
 </div>
 {% endif %}
 
+{% if avaliacoes_spm %}
+<div class="card">
+  <div class="card-title" style="color:#3E73D1;"><i data-lucide="house" style="width:18px;height:18px;"></i> SPM — Sensory Processing Measure</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Instrumento</th><th>Status</th><th>Link</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_spm %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_faixa_display }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td style="font-size:.78rem; color:var(--text-muted);">
+        {% if av.obj.email_enviado_em %}
+          <i data-lucide="send-horizontal" style="width:13px;height:13px;vertical-align:middle;"></i> Enviado {{ av.obj.email_enviado_em|date:"d/m H:i" }}
+        {% elif av.obj.status != "concluida" %}—{% endif %}
+      </td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'spm_resultado' av.obj.id %}" class="btn btn-sm btn-primary">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Resultado
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn btn-sm btn-success" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar link
+        </button>
+        {% if av.obj.paciente.email_responsavel %}
+        <button type="button" class="btn btn-sm btn-primary" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_spm' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i> E-mail
+        </button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-danger" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'spm_deletar' av.obj.id %}', this)">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
 {% if avaliacoes_edm %}
 <div class="card">
-  <div class="card-title" style="color:#27AE60;">🏃 EDM — Escala de Desenvolvimento Motor</div>
+  <div class="card-title" style="color:#27AE60;"><i data-lucide="activity" style="width:18px;height:18px;"></i> EDM — Escala de Desenvolvimento Motor</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Quociente Motor</th><th></th></tr></thead>
     <tbody>
@@ -335,7 +384,7 @@
 
 {% if avaliacoes_mabc2 %}
 <div class="card">
-  <div class="card-title" style="color:#8E44AD;">⚽ MABC-2 — Bateria de Avaliação do Movimento</div>
+  <div class="card-title" style="color:#8E44AD;"><i data-lucide="target" style="width:18px;height:18px;"></i> MABC-2 — Bateria de Avaliação do Movimento</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Faixa</th><th>Percentil</th><th></th></tr></thead>
     <tbody>
@@ -362,7 +411,7 @@
 
 {% if avaliacoes_beery %}
 <div class="card">
-  <div class="card-title" style="color:#2980B9;">✏️ Beery VMI — Integração Visomotora</div>
+  <div class="card-title" style="color:#2980B9;"><i data-lucide="pencil" style="width:18px;height:18px;"></i> Beery VMI — Integração Visomotora</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Escore VMI</th><th>Percentil VMI</th><th></th></tr></thead>
     <tbody>
@@ -389,7 +438,7 @@
 
 {% if avaliacoes_pedi %}
 <div class="card">
-  <div class="card-title" style="color:#16A085;">♿ PEDI — Inventário de Avaliação Pediátrica</div>
+  <div class="card-title" style="color:#16A085;"><i data-lucide="accessibility" style="width:18px;height:18px;"></i> PEDI — Inventário de Avaliação Pediátrica</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>FS Autocuidado</th><th>FS Mobilidade</th><th>FS F. Social</th><th></th></tr></thead>
     <tbody>
@@ -423,47 +472,57 @@
 
     <div class="escolha-grid" style="grid-template-columns:repeat(3,1fr);">
       <button type="button" class="escolha-card sensorial" onclick="criarAvaliacao('sensorial')">
-        <span class="ec-icon">🧠</span>
+        <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Perfil Sensorial</span>
         <span class="ec-desc">86 itens, 9 domínios sensoriais</span>
       </button>
       <button type="button" class="escolha-card vineland" onclick="criarAvaliacao('vineland')">
-        <span class="ec-icon">🧩</span>
+        <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Escala Vineland</span>
         <span class="ec-desc">Maturidade social, 116 itens</span>
       </button>
       <button type="button" class="escolha-card escolar" onclick="criarAvaliacao('escolar')">
-        <span class="ec-icon">🏫</span>
+        <span class="ec-icon"><i data-lucide="school" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Sensorial Escolar</span>
         <span class="ec-desc">35 itens, contexto escolar</span>
       </button>
       <button type="button" class="escolha-card bebe" onclick="criarAvaliacao('bebe_bebe')">
-        <span class="ec-icon">👶</span>
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Bebê (0–6 meses)</span>
         <span class="ec-desc">Perfil Sensorial Bebê</span>
       </button>
       <button type="button" class="escolha-card bebe" onclick="criarAvaliacao('bebe_pequena')">
-        <span class="ec-icon">🧒</span>
+        <span class="ec-icon"><i data-lucide="user-round" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Criança Pequena (7–36m)</span>
         <span class="ec-desc">Perfil Sensorial Toddler</span>
       </button>
+      <button type="button" class="escolha-card spm" onclick="criarAvaliacao('spm_p')">
+        <span class="ec-icon"><i data-lucide="user-round" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SPM-P Casa (2–5 anos)</span>
+        <span class="ec-desc">75 itens, 8 domínios sensoriais</span>
+      </button>
+      <button type="button" class="escolha-card spm" onclick="criarAvaliacao('spm_casa')">
+        <span class="ec-icon"><i data-lucide="house" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SPM Casa (5–12 anos)</span>
+        <span class="ec-desc">75 itens, 8 domínios sensoriais</span>
+      </button>
       <a href="{% url 'nova_avaliacao_edm' paciente.uuid %}" class="escolha-card edm">
-        <span class="ec-icon">🏃</span>
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">EDM Figueiredo</span>
         <span class="ec-desc">Desenvolvimento motor, 7 domínios</span>
       </a>
       <a href="{% url 'nova_avaliacao_mabc2' paciente.uuid %}" class="escolha-card mabc2">
-        <span class="ec-icon">⚽</span>
+        <span class="ec-icon"><i data-lucide="target" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">MABC-2</span>
         <span class="ec-desc">Habilidades motoras, 3 componentes</span>
       </a>
       <a href="{% url 'nova_avaliacao_beery' paciente.uuid %}" class="escolha-card beery">
-        <span class="ec-icon">✏️</span>
+        <span class="ec-icon"><i data-lucide="pencil" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Beery VMI</span>
         <span class="ec-desc">Integração visomotora, 3 subtestes</span>
       </a>
       <a href="{% url 'nova_avaliacao_pedi' paciente.uuid %}" class="escolha-card pedi">
-        <span class="ec-icon">♿</span>
+        <span class="ec-icon"><i data-lucide="accessibility" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">PEDI</span>
         <span class="ec-desc">Independência funcional, 3 domínios</span>
       </a>
@@ -561,6 +620,7 @@
   const urlVineland  = "{% url 'nova_avaliacao_vineland' paciente.uuid %}";
   const urlEscolar   = "{% url 'nova_avaliacao_escolar' paciente.uuid %}";
   const urlBebe      = "{% url 'nova_avaliacao_bebe' paciente.uuid %}";
+  const urlSPM       = "{% url 'nova_avaliacao_spm' paciente.uuid %}";
 
   function criarAvaliacao(tipo) {
     let url, label;
@@ -569,6 +629,8 @@
     else if (tipo === 'escolar') { url = urlEscolar;   label = 'Sensorial Escolar'; }
     else if (tipo === 'bebe_bebe')    { url = urlBebe + '?faixa=bebe';           label = 'Perfil Sensorial Bebê'; }
     else if (tipo === 'bebe_pequena') { url = urlBebe + '?faixa=crianca_pequena'; label = 'Perfil Sensorial Criança Pequena'; }
+    else if (tipo === 'spm_p')        { url = urlSPM  + '?faixa=spm_p';          label = 'SPM-P Casa (2–5 anos)'; }
+    else if (tipo === 'spm_casa')     { url = urlSPM  + '?faixa=spm_casa';       label = 'SPM Casa (5–12 anos)'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())

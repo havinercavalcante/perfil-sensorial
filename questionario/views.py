@@ -91,6 +91,7 @@ from django.contrib.auth.models import User
 from .models import (Paciente, Avaliacao, Resposta, PerfilMedico, AvaliacaoVineland,
                      AvaliacaoEscolar, RespostaEscolar, AvaliacaoBebe, RespostaBebe,
                      AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI,
+                     AvaliacaoSPM, RespostaSPM,
                      LinkConvite)
 from .data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                    calcular_pontuacao, classificar)
@@ -203,14 +204,42 @@ def meu_perfil(request):
 def index(request):
     from django.db.models import Count, Q, Avg
     from django.utils import timezone as tz
-    pacientes = Paciente.objects.filter(medico=request.user).order_by("nome")
+    pacientes = (
+        Paciente.objects.filter(medico=request.user)
+        .annotate(
+            total_avals=(
+                Count("avaliacoes", distinct=True)
+                + Count("avaliacoes_vineland", distinct=True)
+                + Count("avaliacoes_escolar", distinct=True)
+                + Count("avaliacoes_bebe", distinct=True)
+                + Count("avaliacoes_spm", distinct=True)
+                + Count("avaliacoes_edm", distinct=True)
+                + Count("avaliacoes_mabc2", distinct=True)
+                + Count("avaliacoes_beery", distinct=True)
+                + Count("avaliacoes_pedi", distinct=True)
+            )
+        )
+        .order_by("nome")
+    )
     total_pacientes = pacientes.count()
     total_sens = Avaliacao.objects.filter(paciente__medico=request.user).count()
     total_vinel = AvaliacaoVineland.objects.filter(paciente__medico=request.user).count()
-    total_avaliacoes = total_sens + total_vinel
+    total_escolar = AvaliacaoEscolar.objects.filter(paciente__medico=request.user).count()
+    total_bebe = AvaliacaoBebe.objects.filter(paciente__medico=request.user).count()
+    total_spm = AvaliacaoSPM.objects.filter(paciente__medico=request.user).count()
+    total_edm = AvaliacaoEDM.objects.filter(paciente__medico=request.user).count()
+    total_mabc2 = AvaliacaoMABC2.objects.filter(paciente__medico=request.user).count()
+    total_beery = AvaliacaoBeery.objects.filter(paciente__medico=request.user).count()
+    total_pedi = AvaliacaoPEDI.objects.filter(paciente__medico=request.user).count()
+    total_avaliacoes = total_sens + total_vinel + total_escolar + total_bebe + total_spm + total_edm + total_mabc2 + total_beery + total_pedi
+
     concluidas_sens = Avaliacao.objects.filter(paciente__medico=request.user, status="concluida").count()
     concluidas_vinel = AvaliacaoVineland.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas = concluidas_sens + concluidas_vinel
+    concluidas_escolar = AvaliacaoEscolar.objects.filter(paciente__medico=request.user, status="concluida").count()
+    concluidas_bebe = AvaliacaoBebe.objects.filter(paciente__medico=request.user, status="concluida").count()
+    concluidas_spm = AvaliacaoSPM.objects.filter(paciente__medico=request.user, status="concluida").count()
+    concluidas = (concluidas_sens + concluidas_vinel + concluidas_escolar + concluidas_bebe + concluidas_spm
+                  + total_edm + total_mabc2 + total_beery + total_pedi)
     em_andamento = total_avaliacoes - concluidas
 
     hoje = tz.now().date()
@@ -218,6 +247,13 @@ def index(request):
     novas_mes = (
         Avaliacao.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
         + AvaliacaoVineland.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoEscolar.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoBebe.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoSPM.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoEDM.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoMABC2.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoBeery.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
+        + AvaliacaoPEDI.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
     )
 
     ultimas_avaliacoes = list(
@@ -364,8 +400,18 @@ def lista_pacientes(request):
         .annotate(
             sens_total=Count("avaliacoes", distinct=True),
             vinel_total=Count("avaliacoes_vineland", distinct=True),
+            escolar_total=Count("avaliacoes_escolar", distinct=True),
+            bebe_total=Count("avaliacoes_bebe", distinct=True),
+            spm_total=Count("avaliacoes_spm", distinct=True),
+            edm_total=Count("avaliacoes_edm", distinct=True),
+            mabc2_total=Count("avaliacoes_mabc2", distinct=True),
+            beery_total=Count("avaliacoes_beery", distinct=True),
+            pedi_total=Count("avaliacoes_pedi", distinct=True),
             sens_conc=Count("avaliacoes", filter=Q(avaliacoes__status="concluida"), distinct=True),
             vinel_conc=Count("avaliacoes_vineland", filter=Q(avaliacoes_vineland__status="concluida"), distinct=True),
+            escolar_conc=Count("avaliacoes_escolar", filter=Q(avaliacoes_escolar__status="concluida"), distinct=True),
+            bebe_conc=Count("avaliacoes_bebe", filter=Q(avaliacoes_bebe__status="concluida"), distinct=True),
+            spm_conc=Count("avaliacoes_spm", filter=Q(avaliacoes_spm__status="concluida"), distinct=True),
         )
         .order_by("nome")
     )
@@ -373,6 +419,11 @@ def lista_pacientes(request):
         qs = qs.filter(nome__icontains=q)
     paginator = Paginator(qs, 10)
     page = paginator.get_page(request.GET.get("page"))
+    for p in page.object_list:
+        p.total_avals = (p.sens_total + p.vinel_total + p.escolar_total + p.bebe_total
+                         + p.spm_total + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total)
+        p.total_concs = (p.sens_conc + p.vinel_conc + p.escolar_conc + p.bebe_conc + p.spm_conc
+                         + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total)
     return render(request, "questionario/lista_pacientes.html", {"pacientes": page, "q": q, "paginator": paginator})
 
 
@@ -400,6 +451,7 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_vineland": avaliacoes_vineland,
         "avaliacoes_escolar": _build_lista_com_link(paciente.avaliacoes_escolar.all(), request, "escolar_publico"),
         "avaliacoes_bebe": _build_lista_com_link(paciente.avaliacoes_bebe.all(), request, "bebe_publico"),
+        "avaliacoes_spm": _build_lista_com_link(paciente.avaliacoes_spm.all(), request, "spm_publico"),
         "avaliacoes_edm": paciente.avaliacoes_edm.all(),
         "avaliacoes_mabc2": paciente.avaliacoes_mabc2.all(),
         "avaliacoes_beery": paciente.avaliacoes_beery.all(),
@@ -2055,18 +2107,324 @@ def salvar_observacoes_pedi(request, avaliacao_id):
         return redirect("pedi_resultado", avaliacao_id=avaliacao_id)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SPM — SENSORY PROCESSING MEASURE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from .data_spm import (
+    SECOES_SPM_P, SECOES_SPM_CASA,
+    PERGUNTAS_SPM_P, PERGUNTAS_SPM_CASA,
+    OPCOES_SPM,
+    REVERSED_SPM_P, REVERSED_SPM_CASA,
+    SECOES_CONFIG_SPM,
+    calcular_pontuacao_spm,
+    max_score_spm,
+    classificar_spm_pct,
+)
+
+
+@login_required
+def nova_avaliacao_spm(request, paciente_id):
+    from django.http import JsonResponse
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    faixa = request.GET.get("faixa", "spm_p")
+    if faixa not in ("spm_p", "spm_casa"):
+        faixa = "spm_p"
+    av = AvaliacaoSPM.objects.create(paciente=paciente, faixa=faixa, token=str(uuid.uuid4()))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "id": av.id})
+    return redirect("spm_form", avaliacao_id=av.id, pagina=1)
+
+
+def _spm_dados(faixa):
+    if faixa == "spm_p":
+        return SECOES_SPM_P, PERGUNTAS_SPM_P
+    return SECOES_SPM_CASA, PERGUNTAS_SPM_CASA
+
+
+def _spm_salvar_pontuacao(avaliacao):
+    respostas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    p = calcular_pontuacao_spm(respostas, avaliacao.faixa)
+    avaliacao.pont_soc = p.get("soc", 0)
+    avaliacao.pont_vis = p.get("vis", 0)
+    avaliacao.pont_hea = p.get("hea", 0)
+    avaliacao.pont_tou = p.get("tou", 0)
+    avaliacao.pont_sme = p.get("sme", 0)
+    avaliacao.pont_bod = p.get("bod", 0)
+    avaliacao.pont_bal = p.get("bal", 0)
+    avaliacao.pont_pla = p.get("pla", 0)
+    avaliacao.pont_tot = p.get("tot", 0)
+    return avaliacao
+
+
+@login_required
+def spm_form(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    if avaliacao.status == "concluida":
+        return redirect("spm_resultado", avaliacao_id=avaliacao_id)
+
+    secoes, perguntas_data = _spm_dados(avaliacao.faixa)
+    total_paginas = len(secoes)
+    if pagina < 1 or pagina > total_paginas:
+        return redirect("spm_form", avaliacao_id=avaliacao_id, pagina=1)
+
+    secao_atual = secoes[pagina - 1]
+    itens = secao_atual["itens"]
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens)}
+
+    if request.method == "POST":
+        erros = []
+        novas = {}
+        for item in itens:
+            val = request.POST.get(f"item_{item}")
+            if val is None:
+                erros.append(item)
+            else:
+                try:
+                    v = int(val)
+                    if 1 <= v <= 4:
+                        novas[item] = v
+                    else:
+                        erros.append(item)
+                except (ValueError, TypeError):
+                    erros.append(item)
+
+        if erros:
+            messages.error(request, "Por favor, responda todos os itens antes de continuar.")
+            respostas_salvas.update(novas)
+        else:
+            for item, valor in novas.items():
+                RespostaSPM.objects.update_or_create(
+                    avaliacao=avaliacao, numero_item=item, defaults={"valor": valor}
+                )
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, total_paginas)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > total_paginas:
+                return redirect("spm_concluir", avaliacao_id=avaliacao_id)
+            return redirect("spm_form", avaliacao_id=avaliacao_id, pagina=proxima)
+
+    perguntas = [
+        {"numero": item, "texto": perguntas_data.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
+        for item in itens
+    ]
+    return render(request, "questionario/spm_form.html", {
+        "avaliacao": avaliacao,
+        "secao": secao_atual,
+        "perguntas": perguntas,
+        "opcoes": OPCOES_SPM,
+        "pagina": pagina,
+        "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_secoes": [(i + 1, secoes[i]["nome"]) for i in range(total_paginas)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+    })
+
+
+@login_required
+def spm_concluir(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    secoes, _ = _spm_dados(avaliacao.faixa)
+    total_itens = sum(len(s["itens"]) for s in secoes)
+    if avaliacao.respostas.count() < total_itens:
+        messages.warning(request, "Ainda há itens sem resposta.")
+        return redirect("spm_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
+
+    avaliacao = _spm_salvar_pontuacao(avaliacao)
+    avaliacao.status = "concluida"
+    avaliacao.save()
+    return redirect("spm_resultado", avaliacao_id=avaliacao_id)
+
+
+def _spm_build_secoes(avaliacao):
+    faixa = avaliacao.faixa
+    maximos = max_score_spm(faixa)
+    campo_map = {
+        "soc": avaliacao.pont_soc, "vis": avaliacao.pont_vis,
+        "hea": avaliacao.pont_hea, "tou": avaliacao.pont_tou,
+        "sme": avaliacao.pont_sme, "bod": avaliacao.pont_bod,
+        "bal": avaliacao.pont_bal, "pla": avaliacao.pont_pla,
+    }
+    secoes = []
+    for sec_id, config in SECOES_CONFIG_SPM.items():
+        valor = campo_map.get(sec_id) or 0
+        maximo = maximos.get(sec_id, 1)
+        pct = int(valor / maximo * 100) if maximo else 0
+        secoes.append({
+            "id": sec_id,
+            "nome": config["nome"],
+            "sigla": config["sigla"],
+            "cor": config["cor"],
+            "valor": valor,
+            "maximo": maximo,
+            "pct": pct,
+            "classificacao": classificar_spm_pct(pct),
+        })
+    return secoes
+
+
+@login_required
+def spm_resultado(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+
+    if avaliacao.status != "concluida":
+        return redirect("spm_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
+
+    if avaliacao.pont_tot is None:
+        avaliacao = _spm_salvar_pontuacao(avaliacao)
+        avaliacao.save(update_fields=["pont_soc", "pont_vis", "pont_hea", "pont_tou",
+                                      "pont_sme", "pont_bod", "pont_bal", "pont_pla", "pont_tot"])
+
+    secoes = _spm_build_secoes(avaliacao)
+    max_tot = max_score_spm(avaliacao.faixa)["tot"]
+    pct_tot = int((avaliacao.pont_tot or 0) / max_tot * 100) if max_tot else 0
+
+    return render(request, "questionario/spm_resultado.html", {
+        "avaliacao": avaliacao,
+        "paciente": paciente,
+        "secoes": secoes,
+        "pct_tot": pct_tot,
+        "class_tot": classificar_spm_pct(pct_tot),
+        "secoes_json": json.dumps([{"nome": s["sigla"], "pct": s["pct"], "cor": s["cor"]} for s in secoes]),
+    })
+
+
+@login_required
+def spm_deletar(request, avaliacao_id):
+    from django.http import JsonResponse
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    paciente_uuid = avaliacao.paciente.uuid
+    if request.method == "POST":
+        avaliacao.delete()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "message": "Avaliação SPM excluída com sucesso."})
+        messages.success(request, "Avaliação SPM excluída com sucesso.")
+    return redirect("detalhe_paciente", paciente_id=paciente_uuid)
+
+
+@login_required
+def salvar_observacoes_spm(request, avaliacao_id):
+    from django.http import JsonResponse
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    if request.method == "POST":
+        avaliacao.observacoes = request.POST.get("observacoes", "").strip()
+        avaliacao.save(update_fields=["observacoes"])
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True})
+        messages.success(request, "Observações salvas com sucesso.")
+        return redirect("spm_resultado", avaliacao_id=avaliacao_id)
+    return redirect("spm_resultado", avaliacao_id=avaliacao_id)
+
+
+@login_required
+def enviar_email_spm(request, avaliacao_id):
+    from django.core.mail import send_mail
+    from django.http import JsonResponse
+    from django.utils import timezone as tz
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    email_dest = paciente.email_responsavel
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not email_dest:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
+        messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    link = request.build_absolute_uri(f"/spm/publico/{avaliacao.token}/1/")
+    nome_instrumento = avaliacao.get_faixa_display()
+    send_mail(
+        subject=f"{nome_instrumento} — CeciSys",
+        message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
+        from_email=None,
+        recipient_list=[email_dest],
+        fail_silently=False,
+    )
+    avaliacao.email_enviado_em = tz.now()
+    avaliacao.save(update_fields=["email_enviado_em"])
+    if is_ajax:
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
+    messages.success(request, f"E-mail enviado para {email_dest}.")
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+
+
+def spm_publico_view(request, token, pagina):
+    avaliacao = get_object_or_404(AvaliacaoSPM, token=token)
+    if avaliacao.status == "concluida":
+        return render(request, "questionario/concluido.html")
+
+    secoes, perguntas_dict = _spm_dados(avaliacao.faixa)
+    total = len(secoes)
+    if pagina < 1 or pagina > total:
+        pagina = 1
+    secao_atual = secoes[pagina - 1]
+    itens_secao = secao_atual["itens"]
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens_secao)}
+
+    if request.method == "POST":
+        erros = []
+        respostas_novas = {}
+        for item in itens_secao:
+            val = request.POST.get(f"item_{item}")
+            if val is None:
+                erros.append(item)
+            else:
+                try:
+                    v = int(val)
+                    if 1 <= v <= 4:
+                        respostas_novas[item] = v
+                    else:
+                        erros.append(item)
+                except (ValueError, TypeError):
+                    erros.append(item)
+        if erros:
+            messages.error(request, "Por favor, responda todas as perguntas antes de continuar.")
+        else:
+            for item, valor in respostas_novas.items():
+                RespostaSPM.objects.update_or_create(avaliacao=avaliacao, numero_item=item, defaults={"valor": valor})
+            if pagina < total:
+                avaliacao.pagina_atual = pagina + 1
+                avaliacao.save(update_fields=["pagina_atual"])
+                return redirect("spm_publico", token=token, pagina=pagina + 1)
+            else:
+                avaliacao = _spm_salvar_pontuacao(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                try:
+                    _notificar_terapeuta(avaliacao.paciente, "spm", request)
+                except Exception:
+                    pass
+                return render(request, "questionario/concluido.html")
+        respostas_salvas.update(respostas_novas)
+
+    perguntas = [
+        {"numero": item, "texto": perguntas_dict.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
+        for item in itens_secao
+    ]
+    return render(request, "questionario/spm_form.html", {
+        "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
+        "opcoes": OPCOES_SPM, "pagina": pagina, "total": total,
+        "progresso": int((pagina - 1) / total * 100),
+        "paginas_secoes": [(i + 1, secoes[i]["nome"]) for i in range(total)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "publico": True,
+    })
+
+
 # ─── GERAR LINK DE CONVITE ────────────────────────────────────────────────────
 
 _TIPO_INFO = {
-    "sensorial":       ("Perfil Sensorial",               "🧠"),
-    "vineland":        ("Escala Vineland",                 "🧩"),
-    "escolar":         ("Questionário Sensorial Escolar",  "🏫"),
-    "bebe":            ("Bebê (0–6 meses)",                "👶"),
-    "crianca_pequena": ("Criança Pequena (7–36 meses)",    "🧒"),
-    "edm":             ("EDM Figueiredo",                  "🏃"),
-    "mabc2":           ("MABC-2",                          "⚽"),
-    "beery":           ("Beery VMI",                       "✏️"),
-    "pedi":            ("PEDI",                            "♿"),
+    "sensorial":       ("Perfil Sensorial",               '<i data-lucide="brain" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "vineland":        ("Escala Vineland",                 '<i data-lucide="puzzle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "escolar":         ("Questionário Sensorial Escolar",  '<i data-lucide="school" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "bebe":            ("Bebê (0–6 meses)",                '<i data-lucide="baby" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "crianca_pequena": ("Criança Pequena (7–36 meses)",    '<i data-lucide="user-round" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "spm_p":           ("SPM-P Casa (2–5 anos)",           '<i data-lucide="user-round" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "spm_casa":        ("SPM Casa (5–12 anos)",            '<i data-lucide="house" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "edm":             ("EDM Figueiredo",                  '<i data-lucide="activity" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "mabc2":           ("MABC-2",                          '<i data-lucide="target" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "beery":           ("Beery VMI",                       '<i data-lucide="pencil" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "pedi":            ("PEDI",                            '<i data-lucide="accessibility" style="width:18px;height:18px;vertical-align:middle;"></i>'),
 }
 
 
@@ -2137,6 +2495,9 @@ def iniciar_avaliacao(request, token):
         elif tipo == "crianca_pequena":
             AvaliacaoBebe.objects.create(paciente=paciente, token=t, faixa="crianca_pequena")
             return redirect("bebe_publico", token=t, pagina=1)
+        elif tipo in ("spm_p", "spm_casa"):
+            AvaliacaoSPM.objects.create(paciente=paciente, token=t, faixa=tipo)
+            return redirect("spm_publico", token=t, pagina=1)
         else:
             # EDM, MABC-2, Beery, PEDI — avaliação presencial, só cadastra o paciente
             return render(request, "questionario/iniciar_avaliacao.html", {

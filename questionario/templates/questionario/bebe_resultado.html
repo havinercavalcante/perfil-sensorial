@@ -13,14 +13,17 @@
 
   .quad-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
   .quad-card {
-    border-radius: 12px; padding: 1.2rem; border: 2px solid var(--qc, var(--border)); background: #fff;
+    border-radius: 12px; padding: 1.2rem 1rem; color: #fff; text-align: center;
+    background: var(--qc, var(--bebe));
   }
-  .quad-nome  { font-size: .82rem; font-weight: 700; color: var(--qc, var(--text)); margin-bottom: .3rem; }
-  .quad-valor { font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1; }
-  .quad-max   { font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem; }
+  .quad-nome  { font-size: .82rem; font-weight: 700; margin-bottom: .3rem; }
+  .quad-valor { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .quad-max   { font-size: .75rem; opacity: .7; margin-bottom: .5rem; }
   .quad-bar   { margin-bottom: .6rem; }
-  .quad-badge { display: inline-block; padding: .3rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 700;
-                background: color-mix(in srgb, var(--qc, #888) 15%, #fff); color: var(--qc, #333); border: 1px solid var(--qc, #ccc); }
+  .quad-bar .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .quad-bar .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
+  .quad-badge { display: inline-block; padding: .3rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 700; }
+  .quad-card .badge, .quad-card .quad-badge { background: rgba(255,255,255,.22) !important; color: #fff !important; border-color: rgba(255,255,255,.3) !important; }
 
   .badge-semelhante    { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
   .badge-mais          { background: #FEF9C3; color: #854D0E; border-color: #FDE047; }
@@ -47,13 +50,13 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1>👶 Perfil Sensorial Bebê/Criança Pequena — {{ paciente.nome }}</h1>
+      <h1><i data-lucide="baby" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Perfil Sensorial Bebê/Criança Pequena — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp;
         {% if avaliacao.faixa == "bebe" %}Bebê (0–6 meses){% else %}Criança Pequena (7–36 meses){% endif %}
       </p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">🖨️ Exportar PDF</button>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
   </div>
@@ -61,7 +64,7 @@
 
 <!-- Quadrantes -->
 <div class="card">
-  <div class="card-title">📊 Pontuação por Quadrante</div>
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Pontuação por Quadrante</div>
   <div class="quad-grid">
     {% for q in quadrantes %}
     <div class="quad-card" style="--qc:{{ q.cor }};">
@@ -88,13 +91,13 @@
 
 <!-- Gráfico radar -->
 <div class="card">
-  <div class="card-title">📈 Visualização Gráfica</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Visualização Gráfica</div>
   <canvas id="chartBebe" height="100"></canvas>
 </div>
 
 <!-- Legenda de classificação -->
 <div class="card" style="font-size:.85rem;">
-  <div class="card-title">📖 Interpretação</div>
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Interpretação</div>
   <p style="color:var(--text-muted); line-height:1.6;">
     <strong>Escala:</strong> 1=Sempre | 2=Frequentemente | 3=Às vezes | 4=Raramente | 5=Nunca<br>
     <strong>Pontuação menor</strong> = comportamento mais frequente (próximo de "Sempre")<br>
@@ -111,7 +114,7 @@
 
 <!-- Observações clínicas -->
 <div class="card">
-  <div class="card-title">📝 Observações Clínicas</div>
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form id="formObsBebe" method="post" action="{% url 'salvar_observacoes_bebe' avaliacao.id %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
@@ -120,7 +123,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
       <button type="button" class="btn btn-primary btn-sm" style="background:var(--bebe);border-color:var(--bebe);"
-              onclick="salvarObs()">💾 Salvar Observações</button>
+              onclick="salvarObs()"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações</button>
       <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>
   </form>

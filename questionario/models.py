@@ -366,6 +366,55 @@ class AvaliacaoPEDI(models.Model):
         return f"PEDI — {self.paciente.nome} — {self.data}"
 
 
+# ── SPM — Sensory Processing Measure ─────────────────────────────────────────
+
+class AvaliacaoSPM(models.Model):
+    FAIXA_CHOICES = [
+        ("spm_p",    "SPM-P Casa (2–5 anos)"),
+        ("spm_casa", "SPM Casa (5–12 anos)"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente      = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_spm")
+    token         = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    faixa         = models.CharField(max_length=10, choices=FAIXA_CHOICES)
+    data          = models.DateField("Data da avaliação", default=timezone.now)
+    status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual  = models.IntegerField(default=1)
+
+    pont_soc = models.IntegerField(null=True, blank=True)
+    pont_vis = models.IntegerField(null=True, blank=True)
+    pont_hea = models.IntegerField(null=True, blank=True)
+    pont_tou = models.IntegerField(null=True, blank=True)
+    pont_sme = models.IntegerField(null=True, blank=True)
+    pont_bod = models.IntegerField(null=True, blank=True)
+    pont_bal = models.IntegerField(null=True, blank=True)
+    pont_pla = models.IntegerField(null=True, blank=True)
+    pont_tot = models.IntegerField(null=True, blank=True)
+
+    observacoes      = models.TextField("Observações clínicas", blank=True, default="")
+    email_enviado_em = models.DateTimeField("E-mail enviado em", null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "SPM"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"SPM — {self.paciente.nome} — {self.data}"
+
+
+class RespostaSPM(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoSPM, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
 # ── Link de Convite para Questionário ─────────────────────────────────────────
 
 class LinkConvite(models.Model):
@@ -375,6 +424,8 @@ class LinkConvite(models.Model):
         ("escolar", "Questionário Sensorial Escolar"),
         ("bebe", "Bebê (0–6 meses)"),
         ("crianca_pequena", "Criança Pequena (7–36 meses)"),
+        ("spm_p",    "SPM-P Casa (2–5 anos)"),
+        ("spm_casa", "SPM Casa (5–12 anos)"),
         ("edm", "EDM Figueiredo"),
         ("mabc2", "MABC-2"),
         ("beery", "Beery VMI"),

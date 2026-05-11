@@ -38,7 +38,7 @@
 {% block content %}
 <div style="max-width: 680px; margin: 0 auto;">
 
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;">🔗 Gerar Link de Questionário</h2>
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;"><i data-lucide="link" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Gerar Link de Questionário</h2>
   <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:1.5rem;">
     Selecione o tipo de avaliação, copie o link e envie para o responsável.<br>
   </p>
@@ -47,47 +47,57 @@
     <div class="card-title">Tipo de avaliação</div>
     <div class="tipos-grid">
       <button class="tipo-card" onclick="gerarLink('sensorial', this)">
-        <span class="tc-icon">🧠</span>
+        <span class="tc-icon"><i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Perfil Sensorial</span>
         <span class="tc-desc">86 itens · processamento sensorial</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('vineland', this)">
-        <span class="tc-icon">🧩</span>
+        <span class="tc-icon"><i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Escala Vineland</span>
         <span class="tc-desc">116 itens · maturidade social</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('escolar', this)">
-        <span class="tc-icon">🏫</span>
+        <span class="tc-icon"><i data-lucide="school" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Sensorial Escolar</span>
         <span class="tc-desc">Ambiente escolar</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('bebe', this)">
-        <span class="tc-icon">👶</span>
+        <span class="tc-icon"><i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Bebê (0–6 meses)</span>
         <span class="tc-desc">Perfil sensorial bebê</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('crianca_pequena', this)">
-        <span class="tc-icon">🧒</span>
+        <span class="tc-icon"><i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Criança Pequena (7–36m)</span>
         <span class="tc-desc">Perfil sensorial criança</span>
       </button>
+      <button class="tipo-card" onclick="gerarLink('spm_p', this)">
+        <span class="tc-icon"><i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">SPM-P Casa (2–5 anos)</span>
+        <span class="tc-desc">75 itens · 8 domínios</span>
+      </button>
+      <button class="tipo-card" onclick="gerarLink('spm_casa', this)">
+        <span class="tc-icon"><i data-lucide="house" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">SPM Casa (5–12 anos)</span>
+        <span class="tc-desc">75 itens · 8 domínios</span>
+      </button>
       <button class="tipo-card" onclick="gerarLink('edm', this)">
-        <span class="tc-icon">🏃</span>
+        <span class="tc-icon"><i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">EDM Figueiredo</span>
         <span class="tc-desc">Desenvolvimento motor</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('mabc2', this)">
-        <span class="tc-icon">⚽</span>
+        <span class="tc-icon"><i data-lucide="target" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">MABC-2</span>
         <span class="tc-desc">Bateria de avaliação motora</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('beery', this)">
-        <span class="tc-icon">✏️</span>
+        <span class="tc-icon"><i data-lucide="pencil" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Beery VMI</span>
         <span class="tc-desc">Integração visomotora</span>
       </button>
       <button class="tipo-card" onclick="gerarLink('pedi', this)">
-        <span class="tc-icon">♿</span>
+        <span class="tc-icon"><i data-lucide="accessibility" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">PEDI</span>
         <span class="tc-desc">Incapacidade pediátrica</span>
       </button>
