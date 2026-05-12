@@ -52,6 +52,8 @@
   .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
   .card-title { font-size: 1.05rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
 
+  .lucide { vertical-align: middle; }
+
   .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem 1.4rem; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; text-decoration: none; border: 2px solid transparent; transition: all .2s; box-sizing: border-box; }
   .btn-primary { background: var(--primary); color: #fff; }
   .btn-primary:hover { background: var(--primary-dark); }
@@ -307,6 +309,24 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeNav();
 });
 lucide.createIcons();
+
+// Máscara de telefone: (00) 00000-0000
+function aplicarMascaraTelefone(input) {
+  input.addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 10) {
+      v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (v.length > 6) {
+      v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    } else if (v.length > 2) {
+      v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+    } else if (v.length > 0) {
+      v = v.replace(/^(\d{0,2})$/, '($1');
+    }
+    this.value = v;
+  });
+}
+document.querySelectorAll('input[type="tel"]').forEach(aplicarMascaraTelefone);
 </script>
 </body>
 </html>
