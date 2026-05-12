@@ -111,6 +111,13 @@
 </div>
 {% endif %}
 
+{% if readonly %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+  <i data-lucide="eye" style="width:16px;height:16px;flex-shrink:0;"></i>
+  <span><strong>Modo visualização</strong> — você está vendo as respostas do paciente. Nenhuma alteração será salva.</span>
+</div>
+{% endif %}
+
 <!-- Progresso -->
 <div class="progress-header">
   <div class="progress-info">
@@ -158,6 +165,7 @@
       <label class="opcao-label">
         <input type="radio" name="item_{{ p.numero }}" value="{{ valor }}"
           {% if p.resposta_salva == valor %}checked{% endif %}
+          {% if readonly %}disabled{% endif %}
           onchange="marcarRespondida({{ p.numero }})">
         <span class="opcao-num">{{ valor }}</span>
         <span>{{ rotulo }}</span>
@@ -167,6 +175,7 @@
       <label class="opcao-label nsa">
         <input type="radio" name="item_{{ p.numero }}" value="0"
           {% if p.resposta_salva == 0 %}checked{% endif %}
+          {% if readonly %}disabled{% endif %}
           onchange="marcarRespondida({{ p.numero }})">
         <span class="opcao-num">0</span>
         <span>{{ rotulo }}</span>
@@ -179,13 +188,21 @@
   <div class="nav-footer">
     <div>
       {% if pagina_anterior %}
-      <a href="{% if publico %}{% url 'questionario_publico' avaliacao.token pagina_anterior %}{% else %}{% url 'questionario' avaliacao.id pagina_anterior %}{% endif %}"
+      <a href="{% if readonly %}{% url 'questionario_visualizar' avaliacao.id pagina_anterior %}{% elif publico %}{% url 'questionario_publico' avaliacao.token pagina_anterior %}{% else %}{% url 'questionario' avaliacao.id pagina_anterior %}{% endif %}"
          class="btn btn-secondary">← Anterior</a>
       {% endif %}
     </div>
+    {% if readonly %}
+      {% if pagina == total %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Voltar ao paciente</a>
+      {% else %}
+      <a href="{% url 'questionario_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary">Próxima Seção →</a>
+      {% endif %}
+    {% else %}
     <button type="submit" class="btn btn-primary">
       {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Questionário{% else %}Próxima Seção →{% endif %}
     </button>
+    {% endif %}
   </div>
 </form>
 

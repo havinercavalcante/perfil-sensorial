@@ -276,6 +276,31 @@ def dashboard(request, avaliacao_id):
 
 
 @login_required
+def questionario_visualizar(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("questionario_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    secao_atual = SECOES[pagina - 1]
+    itens_secao = secao_atual["itens"]
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens_secao)}
+
+    perguntas_pagina = [
+        {"numero": item, "texto": PERGUNTAS.get(item, ""), "resposta_salva": respostas_salvas.get(item),
+         "quadrante": QUADRANTE.get(item)}
+        for item in itens_secao
+    ]
+    return render(request, "questionario/questionario.html", {
+        "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas_pagina,
+        "opcoes": OPCOES, "pagina": pagina, "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_secoes": [(i + 1, SECOES[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "readonly": True,
+    })
+
+
+@login_required
 def enviar_email_link(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.template.loader import render_to_string

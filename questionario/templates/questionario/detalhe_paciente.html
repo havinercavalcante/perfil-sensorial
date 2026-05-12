@@ -54,7 +54,7 @@
     cursor: pointer; transition: all .15s;
   }
   .bebe-faixa-btn:hover { background: #E91E8C; color: #fff; }
-  .btn-wa, .btn-email, .btn-copy, .btn-resultado {
+  .btn-wa, .btn-email, .btn-copy, .btn-resultado, .btn-ver-respostas {
     display: inline-flex; align-items: center; gap: .3rem;
     border: none; border-radius: 6px;
     padding: .32rem 1rem; font-size: .78rem; font-weight: 600;
@@ -104,10 +104,11 @@
     .acoes-td { flex: 0 0 100%; display: flex; flex-wrap: nowrap; gap: .3rem; margin-top: .25rem; overflow-x: auto; }
     .acoes-td > * { margin-left: 0 !important; flex-shrink: 0; }
     .acoes-td .btn-txt { display: none; }
-    .acoes-td .btn-resultado .btn-txt { display: inline; }
+    .acoes-td .btn-resultado:not(.btn-ver-respostas) .btn-txt { display: inline; }
     .table-scores td:not(:nth-child(1)):not(.acoes-td) { display: none; }
-    .btn-wa, .btn-email, .btn-copy, .btn-resultado { padding: .32rem .55rem; }
+    .btn-wa, .btn-email, .btn-copy, .btn-resultado, .btn-ver-respostas { padding: .32rem .55rem; }
     .acoes-td .btn-resultado { flex: 1 1 auto; justify-content: center; }
+    .acoes-td .btn-ver-respostas { flex: 0 0 auto; }
   }
 </style>
 {% endblock %}
@@ -162,6 +163,9 @@
         <a href="{% url 'dashboard' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -181,6 +185,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletar({{ av.obj.id }}, this)">
