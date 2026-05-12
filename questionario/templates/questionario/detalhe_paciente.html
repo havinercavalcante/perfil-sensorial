@@ -219,6 +219,9 @@
         <a href="{% url 'vineland_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -238,6 +241,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarVineland({{ av.obj.id }}, this)">
@@ -270,6 +276,9 @@
         <a href="{% url 'escolar_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -289,6 +298,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'escolar_deletar' av.obj.id %}', this)">
@@ -320,6 +332,9 @@
         <a href="{% url 'bebe_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -339,6 +354,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'bebe_deletar' av.obj.id %}', this)">
@@ -370,6 +388,9 @@
         <a href="{% url 'spm_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -389,6 +410,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'spm_deletar' av.obj.id %}', this)">
