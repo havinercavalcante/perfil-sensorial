@@ -21,6 +21,7 @@ urlpatterns = [
     path("questionario/publico/<str:token>/<int:pagina>/", views.questionario_publico_view, name="questionario_publico"),
     path("avaliacao/<int:avaliacao_id>/concluir/", views.concluir, name="concluir"),
     path("avaliacao/<int:avaliacao_id>/dashboard/", views.dashboard, name="dashboard"),
+    path("avaliacao/<int:avaliacao_id>/visualizar/<int:pagina>/", views.questionario_visualizar, name="questionario_visualizar"),
     path("avaliacao/<int:avaliacao_id>/deletar/", views.deletar_avaliacao, name="deletar_avaliacao"),
     path("avaliacao/<int:avaliacao_id>/enviar-link/", views.enviar_email_link, name="enviar_email_link"),
     path("avaliacao/<int:avaliacao_id>/observacoes/", views.salvar_observacoes, name="salvar_observacoes"),
