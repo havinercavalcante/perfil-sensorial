@@ -160,6 +160,30 @@ def escolar_resultado(request, avaliacao_id):
 
 
 @login_required
+def escolar_visualizar(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    if pagina < 1 or pagina > ESCOLAR_TOTAL_PAGINAS:
+        return redirect("escolar_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    secao_atual = ESCOLAR_SECOES[pagina - 1]
+    itens = secao_atual["itens"]
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens)}
+
+    perguntas = [
+        {"numero": item, "texto": ESCOLAR_PERGUNTAS.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
+        for item in itens
+    ]
+    return render(request, "questionario/escolar_form.html", {
+        "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
+        "opcoes": ESCOLAR_OPCOES, "pagina": pagina, "total": ESCOLAR_TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / ESCOLAR_TOTAL_PAGINAS * 100),
+        "paginas_secoes": [(i + 1, ESCOLAR_SECOES[i]["nome"]) for i in range(ESCOLAR_TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "readonly": True,
+    })
+
+
+@login_required
 def escolar_deletar(request, avaliacao_id):
     from django.http import JsonResponse
     avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
