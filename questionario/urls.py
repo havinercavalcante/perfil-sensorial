@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # Link de Convite (gerado pelo médico, preenchido pelo paciente)
     path("gerar-link/", views.gerar_link, name="gerar_link"),
+    path("gerar-link/enviar-email/", views.enviar_email_convite, name="enviar_email_convite"),
     path("iniciar/<uuid:token>/", views.iniciar_avaliacao, name="iniciar_avaliacao"),
     # Auth
     path("login/", views.login_view, name="login"),
