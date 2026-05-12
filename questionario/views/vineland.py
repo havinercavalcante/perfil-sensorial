@@ -185,6 +185,31 @@ def vineland_resultado(request, avaliacao_id):
 
 
 @login_required
+def vineland_visualizar(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
+    if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
+        return redirect("vineland_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    grupo = VINELAND_GRUPOS[pagina - 1]
+    itens = grupo["itens"]
+    respostas_salvas = {r.numero_item: r.resposta for r in avaliacao.respostas.filter(numero_item__in=itens)}
+
+    perguntas = [
+        {"numero": item, "texto": VINELAND_PERGUNTAS.get(item, ""), "categoria": VINELAND_CATEGORIA.get(item, ""),
+         "resposta_salva": respostas_salvas.get(item)}
+        for item in itens
+    ]
+    return render(request, "questionario/vineland_form.html", {
+        "avaliacao": avaliacao, "grupo": grupo, "perguntas": perguntas,
+        "opcoes": VINELAND_OPCOES, "pagina": pagina, "total": VINELAND_TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
+        "paginas_grupos": [(i + 1, VINELAND_GRUPOS[i]["nome"]) for i in range(VINELAND_TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "readonly": True,
+    })
+
+
+@login_required
 def vineland_deletar(request, avaliacao_id):
     from django.http import JsonResponse
     avaliacao = get_object_or_404(AvaliacaoVineland, id=avaliacao_id, paciente__medico=request.user)
