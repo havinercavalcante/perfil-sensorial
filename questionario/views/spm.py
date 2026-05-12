@@ -187,6 +187,33 @@ def spm_resultado(request, avaliacao_id):
 
 
 @login_required
+def spm_visualizar(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    secoes, perguntas_data = _spm_dados(avaliacao.faixa)
+    total_paginas = len(secoes)
+
+    if pagina < 1 or pagina > total_paginas:
+        return redirect("spm_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    secao_atual = secoes[pagina - 1]
+    itens = secao_atual["itens"]
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens)}
+
+    perguntas = [
+        {"numero": item, "texto": perguntas_data.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
+        for item in itens
+    ]
+    return render(request, "questionario/spm_form.html", {
+        "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
+        "opcoes": OPCOES_SPM, "pagina": pagina, "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_secoes": [(i + 1, secoes[i]["nome"]) for i in range(total_paginas)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "readonly": True,
+    })
+
+
+@login_required
 def spm_deletar(request, avaliacao_id):
     from django.http import JsonResponse
     avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
