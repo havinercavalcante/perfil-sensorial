@@ -15,6 +15,8 @@ from ..data_spm import (
     calcular_pontuacao_spm,
     max_score_spm,
     classificar_spm_pct,
+    tscore_spm,
+    classificar_tscore_spm,
 )
 from ..services import notificar_terapeuta
 
@@ -42,7 +44,6 @@ def _spm_salvar_pontuacao(avaliacao):
 
 def _spm_build_secoes(avaliacao):
     faixa = avaliacao.faixa
-    maximos = max_score_spm(faixa)
     campo_map = {
         "soc": avaliacao.pont_soc, "vis": avaliacao.pont_vis,
         "hea": avaliacao.pont_hea, "tou": avaliacao.pont_tou,
@@ -51,18 +52,19 @@ def _spm_build_secoes(avaliacao):
     }
     secoes = []
     for sec_id, config in SECOES_CONFIG_SPM.items():
-        valor = campo_map.get(sec_id) or 0
-        maximo = maximos.get(sec_id, 1)
-        pct = int(valor / maximo * 100) if maximo else 0
+        raw = campo_map.get(sec_id) or 0
+        t = tscore_spm(raw, sec_id, faixa)
+        # barra de 0–100% mapeada de T=40 (0%) a T=80 (100%)
+        t_pct = max(0, min(100, int((t - 40) / 40 * 100))) if t is not None else 0
         secoes.append({
             "id": sec_id,
             "nome": config["nome"],
             "sigla": config["sigla"],
             "cor": config["cor"],
-            "valor": valor,
-            "maximo": maximo,
-            "pct": pct,
-            "classificacao": classificar_spm_pct(pct),
+            "valor": raw,
+            "t_score": t,
+            "t_pct": t_pct,
+            "classificacao": classificar_tscore_spm(t) if t is not None else None,
         })
     return secoes
 
@@ -71,6 +73,11 @@ def _spm_build_secoes(avaliacao):
 def nova_avaliacao_spm(request, paciente_id):
     from django.http import JsonResponse
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('spm'):
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "Módulo não disponível no seu plano."}, status=403)
+        messages.error(request, "Você não tem acesso ao módulo SPM.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
     faixa = request.GET.get("faixa", "spm_p")
     if faixa not in ("spm_p", "spm_casa"):
         faixa = "spm_p"
@@ -173,16 +180,22 @@ def spm_resultado(request, avaliacao_id):
                                       "pont_sme", "pont_bod", "pont_bal", "pont_pla", "pont_tot"])
 
     secoes = _spm_build_secoes(avaliacao)
-    max_tot = max_score_spm(avaliacao.faixa)["tot"]
-    pct_tot = int((avaliacao.pont_tot or 0) / max_tot * 100) if max_tot else 0
+    raw_tot = avaliacao.pont_tot or 0
+    t_tot = tscore_spm(raw_tot, "tot", avaliacao.faixa)
+    t_tot_pct = max(0, min(100, int((t_tot - 40) / 40 * 100))) if t_tot else 0
 
     return render(request, "questionario/spm_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "secoes": secoes,
-        "pct_tot": pct_tot,
-        "class_tot": classificar_spm_pct(pct_tot),
-        "secoes_json": json.dumps([{"nome": s["sigla"], "pct": s["pct"], "cor": s["cor"]} for s in secoes]),
+        "raw_tot": raw_tot,
+        "t_tot": t_tot,
+        "t_tot_pct": t_tot_pct,
+        "class_tot": classificar_tscore_spm(t_tot),
+        "secoes_json": json.dumps([
+            {"nome": s["sigla"], "t_score": s["t_score"], "cor": s["cor"]}
+            for s in secoes if s["t_score"] is not None
+        ]),
     })
 
 

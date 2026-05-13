@@ -47,6 +47,9 @@ def _classificar_beery(escore):
 @login_required
 def nova_avaliacao_beery(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('beery'):
+        messages.error(request, "Você não tem acesso ao módulo Beery VMI.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoBeery.objects.create(paciente=paciente)
     return redirect("beery_form", avaliacao_id=av.id)
 

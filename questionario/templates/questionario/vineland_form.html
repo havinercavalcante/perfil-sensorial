@@ -179,6 +179,7 @@
 
 <form method="post" id="form-vineland">
   {% csrf_token %}
+  <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
   {% for p in perguntas %}
   <div class="pergunta-card" id="card-{{ p.numero }}" data-cat="{{ p.categoria }}"
        {% if p.resposta_salva %}class="pergunta-card respondida"{% endif %}>
@@ -235,6 +236,23 @@
   </div>
 </form>
 
+<!-- Modal: itens faltando -->
+<div id="modal-faltando" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+  <div style="background:#fff; border-radius:14px; padding:1.5rem; max-width:440px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <div style="display:flex; align-items:center; gap:.6rem; margin-bottom:.75rem;">
+      <span style="font-size:1.3rem;">⚠️</span>
+      <h3 style="margin:0; font-size:1rem; color:#92400E;">Itens sem resposta</h3>
+    </div>
+    <p style="font-size:.88rem; color:#555; margin-bottom:.5rem;">Os seguintes itens deste grupo <strong>não foram preenchidos</strong>:</p>
+    <div id="modal-itens-lista" style="font-size:.85rem; color:#444; background:#FEF3C7; border-radius:8px; padding:.6rem .9rem; margin-bottom:.9rem; line-height:1.8;"></div>
+    <p style="font-size:.83rem; color:#777; margin-bottom:1.2rem;">Deseja continuar mesmo assim? Os itens não preenchidos ficam sem pontuação neste grupo.</p>
+    <div style="display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap;">
+      <button type="button" onclick="fecharModalFaltando()" class="btn btn-secondary">Voltar e preencher</button>
+      <button type="button" onclick="confirmarContinuar()" class="btn btn-primary">Continuar mesmo assim</button>
+    </div>
+  </div>
+</div>
+
 <script>
 function marcarRespondida(num, input) {
   const card = document.getElementById('card-' + num);
@@ -244,8 +262,39 @@ function marcarRespondida(num, input) {
   input.closest('.opcao-label').classList.add('selected');
 }
 
+function abrirModalFaltando(numeros) {
+  const lista = document.getElementById('modal-itens-lista');
+  lista.innerHTML = numeros.map(n => `<strong>Item ${n}</strong>`).join(' &nbsp;&middot;&nbsp; ');
+  document.getElementById('modal-faltando').style.display = 'flex';
+}
+
+function fecharModalFaltando() {
+  document.getElementById('modal-faltando').style.display = 'none';
+}
+
+function confirmarContinuar() {
+  document.getElementById('confirmar-incompleto').value = '1';
+  fecharModalFaltando();
+  document.getElementById('form-vineland').submit();
+}
+
 document.getElementById('form-vineland').addEventListener('submit', function(e) {
-  // sem validação obrigatória — itens em branco são permitidos
+  if (document.getElementById('confirmar-incompleto').value === '1') return;
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+  if (faltando.length > 0) {
+    e.preventDefault();
+    faltando.forEach(n => {
+      const card = document.getElementById('card-' + n);
+      if (card) {
+        card.style.borderColor = '#F59E0B';
+        card.style.background = '#FFFBEB';
+      }
+    });
+    abrirModalFaltando(faltando);
+    const primeiro = document.getElementById('card-' + faltando[0]);
+    if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 });
 </script>
 {% endblock %}

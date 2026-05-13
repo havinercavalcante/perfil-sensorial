@@ -1,0 +1,235 @@
+{% extends "questionario/base.html" %}
+{% block title %}Vineland-3 — {{ secao.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --v3c: {{ secao.cor }};
+    --v3c-dark: color-mix(in srgb, {{ secao.cor }} 70%, #000);
+  }
+
+  .progress-info { display:flex; justify-content:space-between; font-size:.82rem; color:var(--text-muted); margin-bottom:.4rem; }
+  .steps-bar { display:flex; gap:3px; margin-top:.6rem; flex-wrap:wrap; }
+  .step-dot { height:6px; flex:1; min-width:14px; border-radius:3px; background:var(--border); }
+  .step-dot.done   { background:var(--v3c); }
+  .step-dot.active { background:color-mix(in srgb, var(--v3c) 50%, #fff); }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--v3c-dark), var(--v3c));
+    color:#fff; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.5rem;
+  }
+  .secao-header h2 { font-size:1.1rem; font-weight:700; margin-bottom:.2rem; }
+  .secao-header p  { font-size:.82rem; opacity:.8; }
+
+  .instrucoes {
+    background:#F0F9FF; border:1px solid #BAE6FD;
+    border-radius:10px; padding:.75rem 1rem; margin-bottom:1.2rem;
+  }
+  .instrucoes-titulo { display:block; font-weight:700; margin-bottom:.5rem; color:var(--v3c-dark); font-size:.85rem; }
+  .instrucoes-chips { display:flex; flex-wrap:wrap; gap:.4rem; }
+  .instrucao-chip {
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.3rem .75rem; border-radius:20px;
+    font-size:.78rem; font-weight:600;
+    background:linear-gradient(135deg, var(--v3c-dark), var(--v3c)); color:#fff;
+  }
+
+  .pergunta-card {
+    border:1.5px solid var(--border); border-radius:12px;
+    padding:1.1rem 1.2rem; margin-bottom:.9rem; background:#fff;
+    transition:border-color .2s, background .2s;
+  }
+  .pergunta-card.respondida {
+    border-color:var(--v3c);
+    background:color-mix(in srgb, var(--v3c) 4%, #fff);
+  }
+  .pergunta-num  { font-size:.72rem; font-weight:700; color:var(--text-muted); margin-bottom:.3rem; }
+  .pergunta-texto { font-size:.91rem; color:var(--text); line-height:1.55; margin-bottom:1rem; }
+
+  .opcoes-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:.4rem;
+  }
+  .opcao-label {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:.15rem; cursor:pointer; padding:.55rem .2rem; border-radius:9px;
+    border:1.5px solid var(--border); background:#fff;
+    transition:all .15s; font-size:.72rem; text-align:center; line-height:1.2;
+    user-select:none;
+  }
+  .opcao-label:hover { border-color:var(--v3c); background:color-mix(in srgb, var(--v3c) 10%, #fff); }
+  .opcao-label input { display:none; }
+  .opcao-label.selected { border-color:var(--v3c); background:var(--v3c); color:#fff; font-weight:700; }
+  .opcao-num { font-size:1.05rem; font-weight:800; }
+
+  .nav-footer {
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:.75rem; margin-top:1.75rem;
+    padding-top:1rem; border-top:1px solid var(--border);
+  }
+
+  @media (max-width:600px) {
+    .opcoes-grid { grid-template-columns:repeat(3,1fr); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if readonly %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+  <i data-lucide="eye" style="width:16px;height:16px;flex-shrink:0;"></i>
+  <span><strong>Modo visualização</strong> — você está vendo as respostas do paciente. Nenhuma alteração será salva.</span>
+</div>
+{% endif %}
+
+<div class="progress-header">
+  <div class="progress-info">
+    <span>Seção {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%; background:var(--v3c);"></div>
+  </div>
+  <div class="steps-bar">
+    {% for i, nome in paginas_secoes %}
+    <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="secao-header">
+  <h2><strong>{{ secao.sigla }}</strong> — {{ secao.nome }}</h2>
+  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens nesta seção</p>
+</div>
+
+<div class="instrucoes">
+  <span class="instrucoes-titulo">
+    {% if secao.dominio == "pc_a" or secao.dominio == "pc_bc" %}
+    Com que frequência este comportamento problemático ocorre?
+    {% else %}
+    Com que frequência esta pessoa realiza a atividade descrita?
+    {% endif %}
+  </span>
+  <div class="instrucoes-chips">
+    {% for val, label, sigla in opcoes %}
+    <span class="instrucao-chip"><b>{{ val }}</b>&nbsp;— {{ label }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post" id="form-v3">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
+  {% for p in perguntas %}
+  <div class="pergunta-card{% if p.resposta_salva is not None %} respondida{% endif %}" id="card-{{ p.numero }}">
+    <div class="pergunta-num">Item {{ p.numero_local }}</div>
+    <div class="pergunta-texto">{{ p.texto }}</div>
+    <div class="opcoes-grid">
+      {% for val, label, sigla in opcoes %}
+      <label class="opcao-label {% if p.resposta_salva == val %}selected{% endif %}"
+             id="label-{{ p.numero }}-{{ val }}">
+        <input type="radio" name="item_{{ p.numero }}" value="{{ val }}"
+               {% if p.resposta_salva == val %}checked{% endif %}
+               {% if readonly %}disabled{% endif %}
+               onchange="marcarRespondida({{ p.numero }}, this)">
+        <span class="opcao-num">{{ val }}</span>
+        <span>{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div>
+      {% if pagina_anterior %}
+      <a href="{% if readonly %}{% url 'vineland3_visualizar' avaliacao.id pagina_anterior %}{% else %}{% url 'vineland3_form' avaliacao.id pagina_anterior %}{% endif %}" class="btn btn-secondary">← Anterior</a>
+      {% elif not publico %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Paciente</a>
+      {% endif %}
+    </div>
+    {% if readonly %}
+      {% if pagina == total %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Voltar ao paciente</a>
+      {% else %}
+      <a href="{% url 'vineland3_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--v3c); border-color:var(--v3c);">Próxima Seção →</a>
+      {% endif %}
+    {% else %}
+    <button type="submit" class="btn btn-primary" style="background:var(--v3c); border-color:var(--v3c);">
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação{% else %}Próxima Seção →{% endif %}
+    </button>
+    {% endif %}
+  </div>
+</form>
+
+<!-- Modal: itens faltando -->
+<div id="modal-faltando" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+  <div style="background:#fff; border-radius:14px; padding:1.5rem; max-width:440px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <div style="display:flex; align-items:center; gap:.6rem; margin-bottom:.75rem;">
+      <span style="font-size:1.3rem;">⚠️</span>
+      <h3 style="margin:0; font-size:1rem; color:#92400E;">Itens sem resposta</h3>
+    </div>
+    <p style="font-size:.88rem; color:#555; margin-bottom:.5rem;">Os seguintes itens desta seção <strong>não foram preenchidos</strong>:</p>
+    <div id="modal-itens-lista" style="font-size:.85rem; color:#444; background:#FEF3C7; border-radius:8px; padding:.6rem .9rem; margin-bottom:.9rem; line-height:1.8;"></div>
+    <p style="font-size:.83rem; color:#777; margin-bottom:1.2rem;">Deseja continuar mesmo assim? Os itens não preenchidos ficam sem pontuação nesta seção.</p>
+    <div style="display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap;">
+      <button type="button" onclick="fecharModalFaltando()" class="btn btn-secondary">Voltar e preencher</button>
+      <button type="button" onclick="confirmarContinuar()" class="btn btn-primary" style="background:var(--v3c); border-color:var(--v3c);">Continuar mesmo assim</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function marcarRespondida(num, input) {
+  const card = document.getElementById('card-' + num);
+  if (!card) return;
+  card.classList.add('respondida');
+  card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
+  input.closest('.opcao-label').classList.add('selected');
+}
+
+function abrirModalFaltando(numerosLocais) {
+  const lista = document.getElementById('modal-itens-lista');
+  lista.innerHTML = numerosLocais.map(n => `<strong>Item ${n}</strong>`).join(' &nbsp;&middot;&nbsp; ');
+  document.getElementById('modal-faltando').style.display = 'flex';
+}
+
+function fecharModalFaltando() {
+  document.getElementById('modal-faltando').style.display = 'none';
+}
+
+function confirmarContinuar() {
+  document.getElementById('confirmar-incompleto').value = '1';
+  fecharModalFaltando();
+  document.getElementById('form-v3').submit();
+}
+
+document.getElementById('form-v3').addEventListener('submit', function(e) {
+  if (document.getElementById('confirmar-incompleto').value === '1') return;
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  const itensLocais = { {% for p in perguntas %}{{ p.numero }}:{{ p.numero_local }},{% endfor %} };
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+  if (faltando.length > 0) {
+    e.preventDefault();
+    faltando.forEach(n => {
+      const card = document.getElementById('card-' + n);
+      if (card) {
+        card.style.borderColor = '#F59E0B';
+        card.style.background = '#FFFBEB';
+      }
+    });
+    const numerosLocais = faltando.map(n => itensLocais[n]);
+    abrirModalFaltando(numerosLocais);
+    const primeiro = document.getElementById('card-' + faltando[0]);
+    if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+{% if itens_faltando %}
+window.addEventListener('DOMContentLoaded', function() {
+  const faltando = {{ itens_faltando }};
+  if (faltando.length > 0) abrirModalFaltando(faltando);
+});
+{% endif %}
+</script>
+{% endblock %}
