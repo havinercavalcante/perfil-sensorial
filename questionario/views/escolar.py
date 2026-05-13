@@ -23,6 +23,11 @@ ESCOLAR_TOTAL_PAGINAS = len(ESCOLAR_SECOES)
 def nova_avaliacao_escolar(request, paciente_id):
     from django.http import JsonResponse
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('escolar'):
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "Módulo não disponível no seu plano."}, status=403)
+        messages.error(request, "Você não tem acesso ao módulo Questionário Sensorial Escolar.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoEscolar.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "id": av.id})

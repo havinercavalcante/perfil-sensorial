@@ -22,6 +22,11 @@ from ..services import notificar_terapeuta
 def nova_avaliacao_bebe(request, paciente_id):
     from django.http import JsonResponse
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('bebe'):
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "Módulo não disponível no seu plano."}, status=403)
+        messages.error(request, "Você não tem acesso ao módulo Perfil Sensorial Bebê.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
     faixa = request.GET.get("faixa", "bebe")
     if faixa not in ("bebe", "crianca_pequena"):
         faixa = "bebe"

@@ -37,6 +37,9 @@ def _classificar_mabc2(percentil):
 @login_required
 def nova_avaliacao_mabc2(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('mabc2'):
+        messages.error(request, "Você não tem acesso ao módulo MABC-2.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoMABC2.objects.create(paciente=paciente, faixa_etaria="3_6")
     return redirect("mabc2_form", avaliacao_id=av.id)
 

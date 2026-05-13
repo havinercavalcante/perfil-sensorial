@@ -1,19 +1,35 @@
 import json
+import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 
 from ..models import Paciente, AvaliacaoPEDI
+from ..pedi_data import (
+    AUTOCUIDADO_SECOES, MOBILIDADE_SECOES, FUNCAO_SOCIAL_SECOES,
+    CA_AUTOCUIDADO_ITENS, CA_MOBILIDADE_ITENS, CA_FUNCAO_SOCIAL_ITENS,
+    lookup_escore_continuo,
+)
 
 _PEDI_FS_MAX = {"autocuidado": 73, "mobilidade": 59, "funcao_social": 65}
-_PEDI_CA_MAX = {"autocuidado": 40, "mobilidade": 40, "funcao_social": 40}
+_PEDI_CA_MAX = {"autocuidado": 40, "mobilidade": 35, "funcao_social": 25}
 
 
 @login_required
 def nova_avaliacao_pedi(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
-    av = AvaliacaoPEDI.objects.create(paciente=paciente)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('pedi'):
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            from django.http import JsonResponse
+            return JsonResponse({"ok": False, "error": "Módulo não disponível no seu plano."}, status=403)
+        messages.error(request, "Você não tem acesso ao módulo PEDI.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
+    av = AvaliacaoPEDI.objects.create(paciente=paciente, token=str(uuid.uuid4()))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        from django.http import JsonResponse
+        return JsonResponse({"ok": True})
     return redirect("pedi_form", avaliacao_id=av.id)
 
 
@@ -53,11 +69,33 @@ def pedi_form(request, avaliacao_id):
         messages.success(request, "PEDI salvo com sucesso.")
         return redirect("pedi_resultado", avaliacao_id=avaliacao_id)
 
+    steps = []
+    for s in AUTOCUIDADO_SECOES:
+        steps.append({"tipo": "fs", "dom": "ac", "secao": s, "dominio_label": "Autocuidado", "icon": "utensils"})
+    for s in MOBILIDADE_SECOES:
+        steps.append({"tipo": "fs", "dom": "mob", "secao": s, "dominio_label": "Mobilidade", "icon": "footprints"})
+    for s in FUNCAO_SOCIAL_SECOES:
+        steps.append({"tipo": "fs", "dom": "fs", "secao": s, "dominio_label": "Função Social", "icon": "users"})
+    steps.append({"tipo": "ca", "dom": "ac",  "secao": {"codigo": "CA", "titulo": "Autocuidado"},   "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_AUTOCUIDADO_ITENS,  "ca_max": _PEDI_CA_MAX["autocuidado"]})
+    steps.append({"tipo": "ca", "dom": "mob", "secao": {"codigo": "CA", "titulo": "Mobilidade"},    "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_MOBILIDADE_ITENS,   "ca_max": _PEDI_CA_MAX["mobilidade"]})
+    steps.append({"tipo": "ca", "dom": "fs",  "secao": {"codigo": "CA", "titulo": "Função Social"}, "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_FUNCAO_SOCIAL_ITENS, "ca_max": _PEDI_CA_MAX["funcao_social"]})
+
+    ac_count  = len(AUTOCUIDADO_SECOES)
+    mob_count = len(MOBILIDADE_SECOES)
+    fs_count  = len(FUNCAO_SOCIAL_SECOES)
+    domain_starts = [0, ac_count, ac_count + mob_count, ac_count + mob_count + fs_count]
+
     return render(request, "questionario/pedi_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "fs_max": _PEDI_FS_MAX,
         "ca_max": _PEDI_CA_MAX,
+        "steps": steps,
+        "total_steps": len(steps),
+        "domain_starts": domain_starts,
+        "salvar_url": reverse("pedi_salvar_progresso", args=[avaliacao_id]),
+        "respostas_json": avaliacao.respostas_json or "{}",
+        "pagina_atual": avaliacao.pagina_atual or 0,
     })
 
 
@@ -66,15 +104,25 @@ def pedi_resultado(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
+    def _ec(dominio, raw):
+        if raw is None:
+            return None, None
+        ec, ep = lookup_escore_continuo(dominio, raw)
+        return ec, ep
+
+    fs_ac_ec, fs_ac_ep   = _ec("autocuidado",  avaliacao.fs_autocuidado)
+    fs_mob_ec, fs_mob_ep = _ec("mobilidade",   avaliacao.fs_mobilidade)
+    fs_fs_ec, fs_fs_ep   = _ec("funcao_social", avaliacao.fs_funcao_social)
+
     dominios_fs = [
-        {"nome": "Autocuidado",    "raw": avaliacao.fs_autocuidado,    "max": _PEDI_FS_MAX["autocuidado"],   "escala": avaliacao.fs_autocuidado_escala},
-        {"nome": "Mobilidade",     "raw": avaliacao.fs_mobilidade,     "max": _PEDI_FS_MAX["mobilidade"],    "escala": avaliacao.fs_mobilidade_escala},
-        {"nome": "Função Social",  "raw": avaliacao.fs_funcao_social,  "max": _PEDI_FS_MAX["funcao_social"], "escala": avaliacao.fs_funcao_social_escala},
+        {"nome": "Autocuidado",   "raw": avaliacao.fs_autocuidado,   "max": _PEDI_FS_MAX["autocuidado"],   "escala": avaliacao.fs_autocuidado_escala,   "ec": fs_ac_ec,  "ep": fs_ac_ep},
+        {"nome": "Mobilidade",    "raw": avaliacao.fs_mobilidade,    "max": _PEDI_FS_MAX["mobilidade"],    "escala": avaliacao.fs_mobilidade_escala,    "ec": fs_mob_ec, "ep": fs_mob_ep},
+        {"nome": "Função Social", "raw": avaliacao.fs_funcao_social, "max": _PEDI_FS_MAX["funcao_social"], "escala": avaliacao.fs_funcao_social_escala, "ec": fs_fs_ec,  "ep": fs_fs_ep},
     ]
     dominios_ca = [
-        {"nome": "Autocuidado",    "raw": avaliacao.ca_autocuidado,    "max": _PEDI_CA_MAX["autocuidado"],   "escala": avaliacao.ca_autocuidado_escala},
-        {"nome": "Mobilidade",     "raw": avaliacao.ca_mobilidade,     "max": _PEDI_CA_MAX["mobilidade"],    "escala": avaliacao.ca_mobilidade_escala},
-        {"nome": "Função Social",  "raw": avaliacao.ca_funcao_social,  "max": _PEDI_CA_MAX["funcao_social"], "escala": avaliacao.ca_funcao_social_escala},
+        {"nome": "Autocuidado",   "raw": avaliacao.ca_autocuidado,   "max": _PEDI_CA_MAX["autocuidado"],   "escala": avaliacao.ca_autocuidado_escala},
+        {"nome": "Mobilidade",    "raw": avaliacao.ca_mobilidade,    "max": _PEDI_CA_MAX["mobilidade"],    "escala": avaliacao.ca_mobilidade_escala},
+        {"nome": "Função Social", "raw": avaliacao.ca_funcao_social, "max": _PEDI_CA_MAX["funcao_social"], "escala": avaliacao.ca_funcao_social_escala},
     ]
 
     return render(request, "questionario/pedi_resultado.html", {
@@ -103,6 +151,108 @@ def pedi_deletar(request, avaliacao_id):
     return redirect("detalhe_paciente", paciente_id=paciente_uuid)
 
 
+def pedi_publico_redirect(request, token):
+    return redirect("pedi_publico", token=token, pagina=1)
+
+
+def pedi_publico(request, token, pagina=1):
+    avaliacao = get_object_or_404(AvaliacaoPEDI, token=token)
+    paciente = avaliacao.paciente
+
+    if avaliacao.fs_autocuidado is not None:
+        return render(request, "questionario/concluido.html", {})
+
+    if request.method == "POST":
+        def _get_int(name):
+            try:
+                return int(request.POST.get(name, "").strip())
+            except (ValueError, AttributeError):
+                return None
+
+        avaliacao.fs_autocuidado = _get_int("fs_autocuidado")
+        avaliacao.fs_mobilidade = _get_int("fs_mobilidade")
+        avaliacao.fs_funcao_social = _get_int("fs_funcao_social")
+        avaliacao.ca_autocuidado = _get_int("ca_autocuidado")
+        avaliacao.ca_mobilidade = _get_int("ca_mobilidade")
+        avaliacao.ca_funcao_social = _get_int("ca_funcao_social")
+
+        def _escala(raw, maximo):
+            if raw is None or maximo == 0:
+                return None
+            return round(min(raw, maximo) / maximo * 100, 1)
+
+        avaliacao.fs_autocuidado_escala = _escala(avaliacao.fs_autocuidado, _PEDI_FS_MAX["autocuidado"])
+        avaliacao.fs_mobilidade_escala = _escala(avaliacao.fs_mobilidade, _PEDI_FS_MAX["mobilidade"])
+        avaliacao.fs_funcao_social_escala = _escala(avaliacao.fs_funcao_social, _PEDI_FS_MAX["funcao_social"])
+        avaliacao.ca_autocuidado_escala = _escala(avaliacao.ca_autocuidado, _PEDI_CA_MAX["autocuidado"])
+        avaliacao.ca_mobilidade_escala = _escala(avaliacao.ca_mobilidade, _PEDI_CA_MAX["mobilidade"])
+        avaliacao.ca_funcao_social_escala = _escala(avaliacao.ca_funcao_social, _PEDI_CA_MAX["funcao_social"])
+
+        avaliacao.save()
+        return render(request, "questionario/concluido.html", {})
+
+    steps = []
+    for s in AUTOCUIDADO_SECOES:
+        steps.append({"tipo": "fs", "dom": "ac", "secao": s, "dominio_label": "Autocuidado", "icon": "utensils"})
+    for s in MOBILIDADE_SECOES:
+        steps.append({"tipo": "fs", "dom": "mob", "secao": s, "dominio_label": "Mobilidade", "icon": "footprints"})
+    for s in FUNCAO_SOCIAL_SECOES:
+        steps.append({"tipo": "fs", "dom": "fs", "secao": s, "dominio_label": "Função Social", "icon": "users"})
+    steps.append({"tipo": "ca", "dom": "ac",  "secao": {"codigo": "CA", "titulo": "Autocuidado"},   "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_AUTOCUIDADO_ITENS,  "ca_max": _PEDI_CA_MAX["autocuidado"]})
+    steps.append({"tipo": "ca", "dom": "mob", "secao": {"codigo": "CA", "titulo": "Mobilidade"},    "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_MOBILIDADE_ITENS,   "ca_max": _PEDI_CA_MAX["mobilidade"]})
+    steps.append({"tipo": "ca", "dom": "fs",  "secao": {"codigo": "CA", "titulo": "Função Social"}, "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_FUNCAO_SOCIAL_ITENS, "ca_max": _PEDI_CA_MAX["funcao_social"]})
+
+    ac_count  = len(AUTOCUIDADO_SECOES)
+    mob_count = len(MOBILIDADE_SECOES)
+    fs_count  = len(FUNCAO_SOCIAL_SECOES)
+    domain_starts = [0, ac_count, ac_count + mob_count, ac_count + mob_count + fs_count]
+
+    return render(request, "questionario/pedi_form.html", {
+        "avaliacao": avaliacao,
+        "paciente": paciente,
+        "fs_max": _PEDI_FS_MAX,
+        "ca_max": _PEDI_CA_MAX,
+        "steps": steps,
+        "total_steps": len(steps),
+        "domain_starts": domain_starts,
+        "publico": True,
+        "token": token,
+        "pagina_url": pagina,
+        "salvar_url": reverse("pedi_salvar_progresso_publico", args=[token]),
+        "respostas_json": avaliacao.respostas_json or "{}",
+        "pagina_atual": avaliacao.pagina_atual or 0,
+    })
+
+
+@login_required
+def pedi_salvar_progresso(request, avaliacao_id):
+    from django.http import JsonResponse
+    import json as _json
+    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    if request.method == "POST":
+        data = _json.loads(request.body)
+        avaliacao.respostas_json = _json.dumps(data.get("respostas", {}))
+        avaliacao.pagina_atual = int(data.get("step", 0))
+        avaliacao.save(update_fields=["respostas_json", "pagina_atual"])
+        return JsonResponse({"ok": True})
+    return JsonResponse({"ok": False}, status=405)
+
+
+def pedi_salvar_progresso_publico(request, token):
+    from django.http import JsonResponse
+    import json as _json
+    avaliacao = get_object_or_404(AvaliacaoPEDI, token=token)
+    if avaliacao.fs_autocuidado is not None:
+        return JsonResponse({"ok": False}, status=403)
+    if request.method == "POST":
+        data = _json.loads(request.body)
+        avaliacao.respostas_json = _json.dumps(data.get("respostas", {}))
+        avaliacao.pagina_atual = int(data.get("step", 0))
+        avaliacao.save(update_fields=["respostas_json", "pagina_atual"])
+        return JsonResponse({"ok": True})
+    return JsonResponse({"ok": False}, status=405)
+
+
 @login_required
 def salvar_observacoes_pedi(request, avaliacao_id):
     from django.http import JsonResponse
@@ -114,3 +264,66 @@ def salvar_observacoes_pedi(request, avaliacao_id):
             return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas com sucesso.")
         return redirect("pedi_resultado", avaliacao_id=avaliacao_id)
+
+
+@login_required
+def enviar_email_pedi(request, avaliacao_id):
+    from django.core.mail import send_mail
+    from django.http import JsonResponse
+    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    email_dest = paciente.email_responsavel
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not email_dest:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
+        messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    link = request.build_absolute_uri(f"/pedi/publico/{avaliacao.token}/1/")
+    send_mail(
+        subject="PEDI — CeciSys",
+        message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário PEDI no link: {link}",
+        from_email=None,
+        recipient_list=[email_dest],
+        fail_silently=False,
+    )
+    if is_ajax:
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
+    messages.success(request, f"E-mail enviado para {email_dest}.")
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+
+
+@login_required
+def pedi_visualizar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+
+    steps = []
+    for s in AUTOCUIDADO_SECOES:
+        steps.append({"tipo": "fs", "dom": "ac", "secao": s, "dominio_label": "Autocuidado", "icon": "utensils"})
+    for s in MOBILIDADE_SECOES:
+        steps.append({"tipo": "fs", "dom": "mob", "secao": s, "dominio_label": "Mobilidade", "icon": "footprints"})
+    for s in FUNCAO_SOCIAL_SECOES:
+        steps.append({"tipo": "fs", "dom": "fs", "secao": s, "dominio_label": "Função Social", "icon": "users"})
+    steps.append({"tipo": "ca", "dom": "ac",  "secao": {"codigo": "CA", "titulo": "Autocuidado"},   "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_AUTOCUIDADO_ITENS,  "ca_max": _PEDI_CA_MAX["autocuidado"]})
+    steps.append({"tipo": "ca", "dom": "mob", "secao": {"codigo": "CA", "titulo": "Mobilidade"},    "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_MOBILIDADE_ITENS,   "ca_max": _PEDI_CA_MAX["mobilidade"]})
+    steps.append({"tipo": "ca", "dom": "fs",  "secao": {"codigo": "CA", "titulo": "Função Social"}, "dominio_label": "Assist. Cuidador", "icon": "helping-hand", "ca_itens": CA_FUNCAO_SOCIAL_ITENS, "ca_max": _PEDI_CA_MAX["funcao_social"]})
+
+    ac_count  = len(AUTOCUIDADO_SECOES)
+    mob_count = len(MOBILIDADE_SECOES)
+    fs_count  = len(FUNCAO_SOCIAL_SECOES)
+    domain_starts = [0, ac_count, ac_count + mob_count, ac_count + mob_count + fs_count]
+
+    return render(request, "questionario/pedi_form.html", {
+        "avaliacao": avaliacao,
+        "paciente": paciente,
+        "fs_max": _PEDI_FS_MAX,
+        "ca_max": _PEDI_CA_MAX,
+        "steps": steps,
+        "total_steps": len(steps),
+        "domain_starts": domain_starts,
+        "salvar_url": "",
+        "respostas_json": avaliacao.respostas_json or "{}",
+        "pagina_atual": avaliacao.pagina_atual or 0,
+        "readonly": True,
+    })
