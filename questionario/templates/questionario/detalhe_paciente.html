@@ -7,13 +7,15 @@
   .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,.45); z-index: 1000;
-    align-items: center; justify-content: center;
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto; padding: 1.5rem 0;
   }
   .modal-overlay.active { display: flex; }
   .modal-box {
     background: #fff; border-radius: 14px; padding: 2rem;
     max-width: 480px; width: 92%;
     box-shadow: 0 12px 40px rgba(0,0,0,.2);
+    margin: auto;
   }
   .modal-box h3 { margin: 0 0 .4rem; font-size: 1.1rem; color: var(--primary-dark); }
   .modal-box .modal-sub { color: var(--text-muted); font-size: .88rem; margin-bottom: 1.5rem; }
@@ -47,6 +49,26 @@
   .escolha-card.mabc2     { --qc: #8E44AD; }
   .escolha-card.beery     { --qc: #2980B9; }
   .escolha-card.pedi      { --qc: #16A085; }
+  .escolha-card.vineland3 { --qc: #1D6FA4; }
+  .escolha-card.portage   { --qc: #9B59B6; }
+  .escolha-card:not(.bloqueado) { order: 0; }
+  .escolha-card.bloqueado {
+    order: 2;
+    opacity: .42; cursor: not-allowed; pointer-events: none;
+    border-color: var(--border) !important; background: #f5f5f5 !important;
+    transform: none !important;
+  }
+  .escolha-card.bloqueado .ec-desc { color: #b0b0b0; }
+  .bloqueados-sep {
+    display: none; order: 1;
+    grid-column: 1 / -1; width: 100%;
+    margin: .25rem 0 .5rem;
+    padding: .45rem .75rem;
+    background: #f5f5f5; border-radius: 8px;
+    font-size: .75rem; font-weight: 700; color: #888;
+    letter-spacing: .4px; text-transform: uppercase;
+    align-items: center; gap: .4rem;
+  }
   .bebe-faixa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .3rem; }
   .bebe-faixa-btn {
     padding: .4rem .5rem; border-radius: 8px; border: 1.5px solid #E91E8C;
@@ -426,6 +448,113 @@
 </div>
 {% endif %}
 
+{% if avaliacoes_vineland3 %}
+<div class="card">
+  <div class="card-title" style="color:#1D6FA4;"><i data-lucide="puzzle" style="width:18px;height:18px;"></i> Vineland-3 — Formulário de Pais/Cuidadores</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_vineland3 %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span>{% if av.obj.status != "concluida" %}<br><small style="color:var(--text-muted);font-size:.75rem;">Página {{ av.obj.pagina_atual }} de 6</small>{% endif %}</td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'vineland3_resultado' av.obj.id %}" class="btn-resultado">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
+        </a>
+        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
+        </button>
+        {% if av.obj.paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_vineland3' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;"
+                onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Vineland-3')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+          <span class="btn-txt">WhatsApp</span>
+        </button>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'vineland3_deletar' av.obj.id %}', this)">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_portage %}
+<div class="card">
+  <div class="card-title" style="color:#9B59B6;"><i data-lucide="baby" style="width:18px;height:18px;"></i> Guia Portage de Avaliação Pré-Escolar</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_portage %}
+    <tr>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span>{% if av.obj.status != "concluida" %}<br><small style="color:var(--text-muted);font-size:.75rem;">Página {{ av.obj.pagina_atual }} de 5</small>{% endif %}</td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'portage_resultado' av.obj.id %}" class="btn-resultado">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
+        </a>
+        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
+        </button>
+        {% if av.obj.paciente.email_responsavel %}
+        <!-- envio de e-mail pode ser adicionado futuramente -->
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;"
+                onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Guia Portage')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+          <span class="btn-txt">WhatsApp</span>
+        </button>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'portage_deletar' av.obj.id %}', this)">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
 {% if avaliacoes_edm %}
 <div class="card">
   <div class="card-title" style="color:#27AE60;"><i data-lucide="activity" style="width:18px;height:18px;"></i> EDM — Escala de Desenvolvimento Motor</div>
@@ -510,22 +639,58 @@
 <div class="card">
   <div class="card-title" style="color:#16A085;"><i data-lucide="accessibility" style="width:18px;height:18px;"></i> PEDI — Inventário de Avaliação Pediátrica</div>
   <div class="table-responsive"><table class="avaliacoes-table table-scores">
-    <thead><tr><th>Data</th><th>FS Autocuidado</th><th>FS Mobilidade</th><th>FS F. Social</th><th></th></tr></thead>
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_pedi %}
     <tr>
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td style="font-size:.85rem;">{% if av.fs_autocuidado_escala %}{{ av.fs_autocuidado_escala|floatformat:1 }}{% else %}—{% endif %}</td>
-      <td style="font-size:.85rem;">{% if av.fs_mobilidade_escala %}{{ av.fs_mobilidade_escala|floatformat:1 }}{% else %}—{% endif %}</td>
-      <td style="font-size:.85rem;">{% if av.fs_funcao_social_escala %}{{ av.fs_funcao_social_escala|floatformat:1 }}{% else %}—{% endif %}</td>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>
+        {% if av.obj.fs_autocuidado is not None %}
+        <span class="badge badge-concluida"><i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída</span>
+        {% else %}
+        <span class="badge badge-emandamento"><i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento</span><br>
+        <small style="color:var(--text-muted);font-size:.75rem;">Seção {{ av.obj.pagina_atual|add:1 }} de 45</small>
+        {% endif %}
+      </td>
       <td class="acoes-td">
-        <a href="{% url 'pedi_resultado' av.id %}" class="btn-resultado">
+        {% if av.obj.fs_autocuidado is not None %}
+        <a href="{% url 'pedi_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.obj.id %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
+        </button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_pedi' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;"
+                onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'PEDI')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+          <span class="btn-txt">WhatsApp</span>
+        </button>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        <button type="button" class="btn-del" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.obj.id %}', this)">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+        </button>
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
@@ -541,21 +706,47 @@
     <p class="modal-sub">Selecione o instrumento para <strong>{{ paciente.nome }}</strong>:</p>
 
     <div class="escolha-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="bloqueados-sep" id="bloqueados-sep">🔒 Não inclusos no plano</div>
+      {% if "sensorial" in modulos_liberados %}
       <button type="button" class="escolha-card sensorial" onclick="criarAvaliacao('sensorial')">
         <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Perfil Sensorial</span>
         <span class="ec-desc">86 itens, 9 domínios sensoriais</span>
       </button>
+      {% else %}
+      <div class="escolha-card sensorial bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Perfil Sensorial</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "vineland" in modulos_liberados %}
       <button type="button" class="escolha-card vineland" onclick="criarAvaliacao('vineland')">
         <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Escala Vineland</span>
         <span class="ec-desc">Maturidade social, 116 itens</span>
       </button>
+      {% else %}
+      <div class="escolha-card vineland bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Escala Vineland</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "escolar" in modulos_liberados %}
       <button type="button" class="escolha-card escolar" onclick="criarAvaliacao('escolar')">
         <span class="ec-icon"><i data-lucide="school" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Sensorial Escolar</span>
         <span class="ec-desc">35 itens, contexto escolar</span>
       </button>
+      {% else %}
+      <div class="escolha-card escolar bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Sensorial Escolar</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "bebe" in modulos_liberados %}
       <button type="button" class="escolha-card bebe" onclick="criarAvaliacao('bebe_bebe')">
         <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Bebê (0–6 meses)</span>
@@ -566,6 +757,19 @@
         <span class="ec-titulo">Criança Pequena (7–36m)</span>
         <span class="ec-desc">Perfil Sensorial Toddler</span>
       </button>
+      {% else %}
+      <div class="escolha-card bebe bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Bebê (0–6 meses)</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      <div class="escolha-card bebe bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Criança Pequena (7–36m)</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "spm" in modulos_liberados %}
       <button type="button" class="escolha-card spm" onclick="criarAvaliacao('spm_p')">
         <span class="ec-icon"><i data-lucide="user-round" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">SPM-P Casa (2–5 anos)</span>
@@ -576,26 +780,96 @@
         <span class="ec-titulo">SPM Casa (5–12 anos)</span>
         <span class="ec-desc">75 itens, 8 domínios sensoriais</span>
       </button>
+      {% else %}
+      <div class="escolha-card spm bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">SPM-P Casa (2–5 anos)</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      <div class="escolha-card spm bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">SPM Casa (5–12 anos)</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "edm" in modulos_liberados %}
       <a href="{% url 'nova_avaliacao_edm' paciente.uuid %}" class="escolha-card edm">
         <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">EDM Figueiredo</span>
         <span class="ec-desc">Desenvolvimento motor, 7 domínios</span>
       </a>
+      {% else %}
+      <div class="escolha-card edm bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">EDM Figueiredo</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "mabc2" in modulos_liberados %}
       <a href="{% url 'nova_avaliacao_mabc2' paciente.uuid %}" class="escolha-card mabc2">
         <span class="ec-icon"><i data-lucide="target" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">MABC-2</span>
         <span class="ec-desc">Habilidades motoras, 3 componentes</span>
       </a>
+      {% else %}
+      <div class="escolha-card mabc2 bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">MABC-2</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "beery" in modulos_liberados %}
       <a href="{% url 'nova_avaliacao_beery' paciente.uuid %}" class="escolha-card beery">
         <span class="ec-icon"><i data-lucide="pencil" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Beery VMI</span>
         <span class="ec-desc">Integração visomotora, 3 subtestes</span>
       </a>
-      <a href="{% url 'nova_avaliacao_pedi' paciente.uuid %}" class="escolha-card pedi">
+      {% else %}
+      <div class="escolha-card beery bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Beery VMI</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "pedi" in modulos_liberados %}
+      <button type="button" class="escolha-card pedi" onclick="criarAvaliacao('pedi')">
         <span class="ec-icon"><i data-lucide="accessibility" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">PEDI</span>
         <span class="ec-desc">Independência funcional, 3 domínios</span>
+      </button>
+      {% else %}
+      <div class="escolha-card pedi bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">PEDI</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "vineland3" in modulos_liberados %}
+      <a href="{% url 'nova_avaliacao_vineland3' paciente.uuid %}" class="escolha-card vineland3">
+        <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Vineland-3</span>
+        <span class="ec-desc">Comportamento adaptativo, 180 itens</span>
       </a>
+      {% else %}
+      <div class="escolha-card vineland3 bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Vineland-3</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
+      {% if "portage" in modulos_liberados %}
+      <button type="button" class="escolha-card portage" onclick="criarAvaliacao('portage')">
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Guia Portage</span>
+        <span class="ec-desc">Avaliação pré-escolar, 535 itens</span>
+      </button>
+      {% else %}
+      <div class="escolha-card portage bloqueado" title="Módulo não incluso no seu plano">
+        <span class="ec-icon">🔒</span>
+        <span class="ec-titulo">Guia Portage</span>
+        <span class="ec-desc">Módulo não disponível</span>
+      </div>
+      {% endif %}
     </div>
 
     <div class="modal-actions">
@@ -691,6 +965,8 @@
   const urlEscolar   = "{% url 'nova_avaliacao_escolar' paciente.uuid %}";
   const urlBebe      = "{% url 'nova_avaliacao_bebe' paciente.uuid %}";
   const urlSPM       = "{% url 'nova_avaliacao_spm' paciente.uuid %}";
+  const urlPedi      = "{% url 'nova_avaliacao_pedi' paciente.uuid %}";
+  const urlPortage   = "{% url 'nova_avaliacao_portage' paciente.uuid %}";
 
   function criarAvaliacao(tipo) {
     let url, label;
@@ -701,12 +977,15 @@
     else if (tipo === 'bebe_pequena') { url = urlBebe + '?faixa=crianca_pequena'; label = 'Perfil Sensorial Criança Pequena'; }
     else if (tipo === 'spm_p')        { url = urlSPM  + '?faixa=spm_p';          label = 'SPM-P Casa (2–5 anos)'; }
     else if (tipo === 'spm_casa')     { url = urlSPM  + '?faixa=spm_casa';       label = 'SPM Casa (5–12 anos)'; }
+    else if (tipo === 'pedi')         { url = urlPedi;                            label = 'PEDI'; }
+    else if (tipo === 'portage')      { url = urlPortage;                         label = 'Guia Portage'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())
       .then(data => {
         if (data.ok) {
           fecharModalEscolha();
+          if (data.redirect) { window.location.href = data.redirect; return; }
           mostrarAlerta('Avaliação ' + label + ' criada com sucesso.', 'success');
           setTimeout(() => location.reload(), 1800);
         }
@@ -716,6 +995,11 @@
   /* ── Modal de escolha ── */
   function abrirModalEscolha() {
     document.getElementById('modalEscolha').classList.add('active');
+    const sep = document.getElementById('bloqueados-sep');
+    if (sep) {
+      const temBloqueado = document.querySelectorAll('#modalEscolha .escolha-card.bloqueado').length > 0;
+      sep.style.display = temBloqueado ? 'flex' : 'none';
+    }
   }
   function fecharModalEscolha() {
     document.getElementById('modalEscolha').classList.remove('active');

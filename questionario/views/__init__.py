@@ -10,3 +10,5 @@ from .beery import *
 from .pedi import *
 from .spm import *
 from .convite import *
+from .vineland3 import *
+from .portage import *

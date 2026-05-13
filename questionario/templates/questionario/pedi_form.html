@@ -4,124 +4,405 @@
 {% block extra_css %}
 <style>
   :root { --pedi: #16A085; --pedi-dark: #0E6655; }
-  .form-header {
-    background: linear-gradient(135deg, #0E6655, #16A085);
-    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
-  }
-  .form-header h1 { font-size: 1.25rem; margin-bottom: .3rem; }
-  .form-header p  { opacity: .85; font-size: .9rem; }
 
-  .seccao-titulo {
-    font-size: 1rem; font-weight: 700; color: var(--pedi-dark);
-    padding: .75rem 1.2rem; border-left: 4px solid var(--pedi);
-    background: #E8F8F5; border-radius: 0 8px 8px 0; margin-bottom: 1rem;
-  }
-  .dominios-pedi-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;
-  }
-  .dominio-pedi-card {
-    border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem; background: #fff;
-  }
-  .dominio-pedi-card label { font-weight: 700; font-size: .85rem; display: block; margin-bottom: .3rem; }
-  .dominio-pedi-card small { font-size: .73rem; color: var(--text-muted); display: block; margin-bottom: .4rem; }
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-muted); margin-bottom: .4rem; }
 
-  .info-box {
-    background: #E8F8F5; border: 1px solid #A2D9CE; border-radius: 10px;
-    padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: .85rem; color: #0E6655;
-  }
-  .info-box strong { display: block; margin-bottom: .3rem; }
+  /* 4 milestone dots (one per domain) */
+  .steps-bar { display: flex; gap: 3px; margin-top: .6rem; }
+  .step-dot { height: 6px; flex: 1; border-radius: 3px; background: var(--border); transition: background .2s; }
+  .step-dot.done   { background: var(--pedi); }
+  .step-dot.active { background: color-mix(in srgb, var(--pedi) 55%, #fff); }
 
-  @media (max-width: 700px) {
-    .dominios-pedi-grid { grid-template-columns: 1fr; }
+  .secao-header {
+    background: linear-gradient(135deg, var(--pedi-dark), var(--pedi));
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .secao-header h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: .15rem; }
+  .secao-header .sub { font-size: .88rem; opacity: .9; font-weight: 600; margin-bottom: .1rem; }
+  .secao-header p   { font-size: .8rem; opacity: .75; }
+  .score-live {
+    display: inline-block; margin-top: .55rem;
+    background: rgba(255,255,255,.18); border-radius: 8px;
+    padding: .3rem .8rem; font-size: .8rem; font-weight: 700;
+  }
+
+  .instrucoes {
+    background: #E8F8F5; border: 1px solid #A2D9CE;
+    border-radius: 10px; padding: .7rem 1rem; margin-bottom: 1.2rem;
+  }
+  .instrucoes-titulo { display: block; font-weight: 700; margin-bottom: .4rem; color: var(--pedi-dark); font-size: .83rem; }
+  .instrucoes-chips  { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .instrucao-chip {
+    display: inline-flex; align-items: center; gap: .25rem;
+    padding: .25rem .65rem; border-radius: 20px; font-size: .76rem; font-weight: 600;
+    background: linear-gradient(135deg, var(--pedi-dark), var(--pedi)); color: #fff;
+  }
+
+  .nota-caixa {
+    background: #FEF9E7; border: 1px solid #F9E79F; border-radius: 8px;
+    padding: .45rem .85rem; font-size: .78rem; color: #7D6608;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: .45rem;
+  }
+
+  .pergunta-card {
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.1rem; margin-bottom: .75rem; background: #fff;
+    transition: border-color .2s, background .2s;
+  }
+  .pergunta-card.respondida {
+    border-color: var(--pedi);
+    background: color-mix(in srgb, var(--pedi) 5%, #fff);
+  }
+  .pergunta-num   { font-size: .72rem; font-weight: 700; color: var(--text-muted); margin-bottom: .2rem; }
+  .pergunta-texto { font-size: .88rem; color: var(--text); line-height: 1.5; margin-bottom: .75rem; }
+
+  .opcoes-fs { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+  .opcoes-ca { display: grid; grid-template-columns: repeat(6, 1fr); gap: .4rem; }
+  .opcao-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .1rem; cursor: pointer; padding: .5rem .2rem; border-radius: 9px;
+    border: 1.5px solid var(--border); background: #fff;
+    transition: all .15s; font-size: .72rem; text-align: center; line-height: 1.2;
+    user-select: none;
+  }
+  .opcao-label:hover { border-color: var(--pedi); background: color-mix(in srgb, var(--pedi) 10%, #fff); }
+  .opcao-label input { display: none; }
+  .opcao-label.selected { border-color: var(--pedi); background: var(--pedi); color: #fff; font-weight: 700; }
+  .opcao-num { font-size: 1rem; font-weight: 800; }
+
+  .readonly-badge {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px;
+    padding: .3rem .75rem; font-size: .78rem; color: #666; margin-bottom: 1rem;
+  }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .nav-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem;
+    padding-top: 1rem; border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .opcoes-ca { grid-template-columns: repeat(3, 1fr); }
   }
 </style>
 {% endblock %}
 
-{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+{% block back_button %}{% if not publico %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endif %}{% endblock %}
 
 {% block content %}
 
-<div class="form-header">
-  <h1><i data-lucide="accessibility" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>PEDI — Pediatric Evaluation of Disability Inventory</h1>
-  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos</p>
+<form method="post" id="formPedi">
+{% csrf_token %}
+{% if readonly %}
+<div class="readonly-badge"><i data-lucide="eye" style="width:14px;height:14px;"></i> Visualização — respostas salvas</div>
+{% endif %}
+<input type="hidden" name="fs_autocuidado"   id="hid_fs_ac">
+<input type="hidden" name="fs_mobilidade"    id="hid_fs_mob">
+<input type="hidden" name="fs_funcao_social" id="hid_fs_fs">
+<input type="hidden" name="ca_autocuidado"   id="hid_ca_ac">
+<input type="hidden" name="ca_mobilidade"    id="hid_ca_mob">
+<input type="hidden" name="ca_funcao_social" id="hid_ca_fs">
+
+<!-- Barra de progresso -->
+<div class="progress-header">
+  <div class="progress-info">
+    <span id="prog-label">Seção 1 de {{ total_steps }}</span>
+    <span id="prog-pct">0% concluído</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="prog-bar" style="width:0%; background:var(--pedi); transition:width .35s;"></div>
+  </div>
+  <!-- 4 dots de domínio -->
+  <div class="steps-bar">
+    <div class="step-dot active" id="dot-0" title="Autocuidado"></div>
+    <div class="step-dot"        id="dot-1" title="Mobilidade"></div>
+    <div class="step-dot"        id="dot-2" title="Função Social"></div>
+    <div class="step-dot"        id="dot-3" title="Assist. Cuidador"></div>
+  </div>
 </div>
 
-<div class="info-box">
-  <strong>Instruções:</strong>
-  Insira as pontuações brutas das escalas de Habilidades Funcionais (FS) e Assistência do Cuidador (CA)
-  para cada domínio. O sistema calculará automaticamente os escores na escala 0–100.
-</div>
+<!-- ===== PASSOS GERADOS PELO LOOP ===== -->
+{% for step in steps %}
+<div class="tab-pane{% if forloop.first %} active{% endif %}" id="step-{{ forloop.counter0 }}">
 
-<form method="post">
-  {% csrf_token %}
+  {% if step.secao.nota %}
+  <div class="nota-caixa">
+    <i data-lucide="info" style="width:13px;height:13px;flex-shrink:0;"></i>
+    {{ step.secao.nota }}
+  </div>
+  {% endif %}
 
-  <!-- Habilidades Funcionais (FS) -->
-  <div class="card">
-    <div class="seccao-titulo"><i data-lucide="target" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>Habilidades Funcionais (FS)</div>
-    <div class="dominios-pedi-grid">
-      <div class="dominio-pedi-card">
-        <label for="fs_autocuidado">Autocuidado</label>
-        <small>0 a {{ fs_max.autocuidado }} pontos</small>
-        <input type="number" id="fs_autocuidado" name="fs_autocuidado"
-               min="0" max="{{ fs_max.autocuidado }}"
-               value="{% if avaliacao.fs_autocuidado is not None %}{{ avaliacao.fs_autocuidado }}{% endif %}"
-               placeholder="0–{{ fs_max.autocuidado }}" class="form-control">
-      </div>
-      <div class="dominio-pedi-card">
-        <label for="fs_mobilidade">Mobilidade</label>
-        <small>0 a {{ fs_max.mobilidade }} pontos</small>
-        <input type="number" id="fs_mobilidade" name="fs_mobilidade"
-               min="0" max="{{ fs_max.mobilidade }}"
-               value="{% if avaliacao.fs_mobilidade is not None %}{{ avaliacao.fs_mobilidade }}{% endif %}"
-               placeholder="0–{{ fs_max.mobilidade }}" class="form-control">
-      </div>
-      <div class="dominio-pedi-card">
-        <label for="fs_funcao_social">Função Social</label>
-        <small>0 a {{ fs_max.funcao_social }} pontos</small>
-        <input type="number" id="fs_funcao_social" name="fs_funcao_social"
-               min="0" max="{{ fs_max.funcao_social }}"
-               value="{% if avaliacao.fs_funcao_social is not None %}{{ avaliacao.fs_funcao_social }}{% endif %}"
-               placeholder="0–{{ fs_max.funcao_social }}" class="form-control">
-      </div>
+  <div class="secao-header">
+    <h2><i data-lucide="{{ step.icon }}" style="width:17px;height:17px;vertical-align:middle;margin-right:.35rem;"></i>{{ step.dominio_label }}</h2>
+    <div class="sub">{{ step.secao.titulo }}</div>
+    <p>{{ paciente.nome }} &nbsp;·&nbsp; Seção {{ forloop.counter }} de {{ total_steps }}</p>
+    {% if step.tipo == "fs" %}
+      {% if step.dom == "ac" %}
+      <span class="score-live">Marcados: <strong class="cnt-ac">0</strong> / {{ fs_max.autocuidado }}</span>
+      {% elif step.dom == "mob" %}
+      <span class="score-live">Marcados: <strong class="cnt-mob">0</strong> / {{ fs_max.mobilidade }}</span>
+      {% else %}
+      <span class="score-live">Marcados: <strong class="cnt-fs">0</strong> / {{ fs_max.funcao_social }}</span>
+      {% endif %}
+    {% else %}
+      {% if step.dom == "ac" %}
+      <span class="score-live">Subtotal: <strong class="cnt-ca-ac">0</strong> / {{ ca_max.autocuidado }}</span>
+      {% elif step.dom == "mob" %}
+      <span class="score-live">Subtotal: <strong class="cnt-ca-mob">0</strong> / {{ ca_max.mobilidade }}</span>
+      {% else %}
+      <span class="score-live">Subtotal: <strong class="cnt-ca-fs">0</strong> / {{ ca_max.funcao_social }}</span>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {% if step.tipo == "fs" %}
+  <div class="instrucoes">
+    <span class="instrucoes-titulo">Habilidades Funcionais — marque os que a criança consegue realizar</span>
+    <div class="instrucoes-chips">
+      <span class="instrucao-chip"><b>0</b>&nbsp;— Incapaz</span>
+      <span class="instrucao-chip"><b>1</b>&nbsp;— Capaz</span>
     </div>
   </div>
 
-  <!-- Assistência do Cuidador (CA) -->
-  <div class="card">
-    <div class="seccao-titulo"><i data-lucide="helping-hand" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>Assistência do Cuidador (CA)</div>
-    <div class="dominios-pedi-grid">
-      <div class="dominio-pedi-card">
-        <label for="ca_autocuidado">Autocuidado</label>
-        <small>0 a {{ ca_max.autocuidado }} pontos</small>
-        <input type="number" id="ca_autocuidado" name="ca_autocuidado"
-               min="0" max="{{ ca_max.autocuidado }}"
-               value="{% if avaliacao.ca_autocuidado is not None %}{{ avaliacao.ca_autocuidado }}{% endif %}"
-               placeholder="0–{{ ca_max.autocuidado }}" class="form-control">
-      </div>
-      <div class="dominio-pedi-card">
-        <label for="ca_mobilidade">Mobilidade</label>
-        <small>0 a {{ ca_max.mobilidade }} pontos</small>
-        <input type="number" id="ca_mobilidade" name="ca_mobilidade"
-               min="0" max="{{ ca_max.mobilidade }}"
-               value="{% if avaliacao.ca_mobilidade is not None %}{{ avaliacao.ca_mobilidade }}{% endif %}"
-               placeholder="0–{{ ca_max.mobilidade }}" class="form-control">
-      </div>
-      <div class="dominio-pedi-card">
-        <label for="ca_funcao_social">Função Social</label>
-        <small>0 a {{ ca_max.funcao_social }} pontos</small>
-        <input type="number" id="ca_funcao_social" name="ca_funcao_social"
-               min="0" max="{{ ca_max.funcao_social }}"
-               value="{% if avaliacao.ca_funcao_social is not None %}{{ avaliacao.ca_funcao_social }}{% endif %}"
-               placeholder="0–{{ ca_max.funcao_social }}" class="form-control">
-      </div>
+  {% for num, desc in step.secao.itens %}
+  <div class="pergunta-card" id="card-{{ step.dom }}-{{ num }}">
+    <div class="pergunta-num">Item {{ num }}</div>
+    <div class="pergunta-texto">{{ desc }}</div>
+    <div class="opcoes-fs">
+      <label class="opcao-label" id="lbl-{{ step.dom }}-{{ num }}-0">
+        <input type="radio" name="fs_{{ step.dom }}_{{ num }}" value="0" onchange="onFsChange('{{ step.dom }}','{{ num }}',0)">
+        <span class="opcao-num">0</span><span>Incapaz</span>
+      </label>
+      <label class="opcao-label" id="lbl-{{ step.dom }}-{{ num }}-1">
+        <input type="radio" name="fs_{{ step.dom }}_{{ num }}" value="1" onchange="onFsChange('{{ step.dom }}','{{ num }}',1)">
+        <span class="opcao-num">1</span><span>Capaz</span>
+      </label>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="instrucoes">
+    <span class="instrucoes-titulo">Assistência do Cuidador — nível de ajuda prestada (máx. {{ step.ca_max }} pts)</span>
+    <div class="instrucoes-chips">
+      <span class="instrucao-chip"><b>5</b>&nbsp;— Independente</span>
+      <span class="instrucao-chip"><b>4</b>&nbsp;— Supervisão</span>
+      <span class="instrucao-chip"><b>3</b>&nbsp;— Moderada</span>
+      <span class="instrucao-chip"><b>2</b>&nbsp;— Máxima</span>
+      <span class="instrucao-chip"><b>1</b>&nbsp;— Dep. Total</span>
+      <span class="instrucao-chip"><b>0</b>&nbsp;— Não realiza</span>
     </div>
   </div>
 
-  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
-    <button type="submit" class="btn btn-primary" style="background:var(--pedi); border-color:var(--pedi);">
+  {% for field, lbl, desc in step.ca_itens %}
+  <div class="pergunta-card" id="card-{{ field }}">
+    <div class="pergunta-num">{{ lbl }}</div>
+    <div class="pergunta-texto">{{ desc }}</div>
+    <div class="opcoes-ca">
+      <label class="opcao-label" id="lbl-{{ field }}-0"><input type="radio" name="{{ field }}" value="0" onchange="onCaChange('{{ step.dom }}','{{ field }}',0)"><span class="opcao-num">0</span></label>
+      <label class="opcao-label" id="lbl-{{ field }}-1"><input type="radio" name="{{ field }}" value="1" onchange="onCaChange('{{ step.dom }}','{{ field }}',1)"><span class="opcao-num">1</span></label>
+      <label class="opcao-label" id="lbl-{{ field }}-2"><input type="radio" name="{{ field }}" value="2" onchange="onCaChange('{{ step.dom }}','{{ field }}',2)"><span class="opcao-num">2</span></label>
+      <label class="opcao-label" id="lbl-{{ field }}-3"><input type="radio" name="{{ field }}" value="3" onchange="onCaChange('{{ step.dom }}','{{ field }}',3)"><span class="opcao-num">3</span></label>
+      <label class="opcao-label" id="lbl-{{ field }}-4"><input type="radio" name="{{ field }}" value="4" onchange="onCaChange('{{ step.dom }}','{{ field }}',4)"><span class="opcao-num">4</span></label>
+      <label class="opcao-label" id="lbl-{{ field }}-5"><input type="radio" name="{{ field }}" value="5" onchange="onCaChange('{{ step.dom }}','{{ field }}',5)"><span class="opcao-num">5</span></label>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+    <div class="nav-footer">
+    {% if not readonly %}
+    {% if forloop.first %}
+    <div></div>
+    {% else %}
+    <button type="button" class="btn btn-secondary" onclick="goToStep({{ forloop.counter0|add:'-1' }})">
+      <i data-lucide="arrow-left" style="width:15px;height:15px;"></i> Anterior
+    </button>
+    {% endif %}
+
+    {% if forloop.last %}
+    <button type="submit" class="btn btn-primary" style="background:var(--pedi);border-color:var(--pedi);">
       <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar e Ver Resultado
     </button>
-    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
-  </div>
+    {% else %}
+    <button type="button" class="btn btn-primary" style="background:var(--pedi);border-color:var(--pedi);" onclick="saveAndGo({{ forloop.counter }})">
+      Próximo <i data-lucide="arrow-right" style="width:15px;height:15px;"></i>
+    </button>
+    {% endif %}
+    {% else %}
+    {% if not forloop.first %}
+    <button type="button" class="btn btn-secondary" onclick="goToStep({{ forloop.counter0|add:'-1' }})">
+      <i data-lucide="arrow-left" style="width:15px;height:15px;"></i> Anterior
+    </button>
+    {% else %}
+    <div></div>
+    {% endif %}
+    {% if not forloop.last %}
+    <button type="button" class="btn btn-secondary" onclick="goToStep({{ forloop.counter }})">
+      Próxima seção <i data-lucide="arrow-right" style="width:15px;height:15px;"></i>
+    </button>
+    {% else %}
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Fechar</a>
+    {% endif %}
+    {% endif %}
+    </div>
+
+</div>
+{% endfor %}
+
 </form>
+
+<script>
+const TOTAL_STEPS    = {{ total_steps }};
+const DOMAIN_STARTS  = {{ domain_starts }};  // [0, 15, 29, 42]
+const DOMAIN_NAMES   = ['Autocuidado', 'Mobilidade', 'Função Social', 'Assist. Cuidador'];
+const SALVAR_URL     = '{{ salvar_url }}';
+const PAGINA_ATUAL   = {{ pagina_atual|default:0 }};
+const PAGINA_URL     = {{ pagina_url|default:1 }};  // vindo da URL
+const PUBLICO        = {{ publico|yesno:'true,false' }};
+const TOKEN          = '{{ token|default:'' }}';
+const READONLY       = {{ readonly|yesno:'true,false' }};
+const RESPOSTAS_SALVAS = {{ respostas_json|safe }};
+
+// ─── State ───────────────────────────────────────────────────────────────
+const FS_AC  = {};
+const FS_MOB = {};
+const FS_FS  = {};
+const CA_AC  = {};
+const CA_MOB = {};
+const CA_FS  = {};
+
+// ─── FS handler ──────────────────────────────────────────────────────────
+const FS_MAP = { ac: FS_AC, mob: FS_MOB, fs: FS_FS };
+const HID_FS = { ac: 'hid_fs_ac', mob: 'hid_fs_mob', fs: 'hid_fs_fs' };
+
+function onFsChange(dom, num, val) {
+  FS_MAP[dom][num] = val;
+  [0, 1].forEach(v => {
+    const el = document.getElementById('lbl-' + dom + '-' + num + '-' + v);
+    if (el) el.classList.toggle('selected', v === val);
+  });
+  const card = document.getElementById('card-' + dom + '-' + num);
+  if (card) card.classList.add('respondida');
+
+  const cnt = Object.values(FS_MAP[dom]).filter(v => v === 1).length;
+  document.querySelectorAll('.cnt-' + dom).forEach(el => el.textContent = cnt);
+  document.getElementById(HID_FS[dom]).value = cnt;
+}
+
+// ─── CA handler ──────────────────────────────────────────────────────────
+const CA_MAP = { ac: CA_AC, mob: CA_MOB, fs: CA_FS };
+const HID_CA = { ac: 'hid_ca_ac', mob: 'hid_ca_mob', fs: 'hid_ca_fs' };
+
+function onCaChange(dom, field, val) {
+  CA_MAP[dom][field] = val;
+  '012345'.split('').forEach(v => {
+    const el = document.getElementById('lbl-' + field + '-' + v);
+    if (el) el.classList.toggle('selected', parseInt(v) === val);
+  });
+  const card = document.getElementById('card-' + field);
+  if (card) card.classList.add('respondida');
+
+  const sum = Object.values(CA_MAP[dom]).reduce((a, b) => a + b, 0);
+  document.querySelectorAll('.cnt-ca-' + dom).forEach(el => el.textContent = sum);
+  document.getElementById(HID_CA[dom]).value = sum;
+}
+
+// ─── Step navigation ─────────────────────────────────────────────────────
+let currentStep = 0;
+
+function goToStep(n) {
+  if (n < 0 || n >= TOTAL_STEPS) return;
+  document.querySelectorAll('.tab-pane').forEach((p, i) => p.classList.toggle('active', i === n));
+  currentStep = n;
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (PUBLICO && TOKEN) {
+    const url = '/pedi/publico/' + TOKEN + '/' + (n + 1) + '/';
+    history.replaceState(null, '', url);
+  }
+}
+
+function domainOf(step) {
+  for (let d = DOMAIN_STARTS.length - 1; d >= 0; d--) {
+    if (step >= DOMAIN_STARTS[d]) return d;
+  }
+  return 0;
+}
+
+function updateProgress() {
+  const pct = Math.round((currentStep / TOTAL_STEPS) * 100);
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-label').textContent =
+    'Seção ' + (currentStep + 1) + ' de ' + TOTAL_STEPS + ' · ' + DOMAIN_NAMES[domainOf(currentStep)];
+  document.getElementById('prog-pct').textContent = pct + '% concluído';
+
+  const dom = domainOf(currentStep);
+  for (let d = 0; d < 4; d++) {
+    const dot = document.getElementById('dot-' + d);
+    dot.className = 'step-dot' + (d < dom ? ' done' : d === dom ? ' active' : '');
+  }
+}
+
+// Submit guard
+document.getElementById('formPedi').addEventListener('submit', function () {
+  // ensure all hidden totals are current
+  ['ac','mob','fs'].forEach(dom => {
+    const cnt = Object.values(FS_MAP[dom]).filter(v => v === 1).length;
+    document.getElementById(HID_FS[dom]).value = cnt;
+    const sum = Object.values(CA_MAP[dom]).reduce((a, b) => a + b, 0);
+    document.getElementById(HID_CA[dom]).value = sum;
+  });
+});
+
+// ─── Save progress ────────────────────────────────────────────────────────
+function saveProgress(step) {
+  const respostas = {
+    fs_ac: FS_AC, fs_mob: FS_MOB, fs_fs: FS_FS,
+    ca_ac: CA_AC, ca_mob: CA_MOB, ca_fs: CA_FS,
+  };
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+  fetch(SALVAR_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrf ? csrf.value : '',
+    },
+    body: JSON.stringify({ respostas, step }),
+  }).catch(() => {});
+}
+
+function saveAndGo(n) {
+  if (!READONLY) saveProgress(n);
+  goToStep(n);
+}
+
+// ─── Restore state on load ────────────────────────────────────────────────
+(function restoreState() {
+  const saved = RESPOSTAS_SALVAS;
+  if (!saved || typeof saved !== 'object') return;
+  const { fs_ac, fs_mob, fs_fs, ca_ac, ca_mob, ca_fs } = saved;
+  if (fs_ac)  Object.entries(fs_ac).forEach(([n, v])  => onFsChange('ac',  n, v));
+  if (fs_mob) Object.entries(fs_mob).forEach(([n, v]) => onFsChange('mob', n, v));
+  if (fs_fs)  Object.entries(fs_fs).forEach(([n, v])  => onFsChange('fs',  n, v));
+  if (ca_ac)  Object.entries(ca_ac).forEach(([f, v])  => onCaChange('ac',  f, v));
+  if (ca_mob) Object.entries(ca_mob).forEach(([f, v]) => onCaChange('mob', f, v));
+  if (ca_fs)  Object.entries(ca_fs).forEach(([f, v])  => onCaChange('fs',  f, v));
+  // Prioridade: página da URL > página salva no banco
+  const stepInicial = READONLY ? (PAGINA_URL - 1) : Math.max(PAGINA_URL - 1, PAGINA_ATUAL);
+  if (stepInicial > 0 && stepInicial < TOTAL_STEPS) {
+    goToStep(stepInicial);
+  } else {
+    updateProgress();
+  }
+  if (READONLY) {
+    document.querySelectorAll('#formPedi input[type="radio"]').forEach(el => el.disabled = true);
+    document.querySelectorAll('#formPedi input[type="number"]').forEach(el => el.readOnly = true);
+  }
+})();
+</script>
 {% endblock %}

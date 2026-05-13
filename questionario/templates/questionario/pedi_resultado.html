@@ -23,6 +23,7 @@
   .dom-nome  { font-size: .78rem; font-weight: 700; opacity: .8; margin-bottom: .25rem; text-transform: uppercase; letter-spacing: .04em; }
   .dom-raw   { font-size: .8rem; opacity: .7; }
   .dom-escala{ font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
+  .dom-ec    { font-size: .78rem; opacity: .85; margin-top: .3rem; }
   .dom-bar   { margin-top: .5rem; }
   .dominio-card .progress-bar-wrap { background: rgba(255,255,255,.25); }
   .dominio-card .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
@@ -50,7 +51,6 @@
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <a href="{% url 'pedi_form' avaliacao.id %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="pencil" style="width:15px;height:15px;"></i> Editar</a>
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
     </div>
@@ -67,6 +67,9 @@
       {% if d.raw is not None %}
       <div class="dom-escala">{% if d.escala is not None %}{{ d.escala|floatformat:1 }}{% else %}—{% endif %}</div>
       <div class="dom-raw">Bruto: {{ d.raw }} / {{ d.max }}</div>
+      {% if d.ec is not None %}
+      <div class="dom-ec">EC: {{ d.ec|floatformat:2 }} &nbsp;(EP ± {{ d.ep|floatformat:2 }})</div>
+      {% endif %}
       {% if d.escala is not None %}
       <div class="dom-bar">
         <div class="progress-bar-wrap" style="height:6px;">
@@ -117,10 +120,20 @@
 <div class="card" style="font-size:.85rem;">
   <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Interpretação</div>
   <p style="color:var(--text-muted); line-height:1.6;">
-    <strong>FS (Habilidades Funcionais):</strong> Avalia o repertório de habilidades funcionais em três domínios.<br>
-    <strong>CA (Assistência do Cuidador):</strong> Avalia o nível de ajuda fornecida pelo cuidador (0=dependência total, máx=independência).<br>
-    <strong>Escala 0–100:</strong> Calculada por aproximação (pontuação bruta ÷ máximo × 100).
+    <strong>FS (Habilidades Funcionais):</strong> Avalia o repertório de habilidades funcionais em três domínios (0/1 por item).<br>
+    <strong>CA (Assistência do Cuidador):</strong> Avalia o nível de ajuda fornecida pelo cuidador (0=dependência total, 5=independência).<br>
+    <strong>Escala 0–100:</strong> Calculada por aproximação (pontuação bruta ÷ máximo × 100).<br>
+    <strong>EC (Escore Contínuo):</strong> Escore padronizado contínuo da Tabela 11 do PEDI (versão brasileira 1.0).<br>
+    <strong>EP (Erro Padrão):</strong> Erro padrão associado ao escore contínuo.
   </p>
+</div>
+
+<!-- Visualizar respostas -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
+  <a href="{% url 'pedi_visualizar' avaliacao.id %}" class="btn btn-secondary btn-sm">
+    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
+  </a>
 </div>
 
 <!-- Observações clínicas -->

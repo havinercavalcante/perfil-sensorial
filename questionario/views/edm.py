@@ -27,6 +27,9 @@ def _classificar_qm(qm):
 @login_required
 def nova_avaliacao_edm(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('edm'):
+        messages.error(request, "Você não tem acesso ao módulo EDM.")
+        return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoEDM.objects.create(paciente=paciente)
     return redirect("edm_form", avaliacao_id=av.id)
 

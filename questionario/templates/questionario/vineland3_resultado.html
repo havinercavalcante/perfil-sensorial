@@ -1,0 +1,227 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado Vineland-3 — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --v3: #1D6FA4; --v3-dark: #0D3D5C; }
+
+  .resultado-header {
+    background: linear-gradient(135deg, var(--v3-dark), var(--v3));
+    color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+  }
+  .resultado-header h1 { font-size:1.35rem; margin-bottom:.3rem; }
+  .resultado-header p  { opacity:.85; font-size:.9rem; }
+
+  .tot-card {
+    display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;
+    padding:1.2rem 1.5rem; border-radius:12px;
+    border:2px solid var(--v3); background:color-mix(in srgb, var(--v3) 5%, #fff);
+    margin-bottom:1.5rem;
+  }
+  .tot-label { font-size:.85rem; font-weight:700; color:var(--v3-dark); }
+  .tot-valor { font-size:2.2rem; font-weight:900; color:var(--v3); line-height:1; }
+  .tot-max   { font-size:.8rem; color:var(--text-muted); }
+
+  .dom-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .dom-card {
+    border-radius:12px; padding:1.2rem 1rem; color:#fff; text-align:center;
+    background:var(--dc, var(--v3));
+  }
+  .dom-sigla  { font-size:.72rem; font-weight:800; letter-spacing:.06em; opacity:.8; margin-bottom:.2rem; }
+  .dom-nome   { font-size:.82rem; font-weight:700; margin-bottom:.3rem; }
+  .dom-valor  { font-size:2rem; font-weight:800; line-height:1; }
+  .dom-max    { font-size:.72rem; opacity:.7; margin-bottom:.5rem; }
+  .dom-bar .progress-bar-wrap { background:rgba(255,255,255,.25); }
+  .dom-bar .progress-bar-fill { background:rgba(255,255,255,.85) !important; }
+
+  .pc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+  .pc-card {
+    border-radius:10px; padding:1rem; color:#fff; text-align:center;
+    background:var(--pc, #922B21);
+  }
+  .pc-sigla  { font-size:.7rem; font-weight:800; letter-spacing:.04em; opacity:.8; margin-bottom:.15rem; }
+  .pc-nome   { font-size:.78rem; font-weight:700; margin-bottom:.25rem; }
+  .pc-valor  { font-size:1.6rem; font-weight:800; line-height:1; }
+  .pc-max    { font-size:.68rem; opacity:.7; }
+
+  .legenda-note { font-size:.83rem; color:var(--text-muted); line-height:1.65; }
+
+  @media (max-width:600px) {
+    .dom-grid { grid-template-columns:1fr; }
+    .pc-grid  { grid-template-columns:1fr; }
+    .tot-card { flex-direction:column; align-items:flex-start; }
+  }
+  @media print {
+    nav, .btn-back, .no-print { display:none !important; }
+    body { background:#fff; }
+    .card { box-shadow:none; border:1px solid #ccc; }
+    .resultado-header { background:var(--v3-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1>
+        <i data-lucide="puzzle" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>
+        Vineland-3 — {{ paciente.nome }}
+      </h1>
+      <p>Formulário de Pais/Cuidadores dos Níveis de Domínio &nbsp;·&nbsp; Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Composto Adaptativo -->
+<div class="card">
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Composto de Comportamento Adaptativo</div>
+  <div class="tot-card">
+    <div>
+      <div class="tot-label">Pontuação Bruta Total</div>
+      <div class="tot-valor">{{ avaliacao.pont_total }}</div>
+      <div class="tot-max">de {{ max_total }} pontos &nbsp;({{ pct_total }}%)</div>
+    </div>
+    <div style="flex:1; min-width:180px;">
+      <div class="progress-bar-wrap" style="height:10px; margin-bottom:.6rem;">
+        <div class="progress-bar-fill" style="width:{{ pct_total }}%; background:var(--v3);"></div>
+      </div>
+      <div style="font-size:.82rem; color:var(--text-muted);">
+        COM {{ avaliacao.pont_com }} + AVD {{ avaliacao.pont_avd }} + SOC {{ avaliacao.pont_soc }} + HMOT {{ avaliacao.pont_hmot }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Domínios Adaptativos -->
+<div class="card">
+  <div class="card-title"><i data-lucide="layout-grid" style="width:18px;height:18px;"></i> Pontuação Bruta por Domínio Adaptativo</div>
+  <div class="dom-grid">
+    {% for d in dominios %}
+    <div class="dom-card" style="--dc:{{ d.cor }};">
+      <div class="dom-sigla">{{ d.sigla }}</div>
+      <div class="dom-nome">{{ d.nome }}</div>
+      <div class="dom-valor">{{ d.valor }}</div>
+      <div class="dom-max">de {{ d.maximo }} pts &nbsp;({{ d.pct }}%)</div>
+      <div class="dom-bar" style="margin-top:.4rem;">
+        <div class="progress-bar-wrap" style="height:6px;">
+          <div class="progress-bar-fill" style="width:{{ d.pct }}%;"></div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Problemas de Comportamento -->
+<div class="card">
+  <div class="card-title" style="color:#922B21;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> Problemas de Comportamento</div>
+  <div class="pc-grid">
+    {% for s in pc %}
+    <div class="pc-card" style="--pc:{{ s.cor }};">
+      <div class="pc-sigla">{{ s.sigla }}</div>
+      <div class="pc-nome">{{ s.nome }}</div>
+      <div class="pc-valor">{{ s.valor }}</div>
+      <div class="pc-max">de {{ s.maximo }} pts</div>
+    </div>
+    {% endfor %}
+  </div>
+  <p style="font-size:.8rem; color:var(--text-muted); margin-top:.75rem;">
+    Pontuações mais altas indicam maior frequência de comportamentos problemáticos. A interpretação clínica requer conversão em escores padronizados com as tabelas normativas do manual Vineland-3.
+  </p>
+</div>
+
+<!-- Gráfico -->
+<div class="card">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Visualização Gráfica — Domínios Adaptativos</div>
+  <canvas id="chartV3" height="100"></canvas>
+</div>
+
+<!-- Legenda -->
+<div class="card legenda-note">
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Interpretação</div>
+  <p>
+    <strong>Escala de resposta:</strong> 0 = Nunca &nbsp;|&nbsp; 1 = Às vezes &nbsp;|&nbsp; 2 = Usualmente ou Frequentemente<br>
+    <strong>Domínios adaptativos:</strong> pontuações maiores indicam melhor nível de comportamento adaptativo.<br>
+    <strong>Problemas de Comportamento:</strong> pontuações maiores indicam maior frequência de problemas.<br>
+    <em>Nota: a interpretação clínica completa requer conversão das pontuações brutas em escores padronizados (v-escores, escores compostos e percentis) com as tabelas normativas do manual Vineland-3.</em>
+  </p>
+</div>
+
+<!-- Visualizar respostas -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
+  <a href="{% url 'vineland3_visualizar' avaliacao.id 1 %}" class="btn btn-secondary btn-sm">
+    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
+  </a>
+</div>
+
+<!-- Observações clínicas -->
+<div class="card">
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form id="formObsV3" method="post" action="{% url 'salvar_observacoes_vineland3' avaliacao.id %}">
+    {% csrf_token %}
+    <div class="form-group" style="margin-bottom:.75rem;">
+      <textarea name="observacoes" rows="5" placeholder="Registre observações clínicas e recomendações..."
+        style="resize:vertical;">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" style="background:var(--v3);border-color:var(--v3);"
+              onclick="salvarObs()">
+        <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações
+      </button>
+      <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const dados = {{ dominios_json|safe }};
+new Chart(document.getElementById('chartV3'), {
+  type: 'bar',
+  data: {
+    labels: dados.map(d => d.nome),
+    datasets: [{
+      label: '% do máximo',
+      data: dados.map(d => d.pct),
+      backgroundColor: dados.map(d => d.cor + 'CC'),
+      borderColor: dados.map(d => d.cor),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }],
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+    },
+    plugins: { legend: { display: false } },
+  },
+});
+
+function salvarObs() {
+  const form = document.getElementById('formObsV3');
+  const status = document.getElementById('obs-status');
+  const data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
+{% endblock %}
