@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
-    AvaliacaoBebe, AvaliacaoSPM, LinkConvite,
+    AvaliacaoBebe, AvaliacaoSPM, AvaliacaoVineland3, AvaliacaoPEDI, AvaliacaoPortage, LinkConvite,
 )
 from ..services import TIPO_INFO
 
@@ -18,11 +18,38 @@ from ..services import TIPO_INFO
 @login_required
 def gerar_link(request):
     from django.http import JsonResponse
+
+    # Mapeamento tipo → codigo do módulo
+    TIPO_PARA_MODULO = {
+        "sensorial": "sensorial",
+        "vineland": "vineland",
+        "vineland3": "vineland3",
+        "escolar": "escolar",
+        "bebe": "bebe",
+        "crianca_pequena": "bebe",
+        "spm_p": "spm",
+        "spm_casa": "spm",
+        "edm": "edm",
+        "mabc2": "mabc2",
+        "beery": "beery",
+        "pedi": "pedi",
+        "portage": "portage",
+    }
+
+    modulos_liberados = set()
+    if hasattr(request.user, 'perfil'):
+        modulos_liberados = set(
+            request.user.perfil.modulos_liberados.values_list("codigo", flat=True)
+        )
+
     if request.method == "POST":
         tipo = request.POST.get("tipo", "")
         tipos_validos = [t[0] for t in LinkConvite.TIPO_CHOICES]
         if tipo not in tipos_validos:
             return JsonResponse({"ok": False, "message": "Tipo inválido."})
+        modulo_necessario = TIPO_PARA_MODULO.get(tipo)
+        if modulo_necessario and modulo_necessario not in modulos_liberados:
+            return JsonResponse({"ok": False, "message": "Módulo não disponível no seu plano."})
         convite = LinkConvite.objects.create(medico=request.user, tipo=tipo)
         link = request.build_absolute_uri(f"/iniciar/{convite.token}/")
         nome_medico = request.user.get_full_name() or request.user.username
@@ -33,7 +60,9 @@ def gerar_link(request):
             "nome_medico": nome_medico,
         })
 
-    return render(request, "questionario/gerar_link.html")
+    return render(request, "questionario/gerar_link.html", {
+        "modulos_liberados": modulos_liberados,
+    })
 
 
 @login_required
@@ -126,8 +155,18 @@ def iniciar_avaliacao(request, token):
         elif tipo in ("spm_p", "spm_casa"):
             AvaliacaoSPM.objects.create(paciente=paciente, token=t, faixa=tipo)
             return redirect("spm_publico", token=t, pagina=1)
+        elif tipo == "vineland3":
+            AvaliacaoVineland3.objects.create(paciente=paciente, token=t)
+            return redirect("vineland3_publico", token=t, pagina=1)
+        elif tipo == "pedi":
+            AvaliacaoPEDI.objects.create(paciente=paciente, token=t)
+            return redirect("pedi_publico", token=t, pagina=1)
+        elif tipo == "portage":
+            from ..models import AvaliacaoPortage
+            AvaliacaoPortage.objects.create(paciente=paciente, token=t)
+            return redirect("portage_publico", token=t, pagina=1)
         else:
-            # EDM, MABC-2, Beery, PEDI — avaliação presencial, só cadastra o paciente
+            # EDM, MABC-2, Beery — avaliação presencial, só cadastra o paciente
             return render(request, "questionario/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,

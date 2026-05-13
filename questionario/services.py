@@ -186,4 +186,6 @@ TIPO_INFO = {
     "mabc2":           ("MABC-2",                          '<i data-lucide="target" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "beery":           ("Beery VMI",                       '<i data-lucide="pencil" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "pedi":            ("PEDI",                            '<i data-lucide="accessibility" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "vineland3":       ("Vineland-3",                      '<i data-lucide="puzzle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "portage":         ("Guia Portage",                    '<i data-lucide="baby" style="width:18px;height:18px;vertical-align:middle;"></i>'),
 }

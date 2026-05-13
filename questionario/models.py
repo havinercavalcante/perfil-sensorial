@@ -4,12 +4,45 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+class ModuloAvaliacao(models.Model):
+    MODULO_CHOICES = [
+        ("sensorial", "Perfil Sensorial"),
+        ("vineland", "Escala Vineland"),
+        ("escolar", "Questionário Sensorial Escolar"),
+        ("bebe", "Perfil Sensorial Bebê/Criança Pequena"),
+        ("spm", "SPM — Sensory Processing Measure"),
+        ("edm", "EDM Figueiredo"),
+        ("mabc2", "MABC-2"),
+        ("beery", "Beery VMI"),
+        ("pedi", "PEDI"),
+        ("vineland3", "Vineland-3"),
+        ("portage", "Guia Portage"),
+    ]
+    codigo = models.CharField("Código", max_length=20, unique=True, choices=MODULO_CHOICES)
+    nome = models.CharField("Nome", max_length=100)
+    descricao = models.CharField("Descrição", max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "Módulo de Avaliação"
+        verbose_name_plural = "Módulos de Avaliação"
+        ordering = ["nome"]
+
+    def __str__(self):
+        return self.nome
+
+
 class PerfilMedico(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")
     registro_profissional = models.CharField("Registro Profissional", max_length=30, blank=True)
     especialidade = models.CharField("Especialidade", max_length=100, blank=True)
     telefone = models.CharField("Telefone", max_length=20, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    modulos_liberados = models.ManyToManyField(
+        ModuloAvaliacao,
+        blank=True,
+        verbose_name="Módulos liberados",
+        related_name="medicos",
+    )
 
     class Meta:
         verbose_name = "Perfil do Profissional"
@@ -17,6 +50,9 @@ class PerfilMedico(models.Model):
 
     def __str__(self):
         return f"Dr(a). {self.user.get_full_name() or self.user.username}"
+
+    def tem_acesso(self, codigo_modulo):
+        return self.modulos_liberados.filter(codigo=codigo_modulo).exists()
 
 
 class Paciente(models.Model):
@@ -355,8 +391,11 @@ class AvaliacaoPEDI(models.Model):
     ca_autocuidado_escala = models.FloatField("CA — Autocuidado (escala 0–100)", null=True, blank=True)
     ca_mobilidade_escala = models.FloatField("CA — Mobilidade (escala 0–100)", null=True, blank=True)
     ca_funcao_social_escala = models.FloatField("CA — Função Social (escala 0–100)", null=True, blank=True)
-    observacoes = models.TextField("Observações clínicas", blank=True, default="")
-    criado_em = models.DateTimeField(auto_now_add=True)
+    token          = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    respostas_json = models.TextField(blank=True, default='{}')
+    pagina_atual   = models.IntegerField(default=0)
+    observacoes    = models.TextField("Observações clínicas", blank=True, default="")
+    criado_em      = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "PEDI"
@@ -415,6 +454,52 @@ class RespostaSPM(models.Model):
         ordering = ["numero_item"]
 
 
+# ── Vineland-3 — Formulário de Pais/Cuidadores dos Níveis de Domínio ─────────
+
+class AvaliacaoVineland3(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente      = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vineland3")
+    token         = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data          = models.DateField("Data da avaliação", default=timezone.now)
+    status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual  = models.IntegerField(default=1)
+
+    # Domínios adaptativos (pontuação bruta)
+    pont_com   = models.IntegerField("COM — Comunicação", null=True, blank=True)
+    pont_avd   = models.IntegerField("AVD — Atividade de Vida Diária", null=True, blank=True)
+    pont_soc   = models.IntegerField("SOC — Habilidades Sociais", null=True, blank=True)
+    pont_hmot  = models.IntegerField("HMOT — Atividade Física", null=True, blank=True)
+    pont_total = models.IntegerField("Composto Adaptativo", null=True, blank=True)
+
+    # Problemas de Comportamento
+    pont_pc_a  = models.IntegerField("PC — Seção A", null=True, blank=True)
+    pont_pc_b  = models.IntegerField("PC — Seção B", null=True, blank=True)
+    pont_pc_c  = models.IntegerField("PC — Seção C", null=True, blank=True)
+
+    observacoes      = models.TextField("Observações clínicas", blank=True, default="")
+    email_enviado_em = models.DateTimeField("E-mail enviado em", null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Vineland-3"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Vineland-3 — {self.paciente.nome} — {self.data}"
+
+
+class RespostaVineland3(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoVineland3, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
 # ── Link de Convite para Questionário ─────────────────────────────────────────
 
 class LinkConvite(models.Model):
@@ -430,6 +515,8 @@ class LinkConvite(models.Model):
         ("mabc2", "MABC-2"),
         ("beery", "Beery VMI"),
         ("pedi", "PEDI"),
+        ("vineland3", "Vineland-3"),
+        ("portage", "Guia Portage"),
     ]
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
@@ -444,3 +531,44 @@ class LinkConvite(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} — {self.medico.username} — {self.criado_em.date()}"
+
+
+# ── Guia Portage de Avaliação Pré-Escolar ────────────────────────────────────
+
+class AvaliacaoPortage(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente      = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_portage")
+    token         = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data          = models.DateField("Data da avaliação", default=timezone.now)
+    status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual  = models.IntegerField(default=1)
+
+    pont_soc  = models.IntegerField("Socialização — SIM", null=True, blank=True)
+    pont_cog  = models.IntegerField("Cognição — SIM", null=True, blank=True)
+    pont_lin  = models.IntegerField("Linguagem — SIM", null=True, blank=True)
+    pont_ac   = models.IntegerField("Auto-Cuidados — SIM", null=True, blank=True)
+    pont_mot  = models.IntegerField("Motor — SIM", null=True, blank=True)
+
+    observacoes      = models.TextField("Observações clínicas", blank=True, default="")
+    email_enviado_em = models.DateTimeField("E-mail enviado em", null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Guia Portage"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Portage — {self.paciente.nome} — {self.data}"
+
+
+class RespostaPortage(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPortage, on_delete=models.CASCADE, related_name="respostas")
+    dominio     = models.CharField(max_length=20)
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()   # 2=SIM, 1=SIM COM MEDIAÇÃO, 0=AINDA NÃO
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
