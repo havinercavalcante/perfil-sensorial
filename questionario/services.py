@@ -38,7 +38,7 @@ def notificar_terapeuta(paciente, tipo, request):
         return
     nome_tipo = "Perfil Sensorial" if tipo == "sensorial" else "Escala Vineland"
     send_mail(
-        subject=f"CeciSys — Avaliação concluída: {paciente.nome}",
+        subject=f"IntegraMente — Avaliação concluída: {paciente.nome}",
         message=(
             f"Olá, {terapeuta.get_full_name() or terapeuta.username}!\n\n"
             f"O responsável de {paciente.nome} concluiu o questionário de {nome_tipo}.\n"

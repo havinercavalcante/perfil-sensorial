@@ -18,7 +18,7 @@
   }
   .score-number { font-size: 3rem; font-weight: 800; color: #0F274F; line-height: 1; }
   .score-label  { font-size: .85rem; color: #3E73D1; font-weight: 600; }
-  .score-max    { font-size: .78rem; color: #6B8878; margin-top: .2rem; }
+  .score-max    { font-size: .78rem; color: #39abcb; margin-top: .2rem; }
 
   /* Grade de categorias */
   .cat-grid {
@@ -40,7 +40,7 @@
 
   /* cores das categorias */
   .bg-C   { background: #3E73D1; }
-  .bg-L   { background: #2E7D6B; }
+  .bg-L   { background: #39abcb; }
   .bg-O   { background: #E8793A; }
   .bg-S   { background: #9B59B6; }
   .bg-AG  { background: #C0392B; }
@@ -83,6 +83,7 @@
     .cat-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     nav, .btn-back, .no-print, .is-form form button { display: none !important; }
     body { background: #fff; }
     main { max-width: 100%; padding: 1rem; }
@@ -93,7 +94,7 @@
 </style>
 {% endblock %}
 
-{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
 
 {% block content %}
 
@@ -103,6 +104,7 @@
     <div>
       <h1><i data-lucide="bar-chart-2" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Escala Vineland — {{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">

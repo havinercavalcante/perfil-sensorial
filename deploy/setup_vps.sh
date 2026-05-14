@@ -40,17 +40,17 @@ systemctl enable gunicorn
 systemctl start gunicorn
 
 echo "==> Configurando Nginx..."
-cp deploy/nginx.conf /etc/nginx/sites-available/cecisys.com
-ln -sf /etc/nginx/sites-available/cecisys.com /etc/nginx/sites-enabled/
+cp deploy/nginx.conf /etc/nginx/sites-available/integramente.pro
+ln -sf /etc/nginx/sites-available/integramente.pro /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl restart nginx
 
 echo "==> Configurando HTTPS com Certbot..."
-certbot --nginx -d cecisys.com -d www.cecisys.com
+certbot --nginx -d integramente.pro -d www.integramente.pro
 
 echo "==> Configurando backup automatico do banco de dados..."
 chmod +x deploy/backup.sh
 bash deploy/backup.sh --install-cron
 
 echo ""
-echo "Deploy concluido! Acesse: https://cecisys.com"
+echo "Deploy concluido! Acesse: https://integramente.pro"

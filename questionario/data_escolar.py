@@ -1,4 +1,4 @@
-# CeciSys — Dados do Questionário Sensorial Escolar
+# IntegraMente — Dados do Questionário Sensorial Escolar
 # Preenchido pelo professor/educador
 
 SECOES = [

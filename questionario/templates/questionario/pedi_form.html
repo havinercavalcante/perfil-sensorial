@@ -91,7 +91,7 @@
 </style>
 {% endblock %}
 
-{% block back_button %}{% if not publico %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endif %}{% endblock %}
+{% block back_button %}{% if not publico %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endif %}{% endblock %}
 
 {% block content %}
 

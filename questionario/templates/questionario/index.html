@@ -1,5 +1,5 @@
 {% extends "questionario/base.html" %}
-{% block title %}Início – CeciSys{% endblock %}
+{% block title %}Início – IntegraMente{% endblock %}
 {% block extra_css %}
 <style>
   .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
@@ -74,7 +74,7 @@
     <i data-lucide="clock" style="width:15px;height:15px; flex-shrink:0;"></i>
     <span>Você tem <strong>{{ em_andamento }}</strong> avaliação{{ em_andamento|pluralize:",ões" }} em andamento aguardando conclusão.</span>
   </span>
-  <a href="{% url 'lista_pacientes' %}" style="color:#92400E; font-weight:600; white-space:nowrap; flex-shrink:0;">Ver pacientes →</a>
+  <a href="{% url 'lista_pacientes' %}" style="color:#92400E; font-weight:600; white-space:nowrap; flex-shrink:0;">Ver pacientes <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
 </div>
 {% endif %}
 

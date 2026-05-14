@@ -82,11 +82,7 @@ def vineland3_form(request, avaliacao_id, pagina):
     itens = secao_atual["itens"]
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens)}
 
-    itens_faltando_local = []
-    respostas_para_render = respostas_salvas
-
     if request.method == "POST":
-        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
         erros = []
         novas = {}
         for item in itens:
@@ -103,10 +99,9 @@ def vineland3_form(request, avaliacao_id, pagina):
                 except (ValueError, TypeError):
                     erros.append(item)
 
-        if erros and not confirmar_incompleto:
-            respostas_para_render = dict(respostas_salvas)
-            respostas_para_render.update(novas)
-            itens_faltando_local = [item - itens[0] + 1 for item in erros]
+        if erros:
+            messages.error(request, "Por favor, responda todos os itens antes de continuar.")
+            respostas_salvas.update(novas)
         else:
             for item, valor in novas.items():
                 RespostaVineland3.objects.update_or_create(
@@ -124,7 +119,7 @@ def vineland3_form(request, avaliacao_id, pagina):
             "numero": item,
             "numero_local": item - itens[0] + 1,
             "texto": VINELAND3_PERGUNTAS.get(item, ""),
-            "resposta_salva": respostas_para_render.get(item),
+            "resposta_salva": respostas_salvas.get(item),
         }
         for item in itens
     ]
@@ -138,7 +133,6 @@ def vineland3_form(request, avaliacao_id, pagina):
         "progresso": int((pagina - 1) / total_paginas * 100),
         "paginas_secoes": [(i + 1, VINELAND3_SECOES[i]["nome"]) for i in range(total_paginas)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
-        "itens_faltando": itens_faltando_local,
     })
 
 
@@ -260,7 +254,7 @@ def enviar_email_vineland3(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     link = request.build_absolute_uri(f"/vineland3/publico/{avaliacao.token}/1/")
     send_mail(
-        subject="Vineland-3 — CeciSys",
+        subject="Vineland-3 — IntegraMente",
         message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário Vineland-3 no link: {link}",
         from_email=None,
         recipient_list=[email_dest],
@@ -288,11 +282,7 @@ def vineland3_publico_view(request, token, pagina):
     itens = secao_atual["itens"]
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens)}
 
-    itens_faltando_local = []
-    respostas_para_render = respostas_salvas
-
     if request.method == "POST":
-        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
         erros = []
         novas = {}
         for item in itens:
@@ -308,10 +298,9 @@ def vineland3_publico_view(request, token, pagina):
                         erros.append(item)
                 except (ValueError, TypeError):
                     erros.append(item)
-        if erros and not confirmar_incompleto:
-            respostas_para_render = dict(respostas_salvas)
-            respostas_para_render.update(novas)
-            itens_faltando_local = [item - itens[0] + 1 for item in erros]
+        if erros:
+            messages.error(request, "Por favor, responda todos os itens antes de continuar.")
+            respostas_salvas.update(novas)
         else:
             for item, valor in novas.items():
                 RespostaVineland3.objects.update_or_create(
@@ -336,7 +325,7 @@ def vineland3_publico_view(request, token, pagina):
             "numero": item,
             "numero_local": item - itens[0] + 1,
             "texto": VINELAND3_PERGUNTAS.get(item, ""),
-            "resposta_salva": respostas_para_render.get(item),
+            "resposta_salva": respostas_salvas.get(item),
         }
         for item in itens
     ]
@@ -351,5 +340,4 @@ def vineland3_publico_view(request, token, pagina):
         "paginas_secoes": [(i + 1, VINELAND3_SECOES[i]["nome"]) for i in range(total)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "publico": True,
-        "itens_faltando": itens_faltando_local,
     })

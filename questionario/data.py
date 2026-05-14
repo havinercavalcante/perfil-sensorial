@@ -1,4 +1,4 @@
-# CeciSys - Dados das Perguntas e Pontuação
+# IntegraMente - Dados das Perguntas e Pontuação
 
 SECOES = [
     {"id": "auditiva", "nome": "Processamento AUDITIVO", "itens": list(range(1, 9)), "max": 40},
