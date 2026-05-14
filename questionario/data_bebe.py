@@ -1,4 +1,4 @@
-# CeciSys — Dados do Perfil Sensorial Bebê/Criança Pequena (Winnie Dunn)
+# IntegraMente — Dados do Perfil Sensorial Bebê/Criança Pequena (Winnie Dunn)
 # Preenchido pelo cuidador/responsável
 
 # ── Faixa Bebê (0–6 meses) ──────────────────────────────────────────────────

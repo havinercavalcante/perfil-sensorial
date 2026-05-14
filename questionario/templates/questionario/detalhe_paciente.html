@@ -87,8 +87,8 @@
   .btn-wa:hover  { background: #1ebe5d; color: #fff; }
   .btn-email { background: #3E73D1; }
   .btn-email:hover { background: #2f5bb0; color: #fff; }
-  .btn-copy { background: #2E7D6B; }
-  .btn-copy:hover { background: #236659; color: #fff; }
+  .btn-copy { background: #39abcb; }
+  .btn-copy:hover { background: #0c3c7b; color: #fff; }
   .btn-resultado { background: #3E73D1; }
   .btn-resultado:hover { background: #2f5bb0; color: #fff; }
   .btn-del {
@@ -135,7 +135,7 @@
 </style>
 {% endblock %}
 
-{% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back">← Pacientes</a>{% endblock %}
+{% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Pacientes</a>{% endblock %}
 {% block content %}
 
 <!-- Cabeçalho do paciente -->
@@ -185,7 +185,7 @@
         <a href="{% url 'dashboard' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -207,7 +207,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -241,7 +241,7 @@
         <a href="{% url 'vineland_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -263,7 +263,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -298,7 +298,7 @@
         <a href="{% url 'escolar_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -320,7 +320,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -354,7 +354,7 @@
         <a href="{% url 'bebe_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -376,7 +376,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -410,7 +410,7 @@
         <a href="{% url 'spm_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -432,7 +432,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -465,7 +465,7 @@
         <a href="{% url 'vineland3_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -487,7 +487,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -520,7 +520,7 @@
         <a href="{% url 'portage_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -539,7 +539,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
@@ -657,7 +657,7 @@
         <a href="{% url 'pedi_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
@@ -683,7 +683,7 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#6B8878;">
+        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
@@ -706,7 +706,7 @@
     <p class="modal-sub">Selecione o instrumento para <strong>{{ paciente.nome }}</strong>:</p>
 
     <div class="escolha-grid" style="grid-template-columns:repeat(3,1fr);">
-      <div class="bloqueados-sep" id="bloqueados-sep">🔒 Não inclusos no plano</div>
+      <div class="bloqueados-sep" id="bloqueados-sep"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i> Não inclusos no plano</div>
       {% if "sensorial" in modulos_liberados %}
       <button type="button" class="escolha-card sensorial" onclick="criarAvaliacao('sensorial')">
         <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
@@ -715,7 +715,7 @@
       </button>
       {% else %}
       <div class="escolha-card sensorial bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Perfil Sensorial</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -728,7 +728,7 @@
       </button>
       {% else %}
       <div class="escolha-card vineland bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Escala Vineland</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -741,7 +741,7 @@
       </button>
       {% else %}
       <div class="escolha-card escolar bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Sensorial Escolar</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -759,12 +759,12 @@
       </button>
       {% else %}
       <div class="escolha-card bebe bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Bebê (0–6 meses)</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
       <div class="escolha-card bebe bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Criança Pequena (7–36m)</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -782,12 +782,12 @@
       </button>
       {% else %}
       <div class="escolha-card spm bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">SPM-P Casa (2–5 anos)</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
       <div class="escolha-card spm bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">SPM Casa (5–12 anos)</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -800,7 +800,7 @@
       </a>
       {% else %}
       <div class="escolha-card edm bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">EDM Figueiredo</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -813,7 +813,7 @@
       </a>
       {% else %}
       <div class="escolha-card mabc2 bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">MABC-2</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -826,7 +826,7 @@
       </a>
       {% else %}
       <div class="escolha-card beery bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Beery VMI</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -839,20 +839,20 @@
       </button>
       {% else %}
       <div class="escolha-card pedi bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">PEDI</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
       {% endif %}
       {% if "vineland3" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_vineland3' paciente.uuid %}" class="escolha-card vineland3">
+      <button type="button" class="escolha-card vineland3" onclick="criarAvaliacao('vineland3')">
         <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Vineland-3</span>
         <span class="ec-desc">Comportamento adaptativo, 180 itens</span>
-      </a>
+      </button>
       {% else %}
       <div class="escolha-card vineland3 bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Vineland-3</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -865,7 +865,7 @@
       </button>
       {% else %}
       <div class="escolha-card portage bloqueado" title="Módulo não incluso no seu plano">
-        <span class="ec-icon">🔒</span>
+        <span class="ec-icon"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i></span>
         <span class="ec-titulo">Guia Portage</span>
         <span class="ec-desc">Módulo não disponível</span>
       </div>
@@ -967,6 +967,7 @@
   const urlSPM       = "{% url 'nova_avaliacao_spm' paciente.uuid %}";
   const urlPedi      = "{% url 'nova_avaliacao_pedi' paciente.uuid %}";
   const urlPortage   = "{% url 'nova_avaliacao_portage' paciente.uuid %}";
+  const urlVineland3 = "{% url 'nova_avaliacao_vineland3' paciente.uuid %}";
 
   function criarAvaliacao(tipo) {
     let url, label;
@@ -979,6 +980,7 @@
     else if (tipo === 'spm_casa')     { url = urlSPM  + '?faixa=spm_casa';       label = 'SPM Casa (5–12 anos)'; }
     else if (tipo === 'pedi')         { url = urlPedi;                            label = 'PEDI'; }
     else if (tipo === 'portage')      { url = urlPortage;                         label = 'Guia Portage'; }
+    else if (tipo === 'vineland3')    { url = urlVineland3;                        label = 'Vineland-3'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())

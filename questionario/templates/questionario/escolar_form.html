@@ -152,11 +152,11 @@
       {% if pagina == total %}
       <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Voltar ao paciente</a>
       {% else %}
-      <a href="{% url 'escolar_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--escolar); border-color:var(--escolar);">Próxima Seção →</a>
+      <a href="{% url 'escolar_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--escolar); border-color:var(--escolar);">Próxima Seção <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
       {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary" style="background:var(--escolar); border-color:var(--escolar);">
-      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Questionário{% else %}Próxima Seção →{% endif %}
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Questionário{% else %}Próxima Seção <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>{% endif %}
     </button>
     {% endif %}
   </div>

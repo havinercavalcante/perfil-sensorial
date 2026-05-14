@@ -169,14 +169,14 @@
     {% if pagina == total %}
     <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">Fechar</a>
     {% else %}
-    <a href="{% url 'portage_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-secondary">Próximo Domínio →</a>
+    <a href="{% url 'portage_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-secondary">Próximo Domínio <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
     {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary" style="background:var(--pc); border-color:var(--pc);">
       {% if pagina == total %}
       <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação
       {% else %}
-      Próximo Domínio →
+      Próximo Domínio <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>
       {% endif %}
     </button>
     {% endif %}

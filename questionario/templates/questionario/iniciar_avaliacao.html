@@ -4,14 +4,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% if tipo_label %}{{ tipo_label }} — {% endif %}CeciSys</title>
+<title>{% if tipo_label %}{{ tipo_label }} — {% endif %}IntegraMente</title>
 <link rel="icon" type="image/png" href="{% static 'logotop.png' %}">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root {
-    --primary: #2E7D6B; --primary-dark: #1A5C4D;
-    --accent: #F0A500; --bg: #F4F7F5; --card: #FFFFFF;
-    --text: #1A2B22; --text-muted: #6B8878; --border: #D8E8E2;
+    --primary: #39abcb; --primary-dark: #0c3c7b;
+    --accent: #85cde2; --bg: #d5eef5; --card: #FFFFFF;
+    --text: #0c3c7b; --text-muted: #39abcb; --border: #85cde2;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -71,7 +71,7 @@
 <body>
 
 <div class="topo">
-  <img src="{% static 'logonav.png' %}" alt="Logo CeciSys">
+  <img src="{% static 'logonav.png' %}" alt="Logo IntegraMente">
   <div class="topo-texto">
     {% if tipo_label %}
     <div class="tipo-nome">{{ tipo_icon|safe }} {{ tipo_label }}</div>
@@ -145,7 +145,7 @@
       </div>
       <div style="margin-top:1.5rem;">
         <button type="submit" class="btn btn-primary">
-          Iniciar Questionário →
+          Iniciar Questionário <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>
         </button>
       </div>
     </form>
