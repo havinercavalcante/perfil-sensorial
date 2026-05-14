@@ -19,12 +19,12 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     'https://integramente.pro,https://www.integramente.pro'
 ).split(',')
 INSTALLED_APPS = [
+    'questionario',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'questionario',
     'django.contrib.staticfiles',
 ]
 MIDDLEWARE = [
