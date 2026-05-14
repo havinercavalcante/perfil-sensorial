@@ -1,6 +1,6 @@
-# CeciSys - Sistema Django
+# IntegraMente - Sistema Django
 
-Sistema para aplicação e análise do questionário **Criança CeciSys** (3 a 14 anos e 11 meses).
+Sistema para aplicação e análise do questionário **Criança IntegraMente** (3 a 14 anos e 11 meses).
 
 ## Como rodar
 

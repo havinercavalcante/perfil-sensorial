@@ -320,7 +320,7 @@ def enviar_email_link(request, avaliacao_id):
         "paciente": paciente, "link": link,
     })
     send_mail(
-        subject="Questionário CeciSys",
+        subject="Questionário IntegraMente",
         message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
         from_email=None,
         recipient_list=[email_dest],

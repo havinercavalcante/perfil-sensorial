@@ -8,7 +8,7 @@
   }
 </style>
 {% endblock %}
-{% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back">← Pacientes</a>{% endblock %}
+{% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Pacientes</a>{% endblock %}
 {% block content %}
 <div style="max-width:600px; margin:0 auto;">
   <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="users" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Dados do Paciente</h2>
@@ -68,7 +68,7 @@
       </div>
       <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
         <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Iniciar Questionário →</button>
+        <button type="submit" class="btn btn-primary">Iniciar Questionário <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
       </div>
     </form>
   </div>

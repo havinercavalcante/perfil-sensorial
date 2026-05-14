@@ -270,7 +270,7 @@ def enviar_email_spm(request, avaliacao_id):
     link = request.build_absolute_uri(f"/spm/publico/{avaliacao.token}/1/")
     nome_instrumento = avaliacao.get_faixa_display()
     send_mail(
-        subject=f"{nome_instrumento} — CeciSys",
+        subject=f"{nome_instrumento} — IntegraMente",
         message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
         from_email=None,
         recipient_list=[email_dest],

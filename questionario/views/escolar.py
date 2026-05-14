@@ -231,7 +231,7 @@ def enviar_email_escolar(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     link = request.build_absolute_uri(f"/escolar/publico/{avaliacao.token}/1/")
     send_mail(
-        subject="Questionário Sensorial Escolar — CeciSys",
+        subject="Questionário Sensorial Escolar — IntegraMente",
         message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
         from_email=None,
         recipient_list=[email_dest],

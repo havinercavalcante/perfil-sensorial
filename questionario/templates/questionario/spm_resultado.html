@@ -48,6 +48,7 @@
     .tot-card   { flex-direction: column; align-items: flex-start; }
   }
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     nav, .btn-back, .no-print { display: none !important; }
     body { background: #fff; }
     .card { box-shadow: none; border: 1px solid #ccc; }
@@ -56,7 +57,7 @@
 </style>
 {% endblock %}
 
-{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
 
 {% block content %}
 
@@ -68,6 +69,7 @@
         — {{ paciente.nome }}
       </h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
