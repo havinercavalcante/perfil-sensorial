@@ -14,6 +14,10 @@ if _env_path.exists():
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-perfil-sensorial-2-key-change-in-production')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://integramente.pro,https://www.integramente.pro'
+).split(',')
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

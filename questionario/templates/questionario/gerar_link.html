@@ -1,5 +1,5 @@
 {% extends "questionario/base.html" %}
-{% block title %}Gerar Link — CeciSys{% endblock %}
+{% block title %}Gerar Link — IntegraMente{% endblock %}
 {% block extra_css %}
 <style>
   .tipos-grid {
@@ -90,7 +90,7 @@
   }
 </style>
 {% endblock %}
-{% block back_button %}<a href="{% url 'index' %}" class="btn-back">← Início</a>{% endblock %}
+{% block back_button %}<a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>{% endblock %}
 {% block content %}
 <div style="max-width: 680px; margin: 0 auto;">
 
@@ -102,69 +102,69 @@
   <div class="card">
     <div class="card-title">Tipo de avaliação</div>
     <div class="tipos-grid">
-      <div class="bloqueados-sep" id="bloqueados-sep">🔒 Não inclusos no plano</div>
+      <div class="bloqueados-sep" id="bloqueados-sep"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i> Não inclusos no plano</div>
       <button class="tipo-card{% if 'sensorial' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('sensorial', this)" title="{% if 'sensorial' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'sensorial' not in modulos_liberados %}🔒{% else %}<i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'sensorial' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Perfil Sensorial</span>
         <span class="tc-desc">{% if 'sensorial' not in modulos_liberados %}Módulo não disponível{% else %}86 itens · processamento sensorial{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'vineland' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('vineland', this)" title="{% if 'vineland' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'vineland' not in modulos_liberados %}🔒{% else %}<i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'vineland' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Escala Vineland</span>
         <span class="tc-desc">{% if 'vineland' not in modulos_liberados %}Módulo não disponível{% else %}116 itens · maturidade social{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'escolar' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('escolar', this)" title="{% if 'escolar' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'escolar' not in modulos_liberados %}🔒{% else %}<i data-lucide="school" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'escolar' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="school" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Sensorial Escolar</span>
         <span class="tc-desc">{% if 'escolar' not in modulos_liberados %}Módulo não disponível{% else %}Ambiente escolar{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'bebe' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('bebe', this)" title="{% if 'bebe' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'bebe' not in modulos_liberados %}🔒{% else %}<i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'bebe' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Bebê (0–6 meses)</span>
         <span class="tc-desc">{% if 'bebe' not in modulos_liberados %}Módulo não disponível{% else %}Perfil sensorial bebê{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'bebe' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('crianca_pequena', this)" title="{% if 'bebe' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'bebe' not in modulos_liberados %}🔒{% else %}<i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'bebe' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Criança Pequena (7–36m)</span>
         <span class="tc-desc">{% if 'bebe' not in modulos_liberados %}Módulo não disponível{% else %}Perfil sensorial criança{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'spm' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('spm_p', this)" title="{% if 'spm' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'spm' not in modulos_liberados %}🔒{% else %}<i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'spm' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">SPM-P Casa (2–5 anos)</span>
         <span class="tc-desc">{% if 'spm' not in modulos_liberados %}Módulo não disponível{% else %}75 itens · 8 domínios{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'spm' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('spm_casa', this)" title="{% if 'spm' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'spm' not in modulos_liberados %}🔒{% else %}<i data-lucide="house" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'spm' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="house" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">SPM Casa (5–12 anos)</span>
         <span class="tc-desc">{% if 'spm' not in modulos_liberados %}Módulo não disponível{% else %}75 itens · 8 domínios{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'edm' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('edm', this)" title="{% if 'edm' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'edm' not in modulos_liberados %}🔒{% else %}<i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'edm' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">EDM Figueiredo</span>
         <span class="tc-desc">{% if 'edm' not in modulos_liberados %}Módulo não disponível{% else %}Desenvolvimento motor{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'mabc2' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('mabc2', this)" title="{% if 'mabc2' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'mabc2' not in modulos_liberados %}🔒{% else %}<i data-lucide="target" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'mabc2' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="target" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">MABC-2</span>
         <span class="tc-desc">{% if 'mabc2' not in modulos_liberados %}Módulo não disponível{% else %}Bateria de avaliação motora{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'beery' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('beery', this)" title="{% if 'beery' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'beery' not in modulos_liberados %}🔒{% else %}<i data-lucide="pencil" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'beery' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="pencil" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Beery VMI</span>
         <span class="tc-desc">{% if 'beery' not in modulos_liberados %}Módulo não disponível{% else %}Integração visomotora{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'pedi' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('pedi', this)" title="{% if 'pedi' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'pedi' not in modulos_liberados %}🔒{% else %}<i data-lucide="accessibility" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'pedi' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="accessibility" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">PEDI</span>
         <span class="tc-desc">{% if 'pedi' not in modulos_liberados %}Módulo não disponível{% else %}Incapacidade pediátrica{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'vineland3' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('vineland3', this)" title="{% if 'vineland3' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'vineland3' not in modulos_liberados %}🔒{% else %}<i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'vineland3' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Vineland-3</span>
         <span class="tc-desc">{% if 'vineland3' not in modulos_liberados %}Módulo não disponível{% else %}180 itens · comportamento adaptativo{% endif %}</span>
       </button>
       <button class="tipo-card{% if 'portage' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('portage', this)" title="{% if 'portage' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'portage' not in modulos_liberados %}🔒{% else %}<i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+        <span class="tc-icon">{% if 'portage' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
         <span class="tc-label">Guia Portage</span>
         <span class="tc-desc">{% if 'portage' not in modulos_liberados %}Módulo não disponível{% else %}Avaliação pré-escolar, 535 itens{% endif %}</span>
       </button>
@@ -368,7 +368,7 @@ async function enviarEmail() {
   });
   const data = await resp.json();
   if (data.ok) {
-    mostrarMsgEmail(data.message, "#1A5C4D");
+    mostrarMsgEmail(data.message, "#0c3c7b");
     setTimeout(fecharModalEmail, 1800);
   } else {
     mostrarMsgEmail(data.message, "red");

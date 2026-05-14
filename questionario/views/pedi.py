@@ -281,7 +281,7 @@ def enviar_email_pedi(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     link = request.build_absolute_uri(f"/pedi/publico/{avaliacao.token}/1/")
     send_mail(
-        subject="PEDI — CeciSys",
+        subject="PEDI — IntegraMente",
         message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário PEDI no link: {link}",
         from_email=None,
         recipient_list=[email_dest],

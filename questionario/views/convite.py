@@ -89,7 +89,7 @@ def enviar_email_convite(request):
         "nome_medico": nome_medico,
     })
     send_mail(
-        subject=f"CeciSys — {tipo_display}",
+        subject=f"IntegraMente — {tipo_display}",
         message=f"Acesse o link para responder o questionário:\n\n{link}",
         from_email=None,
         recipient_list=[email_dest],

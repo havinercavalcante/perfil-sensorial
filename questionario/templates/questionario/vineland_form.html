@@ -6,7 +6,7 @@
   /* ── cores por categoria ── */
   :root {
     --c-C:   #3E73D1; --c-C-t:   #fff;
-    --c-L:   #2E7D6B; --c-L-t:   #fff;
+    --c-L:   #39abcb; --c-L-t:   #fff;
     --c-O:   #E8793A; --c-O-t:   #fff;
     --c-S:   #9B59B6; --c-S-t:   #fff;
     --c-AG:  #C0392B; --c-AG-t:  #fff;
@@ -226,11 +226,11 @@
       {% if pagina == total %}
       <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">← Voltar ao paciente</a>
       {% else %}
-      <a href="{% url 'vineland_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary">Próximo Grupo →</a>
+      <a href="{% url 'vineland_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary">Próximo Grupo <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
       {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary">
-      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação{% else %}Próximo Grupo →{% endif %}
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação{% else %}Próximo Grupo <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>{% endif %}
     </button>
     {% endif %}
   </div>

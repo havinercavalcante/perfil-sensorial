@@ -23,16 +23,17 @@
   @media(max-width:700px) { .quadrantes-grid{grid-template-columns:1fr 1fr;} .secoes-grid{grid-template-columns:1fr;} .charts-row{grid-template-columns:1fr;} }
   @media(max-width:480px) { .quadrantes-grid{grid-template-columns:1fr 1fr;} .quad-card .quad-valor{font-size:1.5rem;} }
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     nav, .btn-back, .no-print-hide, #formObs button, #obs-status { display: none !important; }
     body { background: #fff; }
     main { max-width: 100%; padding: 1rem; }
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
-    .dashboard-header { background: #1A5C4D !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .dashboard-header { background: #0c3c7b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .quad-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 {% endblock %}
-{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">← {{ paciente.nome }}</a>{% endblock %}
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
 {% block content %}
 
 <div class="dashboard-header">
@@ -40,6 +41,7 @@
     <div>
       <h1><i data-lucide="bar-chart-2" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>{{ paciente.nome }}</h1>
       <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.8rem; flex-wrap:wrap;">
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;" onclick="window.print()">
@@ -173,8 +175,8 @@ new Chart(document.getElementById('radarChart'), {
       label: 'Pontuação (%)',
       data: radarValores,
       backgroundColor: 'rgba(46,125,107,.2)',
-      borderColor: '#2E7D6B',
-      pointBackgroundColor: '#2E7D6B',
+      borderColor: '#39abcb',
+      pointBackgroundColor: '#39abcb',
       borderWidth: 2,
       pointRadius: 4,
     }]
