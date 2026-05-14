@@ -1,0 +1,492 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_extras %}
+
+{% block extrastyle %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* anula o width:600px que o Django admin aplica em .dashboard #content */
+#content{ width:auto !important; max-width:none !important; padding:0 !important; }
+
+/* ─── vars ───────────────────────────────────────── */
+:root{
+  --br:#3E73D1; --dk:#0F274F; --li:#6B9BE8;
+  --ok:#16a34a;
+  --ca:#fff; --pg:#f1f5f9; --bo:#e2e8f0;
+  --tx:#1e293b; --mu:#64748b; --fa:#94a3b8;
+  --sh:0 1px 3px rgba(15,39,79,.05),0 4px 18px rgba(15,39,79,.07);
+  --sh2:0 8px 24px rgba(62,115,209,.14),0 1px 4px rgba(62,115,209,.07);
+  --r:12px; --gap:16px;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+
+/* ─── page shell ─────────────────────────────────── */
+.dash-page{
+  background:var(--pg);
+  min-height:100vh;
+  max-width:1700px;
+  margin:0 auto;
+  padding:28px 32px 48px;
+}
+
+/* ─── page header ────────────────────────────────── */
+.ph{
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px; margin-bottom:28px;
+}
+.ph-left h1{
+  font-size:1.45rem; font-weight:900; color:var(--dk);
+  letter-spacing:-.03em; line-height:1.1;
+}
+.ph-left p{ font-size:.75rem; color:var(--mu); margin-top:3px; }
+
+/* ─── stat cards ─────────────────────────────────── */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:var(--gap); margin-bottom:var(--gap);
+}
+.card{
+  background:var(--ca); border:1px solid var(--bo);
+  border-radius:var(--r); padding:20px 18px 16px;
+  box-shadow:var(--sh); position:relative; overflow:hidden;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s;
+}
+.card::before{
+  content:''; position:absolute; inset:0 0 auto 0; height:3px;
+  background:linear-gradient(90deg,var(--br),var(--li));
+}
+.card:hover{ transform:translateY(-3px); box-shadow:var(--sh2); }
+.card-top{
+  display:flex; justify-content:space-between;
+  align-items:flex-start; margin-bottom:14px;
+}
+.card-ico{
+  width:42px; height:42px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(62,115,209,.1);
+}
+.card-ico.g{ background:rgba(22,163,74,.1); }
+.card-badge{
+  font-size:.62rem; font-weight:700; padding:2px 8px;
+  border-radius:20px; background:rgba(22,163,74,.1); color:var(--ok);
+  white-space:nowrap; line-height:1.6;
+}
+.card-num{
+  font-size:2.1rem; font-weight:900; line-height:1;
+  letter-spacing:-.04em; color:var(--dk);
+}
+.card-num.g{ color:var(--ok); }
+.card-lbl{
+  font-size:.71rem; font-weight:500; color:var(--mu);
+  margin-top:5px; line-height:1.35;
+}
+
+/* ─── section header ─────────────────────────────── */
+.sec{ margin-bottom:var(--gap); }
+.sec-title{
+  display:flex; align-items:center; gap:10px;
+  font-size:.68rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.09em; color:var(--fa); margin-bottom:14px;
+}
+.sec-title::after{ content:''; flex:1; height:1px; background:var(--bo); }
+
+/* ─── chart grid ─────────────────────────────────── */
+.chart-grid{
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:var(--gap);
+}
+.chart-right{
+  display:flex; flex-direction:column; gap:var(--gap);
+}
+.box{
+  background:var(--ca); border:1px solid var(--bo);
+  border-radius:var(--r); padding:20px; box-shadow:var(--sh); min-width:0;
+}
+.box-title{
+  font-size:.82rem; font-weight:700; color:var(--tx);
+  margin-bottom:16px; display:flex; align-items:center; gap:8px;
+}
+.box-title::before{
+  content:''; width:4px; height:15px; border-radius:2px; flex-shrink:0;
+  background:linear-gradient(180deg,var(--br),var(--li));
+}
+.ch   { position:relative; height:260px; }
+.ch-sm{ position:relative; height:168px; }
+
+/* ─── tabelas ────────────────────────────────────── */
+.tbl-grid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--gap); }
+.tbl-wrap{
+  background:var(--ca); border:1px solid var(--bo);
+  border-radius:var(--r); overflow:hidden; box-shadow:var(--sh);
+}
+.tbl-full{
+  background:var(--ca); border:1px solid var(--bo);
+  border-radius:var(--r); overflow:hidden; box-shadow:var(--sh);
+}
+.tbl-hd{ padding:14px 18px 12px; border-bottom:1px solid var(--bo); }
+.tbl-hd-t{ font-size:.83rem; font-weight:700; color:var(--tx); }
+.tbl-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+table.t{ width:100%; border-collapse:collapse; font-size:.82rem; min-width:300px; }
+table.t thead th{
+  padding:9px 16px; background:var(--pg);
+  font-size:.66rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--mu); text-align:left;
+  border-bottom:1px solid var(--bo); white-space:nowrap;
+}
+table.t tbody td{
+  padding:9px 16px; border-bottom:1px solid var(--bo);
+  color:var(--tx); vertical-align:middle;
+}
+table.t tbody tr:last-child td{ border-bottom:none; }
+table.t tbody tr:hover td{ background:rgba(62,115,209,.025); }
+table.t td a{ color:var(--br); text-decoration:none; font-weight:500; }
+table.t td a:hover{ text-decoration:underline; }
+table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.8rem; }
+
+/* ─── inline bar ─────────────────────────────────── */
+.ibar{ display:flex; align-items:center; gap:8px; }
+.ibar-tr{ flex:1; height:5px; background:var(--bo); border-radius:3px;
+  overflow:hidden; min-width:36px; }
+.ibar-fi{ height:5px; border-radius:3px;
+  background:linear-gradient(90deg,var(--br),var(--li)); }
+.ibar-pc{ font-size:.67rem; color:var(--mu); min-width:26px; text-align:right; }
+
+/* ─── tag ────────────────────────────────────────── */
+.tag{ display:inline-flex; align-items:center;
+  padding:2px 8px; border-radius:20px; font-size:.68rem; font-weight:700; }
+.tag.g{ background:rgba(22,163,74,.1); color:var(--ok); }
+.tag.b{ background:rgba(62,115,209,.1); color:var(--br); }
+
+/* ─── activity strip ─────────────────────────────── */
+.strip{
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 22px;
+  padding:13px 20px; background:var(--ca); border:1px solid var(--bo);
+  border-radius:var(--r); font-size:.8rem; color:var(--mu); box-shadow:var(--sh);
+}
+.strip strong{ color:var(--tx); }
+.strip-dot{ width:7px; height:7px; border-radius:50%;
+  background:var(--br); flex-shrink:0; }
+
+/* ─── app list (modelos do sistema) ─────────────── */
+.app-section{
+  margin-top:32px; padding-top:24px;
+  border-top:1px solid var(--bo);
+}
+.app-section .sec-title{ margin-bottom:16px; }
+.app-section .app-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:var(--gap);
+}
+.app-section .app-list .module{
+  background:var(--ca); border:1px solid var(--bo);
+  border-radius:var(--r); overflow:hidden;
+  box-shadow:var(--sh);
+}
+.app-section .app-list table{ width:100%; border-collapse:collapse; }
+.app-section .app-list caption{
+  background:var(--dk); color:#fff;
+  padding:10px 18px; font-size:.8rem; font-weight:700;
+  text-align:left; letter-spacing:.04em;
+}
+.app-section .app-list td,
+.app-section .app-list th{
+  padding:8px 18px; border-bottom:1px solid var(--bo); font-size:.83rem;
+}
+.app-section .app-list tbody tr:last-child td,
+.app-section .app-list tbody tr:last-child th{ border-bottom:none; }
+.app-section .app-list .addlink,
+.app-section .app-list .changelink{ color:var(--br); font-weight:500; }
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:1200px){
+  .cards{ grid-template-columns:repeat(3,1fr); }
+}
+@media(max-width:950px){
+  .chart-grid{ grid-template-columns:1fr; }
+  .chart-right{ flex-direction:row; }
+  .ch-sm{ flex:1; }
+}
+@media(max-width:760px){
+  .cards{ grid-template-columns:repeat(2,1fr); }
+  .tbl-grid{ grid-template-columns:1fr; }
+  .chart-right{ flex-direction:column; }
+  .ph{ flex-direction:column; align-items:flex-start; }
+  .dash-page{ padding:20px 16px 32px; }
+}
+@media(max-width:440px){
+  .card-num{ font-size:1.75rem; }
+  .card{ padding:16px 14px 13px; }
+  .card-ico{ width:36px; height:36px; }
+  .ch{ height:210px; }
+  .ch-sm{ height:150px; }
+}
+</style>
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+{% dashboard_stats as s %}
+<div class="dash-page">
+
+  <!-- ── Cabeçalho ── -->
+  <div class="ph">
+    <div class="ph-left">
+      <h1>Painel do Sistema</h1>
+      <p>Monitoramento completo · Integramente Pro</p>
+    </div>
+  </div>
+
+  <!-- ── Cards ── -->
+  <div class="sec">
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+        <div class="card-num">{{ s.total_medicos }}</div>
+        <div class="card-lbl">Profissionais</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          {% if s.novos_pacientes_30d > 0 %}<span class="card-badge">+{{ s.novos_pacientes_30d }}/30d</span>{% endif %}
+        </div>
+        <div class="card-num">{{ s.total_pacientes }}</div>
+        <div class="card-lbl">Pacientes</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
+          </div>
+        </div>
+        <div class="card-num">{{ s.total_avaliacoes }}</div>
+        <div class="card-lbl">Avaliações criadas</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-ico g">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+        <div class="card-num g">{{ s.total_concluidas }}</div>
+        <div class="card-lbl">Concluídas</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+        </div>
+        <div class="card-num">{{ s.total_links }}</div>
+        <div class="card-lbl">Links enviados</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-ico g">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+        </div>
+        <div class="card-num g">{{ s.links_usados }}</div>
+        <div class="card-lbl">Links utilizados</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Gráficos ── -->
+  <div class="sec">
+    <div class="sec-title">Análise visual</div>
+    <div class="chart-grid">
+      <div class="box">
+        <div class="box-title">Avaliações por módulo</div>
+        <div class="ch"><canvas id="idxBar"></canvas></div>
+      </div>
+      <div class="chart-right">
+        <div class="box">
+          <div class="box-title">Status das avaliações</div>
+          <div class="ch-sm"><canvas id="idxStatus"></canvas></div>
+        </div>
+        <div class="box">
+          <div class="box-title">Links enviados vs utilizados</div>
+          <div class="ch-sm"><canvas id="idxLinks"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabelas: módulos + profissionais ── -->
+  <div class="sec">
+    <div class="sec-title">Detalhamento por módulo e profissional</div>
+    <div class="tbl-grid">
+
+      <div class="tbl-wrap">
+        <div class="tbl-hd"><span class="tbl-hd-t">Avaliações por módulo</span></div>
+        <div class="tbl-scroll">
+          <table class="t">
+            <thead><tr><th>Módulo</th><th>Total</th><th>Concluídas</th><th>Proporção</th></tr></thead>
+            <tbody>
+              {% for m in s.modulos_contagem %}{% if m.total > 0 %}
+              <tr>
+                <td>{{ m.nome }}</td>
+                <td><strong>{{ m.total }}</strong></td>
+                <td><span class="tag g">{{ m.concluidas }}</span></td>
+                <td>
+                  {% if s.total_avaliacoes > 0 %}
+                  <div class="ibar">
+                    <div class="ibar-tr"><div class="ibar-fi" style="width:{% widthratio m.total s.total_avaliacoes 100 %}%"></div></div>
+                    <span class="ibar-pc">{% widthratio m.total s.total_avaliacoes 100 %}%</span>
+                  </div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endif %}{% empty %}
+              <tr class="empty"><td colspan="4">Nenhuma avaliação registrada</td></tr>
+              {% endfor %}
+              {% if s.total_avaliacoes == 0 %}<tr class="empty"><td colspan="4">Nenhuma avaliação registrada</td></tr>{% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <div class="tbl-hd"><span class="tbl-hd-t">Profissionais cadastrados</span></div>
+        <div class="tbl-scroll">
+          <table class="t">
+            <thead><tr><th>Nome</th><th>Pacientes</th><th>Módulos</th></tr></thead>
+            <tbody>
+              {% for p in s.medicos %}
+              <tr>
+                <td><a href="/admin/auth/user/{{ p.user.id }}/change/">{{ p.user.get_full_name|default:p.user.username }}</a></td>
+                <td><span class="tag b">{{ p.n_pacientes }}</span></td>
+                <td>{{ p.modulos_liberados.count }}</td>
+              </tr>
+              {% empty %}
+              <tr class="empty"><td colspan="3">Nenhum profissional</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Últimos pacientes ── -->
+  <div class="sec">
+    <div class="sec-title">Últimos pacientes cadastrados</div>
+    <div class="tbl-full">
+      <div class="tbl-scroll">
+        <table class="t">
+          <thead><tr><th>Nome</th><th>Profissional</th><th>Responsável</th><th>Cadastrado em</th></tr></thead>
+          <tbody>
+            {% for pac in s.pacientes_recentes %}
+            <tr>
+              <td><a href="/admin/questionario/paciente/{{ pac.id }}/change/">{{ pac.nome }}</a></td>
+              <td>{{ pac.medico.get_full_name|default:pac.medico.username }}</td>
+              <td>{{ pac.responsavel }}</td>
+              <td style="color:var(--mu);font-size:.75rem;">{{ pac.criado_em|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr class="empty"><td colspan="4">Nenhum paciente cadastrado</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Activity strip ── -->
+  <div class="strip">
+    <span class="strip-dot"></span>
+    <span>Últimos <strong>7 dias</strong>: <strong>{{ s.pacientes_7d }}</strong> novos pacientes</span>
+    <span>Últimos <strong>30 dias</strong>: <strong>{{ s.novos_pacientes_30d }}</strong> novos pacientes</span>
+    <span>Links aproveitados: <strong>{{ s.links_usados }}</strong> de <strong>{{ s.total_links }}</strong></span>
+  </div>
+
+  <!-- ── Modelos do sistema (lista de apps do admin) ── -->
+  <div class="app-section">
+    <div class="sec-title">Modelos do sistema</div>
+    <div class="app-list">
+      {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const fg='#1e293b', br='#3E73D1', ok='#16a34a';
+  const pal=['#3E73D1','#2563eb','#4f83cc','#0F274F','#6B9BE8','#93c5fd',
+             '#16a34a','#4ade80','#f59e0b','#fb923c','#a855f7'];
+
+  const bL=[{% for m in s.modulos_contagem %}{% if m.total > 0 %}"{{ m.nome }}",{% endif %}{% endfor %}];
+  const bV=[{% for m in s.modulos_contagem %}{% if m.total > 0 %}{{ m.total }},{% endif %}{% endfor %}];
+
+  const donutOpts={
+    responsive:true, maintainAspectRatio:false, cutout:'68%',
+    plugins:{ legend:{ position:'bottom',
+      labels:{ color:fg, font:{size:11}, padding:12,
+               usePointStyle:true, pointStyleWidth:10 }
+    }}
+  };
+
+  new Chart(document.getElementById('idxBar'),{
+    type:'bar',
+    data:{ labels:bL, datasets:[{
+      data:bV, backgroundColor:pal.slice(0,bL.length),
+      borderRadius:6, borderSkipped:false
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.raw} avaliação(ões)`}} },
+      scales:{
+        x:{ ticks:{color:fg,font:{size:10}}, grid:{display:false} },
+        y:{ ticks:{color:fg,precision:0,font:{size:10}}, beginAtZero:true,
+            grid:{color:'rgba(0,0,0,.05)'} }
+      }
+    }
+  });
+
+  const em=Math.max(0,{{ s.total_avaliacoes }}-{{ s.total_concluidas }});
+  new Chart(document.getElementById('idxStatus'),{
+    type:'doughnut',
+    data:{ labels:['Concluídas','Em andamento'],
+      datasets:[{ data:[{{ s.total_concluidas }},em],
+        backgroundColor:[ok,br], borderWidth:3, borderColor:'#fff', hoverOffset:6 }]
+    },
+    options:donutOpts
+  });
+
+  const ln=Math.max(0,{{ s.total_links }}-{{ s.links_usados }});
+  new Chart(document.getElementById('idxLinks'),{
+    type:'doughnut',
+    data:{ labels:['Utilizados','Não utilizados'],
+      datasets:[{ data:[{{ s.links_usados }},ln],
+        backgroundColor:[ok,'#cbd5e1'], borderWidth:3, borderColor:'#fff', hoverOffset:6 }]
+    },
+    options:donutOpts
+  });
+})();
+</script>
+{% endblock %}
