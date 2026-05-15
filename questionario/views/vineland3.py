@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..models import Paciente, AvaliacaoVineland3, RespostaVineland3
-from ..vineland3_data import (
+from ..data.vineland3_data import (
     VINELAND3_SECOES,
     VINELAND3_PERGUNTAS,
     VINELAND3_OPCOES,

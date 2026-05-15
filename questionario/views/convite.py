@@ -11,6 +11,10 @@ from django.template.loader import render_to_string
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
     AvaliacaoBebe, AvaliacaoSPM, AvaliacaoVineland3, AvaliacaoPEDI, AvaliacaoPortage, LinkConvite,
+    AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT,
+    AvaliacaoLinguagem, AvaliacaoAlimentacao, AvaliacaoDesenvolvimento, AvaliacaoSono,
+    AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
+    AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
 )
 from ..services import TIPO_INFO
 
@@ -34,6 +38,18 @@ def gerar_link(request):
         "beery": "beery",
         "pedi": "pedi",
         "portage": "portage",
+        "sdq": "sdq",
+        "snap_iv": "snap_iv",
+        "mchat": "mchat",
+        "cars": "cars",
+        "linguagem": "linguagem",
+        "alimentacao_seletiva": "alimentacao_seletiva",
+        "desenvolvimento": "desenvolvimento",
+        "sono_infantil": "sono_infantil",
+        "habilidades_adaptativas": "habilidades_adaptativas",
+        "comportamento_funcional": "comportamento_funcional",
+        "rastreio_cognitivo": "rastreio_cognitivo",
+        "psicopedagogica": "psicopedagogica",
     }
 
     modulos_liberados = set()
@@ -162,11 +178,43 @@ def iniciar_avaliacao(request, token):
             AvaliacaoPEDI.objects.create(paciente=paciente, token=t)
             return redirect("pedi_publico", token=t, pagina=1)
         elif tipo == "portage":
-            from ..models import AvaliacaoPortage
             AvaliacaoPortage.objects.create(paciente=paciente, token=t)
             return redirect("portage_publico", token=t, pagina=1)
+        elif tipo == "sdq":
+            AvaliacaoSDQ.objects.create(paciente=paciente, token=t, respondente="pais")
+            return redirect("sdq_publico", token=t)
+        elif tipo == "snap_iv":
+            AvaliacaoSNAPIV.objects.create(paciente=paciente, token=t, respondente="pais")
+            return redirect("snap_iv_publico", token=t)
+        elif tipo == "mchat":
+            AvaliacaoMCHAT.objects.create(paciente=paciente, token=t)
+            return redirect("mchat_publico", token=t)
+        elif tipo == "linguagem":
+            AvaliacaoLinguagem.objects.create(paciente=paciente, token=t)
+            return redirect("linguagem_publico", token=t)
+        elif tipo == "alimentacao_seletiva":
+            AvaliacaoAlimentacao.objects.create(paciente=paciente, token=t)
+            return redirect("alimentacao_publico", token=t)
+        elif tipo == "desenvolvimento":
+            AvaliacaoDesenvolvimento.objects.create(paciente=paciente, token=t)
+            return redirect("desenvolvimento_publico", token=t)
+        elif tipo == "sono_infantil":
+            AvaliacaoSono.objects.create(paciente=paciente, token=t)
+            return redirect("sono_publico", token=t)
+        elif tipo == "habilidades_adaptativas":
+            AvaliacaoHabilidadesAdaptativas.objects.create(paciente=paciente, token=t)
+            return redirect("habilidades_publico", token=t)
+        elif tipo == "comportamento_funcional":
+            AvaliacaoComportamentoFuncional.objects.create(paciente=paciente, token=t)
+            return redirect("comportamento_publico", token=t)
+        elif tipo == "rastreio_cognitivo":
+            AvaliacaoRastreioCognitivo.objects.create(paciente=paciente, token=t)
+            return redirect("cognitivo_publico", token=t)
+        elif tipo == "psicopedagogica":
+            AvaliacaoPsicopedagogica.objects.create(paciente=paciente, token=t)
+            return redirect("psicopedagogica_publico", token=t)
         else:
-            # EDM, MABC-2, Beery — avaliação presencial, só cadastra o paciente
+            # CARS-2, EDM, MABC-2, Beery — presencial, só cadastra o paciente
             return render(request, "questionario/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,

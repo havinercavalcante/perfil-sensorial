@@ -182,6 +182,8 @@ def classificar_bebe(valor: int, maximo: int) -> str:
     Classifica a pontuação de um quadrante.
     Pontuação menor = comportamento MAIS presente (1=Sempre).
     Pontuação maior = comportamento MENOS presente (5=Nunca).
+    Escala 1–5 por item → mínimo possível = 20% do máximo.
+    Threshold "Mais" em 22% para que "Muito mais" seja atingível.
     """
     if maximo == 0:
         return "—"
@@ -192,7 +194,7 @@ def classificar_bebe(valor: int, maximo: int) -> str:
         return "Menos que os pares"
     elif pct >= 25:
         return "Semelhante aos pares"
-    elif pct >= 15:
+    elif pct >= 22:
         return "Mais que os pares"
     else:
         return "Muito mais que os pares"

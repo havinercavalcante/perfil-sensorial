@@ -16,24 +16,7 @@
     font-family: inherit; width: 100%;
   }
   .tipo-card:hover { border-color: var(--primary); background: rgba(46,125,107,.06); transform: translateY(-2px); }
-  .tipo-card:not(.bloqueado) { order: 0; }
   .tipo-card.ativo { border-color: var(--primary); background: rgba(46,125,107,.09); }
-  .tipo-card.bloqueado {
-    order: 2;
-    opacity: .42; cursor: not-allowed; pointer-events: none;
-    border-color: var(--border) !important; background: #f5f5f5 !important;
-    transform: none !important;
-  }
-  .bloqueados-sep {
-    display: none; order: 1;
-    grid-column: 1 / -1; width: 100%;
-    margin: .25rem 0 .5rem;
-    padding: .45rem .75rem;
-    background: #f5f5f5; border-radius: 8px;
-    font-size: .75rem; font-weight: 700; color: #888;
-    letter-spacing: .4px; text-transform: uppercase;
-    align-items: center; gap: .4rem;
-  }
   .tipo-card .tc-icon { font-size: 1.8rem; line-height: 1; }
   .tipo-card .tc-label { font-size: .82rem; font-weight: 700; color: var(--text); line-height: 1.3; }
   .tipo-card .tc-desc { font-size: .72rem; color: var(--text-muted); line-height: 1.3; }
@@ -102,72 +85,183 @@
   <div class="card">
     <div class="card-title">Tipo de avaliação</div>
     <div class="tipos-grid">
-      <div class="bloqueados-sep" id="bloqueados-sep"><i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i> Não inclusos no plano</div>
-      <button class="tipo-card{% if 'sensorial' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('sensorial', this)" title="{% if 'sensorial' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'sensorial' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% if 'sensorial' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('sensorial', this)">
+        <span class="tc-icon"><i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Perfil Sensorial</span>
-        <span class="tc-desc">{% if 'sensorial' not in modulos_liberados %}Módulo não disponível{% else %}86 itens · processamento sensorial{% endif %}</span>
+        <span class="tc-desc">86 itens · processamento sensorial</span>
       </button>
-      <button class="tipo-card{% if 'vineland' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('vineland', this)" title="{% if 'vineland' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'vineland' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'vineland' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('vineland', this)">
+        <span class="tc-icon"><i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Escala Vineland</span>
-        <span class="tc-desc">{% if 'vineland' not in modulos_liberados %}Módulo não disponível{% else %}116 itens · maturidade social{% endif %}</span>
+        <span class="tc-desc">116 itens · maturidade social</span>
       </button>
-      <button class="tipo-card{% if 'escolar' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('escolar', this)" title="{% if 'escolar' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'escolar' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="school" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'escolar' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('escolar', this)">
+        <span class="tc-icon"><i data-lucide="school" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Sensorial Escolar</span>
-        <span class="tc-desc">{% if 'escolar' not in modulos_liberados %}Módulo não disponível{% else %}Ambiente escolar{% endif %}</span>
+        <span class="tc-desc">Ambiente escolar</span>
       </button>
-      <button class="tipo-card{% if 'bebe' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('bebe', this)" title="{% if 'bebe' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'bebe' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'bebe' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('bebe', this)">
+        <span class="tc-icon"><i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Bebê (0–6 meses)</span>
-        <span class="tc-desc">{% if 'bebe' not in modulos_liberados %}Módulo não disponível{% else %}Perfil sensorial bebê{% endif %}</span>
+        <span class="tc-desc">Perfil sensorial bebê</span>
       </button>
-      <button class="tipo-card{% if 'bebe' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('crianca_pequena', this)" title="{% if 'bebe' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'bebe' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      <button class="tipo-card" onclick="gerarLink('crianca_pequena', this)">
+        <span class="tc-icon"><i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Criança Pequena (7–36m)</span>
-        <span class="tc-desc">{% if 'bebe' not in modulos_liberados %}Módulo não disponível{% else %}Perfil sensorial criança{% endif %}</span>
+        <span class="tc-desc">Perfil sensorial criança</span>
       </button>
-      <button class="tipo-card{% if 'spm' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('spm_p', this)" title="{% if 'spm' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'spm' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'spm' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('spm_p', this)">
+        <span class="tc-icon"><i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">SPM-P Casa (2–5 anos)</span>
-        <span class="tc-desc">{% if 'spm' not in modulos_liberados %}Módulo não disponível{% else %}75 itens · 8 domínios{% endif %}</span>
+        <span class="tc-desc">75 itens · 8 domínios</span>
       </button>
-      <button class="tipo-card{% if 'spm' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('spm_casa', this)" title="{% if 'spm' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'spm' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="house" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      <button class="tipo-card" onclick="gerarLink('spm_casa', this)">
+        <span class="tc-icon"><i data-lucide="house" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">SPM Casa (5–12 anos)</span>
-        <span class="tc-desc">{% if 'spm' not in modulos_liberados %}Módulo não disponível{% else %}75 itens · 8 domínios{% endif %}</span>
+        <span class="tc-desc">75 itens · 8 domínios</span>
       </button>
-      <button class="tipo-card{% if 'edm' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('edm', this)" title="{% if 'edm' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'edm' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'edm' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('edm', this)">
+        <span class="tc-icon"><i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">EDM Figueiredo</span>
-        <span class="tc-desc">{% if 'edm' not in modulos_liberados %}Módulo não disponível{% else %}Desenvolvimento motor{% endif %}</span>
+        <span class="tc-desc">Desenvolvimento motor · presencial</span>
       </button>
-      <button class="tipo-card{% if 'mabc2' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('mabc2', this)" title="{% if 'mabc2' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'mabc2' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="target" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'mabc2' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('mabc2', this)">
+        <span class="tc-icon"><i data-lucide="target" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">MABC-2</span>
-        <span class="tc-desc">{% if 'mabc2' not in modulos_liberados %}Módulo não disponível{% else %}Bateria de avaliação motora{% endif %}</span>
+        <span class="tc-desc">Avaliação motora · presencial</span>
       </button>
-      <button class="tipo-card{% if 'beery' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('beery', this)" title="{% if 'beery' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'beery' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="pencil" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'beery' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('beery', this)">
+        <span class="tc-icon"><i data-lucide="pencil" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Beery VMI</span>
-        <span class="tc-desc">{% if 'beery' not in modulos_liberados %}Módulo não disponível{% else %}Integração visomotora{% endif %}</span>
+        <span class="tc-desc">Integração visomotora · presencial</span>
       </button>
-      <button class="tipo-card{% if 'pedi' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('pedi', this)" title="{% if 'pedi' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'pedi' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="accessibility" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'pedi' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('pedi', this)">
+        <span class="tc-icon"><i data-lucide="accessibility" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">PEDI</span>
-        <span class="tc-desc">{% if 'pedi' not in modulos_liberados %}Módulo não disponível{% else %}Incapacidade pediátrica{% endif %}</span>
+        <span class="tc-desc">Incapacidade pediátrica</span>
       </button>
-      <button class="tipo-card{% if 'vineland3' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('vineland3', this)" title="{% if 'vineland3' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'vineland3' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'vineland3' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('vineland3', this)">
+        <span class="tc-icon"><i data-lucide="puzzle" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Vineland-3</span>
-        <span class="tc-desc">{% if 'vineland3' not in modulos_liberados %}Módulo não disponível{% else %}180 itens · comportamento adaptativo{% endif %}</span>
+        <span class="tc-desc">180 itens · comportamento adaptativo</span>
       </button>
-      <button class="tipo-card{% if 'portage' not in modulos_liberados %} bloqueado{% endif %}" onclick="gerarLink('portage', this)" title="{% if 'portage' not in modulos_liberados %}Módulo não incluso no seu plano{% endif %}">
-        <span class="tc-icon">{% if 'portage' not in modulos_liberados %}<i data-lucide="lock" style="width:1.1em;height:1.1em;vertical-align:middle;"></i>{% else %}<i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i>{% endif %}</span>
+      {% endif %}
+      {% if 'portage' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('portage', this)">
+        <span class="tc-icon"><i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">Guia Portage</span>
-        <span class="tc-desc">{% if 'portage' not in modulos_liberados %}Módulo não disponível{% else %}Avaliação pré-escolar, 535 itens{% endif %}</span>
+        <span class="tc-desc">Avaliação pré-escolar, 535 itens</span>
       </button>
+      {% endif %}
+      {% if 'sdq' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('sdq', this)">
+        <span class="tc-icon"><i data-lucide="clipboard-list" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">SDQ</span>
+        <span class="tc-desc">25 itens · capacidades e dificuldades</span>
+      </button>
+      {% endif %}
+      {% if 'snap_iv' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('snap_iv', this)">
+        <span class="tc-icon"><i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">SNAP-IV</span>
+        <span class="tc-desc">26 itens · rastreio de TDAH/TOD</span>
+      </button>
+      {% endif %}
+      {% if 'mchat' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('mchat', this)">
+        <span class="tc-icon"><i data-lucide="search" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">M-CHAT-R</span>
+        <span class="tc-desc">20 itens · rastreio de autismo</span>
+      </button>
+      {% endif %}
+      {% if 'cars' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('cars', this)">
+        <span class="tc-icon"><i data-lucide="alert-circle" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">CARS-2</span>
+        <span class="tc-desc">Escala de autismo · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'linguagem' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('linguagem', this)">
+        <span class="tc-icon"><i data-lucide="message-circle" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Avaliação de Linguagem</span>
+        <span class="tc-desc">4 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'alimentacao_seletiva' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('alimentacao_seletiva', this)">
+        <span class="tc-icon"><i data-lucide="utensils" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Alimentação Seletiva</span>
+        <span class="tc-desc">5 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'desenvolvimento' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('desenvolvimento', this)">
+        <span class="tc-icon"><i data-lucide="trending-up" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Marcos de Desenvolvimento</span>
+        <span class="tc-desc">5 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'sono_infantil' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('sono_infantil', this)">
+        <span class="tc-icon"><i data-lucide="moon" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Sono Infantil</span>
+        <span class="tc-desc">6 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'habilidades_adaptativas' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('habilidades_adaptativas', this)">
+        <span class="tc-icon"><i data-lucide="check-square" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Habilidades Adaptativas</span>
+        <span class="tc-desc">5 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'comportamento_funcional' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('comportamento_funcional', this)">
+        <span class="tc-icon"><i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Comportamento Funcional</span>
+        <span class="tc-desc">6 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'rastreio_cognitivo' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('rastreio_cognitivo', this)">
+        <span class="tc-icon"><i data-lucide="cpu" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Rastreio Cognitivo</span>
+        <span class="tc-desc">6 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if 'psicopedagogica' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('psicopedagogica', this)">
+        <span class="tc-icon"><i data-lucide="book-open" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Avaliação Psicopedagógica</span>
+        <span class="tc-desc">5 domínios · presencial</span>
+      </button>
+      {% endif %}
+      {% if not modulos_liberados %}
+      <div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">
+        <i data-lucide="lock" style="width:2rem;height:2rem; margin-bottom:.5rem;"></i>
+        <p>Nenhum módulo disponível. Entre em contato para ativar seu plano.</p>
+      </div>
+      {% endif %}
     </div>
   </div>
 
@@ -242,11 +336,6 @@
 </div>
 
 <script>
-const sep = document.getElementById('bloqueados-sep');
-if (sep && document.querySelectorAll('.tipo-card.bloqueado').length > 0) {
-  sep.style.display = 'flex';
-}
-
 let _cardAtivo = null;
 let _dadosWA = {};
 

@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..models import Paciente, AvaliacaoVineland, RespostaVineland
-from ..vineland_data import (
+from ..data.vineland_data import (
     VINELAND_GRUPOS, VINELAND_PERGUNTAS, VINELAND_CATEGORIA,
     VINELAND_OPCOES, VINELAND_CATEGORIAS_CONFIG,
     calcular_pontuacao_vineland, classificar_qs,

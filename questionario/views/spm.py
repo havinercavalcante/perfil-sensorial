@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..models import Paciente, AvaliacaoSPM, RespostaSPM
-from ..data_spm import (
+from ..data.data_spm import (
     SECOES_SPM_P, SECOES_SPM_CASA,
     PERGUNTAS_SPM_P, PERGUNTAS_SPM_CASA,
     OPCOES_SPM,
