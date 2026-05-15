@@ -1,0 +1,120 @@
+{% extends "questionario/base.html" %}
+{% block title %}M-CHAT-R — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --mchat: #8E44AD; }
+  .form-header {
+    background: linear-gradient(135deg, #5B2C6F, #8E44AD);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .88rem; }
+  .item-card {
+    border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem;
+    margin-bottom: .75rem; background: #fff;
+  }
+  .item-card.faltando { border-color: #F59E0B; background: #FFFBEB; }
+  .item-header { display: flex; gap: .75rem; align-items: flex-start; }
+  .item-num { min-width: 1.8rem; font-size: .78rem; color: var(--text-muted); font-weight: 700; padding-top: .1rem; }
+  .item-texto { flex: 1; font-size: .88rem; line-height: 1.4; font-weight: 500; }
+  .item-detalhe { font-size: .8rem; color: var(--text-muted); margin-top: .3rem; font-style: italic; }
+  .sim-nao { display: flex; gap: .5rem; margin-top: .6rem; }
+  .sn-btn {
+    padding: .35rem 1.1rem; border-radius: 8px; border: 1.5px solid var(--border);
+    background: #fff; font-size: .82rem; font-weight: 700; cursor: pointer;
+    transition: all .15s; color: var(--text); display: inline-block; user-select: none;
+  }
+  .sn-btn:hover { border-color: var(--mchat); color: var(--mchat); }
+  .sn-btn.sel-sim { background: #D1FAE5; border-color: #10B981; color: #065F46; }
+  .sn-btn.sel-nao { background: #FEE2E2; border-color: #EF4444; color: #991B1B; }
+  .alerta { background: #FEF3C7; border: 1.5px solid #F59E0B; border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1rem; font-size: .85rem; }
+  .info-box { background: #F5EEF8; border: 1px solid #D7BDE2; border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1rem; font-size: .83rem; color: #5B2C6F; }
+</style>
+{% endblock %}
+
+{% block back_button %}
+{% if not publico %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="form-header">
+  <h1><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>M-CHAT-R — Rastreio de Autismo em Bebês (16–30 meses)</h1>
+  <p>
+    {% if not publico %}{{ paciente.nome }} &nbsp;·&nbsp; {% endif %}
+    Respondente: {{ avaliacao.get_respondente_display }}
+  </p>
+</div>
+
+{% if itens_faltando %}
+<div class="alerta">
+  <strong>⚠️ Atenção:</strong> {{ itens_faltando|length }} item(ns) sem resposta. Preencha todos os itens.
+</div>
+{% endif %}
+
+<div class="info-box">
+  <strong>Instruções:</strong> Para cada afirmação, responda <strong>SIM</strong> ou <strong>NÃO</strong> baseado no comportamento habitual da criança nos últimos meses.
+</div>
+
+<form method="post" id="mchat-form" data-require-all-radios>
+  {% csrf_token %}
+  {% if itens_faltando %}<input type="hidden" name="confirmar_incompleto" value="1">{% endif %}
+
+  {% for item in itens %}
+  <div class="item-card{% if item.faltando %} faltando{% endif %}">
+    <div class="item-header">
+      <span class="item-num">{{ item.numero }}.</span>
+      <div style="flex:1;">
+        <div class="item-texto">{{ item.texto }}</div>
+        {% if item.detalhe %}<div class="item-detalhe">{{ item.detalhe }}</div>{% endif %}
+        <div class="sim-nao">
+          <label class="sn-btn{% if item.resposta_salva == True %} sel-sim{% endif %}">
+            <input type="radio" name="item_{{ item.numero }}" value="true"
+              {% if item.resposta_salva == True %}checked{% endif %}
+              style="display:none;" onchange="marcarSN(this, 'sim')">
+            Sim
+          </label>
+          <label class="sn-btn{% if item.resposta_salva == False %} sel-nao{% endif %}">
+            <input type="radio" name="item_{{ item.numero }}" value="false"
+              {% if item.resposta_salva == False %}checked{% endif %}
+              style="display:none;" onchange="marcarSN(this, 'nao')">
+            Não
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--mchat); border-color:var(--mchat);">
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir e Ver Resultado
+    </button>
+    {% if not publico %}
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function marcarSN(input, tipo) {
+  var labels = document.querySelectorAll(`[name="${input.name}"]`);
+  labels.forEach(r => {
+    r.closest('label').classList.remove('sel-sim', 'sel-nao');
+  });
+  input.closest('label').classList.add(tipo === 'sim' ? 'sel-sim' : 'sel-nao');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => {
+    var tipo = r.value === 'true' ? 'sim' : 'nao';
+    r.closest('label').classList.add(tipo === 'sim' ? 'sel-sim' : 'sel-nao');
+  });
+});
+</script>
+{% endblock %}

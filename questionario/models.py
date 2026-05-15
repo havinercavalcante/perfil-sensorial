@@ -6,19 +6,38 @@ from django.utils import timezone
 
 class ModuloAvaliacao(models.Model):
     MODULO_CHOICES = [
-        ("sensorial", "Perfil Sensorial"),
-        ("vineland", "Escala Vineland"),
-        ("escolar", "Questionário Sensorial Escolar"),
-        ("bebe", "Perfil Sensorial Bebê/Criança Pequena"),
-        ("spm", "SPM — Sensory Processing Measure"),
-        ("edm", "EDM Figueiredo"),
-        ("mabc2", "MABC-2"),
-        ("beery", "Beery VMI"),
-        ("pedi", "PEDI"),
-        ("vineland3", "Vineland-3"),
-        ("portage", "Guia Portage"),
+        # ── Terapia Ocupacional ──────────────────────────────────────────
+        ("sensorial",              "Perfil Sensorial"),
+        ("vineland",               "Escala Vineland"),
+        ("escolar",                "Questionário Sensorial Escolar"),
+        ("bebe",                   "Perfil Sensorial Bebê/Criança Pequena"),
+        ("spm",                    "SPM — Sensory Processing Measure"),
+        ("edm",                    "EDM Figueiredo"),
+        ("mabc2",                  "MABC-2"),
+        ("beery",                  "Beery VMI"),
+        ("pedi",                   "PEDI"),
+        ("vineland3",              "Vineland-3"),
+        ("portage",                "Guia Portage"),
+        # ── Psicologia ───────────────────────────────────────────────────
+        ("sdq",                    "SDQ — Capacidades e Dificuldades"),
+        ("snap_iv",                "SNAP-IV — Avaliação de TDAH/TOD"),
+        ("mchat",                  "M-CHAT-R — Rastreio de Autismo"),
+        ("cars",                   "CARS-2 — Escala de Autismo em Crianças"),
+        # ── Fonoaudiologia ───────────────────────────────────────────────
+        ("linguagem",              "Avaliação de Linguagem"),
+        ("alimentacao_seletiva",   "Triagem de Alimentação Seletiva"),
+        # ── Pediatria / Neuropediatria ───────────────────────────────────
+        ("desenvolvimento",        "Marcos de Desenvolvimento Infantil"),
+        ("sono_infantil",          "Avaliação de Sono Infantil"),
+        # ── ABA / Análise do Comportamento ───────────────────────────────
+        ("habilidades_adaptativas", "Habilidades Adaptativas (ABA)"),
+        ("comportamento_funcional", "Comportamento Funcional (ABA)"),
+        # ── Neuropsicologia ──────────────────────────────────────────────
+        ("rastreio_cognitivo",     "Rastreio Cognitivo"),
+        # ── Psicopedagogia ───────────────────────────────────────────────
+        ("psicopedagogica",        "Avaliação Psicopedagógica"),
     ]
-    codigo = models.CharField("Código", max_length=20, unique=True, choices=MODULO_CHOICES)
+    codigo = models.CharField("Código", max_length=30, unique=True, choices=MODULO_CHOICES)
     nome = models.CharField("Nome", max_length=100)
     descricao = models.CharField("Descrição", max_length=200, blank=True)
 
@@ -31,10 +50,72 @@ class ModuloAvaliacao(models.Model):
         return self.nome
 
 
+# Mapeamento especialidade → módulos padrão sugeridos (usados no admin)
+ESPECIALIDADE_CHOICES = [
+    ("terapeuta_ocupacional", "Terapia Ocupacional"),
+    ("psicologo",             "Psicologia"),
+    ("fonoaudiologo",         "Fonoaudiologia"),
+    ("neuropsicoplogo",       "Neuropsicologia"),
+    ("psicopedagogo",         "Psicopedagogia"),
+    ("pediatra",              "Pediatria"),
+    ("neuropediatra",         "Neuropediatria"),
+    ("analista_aba",          "ABA / Análise do Comportamento"),
+]
+
+MODULOS_POR_ESPECIALIDADE = {
+    "terapeuta_ocupacional": [
+        "sensorial", "vineland", "escolar", "bebe", "spm",
+        "edm", "mabc2", "beery", "pedi", "vineland3", "portage",
+    ],
+    "psicologo": [
+        "sdq", "snap_iv", "mchat", "cars",
+    ],
+    "fonoaudiologo": [
+        "linguagem", "alimentacao_seletiva",
+    ],
+    "neuropsicoplogo": [
+        "rastreio_cognitivo", "sdq", "snap_iv", "mchat", "cars",
+    ],
+    "psicopedagogo": [
+        "psicopedagogica", "sdq", "snap_iv",
+    ],
+    "pediatra": [
+        "desenvolvimento", "sono_infantil", "mchat", "snap_iv",
+    ],
+    "neuropediatra": [
+        "desenvolvimento", "sono_infantil", "mchat", "cars",
+        "snap_iv", "rastreio_cognitivo", "sensorial",
+    ],
+    "analista_aba": [
+        "habilidades_adaptativas", "comportamento_funcional",
+        "mchat", "vineland3",
+    ],
+}
+
+
+class Especialidade(models.Model):
+    """Especialidade profissional — usada para filtrar módulos no admin."""
+    codigo = models.CharField("Código", max_length=30, unique=True, choices=ESPECIALIDADE_CHOICES)
+    nome   = models.CharField("Nome",   max_length=100)
+
+    class Meta:
+        verbose_name        = "Especialidade"
+        verbose_name_plural = "Especialidades"
+        ordering            = ["nome"]
+
+    def __str__(self):
+        return self.nome
+
+
 class PerfilMedico(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")
     registro_profissional = models.CharField("Registro Profissional", max_length=30, blank=True)
-    especialidade = models.CharField("Especialidade", max_length=100, blank=True)
+    especialidades = models.ManyToManyField(
+        "Especialidade",
+        blank=True,
+        verbose_name="Especialidades",
+        related_name="profissionais",
+    )
     telefone = models.CharField("Telefone", max_length=20, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     modulos_liberados = models.ManyToManyField(
@@ -504,22 +585,41 @@ class RespostaVineland3(models.Model):
 
 class LinkConvite(models.Model):
     TIPO_CHOICES = [
-        ("sensorial", "Perfil Sensorial"),
-        ("vineland", "Escala Vineland"),
-        ("escolar", "Questionário Sensorial Escolar"),
-        ("bebe", "Bebê (0–6 meses)"),
-        ("crianca_pequena", "Criança Pequena (7–36 meses)"),
-        ("spm_p",    "SPM-P Casa (2–5 anos)"),
-        ("spm_casa", "SPM Casa (5–12 anos)"),
-        ("edm", "EDM Figueiredo"),
-        ("mabc2", "MABC-2"),
-        ("beery", "Beery VMI"),
-        ("pedi", "PEDI"),
-        ("vineland3", "Vineland-3"),
-        ("portage", "Guia Portage"),
+        # ── Terapia Ocupacional ──────────────────────────────────────────
+        ("sensorial",               "Perfil Sensorial"),
+        ("vineland",                "Escala Vineland"),
+        ("escolar",                 "Questionário Sensorial Escolar"),
+        ("bebe",                    "Bebê (0–6 meses)"),
+        ("crianca_pequena",         "Criança Pequena (7–36 meses)"),
+        ("spm_p",                   "SPM-P Casa (2–5 anos)"),
+        ("spm_casa",                "SPM Casa (5–12 anos)"),
+        ("edm",                     "EDM Figueiredo"),
+        ("mabc2",                   "MABC-2"),
+        ("beery",                   "Beery VMI"),
+        ("pedi",                    "PEDI"),
+        ("vineland3",               "Vineland-3"),
+        ("portage",                 "Guia Portage"),
+        # ── Psicologia ───────────────────────────────────────────────────
+        ("sdq",                     "SDQ — Capacidades e Dificuldades"),
+        ("snap_iv",                 "SNAP-IV — Avaliação de TDAH/TOD"),
+        ("mchat",                   "M-CHAT-R — Rastreio de Autismo"),
+        ("cars",                    "CARS-2 — Escala de Autismo em Crianças"),
+        # ── Fonoaudiologia ───────────────────────────────────────────────
+        ("linguagem",               "Avaliação de Linguagem"),
+        ("alimentacao_seletiva",    "Triagem de Alimentação Seletiva"),
+        # ── Pediatria / Neuropediatria ───────────────────────────────────
+        ("desenvolvimento",         "Marcos de Desenvolvimento Infantil"),
+        ("sono_infantil",           "Avaliação de Sono Infantil"),
+        # ── ABA / Análise do Comportamento ───────────────────────────────
+        ("habilidades_adaptativas", "Habilidades Adaptativas (ABA)"),
+        ("comportamento_funcional", "Comportamento Funcional (ABA)"),
+        # ── Neuropsicologia ──────────────────────────────────────────────
+        ("rastreio_cognitivo",      "Rastreio Cognitivo"),
+        # ── Psicopedagogia ───────────────────────────────────────────────
+        ("psicopedagogica",         "Avaliação Psicopedagógica"),
     ]
     token = models.UUIDField(default=uuid.uuid4, unique=True)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
     medico = models.ForeignKey(User, on_delete=models.CASCADE, related_name="links_convite")
     criado_em = models.DateTimeField(auto_now_add=True)
     usado_em = models.DateTimeField(null=True, blank=True)
@@ -568,6 +668,590 @@ class RespostaPortage(models.Model):
     dominio     = models.CharField(max_length=20)
     numero_item = models.IntegerField()
     valor       = models.IntegerField()   # 2=SIM, 1=SIM COM MEDIAÇÃO, 0=AINDA NÃO
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PSICOLOGIA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── SDQ — Questionário de Capacidades e Dificuldades ─────────────────────────
+
+class AvaliacaoSDQ(models.Model):
+    """SDQ — Strengths and Difficulties Questionnaire (Goodman, 1997).
+    25 itens, 5 subescalas de 5 itens. Escala: 0=Não é verdade / 1=Um pouco
+    verdade / 2=Muito verdade. Respondentes: pais, professores ou auto-relato.
+    """
+    RESPONDENTE_CHOICES = [
+        ("pais",      "Pais / Cuidadores"),
+        ("professor", "Professor"),
+        ("auto",      "Auto-relato (≥11 anos)"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente                  = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_sdq")
+    token                     = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    respondente               = models.CharField(max_length=10, choices=RESPONDENTE_CHOICES, default="pais")
+    data                      = models.DateField(default=timezone.now)
+    status                    = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual              = models.IntegerField(default=1)
+
+    # Subescalas (soma bruta 0–10 cada)
+    pont_emocional            = models.IntegerField("Sintomas Emocionais (0–10)",      null=True, blank=True)
+    pont_conduta              = models.IntegerField("Problemas de Conduta (0–10)",     null=True, blank=True)
+    pont_hiperatividade       = models.IntegerField("Hiperatividade (0–10)",           null=True, blank=True)
+    pont_pares                = models.IntegerField("Problemas com Pares (0–10)",      null=True, blank=True)
+    pont_prossocial           = models.IntegerField("Comportamento Prossocial (0–10)", null=True, blank=True)
+    pont_total_dificuldades   = models.IntegerField("Total de Dificuldades (0–40)",    null=True, blank=True)
+
+    observacoes               = models.TextField(blank=True, default="")
+    email_enviado_em          = models.DateTimeField(null=True, blank=True)
+    criado_em                 = models.DateTimeField(auto_now_add=True)
+    atualizado_em             = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "SDQ — Capacidades e Dificuldades"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"SDQ — {self.paciente.nome} — {self.data}"
+
+
+class RespostaSDQ(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoSDQ, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()  # 0 / 1 / 2
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── SNAP-IV — Avaliação de TDAH e TOD ────────────────────────────────────────
+
+class AvaliacaoSNAPIV(models.Model):
+    """SNAP-IV — Swanson, Nolan and Pelham Rating Scale (Swanson, 1992).
+    26 itens; escala 0–3 (Nunca/Pouco/Muito/Demais).
+    Itens 1–9: Desatenção | 10–18: Hiperact./Impuls. | 19–26: TOD.
+    Ponto de corte: média ≥ 1,5 por subescala é clinicamente significativa.
+    """
+    RESPONDENTE_CHOICES = [
+        ("pais",      "Pais / Cuidadores"),
+        ("professor", "Professor"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente                     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_snap_iv")
+    token                        = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    respondente                  = models.CharField(max_length=10, choices=RESPONDENTE_CHOICES, default="pais")
+    data                         = models.DateField(default=timezone.now)
+    status                       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual                 = models.IntegerField(default=1)
+
+    # Médias por subescala (total da subescala / nº de itens)
+    media_desatencao             = models.FloatField("Média Desatenção (itens 1–9)",                null=True, blank=True)
+    media_hiperatividade         = models.FloatField("Média Hiperatividade/Impulsividade (10–18)",  null=True, blank=True)
+    media_tod                    = models.FloatField("Média TOD (itens 19–26)",                     null=True, blank=True)
+
+    observacoes                  = models.TextField(blank=True, default="")
+    email_enviado_em             = models.DateTimeField(null=True, blank=True)
+    criado_em                    = models.DateTimeField(auto_now_add=True)
+    atualizado_em                = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "SNAP-IV"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"SNAP-IV — {self.paciente.nome} — {self.data}"
+
+
+class RespostaSNAPIV(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoSNAPIV, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()  # 0–3
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── M-CHAT-R — Rastreio de Autismo (16–30 meses) ─────────────────────────────
+
+class AvaliacaoMCHAT(models.Model):
+    """M-CHAT-R — Modified Checklist for Autism in Toddlers, Revised (2013).
+    20 itens Sim/Não; faixa etária: 16–30 meses.
+    Risco: 0–2 baixo | 3–7 médio (requer follow-up) | 8–20 alto.
+    """
+    CLASSIFICACAO_CHOICES = [
+        ("baixo", "Baixo risco (0–2)"),
+        ("medio", "Médio risco — indicado M-CHAT-R/F (3–7)"),
+        ("alto",  "Alto risco — encaminhar para avaliação (8–20)"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_mchat")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+
+    score_total      = models.IntegerField("Score total (0–20)", null=True, blank=True)
+    classificacao    = models.CharField(max_length=10, choices=CLASSIFICACAO_CHOICES, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "M-CHAT-R — Rastreio de Autismo"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"M-CHAT-R — {self.paciente.nome} — {self.data}"
+
+
+class RespostaMCHAT(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoMCHAT, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.BooleanField()  # True=Sim / False=Não
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── CARS-2 — Escala de Classificação de Autismo em Crianças ──────────────────
+
+class AvaliacaoCARS(models.Model):
+    """CARS-2 — Childhood Autism Rating Scale, 2ª edição (Schopler, 2010).
+    15 itens; escala 1–4 (com meios pontos: 1/1.5/2/2.5/3/3.5/4).
+    Score: <30 sem autismo | 30–36,5 leve-moderado | ≥37 grave.
+    """
+    CLASSIFICACAO_CHOICES = [
+        ("sem_autismo",   "Sem Autismo (<30)"),
+        ("leve_moderado", "Autismo Leve-Moderado (30–36,5)"),
+        ("grave",         "Autismo Grave (≥37)"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_cars")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+
+    score_total      = models.FloatField("Score total (15–60)", null=True, blank=True)
+    classificacao    = models.CharField(max_length=20, choices=CLASSIFICACAO_CHOICES, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "CARS-2 — Escala de Autismo"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"CARS-2 — {self.paciente.nome} — {self.data}"
+
+
+class RespostaCARS(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoCARS, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.FloatField()  # 1 / 1.5 / 2 / 2.5 / 3 / 3.5 / 4
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  FONOAUDIOLOGIA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Avaliação de Linguagem ────────────────────────────────────────────────────
+
+class AvaliacaoLinguagem(models.Model):
+    """Checklist clínico de avaliação de linguagem — Fonoaudiologia.
+    Áreas: Recepção/Compreensão, Expressão Oral, Pragmática,
+    Fonologia/Articulação.
+    Escala por item: 0=Ausente / 1=Emergente / 2=Presente.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_linguagem")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+
+    pont_recepcao    = models.IntegerField("Recepção/Compreensão",   null=True, blank=True)
+    pont_expressao   = models.IntegerField("Expressão Oral",         null=True, blank=True)
+    pont_pragmatica  = models.IntegerField("Pragmática",             null=True, blank=True)
+    pont_fonologia   = models.IntegerField("Fonologia/Articulação",  null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Avaliação de Linguagem"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Linguagem — {self.paciente.nome} — {self.data}"
+
+
+class RespostaLinguagem(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoLinguagem, on_delete=models.CASCADE, related_name="respostas")
+    dominio      = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()  # 0=ausente / 1=emergente / 2=presente
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── Triagem de Alimentação Seletiva ───────────────────────────────────────────
+
+class AvaliacaoAlimentacao(models.Model):
+    """Triagem de seletividade alimentar e disfagia / processamento oral-motor.
+    Usada por Fonoaudiólogos e Pediatras.
+    Áreas: Variedade Alimentar, Sensibilidade Sensorial, Rituais/Recusa,
+    Motricidade Oral, Deglutição.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente              = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_alimentacao")
+    token                 = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data                  = models.DateField(default=timezone.now)
+    status                = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual          = models.IntegerField(default=1)
+
+    pont_variedade        = models.IntegerField("Variedade Alimentar",     null=True, blank=True)
+    pont_sensibilidade    = models.IntegerField("Sensibilidade Sensorial", null=True, blank=True)
+    pont_recusa_rituais   = models.IntegerField("Recusa/Rituais",          null=True, blank=True)
+    pont_motricidade_oral = models.IntegerField("Motricidade Oral",        null=True, blank=True)
+    pont_degluticao       = models.IntegerField("Deglutição",              null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Triagem de Alimentação Seletiva"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Alimentação — {self.paciente.nome} — {self.data}"
+
+
+class RespostaAlimentacao(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoAlimentacao, on_delete=models.CASCADE, related_name="respostas")
+    dominio      = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PEDIATRIA / NEUROPEDIATRIA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Marcos de Desenvolvimento Infantil ───────────────────────────────────────
+
+class AvaliacaoDesenvolvimento(models.Model):
+    """Checklist de marcos do desenvolvimento infantil.
+    Aplicado por Pediatras e Neuropediatras.
+    Áreas: Motor Grosso, Motor Fino, Linguagem, Social/Emocional, Cognitivo.
+    Escala: 0=Não atingido / 1=Em aquisição / 2=Atingido.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_desenvolvimento")
+    token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data               = models.DateField(default=timezone.now)
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual       = models.IntegerField(default=1)
+
+    pont_motor_grosso  = models.IntegerField("Motor Grosso",      null=True, blank=True)
+    pont_motor_fino    = models.IntegerField("Motor Fino",        null=True, blank=True)
+    pont_linguagem     = models.IntegerField("Linguagem",         null=True, blank=True)
+    pont_social        = models.IntegerField("Social/Emocional",  null=True, blank=True)
+    pont_cognitivo     = models.IntegerField("Cognitivo",         null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Marcos de Desenvolvimento Infantil"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Desenvolvimento — {self.paciente.nome} — {self.data}"
+
+
+class RespostaDesenvolvimento(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoDesenvolvimento, on_delete=models.CASCADE, related_name="respostas")
+    dominio      = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()  # 0=Não atingido / 1=Em aquisição / 2=Atingido
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── Avaliação de Sono Infantil ────────────────────────────────────────────────
+
+class AvaliacaoSono(models.Model):
+    """Triagem de distúrbios do sono infantil.
+    Baseada em BEARS / CSHQ (adaptação clínica).
+    Subescalas: Início do Sono, Manutenção, Sonolência Diurna,
+    Resistência, Ansiedade do Sono, Ronco/Apneia.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente          = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_sono")
+    token             = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data              = models.DateField(default=timezone.now)
+    status            = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual      = models.IntegerField(default=1)
+
+    pont_inicio       = models.IntegerField("Início do sono",      null=True, blank=True)
+    pont_manutencao   = models.IntegerField("Manutenção do sono",  null=True, blank=True)
+    pont_sonolencia   = models.IntegerField("Sonolência diurna",   null=True, blank=True)
+    pont_resistencia  = models.IntegerField("Resistência ao sono", null=True, blank=True)
+    pont_ansiedade    = models.IntegerField("Ansiedade do sono",   null=True, blank=True)
+    pont_ronco_apneia = models.IntegerField("Ronco/Apneia",        null=True, blank=True)
+    pont_total        = models.IntegerField("Score total",         null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Avaliação de Sono Infantil"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Sono — {self.paciente.nome} — {self.data}"
+
+
+class RespostaSono(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoSono, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()  # 1=Nunca / 2=Às vezes / 3=Sempre
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  ABA — ANÁLISE DO COMPORTAMENTO APLICADA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Habilidades Adaptativas ───────────────────────────────────────────────────
+
+class AvaliacaoHabilidadesAdaptativas(models.Model):
+    """Checklist de habilidades adaptativas para ABA.
+    Áreas: Comunicação Funcional, Autocuidado, Socialização,
+    Autonomia, Comportamento Adaptativo.
+    Escala: 0=Não faz / 1=Ajuda total / 2=Ajuda parcial / 3=Independente.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente               = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_habilidades_adaptativas")
+    token                  = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data                   = models.DateField(default=timezone.now)
+    status                 = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual           = models.IntegerField(default=1)
+
+    pont_comunicacao       = models.IntegerField("Comunicação Funcional",    null=True, blank=True)
+    pont_autocuidado       = models.IntegerField("Autocuidado",              null=True, blank=True)
+    pont_socializacao      = models.IntegerField("Socialização",             null=True, blank=True)
+    pont_autonomia         = models.IntegerField("Autonomia",                null=True, blank=True)
+    pont_comportamento     = models.IntegerField("Comportamento Adaptativo", null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Habilidades Adaptativas (ABA)"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Habilidades Adaptativas — {self.paciente.nome} — {self.data}"
+
+
+class RespostaHabilidadesAdaptativas(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoHabilidadesAdaptativas, on_delete=models.CASCADE, related_name="respostas")
+    dominio      = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()  # 0–3
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── Avaliação de Comportamento Funcional ──────────────────────────────────────
+
+class AvaliacaoComportamentoFuncional(models.Model):
+    """Rastreio de comportamento funcional — ABA e Neuropediatria.
+    Áreas: Iniciação, Manutenção de Tarefa, Flexibilidade/Transições,
+    Generalização, Comunicação Funcional, Autocontrole.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_comportamento_funcional")
+    token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data               = models.DateField(default=timezone.now)
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual       = models.IntegerField(default=1)
+
+    pont_iniciacao     = models.IntegerField("Iniciação",                null=True, blank=True)
+    pont_manutencao    = models.IntegerField("Manutenção de Tarefa",     null=True, blank=True)
+    pont_flexibilidade = models.IntegerField("Flexibilidade/Transições", null=True, blank=True)
+    pont_generalizacao = models.IntegerField("Generalização",            null=True, blank=True)
+    pont_comunicacao   = models.IntegerField("Comunicação Funcional",    null=True, blank=True)
+    pont_autocontrole  = models.IntegerField("Autocontrole",             null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Comportamento Funcional (ABA)"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Comportamento Funcional — {self.paciente.nome} — {self.data}"
+
+
+class RespostaComportamentoFuncional(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoComportamentoFuncional, on_delete=models.CASCADE, related_name="respostas")
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  NEUROPSICOLOGIA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Rastreio Cognitivo ────────────────────────────────────────────────────────
+
+class AvaliacaoRastreioCognitivo(models.Model):
+    """Rastreio neuropsicológico de atenção, memória e funções executivas.
+    Usado por Neuropsicólogos e Neuropediatras.
+    Áreas: Atenção Sustentada, Atenção Seletiva, Memória de Trabalho,
+    Memória Episódica, Funções Executivas, Habilidades Visoespaciais.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente                  = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_cognitivo")
+    token                     = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data                      = models.DateField(default=timezone.now)
+    status                    = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual              = models.IntegerField(default=1)
+
+    pont_atencao_sustentada   = models.IntegerField("Atenção Sustentada",        null=True, blank=True)
+    pont_atencao_seletiva     = models.IntegerField("Atenção Seletiva",          null=True, blank=True)
+    pont_memoria_trabalho     = models.IntegerField("Memória de Trabalho",       null=True, blank=True)
+    pont_memoria_episodica    = models.IntegerField("Memória Episódica",         null=True, blank=True)
+    pont_funcoes_executivas   = models.IntegerField("Funções Executivas",        null=True, blank=True)
+    pont_visoespacial         = models.IntegerField("Habilidades Visoespaciais", null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Rastreio Cognitivo"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Rastreio Cognitivo — {self.paciente.nome} — {self.data}"
+
+
+class RespostaRastreioCognitivo(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoRastreioCognitivo, on_delete=models.CASCADE, related_name="respostas")
+    dominio      = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  PSICOPEDAGOGIA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Avaliação Psicopedagógica ─────────────────────────────────────────────────
+
+class AvaliacaoPsicopedagogica(models.Model):
+    """Rastreio psicopedagógico de dificuldades de aprendizagem.
+    Áreas: Leitura, Escrita, Matemática, Atenção Escolar,
+    Comportamento Escolar.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    paciente             = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_psicopedagogica")
+    token                = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data                 = models.DateField(default=timezone.now)
+    status               = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual         = models.IntegerField(default=1)
+
+    pont_leitura         = models.IntegerField("Leitura",              null=True, blank=True)
+    pont_escrita         = models.IntegerField("Escrita",              null=True, blank=True)
+    pont_matematica      = models.IntegerField("Matemática",           null=True, blank=True)
+    pont_atencao_escolar = models.IntegerField("Atenção Escolar",      null=True, blank=True)
+    pont_comportamento   = models.IntegerField("Comportamento Escolar",null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Avaliação Psicopedagógica"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Psicopedagógica — {self.paciente.nome} — {self.data}"
+
+
+class RespostaPsicopedagogica(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoPsicopedagogica, on_delete=models.CASCADE, related_name="respostas")
+    dominio      = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")

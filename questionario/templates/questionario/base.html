@@ -93,6 +93,7 @@
 
   .form-group { margin-bottom: 1.1rem; }
   label { display: block; font-size: .85rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
+  .faltando { background: #FEF3C7 !important; outline: 2px solid #F59E0B; border-radius: 6px; }
   input[type=text], input[type=email], input[type=date], input[type=tel], input[type=password], select, textarea {
     width: 100%; padding: .6rem .9rem; border: 1.5px solid var(--border); border-radius: 8px;
     font-size: .93rem; color: var(--text); background: #fff; transition: border-color .2s;
@@ -328,6 +329,31 @@ function aplicarMascaraTelefone(input) {
   });
 }
 document.querySelectorAll('input[type="tel"]').forEach(aplicarMascaraTelefone);
+
+// Validação de questionários: impede submissão se houver itens sem resposta
+document.addEventListener('submit', function(e) {
+  var form = e.target;
+  if (!form.dataset.requireAllRadios) return;
+  var grupos = {};
+  form.querySelectorAll('input[type=radio]').forEach(function(r) {
+    if (!grupos[r.name]) grupos[r.name] = { marcado: false, linha: r.closest('.item-row,.item-card,.item-bloco') };
+    if (r.checked) grupos[r.name].marcado = true;
+  });
+  var faltando = Object.values(grupos).filter(function(g) { return !g.marcado; });
+  if (faltando.length === 0) return;
+  e.preventDefault();
+  faltando.forEach(function(g) { if (g.linha) g.linha.classList.add('faltando'); });
+  var primeiro = faltando[0].linha;
+  if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  mostrarAlerta(faltando.length + (faltando.length === 1 ? ' item sem resposta.' : ' itens sem resposta.') + ' Responda todos antes de concluir.', 'warning');
+});
+// Remove destaque quando o item é respondido
+document.addEventListener('change', function(e) {
+  if (e.target.type !== 'radio') return;
+  var linha = e.target.closest('.item-row,.item-card,.item-bloco');
+  if (linha) linha.classList.remove('faltando');
+});
 </script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 
 from ..models import Paciente, AvaliacaoPEDI
-from ..pedi_data import (
+from ..data.pedi_data import (
     AUTOCUIDADO_SECOES, MOBILIDADE_SECOES, FUNCAO_SOCIAL_SECOES,
     CA_AUTOCUIDADO_ITENS, CA_MOBILIDADE_ITENS, CA_FUNCAO_SOCIAL_ITENS,
     lookup_escore_continuo,

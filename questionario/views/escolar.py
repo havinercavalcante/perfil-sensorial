@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..models import Paciente, AvaliacaoEscolar, RespostaEscolar
-from ..data_escolar import (
+from ..data.data_escolar import (
     SECOES as ESCOLAR_SECOES,
     PERGUNTAS as ESCOLAR_PERGUNTAS,
     OPCOES as ESCOLAR_OPCOES,

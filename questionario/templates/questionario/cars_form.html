@@ -1,0 +1,102 @@
+{% extends "questionario/base.html" %}
+{% block title %}CARS-2 — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --cars: #8E44AD; }
+  .form-header {
+    background: linear-gradient(135deg, #5B2C6F, #8E44AD);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .88rem; }
+  .item-card { margin-bottom: 1rem; border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; background: #fff; }
+  .item-titulo { font-size: .95rem; font-weight: 700; color: var(--cars); margin-bottom: .75rem; }
+  .item-num-badge { display:inline-block; background:var(--cars); color:#fff; border-radius:6px; font-size:.72rem; font-weight:700; padding:.15rem .5rem; margin-right:.4rem; }
+  .opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: .5rem; }
+  .opcao-label {
+    display: block; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: .5rem .7rem; cursor: pointer; transition: all .15s; font-size: .8rem;
+    background: #fff; text-align: center;
+  }
+  .opcao-label:hover { border-color: var(--cars); background: #F5EEF8; }
+  .opcao-label.sel { background: var(--cars); border-color: var(--cars); color: #fff; }
+  .opcao-valor { font-size: 1rem; font-weight: 800; display: block; margin-bottom: .2rem; }
+  .nivel-desc { font-size: .72rem; line-height: 1.3; display: none; }
+  .info-box { background: #F5EEF8; border: 1px solid #D7BDE2; border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1rem; font-size: .83rem; color: #5B2C6F; }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-header">
+  <h1><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>CARS-2 — Escala de Avaliação de Autismo na Infância</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; Avaliação clínica — preenchimento profissional</p>
+</div>
+
+<div class="info-box">
+  <strong>Instruções:</strong> Para cada área, selecione o nível que melhor descreve o comportamento observado da criança. Escala de 1 (sem anormalidade) a 4 (anormalidade grave). Meio-pontos (1,5; 2,5; 3,5) são permitidos.
+</div>
+
+<form method="post" action="{% url 'cars_form' avaliacao.id %}">
+  {% csrf_token %}
+
+  {% for item in itens %}
+  <div class="item-card">
+    <div class="item-titulo">
+      <span class="item-num-badge">{{ item.numero }}</span>{{ item.titulo }}
+    </div>
+    <div class="opcoes-grid">
+      {% for op in opcoes %}
+      <label class="opcao-label{% if respostas_salvas %}{% with chave=item.numero %}{% if respostas_salvas|length > 0 %} {% endif %}{% endwith %}{% endif %}" id="lbl_{{ item.numero }}_{{ op }}">
+        <input type="radio" name="item_{{ item.numero }}" value="{{ op }}"
+          style="display:none;" onchange="marcarOpcao(this)">
+        <span class="opcao-valor">{{ op }}</span>
+        {% if item.niveis %}
+        <span class="nivel-desc">{{ item.niveis|default_if_none:"" }}</span>
+        {% endif %}
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--cars); border-color:var(--cars);">
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir e Ver Resultado
+    </button>
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var respostas = {{ respostas_salvas|default:"{}" }};
+
+function marcarOpcao(input) {
+  var name = input.name;
+  document.querySelectorAll(`[name="${name}"]`).forEach(r => r.closest('label').classList.remove('sel'));
+  input.closest('label').classList.add('sel');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Marcar respostas salvas
+  for (var num in respostas) {
+    var val = respostas[num];
+    var inputs = document.querySelectorAll(`input[name="item_${num}"]`);
+    inputs.forEach(function(inp) {
+      if (parseFloat(inp.value) === parseFloat(val)) {
+        inp.checked = true;
+        inp.closest('label').classList.add('sel');
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

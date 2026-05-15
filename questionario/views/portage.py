@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from ..models import Paciente, AvaliacaoPortage, RespostaPortage
-from ..portage_data import PORTAGE_DOMINIOS, PORTAGE_OPCOES
-from ..portage_data import (
+from ..data.portage_data import PORTAGE_DOMINIOS, PORTAGE_OPCOES
+from ..data.portage_data import (
     PORTAGE_SOC_PERGUNTAS, PORTAGE_COG_PERGUNTAS, PORTAGE_LIN_PERGUNTAS,
     PORTAGE_AC_PERGUNTAS, PORTAGE_MOT_PERGUNTAS,
 )
@@ -32,8 +32,15 @@ PORTAGE_PONT_MAP = {
 TOTAL_PAGINAS = len(PORTAGE_DOMINIOS)
 
 
+def _idade_na_data(data_nascimento, data_referencia):
+    """Calcula a idade em anos completos numa data de referência específica."""
+    b = data_nascimento
+    d = data_referencia
+    return d.year - b.year - ((d.month, d.day) < (b.month, b.day))
+
+
 def _calcular_pontuacao(avaliacao):
-    idade = avaliacao.paciente.idade
+    idade = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
     for dom in PORTAGE_DOMINIOS:
         key = dom['key']
         campo = PORTAGE_PONT_MAP[key]
@@ -97,7 +104,7 @@ def portage_form(request, avaliacao_id, pagina):
         return redirect("portage_form", avaliacao_id=avaliacao_id, pagina=1)
 
     dom = PORTAGE_DOMINIOS[pagina - 1]
-    faixas_dom = _faixas_por_idade(dom['faixas'], avaliacao.paciente.idade)
+    faixas_dom = _faixas_por_idade(dom['faixas'], _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data))
     todos_itens = [n for f in faixas_dom for n in f['itens']]
     respostas_salvas = {
         r.numero_item: r.valor
@@ -188,7 +195,7 @@ def portage_resultado(request, avaliacao_id):
         sim = avaliacao.respostas.filter(dominio=dom_key, numero_item__in=f['itens'], valor=2).count()
         return sim / total >= 0.8
 
-    idade_paciente = avaliacao.paciente.idade
+    idade_paciente = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
     dominios_resultado = []
     for dom in PORTAGE_DOMINIOS:
         campo = PORTAGE_PONT_MAP[dom['key']]
@@ -250,7 +257,7 @@ def portage_visualizar(request, avaliacao_id, pagina):
         return redirect("portage_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
     dom = PORTAGE_DOMINIOS[pagina - 1]
-    faixas_dom = _faixas_por_idade(dom['faixas'], avaliacao.paciente.idade)
+    faixas_dom = _faixas_por_idade(dom['faixas'], _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data))
     todos_itens = [n for f in faixas_dom for n in f['itens']]
     respostas_salvas = {
         r.numero_item: r.valor
@@ -285,7 +292,7 @@ def portage_publico_view(request, token, pagina):
         pagina = 1
 
     dom = PORTAGE_DOMINIOS[pagina - 1]
-    faixas_dom = _faixas_por_idade(dom['faixas'], avaliacao.paciente.idade)
+    faixas_dom = _faixas_por_idade(dom['faixas'], _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data))
     todos_itens = [n for f in faixas_dom for n in f['itens']]
     respostas_salvas = {
         r.numero_item: r.valor

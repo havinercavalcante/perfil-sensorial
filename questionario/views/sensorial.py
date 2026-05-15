@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..models import Paciente, Avaliacao, Resposta
-from ..data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
+from ..data.data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                     calcular_pontuacao, classificar)
 from ..services import notificar_terapeuta, classe_css
 
@@ -23,7 +23,7 @@ def questionario_publico_view(request, token, pagina):
     itens_secao = secao_atual["itens"]
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens_secao)}
 
-    from ..data import PERGUNTAS, OPCOES, QUADRANTE, calcular_pontuacao
+    from ..data.data import PERGUNTAS, OPCOES, QUADRANTE, calcular_pontuacao
 
     def _build_perguntas(itens, respostas):
         return [

@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from ..models import PerfilMedico
+from ..models import PerfilMedico, Especialidade
 
 
 def login_view(request):
@@ -27,6 +27,8 @@ def logout_view(request):
 
 
 def registrar_view(request):
+    especialidades = Especialidade.objects.all().order_by("nome")
+
     if request.method == "POST":
         nome = request.POST.get("nome", "").strip()
         email = request.POST.get("email", "").strip()
@@ -34,8 +36,8 @@ def registrar_view(request):
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
         registro_profissional = request.POST.get("registro_profissional", "").strip()
-        especialidade = request.POST.get("especialidade", "").strip()
         telefone = request.POST.get("telefone", "").strip()
+        especialidades_ids = request.POST.getlist("especialidades")
 
         erros = []
         if not nome or not username or not password:
@@ -52,24 +54,39 @@ def registrar_view(request):
         if erros:
             for e in erros:
                 messages.error(request, e)
-            return render(request, "questionario/registrar.html", {"post": request.POST})
+            return render(request, "questionario/registrar.html", {
+                "post": request.POST,
+                "especialidades": especialidades,
+                "especialidades_selecionadas": especialidades_ids,
+            })
 
         partes = nome.strip().split(" ", 1)
         user = User.objects.create_user(
             username=username, email=email, password=password,
             first_name=partes[0], last_name=partes[1] if len(partes) > 1 else ""
         )
-        PerfilMedico.objects.create(user=user, registro_profissional=registro_profissional, especialidade=especialidade, telefone=telefone)
+        perfil = PerfilMedico.objects.create(
+            user=user,
+            registro_profissional=registro_profissional,
+            telefone=telefone,
+        )
+        if especialidades_ids:
+            perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
         login(request, user)
         messages.success(request, f"Bem-vindo(a), {user.first_name}! Conta criada com sucesso.")
         return redirect("index")
 
-    return render(request, "questionario/registrar.html")
+    return render(request, "questionario/registrar.html", {
+        "especialidades": especialidades,
+        "especialidades_selecionadas": [],
+    })
 
 
 @login_required
 def meu_perfil(request):
     perfil, _ = PerfilMedico.objects.get_or_create(user=request.user)
+    especialidades = Especialidade.objects.all().order_by("nome")
+
     if request.method == "POST":
         u = request.user
         nome = request.POST.get("nome", "").strip().split(" ", 1)
@@ -78,9 +95,11 @@ def meu_perfil(request):
         u.email = request.POST.get("email", "").strip()
         u.save()
         perfil.registro_profissional = request.POST.get("registro_profissional", "").strip()
-        perfil.especialidade = request.POST.get("especialidade", "").strip()
         perfil.telefone = request.POST.get("telefone", "").strip()
         perfil.save()
+
+        especialidades_ids = request.POST.getlist("especialidades")
+        perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
 
         # Trocar senha, se preenchida
         nova_senha = request.POST.get("nova_senha", "")
@@ -99,4 +118,9 @@ def meu_perfil(request):
         messages.success(request, "Perfil atualizado com sucesso.")
         return redirect("meu_perfil")
 
-    return render(request, "questionario/meu_perfil.html", {"perfil": perfil})
+    especialidades_selecionadas = list(perfil.especialidades.values_list("id", flat=True))
+    return render(request, "questionario/meu_perfil.html", {
+        "perfil": perfil,
+        "especialidades": especialidades,
+        "especialidades_selecionadas": especialidades_selecionadas,
+    })

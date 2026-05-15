@@ -3,15 +3,36 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
+    Especialidade, MODULOS_POR_ESPECIALIDADE,
 )
 
+
+# ── Inline do perfil no User admin ───────────────────────────────────────────
 
 class PerfilInline(admin.StackedInline):
     model = PerfilMedico
     can_delete = False
     verbose_name_plural = "Perfil e Módulos Liberados"
-    filter_horizontal = ("modulos_liberados",)
-    fields = ("registro_profissional", "especialidade", "telefone", "modulos_liberados")
+    filter_horizontal = ("especialidades", "modulos_liberados",)
+    fields = ("registro_profissional", "especialidades", "telefone", "modulos_liberados")
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "modulos_liberados":
+            user_id = request.resolver_match.kwargs.get("object_id")
+            if user_id:
+                try:
+                    perfil = PerfilMedico.objects.get(user_id=user_id)
+                    codigos_esp = list(perfil.especialidades.values_list("codigo", flat=True))
+                    codigos_modulos = set()
+                    for cod in codigos_esp:
+                        codigos_modulos.update(MODULOS_POR_ESPECIALIDADE.get(cod, []))
+                    if codigos_modulos:
+                        kwargs["queryset"] = ModuloAvaliacao.objects.filter(
+                            codigo__in=codigos_modulos
+                        ).order_by("nome")
+                except PerfilMedico.DoesNotExist:
+                    pass
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 class CustomUserAdmin(UserAdmin):
@@ -21,6 +42,20 @@ class CustomUserAdmin(UserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 
+
+# ── Especialidade ─────────────────────────────────────────────────────────────
+
+@admin.register(Especialidade)
+class EspecialidadeAdmin(admin.ModelAdmin):
+    list_display = ["codigo", "nome", "total_profissionais"]
+    ordering = ["nome"]
+
+    def total_profissionais(self, obj):
+        return obj.profissionais.count()
+    total_profissionais.short_description = "Profissionais"
+
+
+# ── Paciente ──────────────────────────────────────────────────────────────────
 
 @admin.register(Paciente)
 class PacienteAdmin(admin.ModelAdmin):
@@ -46,15 +81,39 @@ class ModuloAvaliacaoAdmin(admin.ModelAdmin):
     total_medicos.short_description = "Médicos com acesso"
 
 
+# ── PerfilMedico ──────────────────────────────────────────────────────────────
+
 @admin.register(PerfilMedico)
 class PerfilMedicoAdmin(admin.ModelAdmin):
-    list_display = ["user", "registro_profissional", "especialidade", "modulos_resumo"]
-    filter_horizontal = ("modulos_liberados",)
+    list_display  = ["user", "registro_profissional", "especialidades_resumo", "modulos_resumo"]
+    filter_horizontal = ("especialidades", "modulos_liberados",)
     search_fields = ["user__username", "user__first_name", "user__last_name"]
+
+    def especialidades_resumo(self, obj):
+        nomes = list(obj.especialidades.values_list("nome", flat=True))
+        return ", ".join(nomes) if nomes else "—"
+    especialidades_resumo.short_description = "Especialidades"
 
     def modulos_resumo(self, obj):
         nomes = list(obj.modulos_liberados.values_list("nome", flat=True))
-        if not nomes:
-            return "— nenhum —"
-        return ", ".join(nomes)
+        return ", ".join(nomes) if nomes else "— nenhum —"
     modulos_resumo.short_description = "Módulos liberados"
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        """Filtra modulos_liberados de acordo com as especialidades do profissional."""
+        if db_field.name == "modulos_liberados":
+            obj_id = request.resolver_match.kwargs.get("object_id")
+            if obj_id:
+                try:
+                    perfil = PerfilMedico.objects.get(pk=obj_id)
+                    codigos_esp = list(perfil.especialidades.values_list("codigo", flat=True))
+                    codigos_modulos = set()
+                    for cod in codigos_esp:
+                        codigos_modulos.update(MODULOS_POR_ESPECIALIDADE.get(cod, []))
+                    if codigos_modulos:
+                        kwargs["queryset"] = ModuloAvaliacao.objects.filter(
+                            codigo__in=codigos_modulos
+                        ).order_by("nome")
+                except PerfilMedico.DoesNotExist:
+                    pass
+        return super().formfield_for_manytomany(db_field, request, **kwargs)

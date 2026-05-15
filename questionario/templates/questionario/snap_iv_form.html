@@ -1,0 +1,130 @@
+{% extends "questionario/base.html" %}
+{% block title %}SNAP-IV — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --snap: #2980B9; }
+  .form-header {
+    background: linear-gradient(135deg, #1A4F7A, #2980B9);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .88rem; }
+  .sub-badge {
+    display: inline-block; padding: .2rem .65rem; border-radius: 6px;
+    font-size: .72rem; font-weight: 700; color: #fff; margin-bottom: .65rem;
+  }
+  .item-row {
+    display: flex; align-items: flex-start; gap: .75rem;
+    padding: .65rem 0; border-bottom: 1px solid var(--border);
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-row.faltando { background: #FEF3C7; border-radius: 6px; padding: .45rem .5rem; margin: .1rem 0; }
+  .item-num { min-width: 1.8rem; font-size: .78rem; color: var(--text-muted); padding-top: .15rem; font-weight: 700; }
+  .item-texto { flex: 1; font-size: .88rem; line-height: 1.4; }
+  .opcoes-inline { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .35rem; }
+  .opcao-btn {
+    padding: .28rem .65rem; border-radius: 6px; border: 1.5px solid var(--border);
+    background: #fff; font-size: .75rem; font-weight: 600; cursor: pointer;
+    transition: all .15s; color: var(--text); display: inline-block; user-select: none;
+  }
+  .opcao-btn:hover { border-color: var(--snap); color: var(--snap); }
+  .opcao-btn.sel { background: var(--snap); border-color: var(--snap); color: #fff; }
+  .subescala-card { margin-bottom: 1rem; border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; background: #fff; }
+  .alerta { background: #FEF3C7; border: 1.5px solid #F59E0B; border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1rem; font-size: .85rem; }
+  .info-box { background: #EBF5FB; border: 1px solid #AED6F1; border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1rem; font-size: .83rem; color: #1A5276; }
+</style>
+{% endblock %}
+
+{% block back_button %}
+{% if not publico %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="form-header">
+  <h1><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>SNAP-IV — Avaliação de TDAH e TOD</h1>
+  <p>
+    {% if not publico %}{{ paciente.nome }} &nbsp;·&nbsp; {% endif %}
+    Respondente: {{ avaliacao.get_respondente_display }}
+  </p>
+</div>
+
+{% if itens_faltando %}
+<div class="alerta">
+  <strong>⚠️ Atenção:</strong> {{ itens_faltando|length }} item(ns) sem resposta. Preencha todos os itens ou confirme para continuar.
+</div>
+{% endif %}
+
+<div class="info-box">
+  <strong>Instruções:</strong> Para cada afirmação, marque a frequência com que o comportamento ocorre.
+  <strong>0 = Nunca</strong> &nbsp;·&nbsp; <strong>1 = Às vezes</strong> &nbsp;·&nbsp; <strong>2 = Com frequência</strong> &nbsp;·&nbsp; <strong>3 = Muito frequentemente</strong>
+</div>
+
+<form method="post" id="snap-form" data-require-all-radios>
+  {% csrf_token %}
+  {% if itens_faltando %}<input type="hidden" name="confirmar_incompleto" value="1">{% endif %}
+
+  {% for key, sub in subescalas.items %}
+  <div class="subescala-card">
+    <span class="sub-badge" style="background:{{ sub.cor }};">{{ sub.nome }}</span>
+    {% for item in itens %}{% if item.subescala == key %}
+    <div class="item-row{% if item.faltando %} faltando{% endif %}">
+      <span class="item-num">{{ item.numero }}.</span>
+      <div class="item-texto">
+        {{ item.texto }}
+        <div class="opcoes-inline">
+          {% for op in opcoes %}
+          <label class="opcao-btn" data-item="{{ item.numero }}" data-val="{{ op.valor }}">
+            <input type="radio" name="item_{{ item.numero }}" value="{{ op.valor }}"
+              style="display:none;" onchange="marcar(this)">
+            {{ op.label }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+  {% endfor %}
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    <button type="submit" class="btn btn-primary" style="background:var(--snap); border-color:var(--snap);">
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir e Ver Resultado
+    </button>
+    {% if not publico %}
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var respostas = {{ respostas_salvas|default:"{}" }};
+
+function marcar(input) {
+  document.querySelectorAll(`[name="${input.name}"]`).forEach(r => r.closest('label').classList.remove('sel'));
+  input.closest('label').classList.add('sel');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Marcar respostas salvas vindas da view
+  for (var num in respostas) {
+    var val = respostas[num];
+    var inputs = document.querySelectorAll(`input[name="item_${num}"]`);
+    inputs.forEach(function(inp) {
+      if (parseInt(inp.value) === val) {
+        inp.checked = true;
+        inp.closest('label').classList.add('sel');
+      }
+    });
+  }
+  // Marcar radios já checados
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => r.closest('label').classList.add('sel'));
+});
+</script>
+{% endblock %}
