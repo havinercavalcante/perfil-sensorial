@@ -81,6 +81,14 @@
   .btn-wa:hover  { background: #1ebe5d; color: #fff; }
   .btn-email { background: #3E73D1; }
   .btn-email:hover { background: #2f5bb0; color: #fff; }
+  .btn-email:disabled { background: #7ca3e0; cursor: not-allowed; opacity: .85; }
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
+  .btn-email-loading .btn-spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+    border-radius: 50%; animation: btn-spin .7s linear infinite; flex-shrink: 0;
+  }
+  .btn-email-loading .btn-txt { display: inline !important; }
   .btn-copy { background: #39abcb; }
   .btn-copy:hover { background: #0c3c7b; color: #fff; }
   .btn-resultado { background: #3E73D1; }
@@ -524,8 +532,11 @@
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
           <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
         </button>
-        {% if av.obj.paciente.email_responsavel %}
-        <!-- envio de e-mail pode ser adicionado futuramente -->
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'portage' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
         {% endif %}
         {% if paciente.telefone %}
         <button type="button" class="btn-wa" style="margin-left:.3rem;"
@@ -569,11 +580,20 @@
         <a href="{% url 'sdq_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'sdq_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
           <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
         </button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_sdq' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
+        {% endif %}
         {% if paciente.telefone %}
         <button type="button" class="btn-wa" style="margin-left:.3rem;"
                 onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'SDQ')">
@@ -582,6 +602,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'sdq_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'sdq_deletar' av.obj.id %}', this)">
@@ -613,11 +636,20 @@
         <a href="{% url 'snap_iv_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'snap_iv_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
           <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
         </button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_snap_iv' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
+        {% endif %}
         {% if paciente.telefone %}
         <button type="button" class="btn-wa" style="margin-left:.3rem;"
                 onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'SNAP-IV')">
@@ -626,6 +658,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'snap_iv_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'snap_iv_deletar' av.obj.id %}', this)">
@@ -657,11 +692,20 @@
         <a href="{% url 'mchat_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'mchat_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
           <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
         </button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_mchat' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
+        {% endif %}
         {% if paciente.telefone %}
         <button type="button" class="btn-wa" style="margin-left:.3rem;"
                 onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'M-CHAT-R')">
@@ -670,6 +714,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'mchat_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'mchat_deletar' av.obj.id %}', this)">
@@ -687,19 +734,49 @@
 <div class="card">
   <div class="card-title" style="color:#784212;"><i data-lucide="alert-circle" style="width:18px;height:18px;"></i> CARS-2 — Escala de Avaliação do Autismo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Pontuação</th><th>Classificação</th><th></th></tr></thead>
+    <thead><tr><th>Data</th><th>Status</th><th>Pontuação</th><th>Classificação</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_cars %}
     <tr>
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td style="font-size:.85rem;">{% if av.pont_total %}{{ av.pont_total|floatformat:1 }}/60{% else %}—{% endif %}</td>
-      <td style="font-size:.8rem;">{% if av.classificacao %}{{ av.classificacao }}{% else %}—{% endif %}</td>
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td style="font-size:.85rem;">{% if av.obj.score_total %}{{ av.obj.score_total|floatformat:1 }}/60{% else %}—{% endif %}</td>
+      <td style="font-size:.8rem;">{% if av.obj.classificacao %}{{ av.obj.get_classificacao_display }}{% else %}—{% endif %}</td>
       <td class="acoes-td">
-        <a href="{% url 'cars_resultado' av.id %}" class="btn-resultado">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'cars_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'cars_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span>
+        </button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;"
+                onclick="enviarEmail('{% url 'enviar_email_cars' av.obj.id %}', this)">
+          <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
+        </button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;"
+                onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'CARS-2')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+          <span class="btn-txt">WhatsApp</span>
+        </button>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'cars_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'cars_deletar' av.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'cars_deletar' av.obj.id %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -727,6 +804,9 @@
         <a href="{% url 'linguagem_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'linguagem_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -746,6 +826,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'linguagem_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'linguagem_deletar' av.obj.id %}', this)">
@@ -776,6 +859,9 @@
         <a href="{% url 'alimentacao_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'alimentacao_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -795,6 +881,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'alimentacao_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'alimentacao_deletar' av.obj.id %}', this)">
@@ -825,6 +914,9 @@
         <a href="{% url 'desenvolvimento_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'desenvolvimento_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -844,6 +936,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'desenvolvimento_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'desenvolvimento_deletar' av.obj.id %}', this)">
@@ -874,6 +969,9 @@
         <a href="{% url 'sono_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'sono_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -893,6 +991,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'sono_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'sono_deletar' av.obj.id %}', this)">
@@ -923,6 +1024,9 @@
         <a href="{% url 'habilidades_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'habilidades_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -942,6 +1046,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'habilidades_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'habilidades_deletar' av.obj.id %}', this)">
@@ -972,6 +1079,9 @@
         <a href="{% url 'comportamento_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'comportamento_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -991,6 +1101,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'comportamento_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'comportamento_deletar' av.obj.id %}', this)">
@@ -1021,6 +1134,9 @@
         <a href="{% url 'cognitivo_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'cognitivo_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -1040,6 +1156,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'cognitivo_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'cognitivo_deletar' av.obj.id %}', this)">
@@ -1070,6 +1189,9 @@
         <a href="{% url 'psicopedagogica_resultado' av.obj.id %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
+        <a href="{% url 'psicopedagogica_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% else %}
         {% if av.link_publico %}
         <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')">
@@ -1089,6 +1211,9 @@
         </button>
         {% endif %}
         {% endif %}
+        <a href="{% url 'psicopedagogica_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
                 onclick="abrirModalDeletarGenerico('{% url 'psicopedagogica_deletar' av.obj.id %}', this)">
@@ -1298,25 +1423,25 @@
       </button>
       {% endif %}
       {% if "edm" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_edm' paciente.uuid %}" class="escolha-card edm">
+      <button type="button" class="escolha-card edm" onclick="criarAvaliacao('edm')">
         <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">EDM Figueiredo</span>
         <span class="ec-desc">Desenvolvimento motor, 7 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if "mabc2" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_mabc2' paciente.uuid %}" class="escolha-card mabc2">
+      <button type="button" class="escolha-card mabc2" onclick="criarAvaliacao('mabc2')">
         <span class="ec-icon"><i data-lucide="target" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">MABC-2</span>
         <span class="ec-desc">Habilidades motoras, 3 componentes</span>
-      </a>
+      </button>
       {% endif %}
       {% if "beery" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_beery' paciente.uuid %}" class="escolha-card beery">
+      <button type="button" class="escolha-card beery" onclick="criarAvaliacao('beery')">
         <span class="ec-icon"><i data-lucide="pencil" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Beery VMI</span>
         <span class="ec-desc">Integração visomotora, 3 subtestes</span>
-      </a>
+      </button>
       {% endif %}
       {% if "pedi" in modulos_liberados %}
       <button type="button" class="escolha-card pedi" onclick="criarAvaliacao('pedi')">
@@ -1361,39 +1486,39 @@
       </button>
       {% endif %}
       {% if "cars" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_cars' paciente.uuid %}" class="escolha-card cars">
+      <button type="button" class="escolha-card cars" onclick="criarAvaliacao('cars')">
         <span class="ec-icon"><i data-lucide="alert-circle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">CARS-2</span>
         <span class="ec-desc">Escala de autismo, 15 itens</span>
-      </a>
+      </button>
       {% endif %}
       {% if "linguagem" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_linguagem' paciente.uuid %}" class="escolha-card linguagem">
+      <button type="button" class="escolha-card linguagem" onclick="criarAvaliacao('linguagem')">
         <span class="ec-icon"><i data-lucide="message-circle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Linguagem</span>
         <span class="ec-desc">Avaliação de linguagem, 4 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if "alimentacao_seletiva" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_alimentacao' paciente.uuid %}" class="escolha-card alimentacao">
+      <button type="button" class="escolha-card alimentacao" onclick="criarAvaliacao('alimentacao')">
         <span class="ec-icon"><i data-lucide="utensils" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Alimentação</span>
         <span class="ec-desc">Triagem seletiva, 5 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if "marcos_desenvolvimento" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_desenvolvimento' paciente.uuid %}" class="escolha-card desenvolvimento">
+      <button type="button" class="escolha-card desenvolvimento" onclick="criarAvaliacao('desenvolvimento')">
         <span class="ec-icon"><i data-lucide="trending-up" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Desenvolvimento</span>
         <span class="ec-desc">Marcos do desenvolvimento, 5 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if "sono_infantil" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_sono' paciente.uuid %}" class="escolha-card sono">
+      <button type="button" class="escolha-card sono" onclick="criarAvaliacao('sono')">
         <span class="ec-icon"><i data-lucide="moon" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Sono</span>
         <span class="ec-desc">Avaliação de sono, 6 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if "habilidades_adaptativas" in modulos_liberados %}
       <button type="button" class="escolha-card habilidades" onclick="criarAvaliacao('habilidades')">
@@ -1410,18 +1535,18 @@
       </button>
       {% endif %}
       {% if "rastreio_cognitivo" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_cognitivo' paciente.uuid %}" class="escolha-card cognitivo">
+      <button type="button" class="escolha-card cognitivo" onclick="criarAvaliacao('cognitivo')">
         <span class="ec-icon"><i data-lucide="cpu" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Rastreio Cognitivo</span>
         <span class="ec-desc">Funções executivas, 6 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if "psicopedagogica" in modulos_liberados %}
-      <a href="{% url 'nova_avaliacao_psicopedagogica' paciente.uuid %}" class="escolha-card psicopedagogica">
+      <button type="button" class="escolha-card psicopedagogica" onclick="criarAvaliacao('psicopedagogica')">
         <span class="ec-icon"><i data-lucide="book-open" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Psicopedagógica</span>
         <span class="ec-desc">Avaliação de aprendizagem, 5 domínios</span>
-      </a>
+      </button>
       {% endif %}
       {% if not modulos_liberados %}
       <p style="grid-column:1/-1;color:var(--text-muted);font-size:.88rem;text-align:center;padding:1rem 0;">
@@ -1529,8 +1654,18 @@
   const urlSDQ           = "{% url 'nova_avaliacao_sdq' paciente.uuid %}";
   const urlSNAPIV        = "{% url 'nova_avaliacao_snap_iv' paciente.uuid %}";
   const urlMCHAT         = "{% url 'nova_avaliacao_mchat' paciente.uuid %}";
-  const urlHabilidades   = "{% url 'nova_avaliacao_habilidades' paciente.uuid %}";
-  const urlComportamento = "{% url 'nova_avaliacao_comportamento' paciente.uuid %}";
+  const urlHabilidades      = "{% url 'nova_avaliacao_habilidades' paciente.uuid %}";
+  const urlComportamento    = "{% url 'nova_avaliacao_comportamento' paciente.uuid %}";
+  const urlEDM              = "{% url 'nova_avaliacao_edm' paciente.uuid %}";
+  const urlMABC2            = "{% url 'nova_avaliacao_mabc2' paciente.uuid %}";
+  const urlBeery            = "{% url 'nova_avaliacao_beery' paciente.uuid %}";
+  const urlCARS             = "{% url 'nova_avaliacao_cars' paciente.uuid %}";
+  const urlLinguagem        = "{% url 'nova_avaliacao_linguagem' paciente.uuid %}";
+  const urlAlimentacao      = "{% url 'nova_avaliacao_alimentacao' paciente.uuid %}";
+  const urlDesenvolvimento  = "{% url 'nova_avaliacao_desenvolvimento' paciente.uuid %}";
+  const urlSono             = "{% url 'nova_avaliacao_sono' paciente.uuid %}";
+  const urlCognitivo        = "{% url 'nova_avaliacao_cognitivo' paciente.uuid %}";
+  const urlPsicopedagogica  = "{% url 'nova_avaliacao_psicopedagogica' paciente.uuid %}";
 
   function criarAvaliacao(tipo) {
     let url, label;
@@ -1547,8 +1682,18 @@
     else if (tipo === 'sdq')          { url = urlSDQ;                             label = 'SDQ'; }
     else if (tipo === 'snap_iv')      { url = urlSNAPIV;                          label = 'SNAP-IV'; }
     else if (tipo === 'mchat')        { url = urlMCHAT;                           label = 'M-CHAT-R'; }
-    else if (tipo === 'habilidades')  { url = urlHabilidades;                     label = 'Habilidades Adaptativas'; }
-    else if (tipo === 'comportamento'){ url = urlComportamento;                   label = 'Comportamento Funcional'; }
+    else if (tipo === 'habilidades')     { url = urlHabilidades;     label = 'Habilidades Adaptativas'; }
+    else if (tipo === 'comportamento')   { url = urlComportamento;   label = 'Comportamento Funcional'; }
+    else if (tipo === 'edm')             { url = urlEDM;             label = 'EDM Figueiredo'; }
+    else if (tipo === 'mabc2')           { url = urlMABC2;           label = 'MABC-2'; }
+    else if (tipo === 'beery')           { url = urlBeery;           label = 'Beery VMI'; }
+    else if (tipo === 'cars')            { url = urlCARS;            label = 'CARS-2'; }
+    else if (tipo === 'linguagem')       { url = urlLinguagem;       label = 'Linguagem'; }
+    else if (tipo === 'alimentacao')     { url = urlAlimentacao;     label = 'Alimentação'; }
+    else if (tipo === 'desenvolvimento') { url = urlDesenvolvimento; label = 'Desenvolvimento'; }
+    else if (tipo === 'sono')            { url = urlSono;            label = 'Sono Infantil'; }
+    else if (tipo === 'cognitivo')       { url = urlCognitivo;       label = 'Rastreio Cognitivo'; }
+    else if (tipo === 'psicopedagogica') { url = urlPsicopedagogica; label = 'Psicopedagógica'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())
@@ -1632,11 +1777,23 @@
 
   /* ── Enviar e-mail ── */
   function enviarEmail(url, btn) {
+    const orig = btn.innerHTML;
     btn.disabled = true;
-    ajaxPost(url).then(data => {
-      btn.disabled = false;
-      mostrarAlerta(data.message, data.ok ? 'success' : 'error');
-    });
+    btn.classList.add('btn-email-loading');
+    btn.innerHTML = '<span class="btn-spinner"></span><span class="btn-txt"> Enviando…</span>';
+    ajaxPost(url)
+      .then(data => {
+        btn.disabled = false;
+        btn.classList.remove('btn-email-loading');
+        btn.innerHTML = orig;
+        mostrarAlerta(data.message || 'Erro desconhecido.', data.ok ? 'success' : 'error');
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.classList.remove('btn-email-loading');
+        btn.innerHTML = orig;
+        mostrarAlerta('Erro ao enviar e-mail. Verifique a configuração SMTP.', 'error');
+      });
   }
 
   /* ── Copiar link ── */

@@ -38,19 +38,55 @@ def build_lista_sem_pagina(queryset, request, publico_url_name):
 # ─── Notificações ─────────────────────────────────────────────────────────────
 
 def notificar_terapeuta(paciente, tipo, request):
+    from django.template.loader import render_to_string
     terapeuta = paciente.medico
     if not terapeuta.email:
         return
-    nome_tipo = "Perfil Sensorial" if tipo == "sensorial" else "Escala Vineland"
+    _NOMES = {
+        "sensorial":       "Perfil Sensorial",
+        "vineland":        "Escala Vineland",
+        "escolar":         "Sensorial Escolar",
+        "bebe":            "Perfil Sensorial Bebê",
+        "spm":             "SPM",
+        "spm_p":           "SPM-P Casa",
+        "spm_casa":        "SPM Casa",
+        "pedi":            "PEDI",
+        "vineland3":       "Vineland-3",
+        "portage":         "Guia Portage",
+        "sdq":             "SDQ",
+        "snap_iv":         "SNAP-IV",
+        "mchat":           "M-CHAT-R",
+        "cars":            "CARS-2",
+        "linguagem":       "Avaliação de Linguagem",
+        "alimentacao":     "Triagem de Alimentação Seletiva",
+        "desenvolvimento": "Marcos de Desenvolvimento",
+        "sono":            "Avaliação de Sono Infantil",
+        "habilidades":     "Habilidades Adaptativas",
+        "comportamento":   "Comportamento Funcional",
+        "cognitivo":       "Rastreio Cognitivo",
+        "psicopedagogica": "Avaliação Psicopedagógica",
+    }
+    nome_tipo = _NOMES.get(tipo, tipo.replace("_", " ").title())
+    nome_terapeuta = terapeuta.get_full_name() or terapeuta.username
+    link = request.build_absolute_uri(
+        reverse("detalhe_paciente", kwargs={"paciente_id": paciente.uuid})
+    )
+    html = render_to_string("questionario/email_notificacao_terapeuta.html", {
+        "nome_terapeuta": nome_terapeuta,
+        "paciente": paciente,
+        "nome_tipo": nome_tipo,
+        "link": link,
+    })
     send_mail(
         subject=f"IntegraMente — Avaliação concluída: {paciente.nome}",
         message=(
-            f"Olá, {terapeuta.get_full_name() or terapeuta.username}!\n\n"
+            f"Olá, {nome_terapeuta}!\n\n"
             f"O responsável de {paciente.nome} concluiu o questionário de {nome_tipo}.\n"
-            f"Acesse o sistema para visualizar os resultados."
+            f"Acesse o sistema para visualizar os resultados: {link}"
         ),
         from_email=None,
         recipient_list=[terapeuta.email],
+        html_message=html,
         fail_silently=True,
     )
 

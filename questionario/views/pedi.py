@@ -279,14 +279,23 @@ def enviar_email_pedi(request, avaliacao_id):
             return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
         messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/pedi/publico/{avaliacao.token}/1/")
-    send_mail(
-        subject="PEDI — IntegraMente",
-        message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário PEDI no link: {link}",
-        from_email=None,
-        recipient_list=[email_dest],
-        fail_silently=False,
-    )
+    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    try:
+        send_mail(
+            subject="PEDI — IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário PEDI no link: {link}",
+            from_email=None,
+            recipient_list=[email_dest],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha ao enviar e-mail: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     if is_ajax:
         return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
     messages.success(request, f"E-mail enviado para {email_dest}.")

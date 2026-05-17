@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -7,6 +8,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+
+logger = logging.getLogger("auditoria")
 
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
@@ -131,12 +134,20 @@ def iniciar_avaliacao(request, token):
         responsavel = request.POST.get("responsavel", "").strip()
         email = request.POST.get("email_responsavel", "").strip()
         telefone = request.POST.get("telefone", "").strip()
+        consentimento = request.POST.get("consentimento", "")
 
         if not nome or not data_nascimento or not responsavel:
             return render(request, "questionario/iniciar_avaliacao.html", {
                 "convite": convite,
                 "post": request.POST,
                 "erro": "Preencha os campos obrigatórios (nome, data de nascimento e responsável).",
+            })
+
+        if not consentimento:
+            return render(request, "questionario/iniciar_avaliacao.html", {
+                "convite": convite,
+                "post": request.POST,
+                "erro": "Você deve aceitar a Política de Privacidade para continuar.",
             })
 
         paciente = Paciente.objects.create(
@@ -146,6 +157,12 @@ def iniciar_avaliacao(request, token):
             responsavel=responsavel,
             email_responsavel=email,
             telefone=telefone,
+        )
+        logger.info(
+            "CONSENTIMENTO_OBTIDO paciente_uuid=%s responsavel=%s ip=%s tipo=%s",
+            paciente.uuid, responsavel,
+            request.META.get("REMOTE_ADDR", "desconhecido"),
+            convite.tipo,
         )
         convite.usado_em = tz.now()
         convite.save()

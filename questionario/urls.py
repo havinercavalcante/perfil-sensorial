@@ -11,6 +11,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("registrar/", views.registrar_view, name="registrar"),
     path("meu-perfil/", views.meu_perfil, name="meu_perfil"),
+    path("privacidade/", views.politica_privacidade, name="politica_privacidade"),
     # App
     path("", views.index, name="index"),
     path("pacientes/", views.lista_pacientes, name="lista_pacientes"),
@@ -122,6 +123,7 @@ urlpatterns = [
     path("sdq/<int:avaliacao_id>/deletar/", views.sdq_deletar, name="sdq_deletar"),
     path("sdq/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_sdq, name="salvar_observacoes_sdq"),
     path("sdq/<int:avaliacao_id>/enviar-link/", views.enviar_email_sdq, name="enviar_email_sdq"),
+    path("sdq/<int:avaliacao_id>/visualizar/", views.sdq_visualizar, name="sdq_visualizar"),
     path("sdq/publico/<str:token>/", views.sdq_publico, name="sdq_publico"),
     # SNAP-IV
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-snap-iv/", views.nova_avaliacao_snap_iv, name="nova_avaliacao_snap_iv"),
@@ -130,6 +132,7 @@ urlpatterns = [
     path("snap-iv/<int:avaliacao_id>/deletar/", views.snap_iv_deletar, name="snap_iv_deletar"),
     path("snap-iv/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_snap_iv, name="salvar_observacoes_snap_iv"),
     path("snap-iv/<int:avaliacao_id>/enviar-link/", views.enviar_email_snap_iv, name="enviar_email_snap_iv"),
+    path("snap-iv/<int:avaliacao_id>/visualizar/", views.snap_iv_visualizar, name="snap_iv_visualizar"),
     path("snap-iv/publico/<str:token>/", views.snap_iv_publico, name="snap_iv_publico"),
     # M-CHAT-R
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-mchat/", views.nova_avaliacao_mchat, name="nova_avaliacao_mchat"),
@@ -138,6 +141,7 @@ urlpatterns = [
     path("mchat/<int:avaliacao_id>/deletar/", views.mchat_deletar, name="mchat_deletar"),
     path("mchat/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_mchat, name="salvar_observacoes_mchat"),
     path("mchat/<int:avaliacao_id>/enviar-link/", views.enviar_email_mchat, name="enviar_email_mchat"),
+    path("mchat/<int:avaliacao_id>/visualizar/", views.mchat_visualizar, name="mchat_visualizar"),
     path("mchat/publico/<str:token>/", views.mchat_publico, name="mchat_publico"),
     # E-mail genérico para novos módulos multiprofissionais
     path("modulo/<str:modulo>/<int:avaliacao_id>/enviar-email/", views.enviar_email_modulo, name="enviar_email_modulo"),
@@ -147,12 +151,16 @@ urlpatterns = [
     path("cars/<int:avaliacao_id>/resultado/", views.cars_resultado, name="cars_resultado"),
     path("cars/<int:avaliacao_id>/deletar/", views.cars_deletar, name="cars_deletar"),
     path("cars/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_cars, name="salvar_observacoes_cars"),
+    path("cars/<int:avaliacao_id>/enviar-link/", views.enviar_email_cars, name="enviar_email_cars"),
+    path("cars/<int:avaliacao_id>/visualizar/", views.cars_visualizar, name="cars_visualizar"),
+    path("cars/publico/<str:token>/", views.cars_publico, name="cars_publico"),
     # Avaliação de Linguagem
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-linguagem/", views.nova_avaliacao_linguagem, name="nova_avaliacao_linguagem"),
     path("linguagem/<int:avaliacao_id>/", views.linguagem_form, name="linguagem_form"),
     path("linguagem/<int:avaliacao_id>/resultado/", views.linguagem_resultado, name="linguagem_resultado"),
     path("linguagem/<int:avaliacao_id>/deletar/", views.linguagem_deletar, name="linguagem_deletar"),
     path("linguagem/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_linguagem, name="salvar_observacoes_linguagem"),
+    path("linguagem/<int:avaliacao_id>/visualizar/", views.linguagem_visualizar, name="linguagem_visualizar"),
     path("linguagem/publico/<str:token>/", views.linguagem_publico, name="linguagem_publico"),
     # Triagem de Alimentação
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-alimentacao/", views.nova_avaliacao_alimentacao, name="nova_avaliacao_alimentacao"),
@@ -160,6 +168,7 @@ urlpatterns = [
     path("alimentacao/<int:avaliacao_id>/resultado/", views.alimentacao_resultado, name="alimentacao_resultado"),
     path("alimentacao/<int:avaliacao_id>/deletar/", views.alimentacao_deletar, name="alimentacao_deletar"),
     path("alimentacao/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_alimentacao, name="salvar_observacoes_alimentacao"),
+    path("alimentacao/<int:avaliacao_id>/visualizar/", views.alimentacao_visualizar, name="alimentacao_visualizar"),
     path("alimentacao/publico/<str:token>/", views.alimentacao_publico, name="alimentacao_publico"),
     # Marcos de Desenvolvimento
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-desenvolvimento/", views.nova_avaliacao_desenvolvimento, name="nova_avaliacao_desenvolvimento"),
@@ -167,6 +176,7 @@ urlpatterns = [
     path("desenvolvimento/<int:avaliacao_id>/resultado/", views.desenvolvimento_resultado, name="desenvolvimento_resultado"),
     path("desenvolvimento/<int:avaliacao_id>/deletar/", views.desenvolvimento_deletar, name="desenvolvimento_deletar"),
     path("desenvolvimento/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_desenvolvimento, name="salvar_observacoes_desenvolvimento"),
+    path("desenvolvimento/<int:avaliacao_id>/visualizar/", views.desenvolvimento_visualizar, name="desenvolvimento_visualizar"),
     path("desenvolvimento/publico/<str:token>/", views.desenvolvimento_publico, name="desenvolvimento_publico"),
     # Avaliação de Sono Infantil
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-sono/", views.nova_avaliacao_sono, name="nova_avaliacao_sono"),
@@ -174,6 +184,7 @@ urlpatterns = [
     path("sono/<int:avaliacao_id>/resultado/", views.sono_resultado, name="sono_resultado"),
     path("sono/<int:avaliacao_id>/deletar/", views.sono_deletar, name="sono_deletar"),
     path("sono/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_sono, name="salvar_observacoes_sono"),
+    path("sono/<int:avaliacao_id>/visualizar/", views.sono_visualizar, name="sono_visualizar"),
     path("sono/publico/<str:token>/", views.sono_publico, name="sono_publico"),
     # Habilidades Adaptativas
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-habilidades/", views.nova_avaliacao_habilidades_adaptativas, name="nova_avaliacao_habilidades"),
@@ -181,6 +192,7 @@ urlpatterns = [
     path("habilidades/<int:avaliacao_id>/resultado/", views.habilidades_adaptativas_resultado, name="habilidades_resultado"),
     path("habilidades/<int:avaliacao_id>/deletar/", views.habilidades_adaptativas_deletar, name="habilidades_deletar"),
     path("habilidades/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_habilidades_adaptativas, name="salvar_observacoes_habilidades"),
+    path("habilidades/<int:avaliacao_id>/visualizar/", views.habilidades_adaptativas_visualizar, name="habilidades_visualizar"),
     path("habilidades/publico/<str:token>/", views.habilidades_adaptativas_publico, name="habilidades_publico"),
     # Comportamento Funcional
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-comportamento/", views.nova_avaliacao_comportamento_funcional, name="nova_avaliacao_comportamento"),
@@ -188,6 +200,7 @@ urlpatterns = [
     path("comportamento/<int:avaliacao_id>/resultado/", views.comportamento_funcional_resultado, name="comportamento_resultado"),
     path("comportamento/<int:avaliacao_id>/deletar/", views.comportamento_funcional_deletar, name="comportamento_deletar"),
     path("comportamento/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_comportamento_funcional, name="salvar_observacoes_comportamento"),
+    path("comportamento/<int:avaliacao_id>/visualizar/", views.comportamento_funcional_visualizar, name="comportamento_visualizar"),
     path("comportamento/publico/<str:token>/", views.comportamento_funcional_publico, name="comportamento_publico"),
     # Rastreio Cognitivo
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-cognitivo/", views.nova_avaliacao_cognitivo, name="nova_avaliacao_cognitivo"),
@@ -195,6 +208,7 @@ urlpatterns = [
     path("cognitivo/<int:avaliacao_id>/resultado/", views.cognitivo_resultado, name="cognitivo_resultado"),
     path("cognitivo/<int:avaliacao_id>/deletar/", views.cognitivo_deletar, name="cognitivo_deletar"),
     path("cognitivo/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_cognitivo, name="salvar_observacoes_cognitivo"),
+    path("cognitivo/<int:avaliacao_id>/visualizar/", views.cognitivo_visualizar, name="cognitivo_visualizar"),
     path("cognitivo/publico/<str:token>/", views.cognitivo_publico, name="cognitivo_publico"),
     # Avaliação Psicopedagógica
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-psicopedagogica/", views.nova_avaliacao_psicopedagogica, name="nova_avaliacao_psicopedagogica"),
@@ -202,5 +216,6 @@ urlpatterns = [
     path("psicopedagogica/<int:avaliacao_id>/resultado/", views.psicopedagogica_resultado, name="psicopedagogica_resultado"),
     path("psicopedagogica/<int:avaliacao_id>/deletar/", views.psicopedagogica_deletar, name="psicopedagogica_deletar"),
     path("psicopedagogica/<int:avaliacao_id>/observacoes/", views.salvar_observacoes_psicopedagogica, name="salvar_observacoes_psicopedagogica"),
+    path("psicopedagogica/<int:avaliacao_id>/visualizar/", views.psicopedagogica_visualizar, name="psicopedagogica_visualizar"),
     path("psicopedagogica/publico/<str:token>/", views.psicopedagogica_publico, name="psicopedagogica_publico"),
 ]

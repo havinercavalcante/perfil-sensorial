@@ -134,6 +134,19 @@ def comportamento_funcional_resultado(request, avaliacao_id):
 
 
 @login_required
+def comportamento_funcional_visualizar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, id=avaliacao_id, paciente__medico=request.user)
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    return render(request, "questionario/comportamento_form.html", {
+        "avaliacao": avaliacao, "paciente": avaliacao.paciente,
+        "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
+        "respostas_salvas": respostas_salvas,
+        "numero_global": _numero_global_comportamento,
+        "readonly": True,
+    })
+
+
+@login_required
 def comportamento_funcional_deletar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, id=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid

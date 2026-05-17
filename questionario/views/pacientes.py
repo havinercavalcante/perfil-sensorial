@@ -1,8 +1,11 @@
 import uuid
+import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+
+logger = logging.getLogger("auditoria")
 
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe,
@@ -165,6 +168,7 @@ def novo_paciente(request):
             nome=nome, data_nascimento=data_nascimento,
             responsavel=responsavel, email_responsavel=email, telefone=telefone,
         )
+        logger.info("PACIENTE_CRIADO user=%s paciente_uuid=%s", request.user.username, paciente.uuid)
         messages.success(request, "Paciente cadastrado com sucesso.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
@@ -237,7 +241,7 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_sdq": build_lista_sem_pagina(paciente.avaliacoes_sdq.all(), request, "sdq_publico"),
         "avaliacoes_snap_iv": build_lista_sem_pagina(paciente.avaliacoes_snap_iv.all(), request, "snap_iv_publico"),
         "avaliacoes_mchat": build_lista_sem_pagina(paciente.avaliacoes_mchat.all(), request, "mchat_publico"),
-        "avaliacoes_cars": paciente.avaliacoes_cars.all(),
+        "avaliacoes_cars": build_lista_sem_pagina(paciente.avaliacoes_cars.all(), request, "cars_publico"),
         "avaliacoes_linguagem": build_lista_sem_pagina(paciente.avaliacoes_linguagem.all(), request, "linguagem_publico"),
         "avaliacoes_alimentacao": build_lista_sem_pagina(paciente.avaliacoes_alimentacao.all(), request, "alimentacao_publico"),
         "avaliacoes_desenvolvimento": build_lista_sem_pagina(paciente.avaliacoes_desenvolvimento.all(), request, "desenvolvimento_publico"),
@@ -264,6 +268,7 @@ def enviar_email_modulo(request, modulo, avaliacao_id):
         'comportamento':   (AvaliacaoComportamentoFuncional, 'comportamento_publico',   'Comportamento Funcional'),
         'cognitivo':       (AvaliacaoRastreioCognitivo,      'cognitivo_publico',       'Rastreio Cognitivo'),
         'psicopedagogica': (AvaliacaoPsicopedagogica,        'psicopedagogica_publico', 'Avaliação Psicopedagógica'),
+        'portage':         (AvaliacaoPortage,                'portage_publico',         'Guia Portage'),
     }
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if modulo not in MODULO_MAP:
@@ -280,14 +285,23 @@ def enviar_email_modulo(request, modulo, avaliacao_id):
         messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
+    from django.template.loader import render_to_string
     link = request.build_absolute_uri(reverse(url_name, kwargs={"token": avaliacao.token}))
-    send_mail(
-        subject=f"{label} — IntegraMente",
-        message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-        from_email=None,
-        recipient_list=[email_dest],
-        fail_silently=False,
-    )
+    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    try:
+        send_mail(
+            subject=f"{label} — IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
+            from_email=None,
+            recipient_list=[email_dest],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha ao enviar e-mail: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     avaliacao.email_enviado_em = tz.now()
     avaliacao.save(update_fields=["email_enviado_em"])
     if is_ajax:
@@ -300,6 +314,7 @@ def enviar_email_modulo(request, modulo, avaliacao_id):
 def deletar_paciente(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
     if request.method == "POST":
+        logger.info("PACIENTE_EXCLUIDO user=%s paciente_uuid=%s", request.user.username, paciente_id)
         paciente.delete()
         messages.success(request, "Paciente excluído com sucesso.")
         return redirect("lista_pacientes")
