@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidade — IntegraMente</title>
+<link rel="icon" type="image/png" href="{% static 'logotop.png' %}">
+<style>
+  :root {
+    --primary: #39abcb; --primary-dark: #0c3c7b;
+    --accent: #85cde2; --bg: #d5eef5; --card: #FFFFFF;
+    --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.7; }
+
+  .topo {
+    background: #fff; padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    border-bottom: 1px solid var(--border);
+  }
+  .topo img { height: 30px; width: auto; border-radius: 10px; padding: 2px; }
+  .topo-texto .titulo { font-size: .95rem; font-weight: 700; color: var(--primary-dark); }
+  .topo-texto .sub { font-size: .78rem; color: var(--text-muted); }
+
+  main { max-width: 800px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  .card {
+    background: var(--card); border-radius: 14px; border: 1px solid var(--border);
+    padding: 2.5rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 1.5rem;
+  }
+
+  h1 { font-size: 1.6rem; font-weight: 800; color: var(--primary-dark); margin-bottom: .4rem; }
+  .data-atualizacao { font-size: .82rem; color: var(--text-muted); margin-bottom: 2rem; }
+
+  h2 { font-size: 1.05rem; font-weight: 700; color: var(--primary-dark); margin: 2rem 0 .6rem;
+       border-left: 3px solid var(--primary); padding-left: .75rem; }
+  p { margin-bottom: .9rem; font-size: .93rem; color: var(--text); }
+  ul { margin: .5rem 0 .9rem 1.4rem; }
+  li { font-size: .93rem; margin-bottom: .35rem; }
+  strong { color: var(--primary-dark); }
+
+  .destaque {
+    background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 10px;
+    padding: 1rem 1.2rem; margin: 1rem 0; font-size: .88rem;
+  }
+  .destaque strong { color: #1D4ED8; }
+
+  .back-link {
+    display: inline-flex; align-items: center; gap: .4rem;
+    color: var(--primary); font-size: .88rem; font-weight: 600;
+    text-decoration: none; margin-bottom: 1.5rem;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <img src="{% static 'logonav.png' %}" alt="Logo IntegraMente">
+  <div class="topo-texto">
+    <div class="titulo">IntegraMente</div>
+    <div class="sub">Política de Privacidade</div>
+  </div>
+</div>
+
+<main>
+  {% if user.is_authenticated %}
+  <a href="{% url 'index' %}" class="back-link">← Voltar ao sistema</a>
+  {% endif %}
+
+  <div class="card">
+    <h1>Política de Privacidade</h1>
+    <p class="data-atualizacao">Última atualização: maio de 2026</p>
+
+    <div class="destaque">
+      <strong>Resumo:</strong> Coletamos apenas os dados necessários para a realização de avaliações clínicas
+      pediátricas. Seus dados não são vendidos nem compartilhados com terceiros sem autorização.
+      Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento.
+    </div>
+
+    <h2>1. Quem somos</h2>
+    <p>
+      O <strong>IntegraMente</strong> é uma plataforma de apoio à avaliação clínica multidisciplinar voltada a
+      profissionais de saúde (terapeutas ocupacionais, psicólogos, fonoaudiólogos e outros especialistas)
+      e seus pacientes. O profissional de saúde que cadastrou você nesta plataforma é o
+      <strong>controlador dos dados</strong> de seu paciente, nos termos da LGPD.
+    </p>
+
+    <h2>2. Dados coletados</h2>
+    <p>Coletamos os seguintes dados pessoais:</p>
+    <ul>
+      <li><strong>Dados da criança:</strong> nome completo, data de nascimento.</li>
+      <li><strong>Dados do responsável:</strong> nome, e-mail e telefone (opcionais).</li>
+      <li><strong>Dados de avaliação:</strong> respostas aos questionários clínicos padronizados e observações do profissional.</li>
+      <li><strong>Dados de acesso:</strong> registro de data/hora de respostas para fins de auditoria.</li>
+    </ul>
+    <p>
+      <strong>Não coletamos</strong> documentos de identidade, CPF, endereço, dados financeiros ou
+      informações além do estritamente necessário para a avaliação clínica.
+    </p>
+
+    <h2>3. Finalidade do tratamento</h2>
+    <p>Os dados são coletados exclusivamente para:</p>
+    <ul>
+      <li>Realização de avaliações clínicas padronizadas solicitadas pelo profissional de saúde;</li>
+      <li>Envio de resultados e relatórios ao profissional responsável;</li>
+      <li>Cumprimento de obrigações legais relacionadas à prática profissional em saúde.</li>
+    </ul>
+
+    <h2>4. Base legal (LGPD — Lei 13.709/2018)</h2>
+    <p>O tratamento de dados se fundamenta nas seguintes bases legais:</p>
+    <ul>
+      <li><strong>Consentimento do titular</strong> (Art. 7º, I e Art. 11, I): coletado no momento do preenchimento do formulário;</li>
+      <li><strong>Tutela da saúde</strong> (Art. 11, II, f): tratamento realizado por profissional de saúde habilitado;</li>
+      <li><strong>Proteção da criança</strong> (Art. 14): dados de menores de 18 anos são tratados com autorização do responsável legal.</li>
+    </ul>
+
+    <h2>5. Compartilhamento de dados</h2>
+    <p>
+      Os dados são acessíveis <strong>apenas ao profissional de saúde</strong> que realizou o encaminhamento.
+      Não vendemos, alugamos nem compartilhamos dados com parceiros comerciais, anunciantes ou terceiros.
+      Compartilhamos dados somente quando exigido por lei ou ordem judicial.
+    </p>
+
+    <h2>6. Armazenamento e segurança</h2>
+    <p>
+      Os dados são armazenados em servidores protegidos. Adotamos medidas técnicas e organizacionais
+      para proteger as informações contra acesso não autorizado, alteração, divulgação ou destruição,
+      incluindo autenticação obrigatória, controle de acesso por profissional e comunicação criptografada (HTTPS).
+    </p>
+
+    <h2>7. Seus direitos como titular (Art. 18 da LGPD)</h2>
+    <p>Você tem direito a:</p>
+    <ul>
+      <li>Confirmar a existência de tratamento;</li>
+      <li>Acessar seus dados;</li>
+      <li>Corrigir dados incompletos, inexatos ou desatualizados;</li>
+      <li>Solicitar a anonimização, bloqueio ou eliminação dos dados;</li>
+      <li>Revogar o consentimento a qualquer momento.</li>
+    </ul>
+    <p>
+      Para exercer esses direitos, entre em contato diretamente com o profissional de saúde responsável
+      pelo seu atendimento ou envie e-mail para o endereço indicado por ele.
+    </p>
+
+    <h2>8. Retenção dos dados</h2>
+    <p>
+      Os dados de avaliação clínica são mantidos pelo tempo necessário ao cumprimento das finalidades
+      descritas e de obrigações legais aplicáveis à prática de saúde. O profissional pode excluir
+      os dados do paciente a qualquer momento mediante solicitação.
+    </p>
+
+    <h2>9. Cookies</h2>
+    <p>
+      Utilizamos apenas cookies de sessão estritamente necessários ao funcionamento do sistema
+      (autenticação e proteção CSRF). Não utilizamos cookies de rastreamento ou publicidade.
+    </p>
+
+    <h2>10. Contato e DPO</h2>
+    <p>
+      Em caso de dúvidas sobre esta Política ou sobre seus direitos, entre em contato com o profissional
+      de saúde que realizou o seu encaminhamento. Para questões relacionadas à plataforma em si,
+      utilize os canais disponíveis no sistema.
+    </p>
+  </div>
+</main>
+
+</body>
+</html>

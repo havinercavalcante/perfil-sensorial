@@ -116,6 +116,17 @@ def alimentacao_resultado(request, avaliacao_id):
 
 
 @login_required
+def alimentacao_visualizar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoAlimentacao, id=avaliacao_id, paciente__medico=request.user)
+    respostas_salvas = {(r.dominio, r.numero_item): r.valor for r in avaliacao.respostas.all()}
+    return render(request, "questionario/alimentacao_form.html", {
+        "avaliacao": avaliacao, "paciente": avaliacao.paciente,
+        "dominios": ALIMENTACAO_DOMINIOS, "opcoes": ALIMENTACAO_OPCOES,
+        "respostas_salvas": respostas_salvas, "readonly": True,
+    })
+
+
+@login_required
 def alimentacao_deletar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoAlimentacao, id=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid

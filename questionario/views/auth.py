@@ -124,3 +124,7 @@ def meu_perfil(request):
         "especialidades": especialidades,
         "especialidades_selecionadas": especialidades_selecionadas,
     })
+
+
+def politica_privacidade(request):
+    return render(request, "questionario/politica_privacidade.html")

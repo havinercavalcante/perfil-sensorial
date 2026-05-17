@@ -120,6 +120,22 @@ def snap_iv_resultado(request, avaliacao_id):
 
 
 @login_required
+def snap_iv_visualizar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    return render(request, "questionario/snap_iv_form.html", {
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "itens": SNAP_IV_ITENS,
+        "subescalas": SNAP_IV_SUBESCALAS,
+        "opcoes": SNAP_IV_OPCOES,
+        "respostas_salvas": respostas_salvas,
+        "itens_faltando": [],
+        "readonly": True,
+    })
+
+
+@login_required
 def snap_iv_deletar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
@@ -145,14 +161,43 @@ def salvar_observacoes_snap_iv(request, avaliacao_id):
 
 @login_required
 def enviar_email_snap_iv(request, avaliacao_id):
+    from django.core.mail import send_mail
+    from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    email_dest = paciente.email_responsavel
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not email_dest:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
+        messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     if not avaliacao.token:
         avaliacao.token = str(uuid.uuid4())
         avaliacao.save(update_fields=["token"])
+    from django.template.loader import render_to_string
     link = request.build_absolute_uri(reverse("snap_iv_publico", kwargs={"token": avaliacao.token}))
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "link": link})
-    return redirect("detalhe_paciente", paciente_id=avaliacao.paciente.uuid)
+    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    try:
+        send_mail(
+            subject="SNAP-IV — IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário SNAP-IV no link: {link}",
+            from_email=None,
+            recipient_list=[email_dest],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha ao enviar e-mail: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    avaliacao.email_enviado_em = tz.now()
+    avaliacao.save(update_fields=["email_enviado_em"])
+    if is_ajax:
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
+    messages.success(request, f"E-mail enviado para {email_dest}.")
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
 
 # ── View pública (token) ──────────────────────────────────────────────────────

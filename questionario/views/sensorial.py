@@ -319,14 +319,21 @@ def enviar_email_link(request, avaliacao_id):
     html = render_to_string("questionario/email_link_avaliacao.html", {
         "paciente": paciente, "link": link,
     })
-    send_mail(
-        subject="Questionário IntegraMente",
-        message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-        from_email=None,
-        recipient_list=[email_dest],
-        html_message=html,
-        fail_silently=False,
-    )
+    try:
+        send_mail(
+            subject="Questionário IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
+            from_email=None,
+            recipient_list=[email_dest],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            from django.http import JsonResponse
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha ao enviar e-mail: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     avaliacao.email_enviado_em = tz.now()
     avaliacao.save(update_fields=["email_enviado_em"])
     if is_ajax:

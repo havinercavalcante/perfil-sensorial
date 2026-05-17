@@ -38,6 +38,12 @@
 {% endblock %}
 
 {% block content %}
+{% if readonly %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+  <i data-lucide="eye" style="width:16px;height:16px;flex-shrink:0;"></i>
+  <span><strong>Modo visualização</strong> — você está vendo as respostas do paciente. Nenhuma alteração será salva.</span>
+</div>
+{% endif %}
 <div class="form-header">
   <h1><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Avaliação de Sono Infantil</h1>
   <p>{{ paciente.nome }} &nbsp;·&nbsp; Avaliação clínica — preenchimento profissional</p>
@@ -66,7 +72,7 @@
           {% for op in opcoes %}
           <label class="opcao-btn">
             <input type="radio" name="item_{{ dom.key }}_{{ numero }}" value="{{ op.valor }}"
-              style="display:none;" onchange="marcar(this)">
+              style="display:none;" onchange="marcar(this)" {% if readonly %}disabled{% endif %}>
             {{ op.label }}
           </label>
           {% endfor %}
@@ -79,9 +85,9 @@
   {% endfor %}
 
   <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
-    <button type="submit" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
+    {% if not readonly %}<button type="submit" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
       <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir e Ver Resultado
-    </button>
+    </button>{% endif %}
     {% if not publico %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>{% endif %}
   </div>
 </form>

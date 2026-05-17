@@ -116,6 +116,17 @@ def habilidades_adaptativas_resultado(request, avaliacao_id):
 
 
 @login_required
+def habilidades_adaptativas_visualizar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoHabilidadesAdaptativas, id=avaliacao_id, paciente__medico=request.user)
+    respostas_salvas = {(r.dominio, r.numero_item): r.valor for r in avaliacao.respostas.all()}
+    return render(request, "questionario/habilidades_form.html", {
+        "avaliacao": avaliacao, "paciente": avaliacao.paciente,
+        "dominios": HABILIDADES_DOMINIOS, "opcoes": HABILIDADES_OPCOES,
+        "respostas_salvas": respostas_salvas, "readonly": True,
+    })
+
+
+@login_required
 def habilidades_adaptativas_deletar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoHabilidadesAdaptativas, id=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
