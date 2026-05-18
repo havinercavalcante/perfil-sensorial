@@ -1,0 +1,153 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado Guia Portage — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --pt: #9B59B6; --pt-dark: #6C3483; }
+
+  .resultado-header {
+    background: linear-gradient(135deg, var(--pt-dark), var(--pt));
+    color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+  }
+  .resultado-header h1 { font-size:1.35rem; margin-bottom:.3rem; }
+  .resultado-header p  { opacity:.85; font-size:.9rem; }
+
+  .tot-card {
+    display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;
+    padding:1.2rem 1.5rem; border-radius:12px;
+    border:2px solid var(--pt); background:color-mix(in srgb, var(--pt) 5%, #fff);
+    margin-bottom:1.5rem;
+  }
+  .tot-label { font-size:.85rem; font-weight:700; color:var(--pt-dark); }
+  .tot-valor { font-size:2.2rem; font-weight:900; color:var(--pt); line-height:1; }
+  .tot-max   { font-size:.8rem; color:var(--text-muted); }
+
+  .dom-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .dom-card {
+    border-radius:12px; padding:1.2rem 1rem; color:#fff; text-align:center;
+    background:var(--dc, var(--pt));
+  }
+  .dom-sigla   { font-size:.72rem; font-weight:800; letter-spacing:.06em; opacity:.8; margin-bottom:.2rem; }
+  .dom-nome    { font-size:.82rem; font-weight:700; margin-bottom:.3rem; }
+  .dom-valor   { font-size:2rem; font-weight:800; line-height:1; }
+  .dom-max     { font-size:.72rem; opacity:.7; margin-bottom:.4rem; }
+  .dom-idade   { font-size:.78rem; opacity:.9; font-weight:600; margin-top:.3rem; }
+  .dom-bar .progress-bar-wrap { background:rgba(255,255,255,.25); }
+  .dom-bar .progress-bar-fill { background:rgba(255,255,255,.85) !important; }
+
+  .obs-card { margin-top:1.5rem; }
+  .obs-card textarea { width:100%; min-height:100px; border-radius:8px; border:1.5px solid var(--border); padding:.75rem; font-size:.9rem; resize:vertical; }
+  .obs-card textarea:focus { outline:none; border-color:var(--pt); }
+
+  @media (max-width:600px) {
+    .dom-grid { grid-template-columns:1fr; }
+    .tot-card { flex-direction:column; align-items:flex-start; }
+  }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print { display:none !important; }
+    body { background:#fff; }
+    .card { box-shadow:none; border:1px solid #ccc; }
+    .resultado-header { background:var(--pt-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .dom-card { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1>
+        <i data-lucide="baby" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>
+        Guia Portage — {{ paciente.nome }}
+      </h1>
+      <p>Avaliação Pré-Escolar &nbsp;·&nbsp; Aplicada em {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Pontuação geral -->
+<div class="tot-card">
+  <div>
+    <div class="tot-label">Total de itens com SIM</div>
+    <div class="tot-valor">{{ total_sim }}</div>
+    <div class="tot-max">de {{ total_itens }} itens avaliados</div>
+  </div>
+  <div style="flex:1; min-width:180px;">
+    <div class="progress-bar-wrap" style="height:10px;">
+      <div class="progress-bar-fill" style="width:{{ pct_geral }}%; background:var(--pt); height:10px;"></div>
+    </div>
+    <div style="font-size:.78rem; color:var(--text-muted); margin-top:.3rem;">{{ pct_geral }}% executados de forma independente</div>
+  </div>
+</div>
+
+<!-- Cards por domínio -->
+<div class="dom-grid">
+  {% for dom in dominios %}
+  <div class="dom-card" style="--dc: {{ dom.cor }};">
+    <div class="dom-sigla">{{ dom.sigla }}</div>
+    <div class="dom-nome">{{ dom.nome }}</div>
+    <div class="dom-valor">{{ dom.sim }}</div>
+    <div class="dom-max">de {{ dom.total }} itens · faixa {{ dom.faixa_label }}</div>
+    <div class="dom-bar">
+      <div class="progress-bar-wrap" style="height:6px; margin:.4rem auto; max-width:80%;">
+        <div class="progress-bar-fill" style="width:{{ dom.pct }}%; height:6px;"></div>
+      </div>
+    </div>
+    {% if dom.atingiu %}
+    <div class="dom-idade">✓ Adequado para a faixa</div>
+    {% else %}
+    <div class="dom-idade">✗ Abaixo da faixa</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Legenda -->
+<div class="card">
+  <div class="card-title" style="color:var(--pt);">
+    <i data-lucide="info" style="width:16px;height:16px;"></i> Critério de adequação à faixa etária
+  </div>
+  <p style="font-size:.85rem; color:var(--text-muted); line-height:1.7; margin:0;">
+    Os itens apresentados correspondem à faixa etária da criança no momento da avaliação.
+    O critério de <strong>adequado para a faixa</strong> exige ao menos <strong>80% de itens com SIM</strong>
+    (executados de forma independente). Itens com <em>Sim com mediação</em> ou <em>Ainda não</em> não são contabilizados.
+  </p>
+</div>
+
+<!-- Visualizar respostas -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
+  <a href="{% url 'portage_visualizar' avaliacao.id 1 %}" class="btn btn-secondary btn-sm">
+    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
+  </a>
+</div>
+
+<!-- Observações -->
+<div class="card obs-card">
+  <div class="card-title" style="color:var(--pt);">
+    <i data-lucide="pencil" style="width:16px;height:16px;"></i> Observações clínicas
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="observacoes" placeholder="Registre observações, conclusões ou recomendações...">{{ avaliacao.observacoes }}</textarea>
+    <div style="margin-top:.75rem; text-align:right;">
+      <button type="submit" class="btn btn-primary" style="background:var(--pt); border-color:var(--pt);">
+        <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar observações
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

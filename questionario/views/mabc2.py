@@ -83,7 +83,7 @@ def mabc2_form(request, avaliacao_id):
         messages.success(request, "MABC-2 salvo com sucesso.")
         return redirect("mabc2_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/mabc2_form.html", {
+    return render(request, "questionario/avaliacoes/mabc2_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "faixa_choices": AvaliacaoMABC2.FAIXA_CHOICES,
@@ -103,7 +103,7 @@ def mabc2_resultado(request, avaliacao_id):
         {"nome": "Equilíbrio", "escore": avaliacao.eq_escore},
     ]
 
-    return render(request, "questionario/mabc2_resultado.html", {
+    return render(request, "questionario/avaliacoes/mabc2_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "componentes": componentes,

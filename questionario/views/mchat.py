@@ -86,7 +86,7 @@ def mchat_form(request, avaliacao_id):
             avaliacao.save()
             return redirect("mchat_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/mchat_form.html", {
+    return render(request, "questionario/avaliacoes/mchat_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": MCHAT_ITENS,
@@ -101,7 +101,7 @@ def mchat_resultado(request, avaliacao_id):
     if avaliacao.status != "concluida":
         return redirect("mchat_form", avaliacao_id=avaliacao_id)
     risco_info = next((r for r in MCHAT_RISCO if r[0] == avaliacao.classificacao), MCHAT_RISCO[0])
-    return render(request, "questionario/mchat_resultado.html", {
+    return render(request, "questionario/avaliacoes/mchat_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "risco_info": risco_info,
@@ -117,7 +117,7 @@ def mchat_visualizar(request, avaliacao_id):
         {**item, "resposta_salva": respostas_salvas.get(item["numero"]), "faltando": False}
         for item in MCHAT_ITENS
     ]
-    return render(request, "questionario/mchat_form.html", {
+    return render(request, "questionario/avaliacoes/mchat_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": itens_render,
@@ -169,7 +169,7 @@ def enviar_email_mchat(request, avaliacao_id):
         avaliacao.save(update_fields=["token"])
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(reverse("mchat_publico", kwargs={"token": avaliacao.token}))
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="M-CHAT-R — IntegraMente",
@@ -197,7 +197,7 @@ def enviar_email_mchat(request, avaliacao_id):
 def mchat_publico(request, token):
     avaliacao = get_object_or_404(AvaliacaoMCHAT, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
     itens_faltando = []
@@ -231,9 +231,9 @@ def mchat_publico(request, token):
                 notificar_terapeuta(avaliacao.paciente, "mchat", request)
             except Exception:
                 pass
-            return render(request, "questionario/concluido.html")
+            return render(request, "questionario/dashboard/concluido.html")
 
-    return render(request, "questionario/mchat_form.html", {
+    return render(request, "questionario/avaliacoes/mchat_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": MCHAT_ITENS,
