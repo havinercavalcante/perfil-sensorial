@@ -113,10 +113,14 @@ def mchat_resultado(request, avaliacao_id):
 def mchat_visualizar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    itens_render = [
+        {**item, "resposta_salva": respostas_salvas.get(item["numero"]), "faltando": False}
+        for item in MCHAT_ITENS
+    ]
     return render(request, "questionario/mchat_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
-        "itens": MCHAT_ITENS,
+        "itens": itens_render,
         "respostas_salvas": respostas_salvas,
         "itens_faltando": [],
         "readonly": True,

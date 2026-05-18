@@ -1,0 +1,19 @@
+[Unit]
+Description=Celery Worker - Perfil Sensorial
+After=network.target redis.service
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/root/perfil_sensorial
+EnvironmentFile=/root/perfil_sensorial/.env
+ExecStart=/root/perfil_sensorial/venv/bin/celery \
+    -A perfil_sensorial worker \
+    --loglevel=info \
+    --concurrency=2 \
+    --logfile=/root/perfil_sensorial/logs/celery.log
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

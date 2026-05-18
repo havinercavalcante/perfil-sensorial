@@ -23,6 +23,13 @@
   .class-Médio     { background:#FEF3C7; color:#92400E; }
   .total-box { border-radius:12px; padding:1.1rem 1.2rem; margin-bottom:1rem; }
   .obs-form textarea { width:100%; min-height:100px; border:1.5px solid var(--border); border-radius:8px; padding:.6rem; font-size:.88rem; resize:vertical; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+    .resultado-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 {% endblock %}
 
@@ -34,8 +41,17 @@
 
 {% block content %}
 <div class="resultado-header">
-  <h1><i data-lucide="bar-chart-2" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>SDQ — Resultado</h1>
-  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d/m/Y" }} &nbsp;·&nbsp; Respondente: {{ avaliacao.get_respondente_display }}</p>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="bar-chart-2" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>SDQ — Resultado</h1>
+      <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Respondente: {{ avaliacao.get_respondente_display }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
+    </div>
+  </div>
 </div>
 
 <!-- Total de Dificuldades -->
@@ -90,15 +106,4 @@
   </form>
 </div>
 
-<div style="display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap;">
-  <button onclick="window.print()" class="btn btn-secondary">
-    <i data-lucide="printer" style="width:14px;height:14px;"></i> Imprimir
-  </button>
-  <form method="post" action="{% url 'sdq_deletar' avaliacao.id %}" onsubmit="return confirm('Excluir este SDQ?')">
-    {% csrf_token %}
-    <button type="submit" class="btn" style="background:#FEE2E2; border:1.5px solid #FECACA; color:#DC2626;">
-      <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir
-    </button>
-  </form>
-</div>
 {% endblock %}
