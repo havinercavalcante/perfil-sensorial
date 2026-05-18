@@ -80,7 +80,7 @@ def comportamento_funcional_form(request, avaliacao_id):
                         respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
             for chave, (v, _ng) in novas.items():
                 respostas_form[chave] = v
-            return render(request, "questionario/comportamento_form.html", {
+            return render(request, "questionario/avaliacoes/comportamento_form.html", {
                 "avaliacao": avaliacao, "paciente": avaliacao.paciente,
                 "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
                 "respostas_salvas": respostas_salvas,
@@ -98,7 +98,7 @@ def comportamento_funcional_form(request, avaliacao_id):
         avaliacao.save()
         return redirect("comportamento_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/comportamento_form.html", {
+    return render(request, "questionario/avaliacoes/comportamento_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "dominios": COMPORTAMENTO_DOMINIOS,
@@ -126,7 +126,7 @@ def comportamento_funcional_resultado(request, avaliacao_id):
             "max": max_score,
             "pct": int(score / max_score * 100) if max_score else 0,
         })
-    return render(request, "questionario/comportamento_resultado.html", {
+    return render(request, "questionario/avaliacoes/comportamento_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "resultado": resultado,
@@ -145,7 +145,7 @@ def comportamento_funcional_visualizar(request, avaliacao_id):
             if ng in respostas_salvas:
                 respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
     respostas_json = json.dumps(respostas_form)
-    return render(request, "questionario/comportamento_form.html", {
+    return render(request, "questionario/avaliacoes/comportamento_form.html", {
         "avaliacao": avaliacao, "paciente": avaliacao.paciente,
         "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
         "respostas_salvas": respostas_salvas,
@@ -182,7 +182,7 @@ def salvar_observacoes_comportamento_funcional(request, avaliacao_id):
 def comportamento_funcional_publico(request, token):
     avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     # respostas_salvas: {numero_global: valor}
     respostas_salvas = {
@@ -218,7 +218,7 @@ def comportamento_funcional_publico(request, token):
                         respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
             for chave, (v, _ng) in novas.items():
                 respostas_form[chave] = v
-            return render(request, "questionario/comportamento_form.html", {
+            return render(request, "questionario/avaliacoes/comportamento_form.html", {
                 "avaliacao": avaliacao, "paciente": avaliacao.paciente,
                 "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
                 "respostas_salvas": respostas_salvas,
@@ -239,9 +239,9 @@ def comportamento_funcional_publico(request, token):
             notificar_terapeuta(avaliacao.paciente, "comportamento", request)
         except Exception:
             pass
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
-    return render(request, "questionario/comportamento_form.html", {
+    return render(request, "questionario/avaliacoes/comportamento_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "dominios": COMPORTAMENTO_DOMINIOS,

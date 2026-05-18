@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.shortcuts import render
 from django.urls import path
 from . import views
 
@@ -10,6 +12,7 @@ urlpatterns = [
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("registrar/", views.registrar_view, name="registrar"),
+    path("confirmar-email/<uidb64>/<token>/", views.confirmar_email_view, name="confirmar_email"),
     path("meu-perfil/", views.meu_perfil, name="meu_perfil"),
     path("privacidade/", views.politica_privacidade, name="politica_privacidade"),
     # App
@@ -219,3 +222,10 @@ urlpatterns = [
     path("psicopedagogica/<int:avaliacao_id>/visualizar/", views.psicopedagogica_visualizar, name="psicopedagogica_visualizar"),
     path("psicopedagogica/publico/<str:token>/", views.psicopedagogica_publico, name="psicopedagogica_publico"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path("__404__/", lambda r: render(r, "erros/404.html", status=404)),
+        path("__403__/", lambda r: render(r, "403.html", status=403)),
+        path("__500__/", lambda r: render(r, "500.html", status=500)),
+    ]

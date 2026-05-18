@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Erro interno — IntegraMente</title>
+<link rel="icon" type="image/png" href="{% static 'logotop.png' %}">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --primary: #39abcb;
+    --primary-dark: #0c3c7b;
+    --accent: #85cde2;
+    --bg: #d5eef5;
+    --card: #ffffff;
+    --border: #85cde2;
+    --text: #0c3c7b;
+    --muted: #6B8DD6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    background: var(--card);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 40px rgba(12, 60, 123, .1);
+    padding: 3rem 2.5rem;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  .logo {
+    width: 200px;
+    margin: 0 auto 2rem;
+    display: block;
+    opacity: .9;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 auto 2rem;
+    width: 60%;
+  }
+
+  .code {
+    font-size: 5rem;
+    font-weight: 800;
+    color: #DC2626;
+    line-height: 1;
+    letter-spacing: -3px;
+    margin-bottom: .4rem;
+  }
+
+  .title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: .6rem;
+  }
+
+  .desc {
+    font-size: .92rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+
+  .actions {
+    display: flex;
+    gap: .75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .65rem 1.5rem;
+    border-radius: 8px;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 2px solid transparent;
+    transition: all .2s;
+    cursor: pointer;
+    background: none;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-ghost { color: var(--primary); border-color: var(--primary); }
+  .btn-ghost:hover { background: var(--primary); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <img src="{% static 'logo.png' %}" alt="IntegraMente" class="logo">
+
+  <div class="divider"></div>
+
+  <div class="code">500</div>
+  <div class="title">Algo deu errado</div>
+  <div class="desc">
+    Ocorreu um erro interno no servidor. Nossa equipe já foi notificada.<br>
+    Tente novamente em alguns instantes.
+  </div>
+
+  <div class="actions">
+    <a href="/" class="btn btn-primary">
+      <i data-lucide="home" style="width:15px;height:15px;"></i>
+      Ir para o início
+    </a>
+    <a href="javascript:location.reload()" class="btn btn-ghost">
+      <i data-lucide="refresh-cw" style="width:15px;height:15px;"></i>
+      Tentar novamente
+    </a>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

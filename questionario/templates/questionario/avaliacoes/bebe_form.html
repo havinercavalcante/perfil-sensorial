@@ -1,0 +1,198 @@
+{% extends "questionario/base.html" %}
+{% block title %}Perfil Sensorial Bebê — {{ secao.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --bebe: #E91E8C; --bebe-dark: #9C0F5F; }
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-muted); margin-bottom: .4rem; }
+  .steps-bar { display: flex; gap: 3px; margin-top: .6rem; flex-wrap: wrap; }
+  .step-dot { height: 6px; flex: 1; min-width: 14px; border-radius: 3px; background: var(--border); }
+  .step-dot.done   { background: var(--bebe); }
+  .step-dot.active { background: color-mix(in srgb, var(--bebe) 50%, #fff); }
+
+  .secao-header {
+    background: linear-gradient(135deg, #9C0F5F, #E91E8C);
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .secao-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .2rem; }
+  .secao-header p  { font-size: .82rem; opacity: .8; }
+
+  .instrucoes {
+    background: #FFF0F8; border: 1px solid #F9A8D4;
+    border-radius: 10px; padding: .75rem 1rem; margin-bottom: 1.2rem;
+  }
+  .instrucoes-titulo { display: block; font-weight: 700; margin-bottom: .5rem; color: #9C0F5F; font-size: .85rem; }
+  .instrucoes-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .instrucao-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .3rem .75rem; border-radius: 20px;
+    font-size: .78rem; font-weight: 600;
+    background: linear-gradient(135deg, #9C0F5F, #E91E8C); color: #fff;
+  }
+
+  .faixa-badge {
+    display: inline-block; padding: .25rem .8rem; border-radius: 20px;
+    background: color-mix(in srgb, var(--bebe) 15%, #fff);
+    border: 1px solid var(--bebe); color: var(--bebe-dark); font-size: .78rem; font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .pergunta-card {
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1.1rem 1.2rem; margin-bottom: .9rem; background: #fff;
+    transition: border-color .2s, background .2s;
+  }
+  .pergunta-card.respondida {
+    border-color: var(--bebe);
+    background: color-mix(in srgb, var(--bebe) 5%, #fff);
+  }
+  .pergunta-meta { margin-bottom: .5rem; }
+  .pergunta-num  { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+  .pergunta-texto { font-size: .91rem; color: var(--text); line-height: 1.55; margin-bottom: 1rem; }
+
+  .opcoes-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem;
+  }
+  .opcao-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .15rem; cursor: pointer; padding: .55rem .2rem; border-radius: 9px;
+    border: 1.5px solid var(--border); background: #fff;
+    transition: all .15s; font-size: .7rem; text-align: center; line-height: 1.2;
+    user-select: none;
+  }
+  .opcao-label:hover { border-color: var(--bebe); background: color-mix(in srgb, var(--bebe) 10%, #fff); }
+  .opcao-label input { display: none; }
+  .opcao-label.selected { border-color: var(--bebe); background: var(--bebe); color: #fff; font-weight: 700; }
+  .opcao-num { font-size: 1.05rem; font-weight: 800; }
+
+  .nav-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem;
+    padding-top: 1rem; border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .opcoes-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if readonly %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+  <i data-lucide="eye" style="width:16px;height:16px;flex-shrink:0;"></i>
+  <span><strong>Modo visualização</strong> — você está vendo as respostas do paciente. Nenhuma alteração será salva.</span>
+</div>
+{% endif %}
+
+<!-- Progresso -->
+<div class="progress-header">
+  <div class="progress-info">
+    <span>Seção {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%; background:var(--bebe);"></div>
+  </div>
+  <div class="steps-bar">
+    {% for i, nome in paginas_secoes %}
+    <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Faixa badge -->
+<div>
+  <span class="faixa-badge">
+    {% if avaliacao.faixa == "bebe" %}<i data-lucide="baby" style="width:15px;height:15px;vertical-align:middle;"></i> Bebê (0–6 meses){% else %}<i data-lucide="user-round" style="width:15px;height:15px;vertical-align:middle;"></i> Criança Pequena (7–36 meses){% endif %}
+  </span>
+</div>
+
+<!-- Cabeçalho da seção -->
+<div class="secao-header">
+  <h2><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.3rem;"></i>{{ secao.nome }}</h2>
+  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens nesta seção</p>
+</div>
+
+<!-- Instrução -->
+<div class="instrucoes">
+  <span class="instrucoes-titulo"><i data-lucide="clipboard-list" style="width:14px;height:14px;vertical-align:middle;"></i> Com que frequência o bebê/criança apresenta o comportamento?</span>
+  <div class="instrucoes-chips">
+    {% for val, label in opcoes %}
+    <span class="instrucao-chip"><b>{{ val }}</b>&nbsp;— {{ label }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post" id="form-bebe">
+  {% csrf_token %}
+  {% for p in perguntas %}
+  <div class="pergunta-card{% if p.resposta_salva is not None %} respondida{% endif %}" id="card-{{ p.numero }}">
+    <div class="pergunta-meta">
+      <span class="pergunta-num">Item {{ p.numero }}</span>
+    </div>
+    <div class="pergunta-texto">{{ p.texto }}</div>
+    <div class="opcoes-grid">
+      {% for val, label in opcoes %}
+      <label class="opcao-label {% if p.resposta_salva == val %}selected{% endif %}"
+             id="label-{{ p.numero }}-{{ val }}">
+        <input type="radio" name="item_{{ p.numero }}" value="{{ val }}"
+               {% if p.resposta_salva == val %}checked{% endif %}
+               {% if readonly %}disabled{% endif %}
+               onchange="marcarRespondida({{ p.numero }}, this)">
+        <span class="opcao-num">{{ val }}</span>
+        <span>{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div>
+      {% if pagina_anterior %}
+      <a href="{% if readonly %}{% url 'bebe_visualizar' avaliacao.id pagina_anterior %}{% else %}{% url 'bebe_form' avaliacao.id pagina_anterior %}{% endif %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+      {% else %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Paciente</a>
+      {% endif %}
+    </div>
+    {% if readonly %}
+      {% if pagina == total %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar ao paciente</a>
+      {% else %}
+      <a href="{% url 'bebe_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--bebe); border-color:var(--bebe);">Próxima Seção <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+      {% endif %}
+    {% else %}
+    <button type="submit" class="btn btn-primary" style="background:var(--bebe); border-color:var(--bebe);">
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação{% else %}Próxima Seção <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>{% endif %}
+    </button>
+    {% endif %}
+  </div>
+</form>
+
+<script>
+function marcarRespondida(num, input) {
+  const card = document.getElementById('card-' + num);
+  if (!card) return;
+  card.classList.add('respondida');
+  card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
+  input.closest('.opcao-label').classList.add('selected');
+}
+
+document.getElementById('form-bebe').addEventListener('submit', function(e) {
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+  if (faltando.length > 0) {
+    e.preventDefault();
+    const card = document.getElementById('card-' + faltando[0]);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.borderColor = '#EF4444';
+      card.style.background = '#FFF5F5';
+    }
+    alert(`Responda todos os itens antes de continuar.\nItens sem resposta: ${faltando.join(', ')}`);
+  }
+});
+</script>
+{% endblock %}

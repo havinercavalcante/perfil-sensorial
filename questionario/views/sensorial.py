@@ -16,7 +16,7 @@ def questionario_publico_view(request, token, pagina):
     from django.http import Http404
     avaliacao = get_object_or_404(Avaliacao, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
     if pagina < 1 or pagina > TOTAL_PAGINAS:
         pagina = 1
     secao_atual = SECOES[pagina - 1]
@@ -83,11 +83,11 @@ def questionario_publico_view(request, token, pagina):
                     notificar_terapeuta(avaliacao.paciente, "sensorial", request)
                 except Exception:
                     pass
-                return render(request, "questionario/concluido.html")
+                return render(request, "questionario/dashboard/concluido.html")
         respostas_salvas.update(respostas_novas)
         perguntas_pagina = _build_perguntas(itens_secao, respostas_salvas)
 
-    return render(request, "questionario/questionario.html", {
+    return render(request, "questionario/dashboard/questionario.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas_pagina,
@@ -149,7 +149,7 @@ def questionario_view(request, avaliacao_id, pagina):
          "quadrante": QUADRANTE.get(item)}
         for item in itens_secao
     ]
-    return render(request, "questionario/questionario.html", {
+    return render(request, "questionario/dashboard/questionario.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas_pagina,
         "opcoes": OPCOES, "pagina": pagina, "total": TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
@@ -261,7 +261,7 @@ def dashboard(request, avaliacao_id):
         valores = [round(getattr(av, dom["campo"]) / dom["max"] * 100) if getattr(av, dom["campo"]) is not None else 0 for av in todas_avaliacoes]
         comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
 
-    return render(request, "questionario/dashboard.html", {
+    return render(request, "questionario/dashboard/dashboard.html", {
         "avaliacao": avaliacao, "paciente": paciente,
         "secoes": secoes_dados, "quadrantes": quadrantes_dados, "outras_avaliacoes": outras,
         "radar_labels": json.dumps([s["nome"] for s in secoes_dados]),
@@ -290,7 +290,7 @@ def questionario_visualizar(request, avaliacao_id, pagina):
          "quadrante": QUADRANTE.get(item)}
         for item in itens_secao
     ]
-    return render(request, "questionario/questionario.html", {
+    return render(request, "questionario/dashboard/questionario.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas_pagina,
         "opcoes": OPCOES, "pagina": pagina, "total": TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
@@ -316,7 +316,7 @@ def enviar_email_link(request, avaliacao_id):
         messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     link = request.build_absolute_uri(f"/questionario/publico/{avaliacao.token}/1/")
-    html = render_to_string("questionario/email_link_avaliacao.html", {
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {
         "paciente": paciente, "link": link,
     })
     try:
