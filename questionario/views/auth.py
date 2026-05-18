@@ -3,8 +3,16 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 
-from ..models import PerfilMedico, Especialidade
+from ..models import PerfilMedico, Especialidade, HistoricoLogin, _parse_dispositivo
+
+
+def _get_ip(request):
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
 
 
 def login_view(request):
@@ -13,15 +21,55 @@ def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
+        ua = request.META.get("HTTP_USER_AGENT", "")
+        ip = _get_ip(request)
+
         user = authenticate(request, username=username, password=password)
         if user:
+            # Encerra sessão anterior (impede uso simultâneo da conta em outro dispositivo)
+            perfil, _ = PerfilMedico.objects.get_or_create(user=user)
+            if perfil.session_key:
+                Session.objects.filter(session_key=perfil.session_key).delete()
+
             login(request, user)
+
+            perfil.session_key = request.session.session_key
+            perfil.save(update_fields=["session_key"])
+
+            HistoricoLogin.objects.create(
+                user=user,
+                ip=ip,
+                dispositivo=_parse_dispositivo(ua),
+                user_agent=ua,
+                sucesso=True,
+            )
+
             return redirect(request.GET.get("next", "index"))
+
+        # Registra tentativa falha — só se o usuário existir (para não expor enumeração)
+        try:
+            user_obj = User.objects.get(username=username)
+            HistoricoLogin.objects.create(
+                user=user_obj,
+                ip=ip,
+                dispositivo=_parse_dispositivo(ua),
+                user_agent=ua,
+                sucesso=False,
+            )
+        except User.DoesNotExist:
+            pass
+
         messages.error(request, "Usuário ou senha incorretos.")
     return render(request, "questionario/login.html")
 
 
 def logout_view(request):
+    if request.user.is_authenticated:
+        try:
+            request.user.perfil.session_key = ""
+            request.user.perfil.save(update_fields=["session_key"])
+        except PerfilMedico.DoesNotExist:
+            pass
     logout(request)
     return redirect("login")
 
