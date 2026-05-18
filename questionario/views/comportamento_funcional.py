@@ -135,13 +135,22 @@ def comportamento_funcional_resultado(request, avaliacao_id):
 
 @login_required
 def comportamento_funcional_visualizar(request, avaliacao_id):
+    import json
     avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, id=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    respostas_form = {}
+    for idx, dom in enumerate(COMPORTAMENTO_DOMINIOS):
+        for numero, _ in dom["itens"]:
+            ng = _numero_global_comportamento(idx, numero)
+            if ng in respostas_salvas:
+                respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
+    respostas_json = json.dumps(respostas_form)
     return render(request, "questionario/comportamento_form.html", {
         "avaliacao": avaliacao, "paciente": avaliacao.paciente,
         "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
         "respostas_salvas": respostas_salvas,
         "numero_global": _numero_global_comportamento,
+        "respostas_json": respostas_json,
         "readonly": True,
     })
 

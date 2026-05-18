@@ -117,12 +117,14 @@ def desenvolvimento_resultado(request, avaliacao_id):
 
 @login_required
 def desenvolvimento_visualizar(request, avaliacao_id):
+    import json
     avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {(r.dominio, r.numero_item): r.valor for r in avaliacao.respostas.all()}
+    respostas_json = json.dumps({f"{d}_{n}": v for (d, n), v in respostas_salvas.items()})
     return render(request, "questionario/desenvolvimento_form.html", {
         "avaliacao": avaliacao, "paciente": avaliacao.paciente,
         "dominios": DESENVOLVIMENTO_DOMINIOS, "opcoes": DESENVOLVIMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas, "readonly": True,
+        "respostas_salvas": respostas_salvas, "respostas_json": respostas_json, "readonly": True,
     })
 
 
