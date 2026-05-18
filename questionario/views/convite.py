@@ -79,7 +79,7 @@ def gerar_link(request):
             "nome_medico": nome_medico,
         })
 
-    return render(request, "questionario/gerar_link.html", {
+    return render(request, "questionario/dashboard/gerar_link.html", {
         "modulos_liberados": modulos_liberados,
     })
 
@@ -102,7 +102,7 @@ def enviar_email_convite(request):
         return JsonResponse({"ok": False, "message": "E-mail inválido."})
 
     nome_medico = request.user.get_full_name() or request.user.username
-    html = render_to_string("questionario/email_convite.html", {
+    html = render_to_string("questionario/emails/email_convite.html", {
         "link": link,
         "tipo_display": tipo_display,
         "nome_medico": nome_medico,
@@ -123,7 +123,7 @@ def iniciar_avaliacao(request, token):
     convite = get_object_or_404(LinkConvite, token=token)
 
     if convite.usado_em:
-        return render(request, "questionario/iniciar_avaliacao.html", {
+        return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
             "convite": convite,
             "ja_utilizado": True,
         })
@@ -137,14 +137,14 @@ def iniciar_avaliacao(request, token):
         consentimento = request.POST.get("consentimento", "")
 
         if not nome or not data_nascimento or not responsavel:
-            return render(request, "questionario/iniciar_avaliacao.html", {
+            return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "post": request.POST,
                 "erro": "Preencha os campos obrigatórios (nome, data de nascimento e responsável).",
             })
 
         if not consentimento:
-            return render(request, "questionario/iniciar_avaliacao.html", {
+            return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "post": request.POST,
                 "erro": "Você deve aceitar a Política de Privacidade para continuar.",
@@ -232,13 +232,13 @@ def iniciar_avaliacao(request, token):
             return redirect("psicopedagogica_publico", token=t)
         else:
             # CARS-2, EDM, MABC-2, Beery — presencial, só cadastra o paciente
-            return render(request, "questionario/iniciar_avaliacao.html", {
+            return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,
             })
 
     label, icon = TIPO_INFO.get(convite.tipo, (convite.get_tipo_display(), ""))
-    return render(request, "questionario/iniciar_avaliacao.html", {
+    return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
         "convite": convite,
         "tipo_label": label,
         "tipo_icon": icon,

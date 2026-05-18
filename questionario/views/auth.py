@@ -4,6 +4,11 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 from ..models import PerfilMedico, Especialidade, HistoricoLogin, _parse_dispositivo
 
@@ -60,7 +65,7 @@ def login_view(request):
             pass
 
         messages.error(request, "Usuário ou senha incorretos.")
-    return render(request, "questionario/login.html")
+    return render(request, "questionario/auth/login.html")
 
 
 def logout_view(request):
@@ -87,8 +92,10 @@ def registrar_view(request):
         telefone = request.POST.get("telefone", "").strip()
         especialidades_ids = request.POST.getlist("especialidades")
 
+        consentimento = request.POST.get("consentimento", "")
+
         erros = []
-        if not nome or not username or not password:
+        if not nome or not username or not password or not email:
             erros.append("Preencha todos os campos obrigatórios.")
         if password != password2:
             erros.append("As senhas não coincidem.")
@@ -98,11 +105,13 @@ def registrar_view(request):
             erros.append("Este nome de usuário já está em uso.")
         if email and User.objects.filter(email=email).exists():
             erros.append("Este e-mail já está cadastrado.")
+        if not consentimento:
+            erros.append("É necessário aceitar a Política de Privacidade para criar uma conta.")
 
         if erros:
             for e in erros:
                 messages.error(request, e)
-            return render(request, "questionario/registrar.html", {
+            return render(request, "questionario/auth/registrar.html", {
                 "post": request.POST,
                 "especialidades": especialidades,
                 "especialidades_selecionadas": especialidades_ids,
@@ -111,7 +120,8 @@ def registrar_view(request):
         partes = nome.strip().split(" ", 1)
         user = User.objects.create_user(
             username=username, email=email, password=password,
-            first_name=partes[0], last_name=partes[1] if len(partes) > 1 else ""
+            first_name=partes[0], last_name=partes[1] if len(partes) > 1 else "",
+            is_active=False,
         )
         perfil = PerfilMedico.objects.create(
             user=user,
@@ -120,13 +130,59 @@ def registrar_view(request):
         )
         if especialidades_ids:
             perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
-        login(request, user)
-        messages.success(request, f"Bem-vindo(a), {user.first_name}! Conta criada com sucesso.")
-        return redirect("index")
 
-    return render(request, "questionario/registrar.html", {
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        link = request.build_absolute_uri(f"/confirmar-email/{uid}/{token}/")
+        html = render_to_string("questionario/emails/email_confirmacao_conta.html", {
+            "nome": user.first_name,
+            "link": link,
+        })
+        send_mail(
+            subject="IntegraMente — Confirme seu e-mail",
+            message=f"Olá, {user.first_name}!\n\nConfirme seu e-mail acessando: {link}",
+            from_email=None,
+            recipient_list=[email],
+            html_message=html,
+            fail_silently=True,
+        )
+        return render(request, "questionario/auth/registrar.html", {
+            "especialidades": especialidades,
+            "especialidades_selecionadas": [],
+            "aguardando_confirmacao": True,
+            "email_destino": email,
+        })
+
+    return render(request, "questionario/auth/registrar.html", {
         "especialidades": especialidades,
         "especialidades_selecionadas": [],
+    })
+
+
+def confirmar_email_view(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+        perfil, _ = PerfilMedico.objects.get_or_create(user=user)
+        if perfil.session_key:
+            Session.objects.filter(session_key=perfil.session_key).delete()
+        login(request, user)
+        request.session.save()
+        perfil.session_key = request.session.session_key or ""
+        perfil.save(update_fields=["session_key"])
+        messages.success(request, f"Bem-vindo(a), {user.first_name}! Sua conta foi confirmada com sucesso.")
+        return redirect("index")
+
+    return render(request, "questionario/auth/registrar.html", {
+        "especialidades": Especialidade.objects.all().order_by("nome"),
+        "especialidades_selecionadas": [],
+        "link_invalido": True,
     })
 
 
@@ -167,7 +223,7 @@ def meu_perfil(request):
         return redirect("meu_perfil")
 
     especialidades_selecionadas = list(perfil.especialidades.values_list("id", flat=True))
-    return render(request, "questionario/meu_perfil.html", {
+    return render(request, "questionario/auth/meu_perfil.html", {
         "perfil": perfil,
         "especialidades": especialidades,
         "especialidades_selecionadas": especialidades_selecionadas,
@@ -175,4 +231,4 @@ def meu_perfil(request):
 
 
 def politica_privacidade(request):
-    return render(request, "questionario/politica_privacidade.html")
+    return render(request, "questionario/auth/politica_privacidade.html")

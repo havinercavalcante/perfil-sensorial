@@ -85,7 +85,7 @@ def pedi_form(request, avaliacao_id):
     fs_count  = len(FUNCAO_SOCIAL_SECOES)
     domain_starts = [0, ac_count, ac_count + mob_count, ac_count + mob_count + fs_count]
 
-    return render(request, "questionario/pedi_form.html", {
+    return render(request, "questionario/avaliacoes/pedi_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "fs_max": _PEDI_FS_MAX,
@@ -125,7 +125,7 @@ def pedi_resultado(request, avaliacao_id):
         {"nome": "Função Social", "raw": avaliacao.ca_funcao_social, "max": _PEDI_CA_MAX["funcao_social"], "escala": avaliacao.ca_funcao_social_escala},
     ]
 
-    return render(request, "questionario/pedi_resultado.html", {
+    return render(request, "questionario/avaliacoes/pedi_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "dominios_fs": dominios_fs,
@@ -160,7 +160,7 @@ def pedi_publico(request, token, pagina=1):
     paciente = avaliacao.paciente
 
     if avaliacao.fs_autocuidado is not None:
-        return render(request, "questionario/concluido.html", {})
+        return render(request, "questionario/dashboard/concluido.html", {})
 
     if request.method == "POST":
         def _get_int(name):
@@ -189,7 +189,7 @@ def pedi_publico(request, token, pagina=1):
         avaliacao.ca_funcao_social_escala = _escala(avaliacao.ca_funcao_social, _PEDI_CA_MAX["funcao_social"])
 
         avaliacao.save()
-        return render(request, "questionario/concluido.html", {})
+        return render(request, "questionario/dashboard/concluido.html", {})
 
     steps = []
     for s in AUTOCUIDADO_SECOES:
@@ -207,7 +207,7 @@ def pedi_publico(request, token, pagina=1):
     fs_count  = len(FUNCAO_SOCIAL_SECOES)
     domain_starts = [0, ac_count, ac_count + mob_count, ac_count + mob_count + fs_count]
 
-    return render(request, "questionario/pedi_form.html", {
+    return render(request, "questionario/avaliacoes/pedi_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "fs_max": _PEDI_FS_MAX,
@@ -281,7 +281,7 @@ def enviar_email_pedi(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/pedi/publico/{avaliacao.token}/1/")
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="PEDI — IntegraMente",
@@ -323,7 +323,7 @@ def pedi_visualizar(request, avaliacao_id):
     fs_count  = len(FUNCAO_SOCIAL_SECOES)
     domain_starts = [0, ac_count, ac_count + mob_count, ac_count + mob_count + fs_count]
 
-    return render(request, "questionario/pedi_form.html", {
+    return render(request, "questionario/avaliacoes/pedi_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "fs_max": _PEDI_FS_MAX,

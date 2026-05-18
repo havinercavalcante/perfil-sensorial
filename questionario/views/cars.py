@@ -66,7 +66,7 @@ def cars_form(request, avaliacao_id):
         avaliacao.save()
         return redirect("cars_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/cars_form.html", {
+    return render(request, "questionario/avaliacoes/cars_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": CARS_ITENS,
@@ -84,7 +84,7 @@ def cars_resultado(request, avaliacao_id):
         (c for c in CARS_CLASSIFICACAO if c[0] == avaliacao.classificacao), CARS_CLASSIFICACAO[0]
     )
     respostas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
-    return render(request, "questionario/cars_resultado.html", {
+    return render(request, "questionario/avaliacoes/cars_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": CARS_ITENS,
@@ -98,7 +98,7 @@ def cars_resultado(request, avaliacao_id):
 def cars_visualizar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
-    return render(request, "questionario/cars_form.html", {
+    return render(request, "questionario/avaliacoes/cars_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": CARS_ITENS,
@@ -150,7 +150,7 @@ def enviar_email_cars(request, avaliacao_id):
         avaliacao.token = str(uuid.uuid4())
         avaliacao.save(update_fields=["token"])
     link = request.build_absolute_uri(reverse("cars_publico", kwargs={"token": avaliacao.token}))
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="CARS-2 — IntegraMente",
@@ -178,7 +178,7 @@ def enviar_email_cars(request, avaliacao_id):
 def cars_publico(request, token):
     avaliacao = get_object_or_404(AvaliacaoCARS, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
 
@@ -204,9 +204,9 @@ def cars_publico(request, token):
             notificar_terapeuta(avaliacao.paciente, "cars", request)
         except Exception:
             pass
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
-    return render(request, "questionario/cars_form.html", {
+    return render(request, "questionario/avaliacoes/cars_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": CARS_ITENS,

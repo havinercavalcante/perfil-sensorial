@@ -84,7 +84,7 @@ def escolar_form(request, avaliacao_id, pagina):
         for item in itens
     ]
 
-    return render(request, "questionario/escolar_form.html", {
+    return render(request, "questionario/avaliacoes/escolar_form.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas,
@@ -156,7 +156,7 @@ def escolar_resultado(request, avaliacao_id):
             "classificacao": classificacao,
         })
 
-    return render(request, "questionario/escolar_resultado.html", {
+    return render(request, "questionario/avaliacoes/escolar_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "dominios": dominios,
@@ -178,7 +178,7 @@ def escolar_visualizar(request, avaliacao_id, pagina):
         {"numero": item, "texto": ESCOLAR_PERGUNTAS.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens
     ]
-    return render(request, "questionario/escolar_form.html", {
+    return render(request, "questionario/avaliacoes/escolar_form.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
         "opcoes": ESCOLAR_OPCOES, "pagina": pagina, "total": ESCOLAR_TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / ESCOLAR_TOTAL_PAGINAS * 100),
@@ -231,7 +231,7 @@ def enviar_email_escolar(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/escolar/publico/{avaliacao.token}/1/")
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="Questionário Sensorial Escolar — IntegraMente",
@@ -257,7 +257,7 @@ def enviar_email_escolar(request, avaliacao_id):
 def escolar_publico_view(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoEscolar, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
     if pagina < 1 or pagina > ESCOLAR_TOTAL_PAGINAS:
         pagina = 1
     secao_atual = ESCOLAR_SECOES[pagina - 1]
@@ -303,14 +303,14 @@ def escolar_publico_view(request, token, pagina):
                     notificar_terapeuta(avaliacao.paciente, "escolar", request)
                 except Exception:
                     pass
-                return render(request, "questionario/concluido.html")
+                return render(request, "questionario/dashboard/concluido.html")
         respostas_salvas.update(respostas_novas)
 
     perguntas = [
         {"numero": item, "texto": ESCOLAR_PERGUNTAS.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens_secao
     ]
-    return render(request, "questionario/escolar_form.html", {
+    return render(request, "questionario/avaliacoes/escolar_form.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
         "opcoes": ESCOLAR_OPCOES, "pagina": pagina, "total": ESCOLAR_TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / ESCOLAR_TOTAL_PAGINAS * 100),

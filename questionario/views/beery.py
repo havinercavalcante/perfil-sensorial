@@ -81,7 +81,7 @@ def beery_form(request, avaliacao_id):
         messages.success(request, "Beery VMI salvo com sucesso.")
         return redirect("beery_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/beery_form.html", {
+    return render(request, "questionario/avaliacoes/beery_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
     })
@@ -116,7 +116,7 @@ def beery_resultado(request, avaliacao_id):
         },
     ]
 
-    return render(request, "questionario/beery_resultado.html", {
+    return render(request, "questionario/avaliacoes/beery_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "subtestes": subtestes,

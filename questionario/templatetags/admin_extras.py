@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings as django_settings
 from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
@@ -9,6 +10,11 @@ from questionario.models import (
 )
 
 register = template.Library()
+
+
+@register.simple_tag
+def logo_url():
+    return f"{django_settings.SITE_URL}{django_settings.STATIC_URL}logonav.png"
 
 
 @register.simple_tag

@@ -119,7 +119,7 @@ def sdq_form(request, avaliacao_id):
          "faltando": item["numero"] in itens_faltando}
         for item in SDQ_ITENS
     ]
-    return render(request, "questionario/sdq_form.html", {
+    return render(request, "questionario/avaliacoes/sdq_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": itens_render,
@@ -135,7 +135,7 @@ def sdq_resultado(request, avaliacao_id):
     if avaliacao.status != "concluida":
         return redirect("sdq_form", avaliacao_id=avaliacao_id)
     resultado, total, class_total = _build_resultado(avaliacao)
-    return render(request, "questionario/sdq_resultado.html", {
+    return render(request, "questionario/avaliacoes/sdq_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "resultado": resultado,
@@ -152,7 +152,7 @@ def sdq_visualizar(request, avaliacao_id):
         {**item, "resposta_salva": respostas_salvas.get(item["numero"]), "faltando": False}
         for item in SDQ_ITENS
     ]
-    return render(request, "questionario/sdq_form.html", {
+    return render(request, "questionario/avaliacoes/sdq_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": itens_render,
@@ -206,7 +206,7 @@ def enviar_email_sdq(request, avaliacao_id):
         avaliacao.save(update_fields=["token"])
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(reverse("sdq_publico", kwargs={"token": avaliacao.token}))
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="SDQ — IntegraMente",
@@ -234,7 +234,7 @@ def enviar_email_sdq(request, avaliacao_id):
 def sdq_publico(request, token):
     avaliacao = get_object_or_404(AvaliacaoSDQ, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
     itens_faltando = []
@@ -271,14 +271,14 @@ def sdq_publico(request, token):
                 notificar_terapeuta(avaliacao.paciente, "sdq", request)
             except Exception:
                 pass
-            return render(request, "questionario/concluido.html")
+            return render(request, "questionario/dashboard/concluido.html")
 
     itens_render = [
         {**item, "resposta_salva": respostas_salvas.get(item["numero"]),
          "faltando": item["numero"] in itens_faltando}
         for item in SDQ_ITENS
     ]
-    return render(request, "questionario/sdq_form.html", {
+    return render(request, "questionario/avaliacoes/sdq_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": itens_render,

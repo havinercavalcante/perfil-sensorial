@@ -99,7 +99,7 @@ def index(request):
         .select_related("paciente").order_by("-data")[:5]
     )
 
-    return render(request, "questionario/index.html", {
+    return render(request, "questionario/auth/index.html", {
         "pacientes": pacientes,
         "total_pacientes": total_pacientes,
         "total_avaliacoes": total_avaliacoes,
@@ -147,7 +147,7 @@ def lista_pacientes(request):
                          + p.spm_total + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total + p.vinel3_total)
         p.total_concs = (p.sens_conc + p.vinel_conc + p.escolar_conc + p.bebe_conc + p.spm_conc
                          + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total + p.vinel3_total)
-    return render(request, "questionario/lista_pacientes.html", {"pacientes": page, "q": q, "paginator": paginator})
+    return render(request, "questionario/pacientes/lista_pacientes.html", {"pacientes": page, "q": q, "paginator": paginator})
 
 
 @login_required
@@ -161,7 +161,7 @@ def novo_paciente(request):
 
         if not nome or not data_nascimento or not responsavel:
             messages.error(request, "Preencha os campos obrigatórios.")
-            return render(request, "questionario/novo_paciente.html", {"post": request.POST})
+            return render(request, "questionario/pacientes/novo_paciente.html", {"post": request.POST})
 
         paciente = Paciente.objects.create(
             medico=request.user,
@@ -172,7 +172,7 @@ def novo_paciente(request):
         messages.success(request, "Paciente cadastrado com sucesso.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
-    return render(request, "questionario/novo_paciente.html")
+    return render(request, "questionario/pacientes/novo_paciente.html")
 
 
 @login_required
@@ -186,7 +186,7 @@ def editar_paciente(request, paciente_id):
         telefone = request.POST.get("telefone", "").strip()
         if not nome or not data_nascimento or not responsavel:
             messages.error(request, "Preencha os campos obrigatórios.")
-            return render(request, "questionario/editar_paciente.html", {"paciente": paciente, "post": request.POST})
+            return render(request, "questionario/pacientes/editar_paciente.html", {"paciente": paciente, "post": request.POST})
         paciente.nome = nome
         paciente.data_nascimento = data_nascimento
         paciente.responsavel = responsavel
@@ -195,7 +195,7 @@ def editar_paciente(request, paciente_id):
         paciente.save()
         messages.success(request, "Dados do paciente atualizados com sucesso.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
-    return render(request, "questionario/editar_paciente.html", {"paciente": paciente})
+    return render(request, "questionario/pacientes/editar_paciente.html", {"paciente": paciente})
 
 
 @login_required
@@ -224,7 +224,7 @@ def detalhe_paciente(request, paciente_id):
         if av.token and av.status != "concluida":
             link_publico = request.build_absolute_uri(f"/vineland/publico/{av.token}/1/")
         avaliacoes_vineland.append({"obj": av, "link_publico": link_publico})
-    return render(request, "questionario/detalhe_paciente.html", {
+    return render(request, "questionario/pacientes/detalhe_paciente.html", {
         "paciente": paciente,
         "modulos_liberados": modulos_liberados,
         "avaliacoes": avaliacoes,
@@ -287,7 +287,7 @@ def enviar_email_modulo(request, modulo, avaliacao_id):
 
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(reverse(url_name, kwargs={"token": avaliacao.token}))
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject=f"{label} — IntegraMente",

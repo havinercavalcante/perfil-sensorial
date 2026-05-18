@@ -95,7 +95,7 @@ def snap_iv_form(request, avaliacao_id):
             avaliacao.save()
             return redirect("snap_iv_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/snap_iv_form.html", {
+    return render(request, "questionario/avaliacoes/snap_iv_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": SNAP_IV_ITENS,
@@ -111,7 +111,7 @@ def snap_iv_resultado(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
         return redirect("snap_iv_form", avaliacao_id=avaliacao_id)
-    return render(request, "questionario/snap_iv_resultado.html", {
+    return render(request, "questionario/avaliacoes/snap_iv_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "resultado": _build_resultado(avaliacao),
@@ -123,7 +123,7 @@ def snap_iv_resultado(request, avaliacao_id):
 def snap_iv_visualizar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
-    return render(request, "questionario/snap_iv_form.html", {
+    return render(request, "questionario/avaliacoes/snap_iv_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": SNAP_IV_ITENS,
@@ -177,7 +177,7 @@ def enviar_email_snap_iv(request, avaliacao_id):
         avaliacao.save(update_fields=["token"])
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(reverse("snap_iv_publico", kwargs={"token": avaliacao.token}))
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="SNAP-IV — IntegraMente",
@@ -205,7 +205,7 @@ def enviar_email_snap_iv(request, avaliacao_id):
 def snap_iv_publico(request, token):
     avaliacao = get_object_or_404(AvaliacaoSNAPIV, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
     itens_faltando = []
@@ -242,9 +242,9 @@ def snap_iv_publico(request, token):
                 notificar_terapeuta(avaliacao.paciente, "snap_iv", request)
             except Exception:
                 pass
-            return render(request, "questionario/concluido.html")
+            return render(request, "questionario/dashboard/concluido.html")
 
-    return render(request, "questionario/snap_iv_form.html", {
+    return render(request, "questionario/avaliacoes/snap_iv_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "itens": SNAP_IV_ITENS,

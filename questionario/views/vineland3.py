@@ -123,7 +123,7 @@ def vineland3_form(request, avaliacao_id, pagina):
         }
         for item in itens
     ]
-    return render(request, "questionario/vineland3_form.html", {
+    return render(request, "questionario/avaliacoes/vineland3_form.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas,
@@ -165,7 +165,7 @@ def vineland3_resultado(request, avaliacao_id):
     max_total = VINELAND3_MAXIMOS["com"] + VINELAND3_MAXIMOS["avd"] + VINELAND3_MAXIMOS["soc"] + VINELAND3_MAXIMOS["hmot"]
     pct_total = int((avaliacao.pont_total or 0) / max_total * 100) if max_total else 0
 
-    return render(request, "questionario/vineland3_resultado.html", {
+    return render(request, "questionario/avaliacoes/vineland3_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "dominios": dominios,
@@ -197,7 +197,7 @@ def vineland3_visualizar(request, avaliacao_id, pagina):
         }
         for item in itens
     ]
-    return render(request, "questionario/vineland3_form.html", {
+    return render(request, "questionario/avaliacoes/vineland3_form.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas,
@@ -254,7 +254,7 @@ def enviar_email_vineland3(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/vineland3/publico/{avaliacao.token}/1/")
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="Vineland-3 — IntegraMente",
@@ -282,7 +282,7 @@ def enviar_email_vineland3(request, avaliacao_id):
 def vineland3_publico_view(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoVineland3, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     total = len(VINELAND3_SECOES)
     if pagina < 1 or pagina > total:
@@ -327,7 +327,7 @@ def vineland3_publico_view(request, token, pagina):
                     notificar_terapeuta(avaliacao.paciente, "vineland3", request)
                 except Exception:
                     pass
-                return render(request, "questionario/concluido.html")
+                return render(request, "questionario/dashboard/concluido.html")
 
     perguntas = [
         {
@@ -338,7 +338,7 @@ def vineland3_publico_view(request, token, pagina):
         }
         for item in itens
     ]
-    return render(request, "questionario/vineland3_form.html", {
+    return render(request, "questionario/avaliacoes/vineland3_form.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas,
