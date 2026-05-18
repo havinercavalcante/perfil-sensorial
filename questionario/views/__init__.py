@@ -12,3 +12,15 @@ from .spm import *
 from .convite import *
 from .vineland3 import *
 from .portage import *
+from .sdq import *
+from .snap_iv import *
+from .mchat import *
+from .cars import *
+from .linguagem import *
+from .alimentacao import *
+from .desenvolvimento import *
+from .sono import *
+from .habilidades_adaptativas import *
+from .comportamento_funcional import *
+from .cognitivo import *
+from .psicopedagogica import *

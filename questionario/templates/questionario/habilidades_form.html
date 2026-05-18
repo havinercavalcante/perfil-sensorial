@@ -1,0 +1,122 @@
+{% extends "questionario/base.html" %}
+{% block title %}Habilidades Adaptativas (ABA) — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --mod: #3E73D1; }
+  .form-header {
+    background: linear-gradient(135deg, #1A3A7A, #3E73D1);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .form-header p  { opacity: .85; font-size: .88rem; }
+  .dominio-card { margin-bottom: 1rem; border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; background: #fff; }
+  .dominio-titulo { font-size: .88rem; font-weight: 700; margin-bottom: .75rem; display: flex; align-items: center; gap: .5rem; }
+  .dominio-badge { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .item-row { display:flex; align-items:flex-start; gap:.75rem; padding:.6rem 0; border-bottom:1px solid var(--border); }
+  .item-row:last-child { border-bottom:none; }
+  .item-num { min-width:1.8rem; font-size:.78rem; color:var(--text-muted); font-weight:700; padding-top:.15rem; }
+  .item-texto { flex:1; font-size:.87rem; line-height:1.4; }
+  .opcoes-inline { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.3rem; }
+  .opcao-btn {
+    padding:.25rem .6rem; border-radius:6px; border:1.5px solid var(--border);
+    background:#fff; font-size:.74rem; font-weight:600; cursor:pointer;
+    transition:all .15s; color:var(--text); display:inline-block; user-select:none;
+  }
+  .opcao-btn:hover { border-color:var(--mod); color:var(--mod); }
+  .opcao-btn.sel { background:var(--mod); border-color:var(--mod); color:#fff; }
+  .info-box { background:#EBF5FB; border:1px solid #AED6F1; border-radius:10px; padding:.9rem 1.1rem; margin-bottom:1rem; font-size:.83rem; color:#1A5276; }
+</style>
+{% endblock %}
+
+{% block back_button %}
+{% if not publico %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if readonly %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+  <i data-lucide="eye" style="width:16px;height:16px;flex-shrink:0;"></i>
+  <span><strong>Modo visualização</strong> — você está vendo as respostas do paciente. Nenhuma alteração será salva.</span>
+</div>
+{% endif %}
+<div class="form-header">
+  <h1><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Habilidades Adaptativas (ABA)</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; Avaliação clínica — preenchimento profissional</p>
+</div>
+
+<div class="info-box">
+  <strong>Instruções:</strong> Marque para cada item a opção que melhor descreve o desempenho atual da criança/paciente.
+</div>
+
+<form method="post" data-require-all-radios {% if not publico %}action="{% url 'habilidades_form' avaliacao.id %}"{% endif %}>
+  {% csrf_token %}
+
+  {% for dom in dominios %}
+  <div class="dominio-card">
+    <div class="dominio-titulo">
+      <span class="dominio-badge" style="background:{{ dom.cor }};"></span>
+      <span style="color:{{ dom.cor }};">{{ dom.nome }}</span>
+    </div>
+    {% for item in dom.itens %}
+    {% with numero=item.0 texto=item.1 %}
+    <div class="item-row">
+      <span class="item-num">{{ numero }}.</span>
+      <div class="item-texto">
+        {{ texto }}
+        <div class="opcoes-inline">
+          {% for op in opcoes %}
+          <label class="opcao-btn">
+            <input type="radio" name="item_{{ dom.key }}_{{ numero }}" value="{{ op.valor }}"
+              style="display:none;" onchange="marcar(this)" {% if readonly %}disabled{% endif %}>
+            {{ op.label }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+    {% if not readonly %}<button type="submit" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir e Ver Resultado
+    </button>{% endif %}
+    {% if not publico %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>{% endif %}
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function marcar(input) {
+  document.querySelectorAll(`[name="${input.name}"]`).forEach(r => r.closest('label').classList.remove('sel'));
+  input.closest('label').classList.add('sel');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  {% if respostas_json %}
+  var resp = {{ respostas_json|safe }};
+  Object.entries(resp).forEach(([chave, val]) => {
+    var r = document.querySelector(`input[name="item_${chave}"][value="${val}"]`);
+    if (r) { r.checked = true; r.closest('label').classList.add('sel'); }
+  });
+  {% else %}
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => r.closest('label').classList.add('sel'));
+  {% endif %}
+  {% if erros_json %}
+  var erros = {{ erros_json|safe }};
+  erros.forEach(chave => {
+    var r = document.querySelector(`input[name="item_${chave}"]`);
+    if (r) { var l = r.closest('.item-row'); if (l) l.classList.add('faltando'); }
+  });
+  if (erros.length) { var p = document.querySelector('.faltando'); if (p) p.scrollIntoView({behavior:'smooth',block:'center'}); }
+  {% endif %}
+});
+</script>
+{% endblock %}

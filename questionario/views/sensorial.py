@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..models import Paciente, Avaliacao, Resposta
-from ..data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
+from ..data.data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                     calcular_pontuacao, classificar)
 from ..services import notificar_terapeuta, classe_css
 
@@ -23,7 +23,7 @@ def questionario_publico_view(request, token, pagina):
     itens_secao = secao_atual["itens"]
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.filter(numero_item__in=itens_secao)}
 
-    from ..data import PERGUNTAS, OPCOES, QUADRANTE, calcular_pontuacao
+    from ..data.data import PERGUNTAS, OPCOES, QUADRANTE, calcular_pontuacao
 
     def _build_perguntas(itens, respostas):
         return [
@@ -319,14 +319,21 @@ def enviar_email_link(request, avaliacao_id):
     html = render_to_string("questionario/email_link_avaliacao.html", {
         "paciente": paciente, "link": link,
     })
-    send_mail(
-        subject="Questionário IntegraMente",
-        message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-        from_email=None,
-        recipient_list=[email_dest],
-        html_message=html,
-        fail_silently=False,
-    )
+    try:
+        send_mail(
+            subject="Questionário IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
+            from_email=None,
+            recipient_list=[email_dest],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            from django.http import JsonResponse
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha ao enviar e-mail: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     avaliacao.email_enviado_em = tz.now()
     avaliacao.save(update_fields=["email_enviado_em"])
     if is_ajax:

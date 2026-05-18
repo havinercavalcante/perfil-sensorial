@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV '/home/haviner/Projetos/PERFIL SENSORIAL/perfil_sensorial/.venv'
+set -gx VIRTUAL_ENV '/home/haviner/Projetos/PERFIL SENSORIAL/perfil-sensorial/.venv'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH
