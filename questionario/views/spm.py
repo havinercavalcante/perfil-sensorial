@@ -138,7 +138,7 @@ def spm_form(request, avaliacao_id, pagina):
         {"numero": item, "texto": perguntas_data.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens
     ]
-    return render(request, "questionario/spm_form.html", {
+    return render(request, "questionario/avaliacoes/spm_form.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas,
@@ -184,7 +184,7 @@ def spm_resultado(request, avaliacao_id):
     t_tot = tscore_spm(raw_tot, "tot", avaliacao.faixa)
     t_tot_pct = max(0, min(100, int((t_tot - 40) / 40 * 100))) if t_tot else 0
 
-    return render(request, "questionario/spm_resultado.html", {
+    return render(request, "questionario/avaliacoes/spm_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "secoes": secoes,
@@ -216,7 +216,7 @@ def spm_visualizar(request, avaliacao_id, pagina):
         {"numero": item, "texto": perguntas_data.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens
     ]
-    return render(request, "questionario/spm_form.html", {
+    return render(request, "questionario/avaliacoes/spm_form.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
         "opcoes": OPCOES_SPM, "pagina": pagina, "total": total_paginas,
         "progresso": int((pagina - 1) / total_paginas * 100),
@@ -270,7 +270,7 @@ def enviar_email_spm(request, avaliacao_id):
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/spm/publico/{avaliacao.token}/1/")
     nome_instrumento = avaliacao.get_faixa_display()
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject=f"{nome_instrumento} — IntegraMente",
@@ -296,7 +296,7 @@ def enviar_email_spm(request, avaliacao_id):
 def spm_publico_view(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoSPM, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     secoes, perguntas_dict = _spm_dados(avaliacao.faixa)
     total = len(secoes)
@@ -339,14 +339,14 @@ def spm_publico_view(request, token, pagina):
                     notificar_terapeuta(avaliacao.paciente, "spm", request)
                 except Exception:
                     pass
-                return render(request, "questionario/concluido.html")
+                return render(request, "questionario/dashboard/concluido.html")
         respostas_salvas.update(respostas_novas)
 
     perguntas = [
         {"numero": item, "texto": perguntas_dict.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens_secao
     ]
-    return render(request, "questionario/spm_form.html", {
+    return render(request, "questionario/avaliacoes/spm_form.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
         "opcoes": OPCOES_SPM, "pagina": pagina, "total": total,
         "progresso": int((pagina - 1) / total * 100),

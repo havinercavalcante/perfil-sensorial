@@ -44,7 +44,7 @@ def enviar_email_notificacao(self, paciente_id, tipo, link):
         nome_tipo = _NOMES.get(tipo, tipo.replace("_", " ").title())
         nome_terapeuta = terapeuta.get_full_name() or terapeuta.username
 
-        html = render_to_string("questionario/email_notificacao_terapeuta.html", {
+        html = render_to_string("questionario/emails/email_notificacao_terapeuta.html", {
             "nome_terapeuta": nome_terapeuta,
             "paciente": paciente,
             "nome_tipo": nome_tipo,

@@ -1,0 +1,182 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado Bebê — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --bebe: #E91E8C; --bebe-dark: #9C0F5F; }
+  .resultado-header {
+    background: linear-gradient(135deg, #9C0F5F, #E91E8C);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.35rem; margin-bottom: .3rem; }
+  .resultado-header p  { opacity: .85; font-size: .9rem; }
+
+  .quad-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .quad-card {
+    border-radius: 12px; padding: 1.2rem 1rem; color: #fff; text-align: center;
+    background: var(--qc, var(--bebe));
+  }
+  .quad-nome  { font-size: .82rem; font-weight: 700; margin-bottom: .3rem; }
+  .quad-valor { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .quad-max   { font-size: .75rem; opacity: .7; margin-bottom: .5rem; }
+  .quad-bar   { margin-bottom: .6rem; }
+  .quad-bar .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .quad-bar .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
+  .quad-badge { display: inline-block; padding: .3rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 700; }
+  .quad-card .badge, .quad-card .quad-badge { background: rgba(255,255,255,.22) !important; color: #fff !important; border-color: rgba(255,255,255,.3) !important; }
+
+  .badge-semelhante    { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+  .badge-mais          { background: #FEF9C3; color: #854D0E; border-color: #FDE047; }
+  .badge-muito-mais    { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+  .badge-menos         { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+  .badge-muito-menos   { background: #F3F4F6; color: #374151; border-color: #D1D5DB; }
+
+  @media (max-width: 600px) {
+    .quad-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+    .resultado-header { background: #9C0F5F !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="baby" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Perfil Sensorial Bebê/Criança Pequena — {{ paciente.nome }}</h1>
+      <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp;
+        {% if avaliacao.faixa == "bebe" %}Bebê (0–6 meses){% else %}Criança Pequena (7–36 meses){% endif %}
+      </p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Quadrantes -->
+<div class="card">
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Pontuação por Quadrante</div>
+  <div class="quad-grid">
+    {% for q in quadrantes %}
+    <div class="quad-card" style="--qc:{{ q.cor }};">
+      <div class="quad-nome">{{ q.nome }}</div>
+      <div class="quad-valor">{{ q.valor }}</div>
+      <div class="quad-max">de {{ q.maximo }} pts &nbsp;({{ q.pct }}%)</div>
+      <div class="quad-bar">
+        <div class="progress-bar-wrap" style="height:7px;">
+          <div class="progress-bar-fill" style="width:{{ q.pct }}%; background:{{ q.cor }};"></div>
+        </div>
+      </div>
+      <span class="badge
+        {% if q.classificacao == 'Semelhante aos pares' %}badge-semelhante
+        {% elif q.classificacao == 'Mais que os pares' %}badge-mais
+        {% elif q.classificacao == 'Muito mais que os pares' %}badge-muito-mais
+        {% elif q.classificacao == 'Menos que os pares' %}badge-menos
+        {% else %}badge-muito-menos{% endif %}">
+        {{ q.classificacao }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Gráfico radar -->
+<div class="card">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Visualização Gráfica</div>
+  <canvas id="chartBebe" height="100"></canvas>
+</div>
+
+<!-- Legenda de classificação -->
+<div class="card" style="font-size:.85rem;">
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Interpretação</div>
+  <p style="color:var(--text-muted); line-height:1.6;">
+    <strong>Escala:</strong> 1=Sempre | 2=Frequentemente | 3=Às vezes | 4=Raramente | 5=Nunca<br>
+    <strong>Pontuação menor</strong> = comportamento mais frequente (próximo de "Sempre")<br>
+    <strong>Pontuação maior</strong> = comportamento menos frequente (próximo de "Nunca")
+  </p>
+  <div style="display:flex; flex-wrap:wrap; gap:.5rem .75rem; margin-top:.5rem;">
+    <span class="badge badge-muito-mais">Muito mais que os pares (≤14%)</span>
+    <span class="badge badge-mais">Mais que os pares (15–24%)</span>
+    <span class="badge badge-semelhante">Semelhante aos pares (25–74%)</span>
+    <span class="badge badge-menos">Menos que os pares (75–84%)</span>
+    <span class="badge badge-muito-menos">Muito menos que os pares (≥85%)</span>
+  </div>
+</div>
+
+<!-- Visualizar respostas -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
+  <a href="{% url 'bebe_visualizar' avaliacao.id 1 %}" class="btn btn-secondary btn-sm">
+    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
+  </a>
+</div>
+
+<!-- Observações clínicas -->
+<div class="card">
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form id="formObsBebe" method="post" action="{% url 'salvar_observacoes_bebe' avaliacao.id %}">
+    {% csrf_token %}
+    <div class="form-group" style="margin-bottom:.75rem;">
+      <textarea name="observacoes" rows="5" placeholder="Registre observações clínicas e recomendações..."
+        style="resize:vertical;">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" style="background:var(--bebe);border-color:var(--bebe);"
+              onclick="salvarObs()"><i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações</button>
+      <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const dados = {{ quadrantes_json|safe }};
+new Chart(document.getElementById('chartBebe'), {
+  type: 'bar',
+  data: {
+    labels: dados.map(d => d.nome),
+    datasets: [{
+      label: '% do máximo',
+      data: dados.map(d => d.pct),
+      backgroundColor: dados.map(d => d.cor + 'CC'),
+      borderColor: dados.map(d => d.cor),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }],
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+    },
+    plugins: { legend: { display: false } },
+  },
+});
+
+function salvarObs() {
+  const form = document.getElementById('formObsBebe');
+  const status = document.getElementById('obs-status');
+  const data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
+{% endblock %}

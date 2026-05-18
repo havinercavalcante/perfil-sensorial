@@ -82,7 +82,7 @@ def edm_form(request, avaliacao_id):
         messages.success(request, "EDM salvo com sucesso.")
         return redirect("edm_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/edm_form.html", {
+    return render(request, "questionario/avaliacoes/edm_form.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
     })
@@ -104,7 +104,7 @@ def edm_resultado(request, avaliacao_id):
 
     lat_label = dict(AvaliacaoEDM.LATERALIDADE_CHOICES).get(avaliacao.lateralidade, "—") if avaliacao.lateralidade else "—"
 
-    return render(request, "questionario/edm_resultado.html", {
+    return render(request, "questionario/avaliacoes/edm_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "dominios": dominios,

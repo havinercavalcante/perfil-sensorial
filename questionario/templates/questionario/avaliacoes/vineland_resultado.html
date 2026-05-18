@@ -1,0 +1,277 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado Vineland — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .resultado-header {
+    background: linear-gradient(135deg, #0F274F, #3E73D1);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.35rem; margin-bottom: .3rem; }
+  .resultado-header p  { opacity: .85; font-size: .9rem; }
+
+  /* Pontuação total destaque */
+  .score-destaque {
+    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+    background: #F0F6FF; border: 1px solid #C2D8FF; border-radius: 12px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .score-number { font-size: 3rem; font-weight: 800; color: #0F274F; line-height: 1; }
+  .score-label  { font-size: .85rem; color: #3E73D1; font-weight: 600; }
+  .score-max    { font-size: .78rem; color: #39abcb; margin-top: .2rem; }
+
+  /* Grade de categorias */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .cat-card {
+    border-radius: 12px; padding: 1.1rem 1rem; text-align: center; color: #fff;
+  }
+  .cat-sigla { font-size: .75rem; font-weight: 800; opacity: .8; display: inline-block; margin-bottom: .45rem; letter-spacing: .05em; }
+  .cat-nome  { font-size: .72rem; opacity: .7; margin-bottom: .5rem; }
+  .cat-valor { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1; }
+  .cat-max   { font-size: .72rem; opacity: .7; }
+  .cat-bar   { margin-top: .5rem; }
+  .cat-card .progress-bar-wrap { background: rgba(255,255,255,.25); }
+  .cat-card .progress-bar-fill { background: rgba(255,255,255,.85) !important; }
+
+  /* cores das categorias */
+  .bg-C   { background: #3E73D1; }
+  .bg-L   { background: #39abcb; }
+  .bg-O   { background: #E8793A; }
+  .bg-S   { background: #9B59B6; }
+  .bg-AG  { background: #C0392B; }
+  .bg-AGE { background: #16A085; }
+  .bg-AC  { background: #D4AC0D; }
+  .bg-AV  { background: #1ABC9C; }
+
+  /* Seção QS */
+  .qs-section { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; }
+  .qs-title   { font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: .4rem; }
+
+  .qs-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+  .qs-info-box  { text-align: center; background: var(--bg); border-radius: 8px; padding: .75rem; }
+  .qs-info-val  { font-size: 1.7rem; font-weight: 800; color: var(--primary-dark); }
+  .qs-info-lbl  { font-size: .75rem; color: var(--text-muted); margin-top: .2rem; }
+
+  .qs-badge { display: inline-block; padding: .35rem 1.2rem; border-radius: 20px; font-size: .88rem; font-weight: 700; }
+  .qs-muito-superior { background: #D4EDDA; color: #155724; }
+  .qs-superior       { background: #CCE5FF; color: #004085; }
+  .qs-medio-superior { background: #D1ECF1; color: #0C5460; }
+  .qs-medio          { background: #DCFCE7; color: #166534; }
+  .qs-medio-inferior { background: #FFF3CD; color: #856404; }
+  .qs-limitrofe      { background: #FFE8CC; color: #7A3F00; }
+  .qs-deficiente     { background: #FEE2E2; color: #991B1B; }
+
+  /* Formulário IS */
+  .is-form { background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 10px; padding: 1.2rem; margin-top: 1rem; }
+  .is-form p { font-size: .85rem; color: #78350F; margin-bottom: .75rem; }
+  .is-input-row { display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap; }
+  .is-input-row .form-group { margin: 0; flex: 1; min-width: 120px; }
+  .formula-box { background: #EEF4FF; border-radius: 8px; padding: .75rem 1rem; margin-top: 1rem; font-size: .85rem; color: #1A3A6B; }
+  .formula-box strong { display: block; margin-bottom: .3rem; }
+
+  @media (max-width: 700px) {
+    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+    .qs-info-grid { grid-template-columns: 1fr 1fr; }
+    .score-number { font-size: 2.2rem; }
+  }
+  @media (max-width: 480px) {
+    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print, .is-form form button { display: none !important; }
+    body { background: #fff; }
+    main { max-width: 100%; padding: 1rem; }
+    .card, .qs-section { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    .resultado-header { background: #0F274F !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cat-sigla { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho -->
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="bar-chart-2" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Escala Vineland — {{ paciente.nome }}</h1>
+      <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Pontuação total -->
+<div class="score-destaque">
+  <div>
+    <div class="score-number">{{ avaliacao.pont_total|floatformat:1 }}</div>
+    <div class="score-label">Pontuação Total</div>
+    <div class="score-max">Máximo possível: 116 pontos</div>
+  </div>
+  <div style="flex:1; min-width:180px;">
+    <div class="progress-bar-wrap" style="height:12px;">
+      <div class="progress-bar-fill" style="width:{% widthratio avaliacao.pont_total 116 100 %}%; background:#3E73D1;"></div>
+    </div>
+    <div style="font-size:.78rem; color:var(--text-muted); margin-top:.35rem;">
+      {% widthratio avaliacao.pont_total 116 100 %}% do máximo
+    </div>
+  </div>
+</div>
+
+<!-- Grade de categorias -->
+<div class="card">
+  <div class="card-title"><i data-lucide="folder-open" style="width:18px;height:18px;"></i> Pontuação por Categoria</div>
+  <div class="cat-grid">
+    {% for cat in categorias %}
+    <div class="cat-card bg-{{ cat.cod }}">
+      <span class="cat-sigla">{{ cat.cod }}</span>
+      <div class="cat-nome">{{ cat.nome }}</div>
+      <div class="cat-valor">{{ cat.valor|floatformat:1 }}</div>
+      <div class="cat-max">de {{ cat.max }}</div>
+      <div class="cat-bar">
+        <div class="progress-bar-wrap" style="height:5px;">
+          <div class="progress-bar-fill" style="width:{% widthratio cat.valor cat.max 100 %}%;"></div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Quociente Social -->
+<div class="qs-section">
+  <div class="qs-title"><i data-lucide="calculator" style="width:16px;height:16px;vertical-align:middle;"></i> Quociente Social (QS)</div>
+
+  <div class="qs-info-grid">
+    <div class="qs-info-box">
+      <div class="qs-info-val">{{ ic_meses }}</div>
+      <div class="qs-info-lbl">IC — Idade Cronológica (meses)</div>
+    </div>
+    <div class="qs-info-box">
+      <div class="qs-info-val">{% if avaliacao.idade_social_meses %}{{ avaliacao.idade_social_meses }}{% else %}—{% endif %}</div>
+      <div class="qs-info-lbl">IS — Idade Social (meses)</div>
+    </div>
+    <div class="qs-info-box">
+      <div class="qs-info-val">{% if avaliacao.quociente_social %}{{ avaliacao.quociente_social|floatformat:1 }}{% else %}—{% endif %}</div>
+      <div class="qs-info-lbl">QS = IS ÷ IC × 100</div>
+    </div>
+  </div>
+
+  {% if avaliacao.quociente_social %}
+  <div style="text-align:center; margin-bottom:.75rem;">
+    <span class="qs-badge qs-{{ qs_classificacao|lower|cut:' ' }}">{{ qs_classificacao }}</span>
+  </div>
+  {% endif %}
+
+  <div class="is-form">
+    <p>
+      <strong>Como calcular a Idade Social (IS):</strong><br>
+      Consulte a tabela de conversão da Escala Vineland (anexa ao manual). Localize a pontuação total
+      <strong>{{ avaliacao.pont_total|floatformat:1 }}</strong> na tabela e anote o valor IS correspondente.
+      O valor IS está em formato <em>anos,meses</em> — desconsidere a segunda casa decimal.
+      Ex.: IS = 1,47 → 1 ano e 4 meses = <strong>16 meses</strong>.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="is-input-row">
+        <div class="form-group">
+          <label for="idade_social_meses">IS em meses (número inteiro)</label>
+          <input type="number" id="idade_social_meses" name="idade_social_meses" min="1" max="600"
+                 value="{% if avaliacao.idade_social_meses %}{{ avaliacao.idade_social_meses }}{% endif %}"
+                 placeholder="Ex.: 16">
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary">Calcular QS</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="formula-box">
+      <strong>Fórmula:</strong>
+      QS = IS (meses) ÷ IC (meses) × 100 &nbsp;=&nbsp;
+      {% if avaliacao.quociente_social %}
+        {{ avaliacao.idade_social_meses }} ÷ {{ ic_meses }} × 100 = <strong>{{ avaliacao.quociente_social|floatformat:1 }}</strong>
+      {% else %}
+        IS ÷ {{ ic_meses }} × 100
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Legenda categorias -->
+<div class="card" style="font-size:.83rem;">
+  <div class="card-title"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Legenda das Categorias</div>
+  <div style="display:flex; flex-wrap:wrap; gap:.5rem .75rem;">
+    {% for cat in categorias %}
+    <span>
+      <span class="cat-sigla bg-{{ cat.cod }}" style="font-size:.65rem; padding:1px 6px;">{{ cat.cod }}</span>
+      {{ cat.nome }}
+    </span>
+    {% endfor %}
+  </div>
+  <p style="margin-top:.75rem; color:var(--text-muted);">
+    <strong>Pontuação:</strong> (+) Sim, sempre = 1 pt &nbsp;|&nbsp; (±) Sim, às vezes = 0,5 pt &nbsp;|&nbsp;
+    (−) Não, nunca / NTO / NS = 0 pt
+  </p>
+</div>
+
+<!-- Visualizar respostas -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
+  <a href="{% url 'vineland_visualizar' avaliacao.id 1 %}" class="btn btn-secondary btn-sm">
+    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
+  </a>
+</div>
+
+<!-- OBSERVAÇÕES CLÍNICAS -->
+<div class="card">
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form id="formObsVin" method="post" action="{% url 'salvar_observacoes_vineland' avaliacao.id %}">
+    {% csrf_token %}
+    <div class="form-group" style="margin-bottom:.75rem;">
+      <textarea name="observacoes" id="obsVinTextarea" rows="5"
+        placeholder="Registre aqui suas observações clínicas, interpretação do QS e recomendações..."
+        style="resize:vertical;">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" onclick="salvarObsVin()">
+        <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações
+      </button>
+      <span id="obs-vin-status" style="font-size:.82rem; color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+<script>
+function salvarObsVin() {
+  const form = document.getElementById('formObsVin');
+  const status = document.getElementById('obs-vin-status');
+  const data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
+
+{% endblock %}

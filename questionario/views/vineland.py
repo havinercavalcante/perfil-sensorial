@@ -75,7 +75,7 @@ def vineland_form(request, avaliacao_id, pagina):
         for item in itens
     ]
 
-    return render(request, "questionario/vineland_form.html", {
+    return render(request, "questionario/avaliacoes/vineland_form.html", {
         "avaliacao": avaliacao,
         "grupo": grupo,
         "perguntas": perguntas,
@@ -184,7 +184,7 @@ def vineland_resultado(request, avaliacao_id):
 
     qs_class = classificar_qs(avaliacao.quociente_social) if avaliacao.quociente_social else None
 
-    return render(request, "questionario/vineland_resultado.html", {
+    return render(request, "questionario/avaliacoes/vineland_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "ic_meses": ic_meses,
@@ -208,7 +208,7 @@ def vineland_visualizar(request, avaliacao_id, pagina):
          "resposta_salva": respostas_salvas.get(item)}
         for item in itens
     ]
-    return render(request, "questionario/vineland_form.html", {
+    return render(request, "questionario/avaliacoes/vineland_form.html", {
         "avaliacao": avaliacao, "grupo": grupo, "perguntas": perguntas,
         "opcoes": VINELAND_OPCOES, "pagina": pagina, "total": VINELAND_TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
@@ -234,7 +234,7 @@ def vineland_deletar(request, avaliacao_id):
 def vineland_publico_view(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoVineland, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
         pagina = 1
@@ -279,7 +279,7 @@ def vineland_publico_view(request, token, pagina):
                 notificar_terapeuta(avaliacao.paciente, "vineland", request)
             except Exception:
                 pass
-            return render(request, "questionario/concluido.html")
+            return render(request, "questionario/dashboard/concluido.html")
         return redirect("vineland_publico", token=token, pagina=proxima)
 
     perguntas = [
@@ -292,7 +292,7 @@ def vineland_publico_view(request, token, pagina):
         for item in itens
     ]
 
-    return render(request, "questionario/vineland_form.html", {
+    return render(request, "questionario/avaliacoes/vineland_form.html", {
         "avaliacao": avaliacao,
         "grupo": grupo,
         "perguntas": perguntas,
@@ -323,7 +323,7 @@ def enviar_email_link_vineland(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/vineland/publico/{avaliacao.token}/1/")
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="Escala Vineland — IntegraMente",

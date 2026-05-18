@@ -1,0 +1,300 @@
+{% extends "questionario/base.html" %}
+{% block title %}Escala Vineland — {{ grupo.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── cores por categoria ── */
+  :root {
+    --c-C:   #3E73D1; --c-C-t:   #fff;
+    --c-L:   #39abcb; --c-L-t:   #fff;
+    --c-O:   #E8793A; --c-O-t:   #fff;
+    --c-S:   #9B59B6; --c-S-t:   #fff;
+    --c-AG:  #C0392B; --c-AG-t:  #fff;
+    --c-AGE: #16A085; --c-AGE-t: #fff;
+    --c-AC:  #D4AC0D; --c-AC-t:  #fff;
+    --c-AV:  #1ABC9C; --c-AV-t:  #fff;
+  }
+  .pergunta-card[data-cat="C"]   { --qc: var(--c-C);   --qt: var(--c-C-t); }
+  .pergunta-card[data-cat="L"]   { --qc: var(--c-L);   --qt: var(--c-L-t); }
+  .pergunta-card[data-cat="O"]   { --qc: var(--c-O);   --qt: var(--c-O-t); }
+  .pergunta-card[data-cat="S"]   { --qc: var(--c-S);   --qt: var(--c-S-t); }
+  .pergunta-card[data-cat="AG"]  { --qc: var(--c-AG);  --qt: var(--c-AG-t); }
+  .pergunta-card[data-cat="AGE"] { --qc: var(--c-AGE); --qt: var(--c-AGE-t); }
+  .pergunta-card[data-cat="AC"]  { --qc: var(--c-AC);  --qt: var(--c-AC-t); }
+  .pergunta-card[data-cat="AV"]  { --qc: var(--c-AV);  --qt: var(--c-AV-t); }
+
+  /* progresso */
+  .progress-header { margin-bottom: 1.5rem; }
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-muted); margin-bottom: .4rem; }
+  .steps-bar { display: flex; gap: 3px; margin-top: .6rem; flex-wrap: wrap; }
+  .step-dot { height: 6px; flex: 1; min-width: 14px; border-radius: 3px; background: var(--border); }
+  .step-dot.done   { background: var(--primary); }
+  .step-dot.active { background: var(--primary-light); }
+
+  /* cabeçalho do grupo */
+  .grupo-header {
+    background: linear-gradient(135deg, #0F274F, #3E73D1);
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .grupo-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .2rem; }
+  .grupo-header p  { font-size: .82rem; opacity: .8; }
+
+  /* instrução */
+  .instrucoes {
+    border-radius: 10px;
+    padding: .75rem 1rem; margin-bottom: 1.2rem;
+  }
+  .instrucoes .instrucoes-titulo {
+    display: block; font-weight: 700; margin-bottom: .6rem;
+    color: #1A3A6B; font-size: .85rem;
+  }
+  .instrucoes-chips {
+    display: flex; flex-wrap: nowrap; gap: .4rem;
+  }
+  .instrucao-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .3rem .7rem; border-radius: 20px;
+    font-size: .78rem; font-weight: 600; white-space: nowrap;
+    flex: 1; justify-content: center;
+  }
+  .chip-sim, .chip-as, .chip-nao, .chip-nto, .chip-ns {
+    background: linear-gradient(135deg, #0F274F, #3E73D1);
+    color: #fff;
+    border: none;
+  }
+
+  /* card da pergunta */
+  .pergunta-card {
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1.1rem 1.2rem; margin-bottom: .9rem; background: #fff;
+    transition: border-color .2s, background .2s;
+    --qc: #888; --qt: #fff;
+  }
+  .pergunta-card.respondida {
+    border-color: var(--qc);
+    background: color-mix(in srgb, var(--qc) 6%, #fff);
+  }
+
+  /* meta da pergunta */
+  .pergunta-meta { display: flex; align-items: center; gap: .45rem; margin-bottom: .5rem; }
+  .pergunta-num  { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+  .cat-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--qc); color: var(--qt);
+    font-size: .65rem; font-weight: 800; letter-spacing: .5px;
+    padding: 2px 8px; border-radius: 5px; line-height: 1.4;
+  }
+
+  /* texto */
+  .pergunta-texto { font-size: .91rem; color: var(--text); line-height: 1.55; margin-bottom: 1rem; }
+
+  /* opções — 3 colunas */
+  .opcoes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .45rem;
+  }
+  .opcao-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .2rem; cursor: pointer; padding: .6rem .3rem; border-radius: 9px;
+    border: 1.5px solid var(--border); background: #fff;
+    transition: all .15s; font-size: .74rem; text-align: center; line-height: 1.2;
+    user-select: none;
+  }
+  .opcao-label:hover { border-color: var(--qc); background: color-mix(in srgb, var(--qc) 10%, #fff); }
+  .opcao-label input { display: none; }
+  .opcao-label.selected {
+    border-color: var(--qc); background: var(--qc);
+    color: var(--qt); font-weight: 700;
+  }
+  .opcao-sigla { font-size: 1.1rem; font-weight: 800; }
+  .opcao-label.neutra { border-style: dashed; color: var(--text-muted); font-size: .7rem; }
+  .opcao-label.neutra.selected { background: #555; border-color: #555; color: #fff; }
+
+  /* rodapé */
+  .nav-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem;
+    padding-top: 1rem; border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .opcoes-grid { grid-template-columns: repeat(3, 1fr); gap: .3rem; }
+    .opcao-label { padding: .55rem .2rem; font-size: .68rem; }
+    .opcao-sigla { font-size: .95rem; }
+    .grupo-header { padding: .9rem 1rem; }
+    .pergunta-card { padding: .9rem 1rem; }
+    .pergunta-texto { font-size: .87rem; }
+    .instrucoes-chips { flex-wrap: wrap; }
+    .instrucao-chip { flex: 0 0 calc(33.333% - .3rem); font-size: .68rem; padding: .25rem .4rem; }
+    .instrucao-chip:nth-child(4),
+    .instrucao-chip:nth-child(5) { flex: 0 0 calc(50% - .2rem); }
+    .instrucao-chip { font-size: .72rem; padding: .25rem .55rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if readonly %}
+<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+  <i data-lucide="eye" style="width:16px;height:16px;flex-shrink:0;"></i>
+  <span><strong>Modo visualização</strong> — você está vendo as respostas do paciente. Nenhuma alteração será salva.</span>
+</div>
+{% endif %}
+
+<!-- Progresso -->
+<div class="progress-header">
+  <div class="progress-info">
+    <span>Grupo {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%"></div>
+  </div>
+  <div class="steps-bar">
+    {% for i, nome in paginas_grupos %}
+    <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Cabeçalho do grupo de idade -->
+<div class="grupo-header">
+  <h2><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.3rem;"></i>{{ grupo.nome }}</h2>
+  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens neste grupo</p>
+</div>
+
+<!-- Instrução -->
+<div class="instrucoes">
+  <span class="instrucoes-titulo"><i data-lucide="clipboard-list" style="width:14px;height:14px;vertical-align:middle;"></i> Escala Vineland — Instruções de resposta:</span>
+  <div class="instrucoes-chips">
+    <span class="instrucao-chip chip-sim"><b>(+)</b>&nbsp;Sim, sempre</span>
+    <span class="instrucao-chip chip-as"><b>(±)</b>&nbsp;Às vezes</span>
+    <span class="instrucao-chip chip-nao"><b>(−)</b>&nbsp;Não, nunca</span>
+    <span class="instrucao-chip chip-nto"><b>NTO</b>&nbsp;Sem oportunidade</span>
+    <span class="instrucao-chip chip-ns"><b>NS</b>&nbsp;Não sei</span>
+  </div>
+</div>
+
+<form method="post" id="form-vineland">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
+  {% for p in perguntas %}
+  <div class="pergunta-card" id="card-{{ p.numero }}" data-cat="{{ p.categoria }}"
+       {% if p.resposta_salva %}class="pergunta-card respondida"{% endif %}>
+
+    <div class="pergunta-meta">
+      <span class="pergunta-num">Item {{ p.numero }}</span>
+      <span class="cat-badge">{{ p.categoria }}</span>
+    </div>
+
+    <div class="pergunta-texto">{{ p.texto }}</div>
+
+    <div class="opcoes-grid">
+      {% for val, label, sigla, _ in opcoes %}
+      <label class="opcao-label {% if val == 'nao_oportunidade' or val == 'nao_sei' %}neutra{% endif %}
+                   {% if p.resposta_salva == val %}selected{% endif %}"
+             id="label-{{ p.numero }}-{{ val }}">
+        <input type="radio" name="item_{{ p.numero }}" value="{{ val }}"
+               {% if p.resposta_salva == val %}checked{% endif %}
+               {% if readonly %}disabled{% endif %}
+               onchange="marcarRespondida({{ p.numero }}, this)">
+        <span class="opcao-sigla">{{ sigla }}</span>
+        <span>{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div>
+      {% if pagina_anterior %}
+        {% if readonly %}
+        <a href="{% url 'vineland_visualizar' avaliacao.id pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+        {% elif publico %}
+        <a href="{% url 'vineland_publico' token pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+        {% else %}
+        <a href="{% url 'vineland_form' avaliacao.id pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+        {% endif %}
+      {% elif not publico %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Paciente</a>
+      {% endif %}
+    </div>
+    {% if readonly %}
+      {% if pagina == total %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar ao paciente</a>
+      {% else %}
+      <a href="{% url 'vineland_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary">Próximo Grupo <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+      {% endif %}
+    {% else %}
+    <button type="submit" class="btn btn-primary">
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação{% else %}Próximo Grupo <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>{% endif %}
+    </button>
+    {% endif %}
+  </div>
+</form>
+
+<!-- Modal: itens faltando -->
+<div id="modal-faltando" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+  <div style="background:#fff; border-radius:14px; padding:1.5rem; max-width:440px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <div style="display:flex; align-items:center; gap:.6rem; margin-bottom:.75rem;">
+      <span style="font-size:1.3rem;">⚠️</span>
+      <h3 style="margin:0; font-size:1rem; color:#92400E;">Itens sem resposta</h3>
+    </div>
+    <p style="font-size:.88rem; color:#555; margin-bottom:.5rem;">Os seguintes itens deste grupo <strong>não foram preenchidos</strong>:</p>
+    <div id="modal-itens-lista" style="font-size:.85rem; color:#444; background:#FEF3C7; border-radius:8px; padding:.6rem .9rem; margin-bottom:.9rem; line-height:1.8;"></div>
+    <p style="font-size:.83rem; color:#777; margin-bottom:1.2rem;">Deseja continuar mesmo assim? Os itens não preenchidos ficam sem pontuação neste grupo.</p>
+    <div style="display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap;">
+      <button type="button" onclick="fecharModalFaltando()" class="btn btn-secondary">Voltar e preencher</button>
+      <button type="button" onclick="confirmarContinuar()" class="btn btn-primary">Continuar mesmo assim</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function marcarRespondida(num, input) {
+  const card = document.getElementById('card-' + num);
+  if (!card) return;
+  card.classList.add('respondida');
+  card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
+  input.closest('.opcao-label').classList.add('selected');
+}
+
+function abrirModalFaltando(numeros) {
+  const lista = document.getElementById('modal-itens-lista');
+  lista.innerHTML = numeros.map(n => `<strong>Item ${n}</strong>`).join(' &nbsp;&middot;&nbsp; ');
+  document.getElementById('modal-faltando').style.display = 'flex';
+}
+
+function fecharModalFaltando() {
+  document.getElementById('modal-faltando').style.display = 'none';
+}
+
+function confirmarContinuar() {
+  document.getElementById('confirmar-incompleto').value = '1';
+  fecharModalFaltando();
+  document.getElementById('form-vineland').submit();
+}
+
+document.getElementById('form-vineland').addEventListener('submit', function(e) {
+  if (document.getElementById('confirmar-incompleto').value === '1') return;
+  const itens = [{% for p in perguntas %}{{ p.numero }},{% endfor %}];
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+  if (faltando.length > 0) {
+    e.preventDefault();
+    faltando.forEach(n => {
+      const card = document.getElementById('card-' + n);
+      if (card) {
+        card.style.borderColor = '#F59E0B';
+        card.style.background = '#FFFBEB';
+      }
+    });
+    abrirModalFaltando(faltando);
+    const primeiro = document.getElementById('card-' + faltando[0]);
+    if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+</script>
+{% endblock %}

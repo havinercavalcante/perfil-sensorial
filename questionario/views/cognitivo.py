@@ -64,7 +64,7 @@ def cognitivo_form(request, avaliacao_id):
         if erros:
             respostas_form = {f"{d}_{n}": v for (d, n), v in respostas_salvas.items()}
             respostas_form.update(novas)
-            return render(request, "questionario/cognitivo_form.html", {
+            return render(request, "questionario/avaliacoes/cognitivo_form.html", {
                 "avaliacao": avaliacao, "paciente": avaliacao.paciente,
                 "dominios": COGNITIVO_DOMINIOS, "opcoes": COGNITIVO_OPCOES,
                 "respostas_salvas": respostas_salvas,
@@ -82,7 +82,7 @@ def cognitivo_form(request, avaliacao_id):
         avaliacao.save()
         return redirect("cognitivo_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/cognitivo_form.html", {
+    return render(request, "questionario/avaliacoes/cognitivo_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "dominios": COGNITIVO_DOMINIOS,
@@ -108,7 +108,7 @@ def cognitivo_resultado(request, avaliacao_id):
             "max": max_score,
             "pct": int(score / max_score * 100) if max_score else 0,
         })
-    return render(request, "questionario/cognitivo_resultado.html", {
+    return render(request, "questionario/avaliacoes/cognitivo_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "resultado": resultado,
@@ -121,7 +121,7 @@ def cognitivo_visualizar(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, id=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {(r.dominio, r.numero_item): r.valor for r in avaliacao.respostas.all()}
     respostas_json = json.dumps({f"{d}_{n}": v for (d, n), v in respostas_salvas.items()})
-    return render(request, "questionario/cognitivo_form.html", {
+    return render(request, "questionario/avaliacoes/cognitivo_form.html", {
         "avaliacao": avaliacao, "paciente": avaliacao.paciente,
         "dominios": COGNITIVO_DOMINIOS, "opcoes": COGNITIVO_OPCOES,
         "respostas_salvas": respostas_salvas, "respostas_json": respostas_json, "readonly": True,
@@ -155,7 +155,7 @@ def salvar_observacoes_cognitivo(request, avaliacao_id):
 def cognitivo_publico(request, token):
     avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     respostas_salvas = {
         (r.dominio, r.numero_item): r.valor
@@ -183,7 +183,7 @@ def cognitivo_publico(request, token):
         if erros:
             respostas_form = {f"{d}_{n}": v for (d, n), v in respostas_salvas.items()}
             respostas_form.update(novas)
-            return render(request, "questionario/cognitivo_form.html", {
+            return render(request, "questionario/avaliacoes/cognitivo_form.html", {
                 "avaliacao": avaliacao, "paciente": avaliacao.paciente,
                 "dominios": COGNITIVO_DOMINIOS, "opcoes": COGNITIVO_OPCOES,
                 "respostas_salvas": respostas_salvas,
@@ -204,9 +204,9 @@ def cognitivo_publico(request, token):
             notificar_terapeuta(avaliacao.paciente, "cognitivo", request)
         except Exception:
             pass
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
-    return render(request, "questionario/cognitivo_form.html", {
+    return render(request, "questionario/avaliacoes/cognitivo_form.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "dominios": COGNITIVO_DOMINIOS,

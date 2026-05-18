@@ -151,7 +151,7 @@ def portage_form(request, avaliacao_id, pagina):
 
     faixas_render = _get_perguntas_por_faixa(dom, respostas_para_render, faixas=faixas_dom)
 
-    return render(request, "questionario/portage_form.html", {
+    return render(request, "questionario/avaliacoes/portage_form.html", {
         "avaliacao": avaliacao,
         "dominio": dom,
         "faixas": faixas_render,
@@ -227,7 +227,7 @@ def portage_resultado(request, avaliacao_id):
         messages.success(request, "Observações salvas.")
         return redirect("portage_resultado", avaliacao_id=avaliacao_id)
 
-    return render(request, "questionario/portage_resultado.html", {
+    return render(request, "questionario/avaliacoes/portage_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "dominios": dominios_resultado,
@@ -265,7 +265,7 @@ def portage_visualizar(request, avaliacao_id, pagina):
     }
     faixas_render = _get_perguntas_por_faixa(dom, respostas_salvas, faixas=faixas_dom)
 
-    return render(request, "questionario/portage_form.html", {
+    return render(request, "questionario/avaliacoes/portage_form.html", {
         "avaliacao": avaliacao,
         "dominio": dom,
         "faixas": faixas_render,
@@ -286,7 +286,7 @@ def portage_visualizar(request, avaliacao_id, pagina):
 def portage_publico_view(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoPortage, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
 
     if pagina < 1 or pagina > TOTAL_PAGINAS:
         pagina = 1
@@ -341,12 +341,12 @@ def portage_publico_view(request, token, pagina):
                     notificar_terapeuta(avaliacao.paciente, "portage", request)
                 except Exception:
                     pass
-                return render(request, "questionario/concluido.html")
+                return render(request, "questionario/dashboard/concluido.html")
             return redirect("portage_publico", token=token, pagina=proxima)
 
     faixas_render = _get_perguntas_por_faixa(dom, respostas_para_render, faixas=faixas_dom)
 
-    return render(request, "questionario/portage_form.html", {
+    return render(request, "questionario/avaliacoes/portage_form.html", {
         "avaliacao": avaliacao,
         "dominio": dom,
         "faixas": faixas_render,

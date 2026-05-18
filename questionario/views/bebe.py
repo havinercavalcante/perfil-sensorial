@@ -94,7 +94,7 @@ def bebe_form(request, avaliacao_id, pagina):
         for item in itens
     ]
 
-    return render(request, "questionario/bebe_form.html", {
+    return render(request, "questionario/avaliacoes/bebe_form.html", {
         "avaliacao": avaliacao,
         "secao": secao_atual,
         "perguntas": perguntas,
@@ -166,7 +166,7 @@ def bebe_resultado(request, avaliacao_id):
             "classificacao": classificacao,
         })
 
-    return render(request, "questionario/bebe_resultado.html", {
+    return render(request, "questionario/avaliacoes/bebe_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "quadrantes": quadrantes,
@@ -192,7 +192,7 @@ def bebe_visualizar(request, avaliacao_id, pagina):
         {"numero": item, "texto": perguntas_data.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens
     ]
-    return render(request, "questionario/bebe_form.html", {
+    return render(request, "questionario/avaliacoes/bebe_form.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
         "opcoes": OPCOES_BEBE, "pagina": pagina, "total": total_paginas,
         "progresso": int((pagina - 1) / total_paginas * 100),
@@ -245,7 +245,7 @@ def enviar_email_bebe(request, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
     from django.template.loader import render_to_string
     link = request.build_absolute_uri(f"/bebe/publico/{avaliacao.token}/1/")
-    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
             subject="Perfil Sensorial Bebê — IntegraMente",
@@ -271,7 +271,7 @@ def enviar_email_bebe(request, avaliacao_id):
 def bebe_publico_view(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoBebe, token=token)
     if avaliacao.status == "concluida":
-        return render(request, "questionario/concluido.html")
+        return render(request, "questionario/dashboard/concluido.html")
     faixa = avaliacao.faixa
     secoes = SECOES_BEBE if faixa == "bebe" else SECOES_PEQUENA
     perguntas_dict = PERGUNTAS_BEBE if faixa == "bebe" else PERGUNTAS_PEQUENA
@@ -320,14 +320,14 @@ def bebe_publico_view(request, token, pagina):
                     notificar_terapeuta(avaliacao.paciente, "bebe", request)
                 except Exception:
                     pass
-                return render(request, "questionario/concluido.html")
+                return render(request, "questionario/dashboard/concluido.html")
         respostas_salvas.update(respostas_novas)
 
     perguntas = [
         {"numero": item, "texto": perguntas_dict.get(item, ""), "resposta_salva": respostas_salvas.get(item)}
         for item in itens_secao
     ]
-    return render(request, "questionario/bebe_form.html", {
+    return render(request, "questionario/avaliacoes/bebe_form.html", {
         "avaliacao": avaliacao, "secao": secao_atual, "perguntas": perguntas,
         "opcoes": OPCOES_BEBE, "pagina": pagina, "total": total,
         "progresso": int((pagina - 1) / total * 100),
