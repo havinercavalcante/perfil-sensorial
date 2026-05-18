@@ -1,7 +1,43 @@
 import uuid
+import re
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+
+
+def _parse_dispositivo(user_agent: str) -> str:
+    """Extrai sistema operacional e navegador do User-Agent."""
+    ua = user_agent or ""
+
+    if "iPhone" in ua:
+        os = "iPhone"
+    elif "iPad" in ua:
+        os = "iPad"
+    elif "Android" in ua:
+        os = "Android"
+    elif "Windows NT" in ua:
+        os = "Windows"
+    elif "Macintosh" in ua or "Mac OS X" in ua:
+        os = "Mac"
+    elif "Linux" in ua:
+        os = "Linux"
+    else:
+        os = "Desconhecido"
+
+    if "Edg/" in ua or "EdgA/" in ua:
+        browser = "Edge"
+    elif "OPR/" in ua or "Opera" in ua:
+        browser = "Opera"
+    elif "Chrome/" in ua:
+        browser = "Chrome"
+    elif "Firefox/" in ua:
+        browser = "Firefox"
+    elif "Safari/" in ua:
+        browser = "Safari"
+    else:
+        browser = "Outro"
+
+    return f"{browser} / {os}"
 
 
 class ModuloAvaliacao(models.Model):
@@ -123,6 +159,9 @@ class PerfilMedico(models.Model):
         blank=True,
         verbose_name="Módulos liberados",
         related_name="medicos",
+    )
+    session_key = models.CharField(
+        "Chave de sessão ativa", max_length=40, blank=True, default=""
     )
 
     class Meta:
@@ -1256,3 +1295,21 @@ class RespostaPsicopedagogica(models.Model):
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
         ordering = ["dominio", "numero_item"]
+
+
+class HistoricoLogin(models.Model):
+    user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name="historico_logins")
+    ip          = models.GenericIPAddressField("Endereço IP", null=True, blank=True)
+    dispositivo = models.CharField("Dispositivo", max_length=120, blank=True)
+    user_agent  = models.TextField("User-Agent completo", blank=True)
+    sucesso     = models.BooleanField("Login bem-sucedido", default=True)
+    data_hora   = models.DateTimeField("Data/hora", auto_now_add=True)
+
+    class Meta:
+        verbose_name        = "Histórico de Login"
+        verbose_name_plural = "Histórico de Logins"
+        ordering            = ["-data_hora"]
+
+    def __str__(self):
+        status = "✓" if self.sucesso else "✗"
+        return f"{status} {self.user.username} — {self.ip} — {self.data_hora:%d/%m/%Y %H:%M}"

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
-    Especialidade, MODULOS_POR_ESPECIALIDADE,
+    Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
 )
 
 
@@ -117,3 +117,24 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
                 except PerfilMedico.DoesNotExist:
                     pass
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+# ── Histórico de Logins ───────────────────────────────────────────────────────
+
+@admin.register(HistoricoLogin)
+class HistoricoLoginAdmin(admin.ModelAdmin):
+    list_display  = ["data_hora", "user", "ip", "dispositivo", "status_icon"]
+    list_filter   = ["sucesso", "user"]
+    search_fields = ["user__username", "user__first_name", "ip", "dispositivo"]
+    readonly_fields = ["user", "ip", "dispositivo", "user_agent", "sucesso", "data_hora"]
+    ordering      = ["-data_hora"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def status_icon(self, obj):
+        return "✓ Sucesso" if obj.sucesso else "✗ Falha"
+    status_icon.short_description = "Status"
