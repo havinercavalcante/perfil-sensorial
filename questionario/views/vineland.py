@@ -148,6 +148,8 @@ def vineland_resultado(request, avaliacao_id):
             hoje = tz.now().date()
             b = paciente.data_nascimento
             ic_meses = (hoje.year - b.year) * 12 + (hoje.month - b.month)
+            if hoje.day < b.day:
+                ic_meses -= 1
             if ic_meses > 0:
                 qs = round(is_meses / ic_meses * 100, 1)
             else:
@@ -162,6 +164,8 @@ def vineland_resultado(request, avaliacao_id):
     hoje = tz.now().date()
     b = paciente.data_nascimento
     ic_meses = (hoje.year - b.year) * 12 + (hoje.month - b.month)
+    if hoje.day < b.day:
+        ic_meses -= 1
 
     categorias = [
         {
