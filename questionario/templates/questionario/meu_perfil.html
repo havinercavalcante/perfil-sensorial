@@ -1,8 +1,23 @@
 {% extends "questionario/base.html" %}
 {% block title %}Meu Perfil{% endblock %}
 {% block back_button %}<a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Especialidades ── */
+  .esp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .8rem; }
+  @media(max-width:500px) { .esp-grid { grid-template-columns: 1fr; } }
+  .esp-item { display: flex; align-items: center; gap: .45rem; padding: .38rem .55rem; border-radius: 7px; border: 1.5px solid transparent; cursor: pointer; transition: background .15s, border-color .15s; }
+  .esp-item:hover { background: var(--bg); }
+  .esp-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+  .esp-item.checked { background: #e4f5fb; border-color: var(--primary); }
+  .esp-label { font-size: .87rem; color: var(--text); font-weight: 500; line-height: 1.3; }
+  .esp-hint { font-size: .8rem; color: var(--text-muted); font-style: italic; margin-bottom: .6rem; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:600px; margin:0 auto;">
+<div style="max-width:620px; margin:0 auto;">
   <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="settings" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Meu Perfil</h2>
 
   <div class="card" style="text-align:center; padding:2rem;">
@@ -11,13 +26,19 @@
     </div>
     <div style="font-size:1.2rem; font-weight:700; color:var(--primary-dark);">{{ user.get_full_name|default:user.username }}</div>
     <div style="color:var(--text-muted); font-size:.9rem;">
-      {% if perfil.especialidade %}{{ perfil.especialidade }}{% endif %}
-      {% if perfil.registro_profissional %} · {{ perfil.registro_profissional }}{% endif %}
+      {% with perfil.especialidades.all as esps %}
+        {% for e in esps %}{{ e.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        {% if perfil.registro_profissional %} · {{ perfil.registro_profissional }}{% endif %}
+      {% endwith %}
     </div>
     <div style="margin-top:1rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
       <div style="background:var(--bg); border-radius:8px; padding:.5rem 1.2rem; text-align:center;">
         <div style="font-size:1.4rem; font-weight:800; color:var(--primary);">{{ user.pacientes.count }}</div>
         <div style="font-size:.78rem; color:var(--text-muted);">Pacientes</div>
+      </div>
+      <div style="background:var(--bg); border-radius:8px; padding:.5rem 1.2rem; text-align:center;">
+        <div style="font-size:1.4rem; font-weight:800; color:var(--primary);">{{ perfil.modulos_liberados.count }}</div>
+        <div style="font-size:.78rem; color:var(--text-muted);">Avaliações ativas</div>
       </div>
     </div>
   </div>
@@ -33,21 +54,30 @@
       <div class="form-row">
         <div class="form-group">
           <label>Registro Profissional</label>
-          <input type="text" name="registro_profissional" value="{{ perfil.registro_profissional }}" placeholder="CRM, CRP, CREFITO... 00000/UF">
-        </div>
-        <div class="form-group">
-          <label>Especialidade</label>
-          <input type="text" name="especialidade" value="{{ perfil.especialidade }}">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>E-mail</label>
-          <input type="email" name="email" value="{{ user.email }}">
+          <input type="text" name="registro_profissional" value="{{ perfil.registro_profissional }}" placeholder="CREFITO, CRP, CRFa, CRM... 00000/UF">
         </div>
         <div class="form-group">
           <label>Telefone</label>
           <input type="tel" name="telefone" value="{{ perfil.telefone }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" name="email" value="{{ user.email }}">
+      </div>
+
+      <!-- ── Especialidades ──────────────────────────────────── -->
+      <div class="form-group">
+        <label><i data-lucide="stethoscope" style="width:13px;height:13px;vertical-align:middle;"></i> Especialidade(s)</label>
+        <p class="esp-hint">Selecione todas as áreas em que você atua. O administrador liberará os questionários correspondentes.</p>
+        <div class="esp-grid">
+          {% for esp in especialidades %}
+          <label class="esp-item {% if esp.id in especialidades_selecionadas %}checked{% endif %}">
+            <input type="checkbox" name="especialidades" value="{{ esp.id }}"
+                   {% if esp.id in especialidades_selecionadas %}checked{% endif %}>
+            <span class="esp-label">{{ esp.nome }}</span>
+          </label>
+          {% endfor %}
         </div>
       </div>
 
@@ -72,4 +102,12 @@
     </form>
   </div>
 </div>
+
+<script>
+  document.querySelectorAll('.esp-item input[type=checkbox]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      chk.closest('.esp-item').classList.toggle('checked', chk.checked);
+    });
+  });
+</script>
 {% endblock %}

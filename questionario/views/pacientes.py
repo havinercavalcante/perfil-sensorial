@@ -1,15 +1,22 @@
 import uuid
+import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
+logger = logging.getLogger("auditoria")
+
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe,
     AvaliacaoSPM, AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI,
     AvaliacaoVineland3, AvaliacaoPortage,
+    AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT, AvaliacaoCARS,
+    AvaliacaoLinguagem, AvaliacaoAlimentacao, AvaliacaoDesenvolvimento, AvaliacaoSono,
+    AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
+    AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
 )
-from ..services import build_lista_com_link
+from ..services import build_lista_com_link, build_lista_sem_pagina
 from django.urls import reverse
 
 
@@ -161,6 +168,7 @@ def novo_paciente(request):
             nome=nome, data_nascimento=data_nascimento,
             responsavel=responsavel, email_responsavel=email, telefone=telefone,
         )
+        logger.info("PACIENTE_CRIADO user=%s paciente_uuid=%s", request.user.username, paciente.uuid)
         messages.success(request, "Paciente cadastrado com sucesso.")
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
@@ -230,13 +238,83 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_pedi": _build_pedi_lista(paciente.avaliacoes_pedi.all(), request),
         "avaliacoes_vineland3": build_lista_com_link(paciente.avaliacoes_vineland3.all(), request, "vineland3_publico"),
         "avaliacoes_portage": build_lista_com_link(paciente.avaliacoes_portage.all(), request, "portage_publico"),
+        "avaliacoes_sdq": build_lista_sem_pagina(paciente.avaliacoes_sdq.all(), request, "sdq_publico"),
+        "avaliacoes_snap_iv": build_lista_sem_pagina(paciente.avaliacoes_snap_iv.all(), request, "snap_iv_publico"),
+        "avaliacoes_mchat": build_lista_sem_pagina(paciente.avaliacoes_mchat.all(), request, "mchat_publico"),
+        "avaliacoes_cars": build_lista_sem_pagina(paciente.avaliacoes_cars.all(), request, "cars_publico"),
+        "avaliacoes_linguagem": build_lista_sem_pagina(paciente.avaliacoes_linguagem.all(), request, "linguagem_publico"),
+        "avaliacoes_alimentacao": build_lista_sem_pagina(paciente.avaliacoes_alimentacao.all(), request, "alimentacao_publico"),
+        "avaliacoes_desenvolvimento": build_lista_sem_pagina(paciente.avaliacoes_desenvolvimento.all(), request, "desenvolvimento_publico"),
+        "avaliacoes_sono": build_lista_sem_pagina(paciente.avaliacoes_sono.all(), request, "sono_publico"),
+        "avaliacoes_habilidades": build_lista_sem_pagina(paciente.avaliacoes_habilidades_adaptativas.all(), request, "habilidades_publico"),
+        "avaliacoes_comportamento": build_lista_sem_pagina(paciente.avaliacoes_comportamento_funcional.all(), request, "comportamento_publico"),
+        "avaliacoes_cognitivo": build_lista_sem_pagina(paciente.avaliacoes_cognitivo.all(), request, "cognitivo_publico"),
+        "avaliacoes_psicopedagogica": build_lista_sem_pagina(paciente.avaliacoes_psicopedagogica.all(), request, "psicopedagogica_publico"),
     })
+
+
+@login_required
+def enviar_email_modulo(request, modulo, avaliacao_id):
+    from django.core.mail import send_mail
+    from django.http import JsonResponse
+    from django.utils import timezone as tz
+
+    MODULO_MAP = {
+        'linguagem':       (AvaliacaoLinguagem,              'linguagem_publico',       'Avaliação de Linguagem'),
+        'alimentacao':     (AvaliacaoAlimentacao,            'alimentacao_publico',     'Triagem de Alimentação Seletiva'),
+        'desenvolvimento': (AvaliacaoDesenvolvimento,        'desenvolvimento_publico', 'Marcos de Desenvolvimento'),
+        'sono':            (AvaliacaoSono,                   'sono_publico',            'Avaliação de Sono Infantil'),
+        'habilidades':     (AvaliacaoHabilidadesAdaptativas, 'habilidades_publico',     'Habilidades Adaptativas'),
+        'comportamento':   (AvaliacaoComportamentoFuncional, 'comportamento_publico',   'Comportamento Funcional'),
+        'cognitivo':       (AvaliacaoRastreioCognitivo,      'cognitivo_publico',       'Rastreio Cognitivo'),
+        'psicopedagogica': (AvaliacaoPsicopedagogica,        'psicopedagogica_publico', 'Avaliação Psicopedagógica'),
+        'portage':         (AvaliacaoPortage,                'portage_publico',         'Guia Portage'),
+    }
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if modulo not in MODULO_MAP:
+        return JsonResponse({"ok": False, "message": "Módulo inválido."}, status=400)
+
+    Model, url_name, label = MODULO_MAP[modulo]
+    avaliacao = get_object_or_404(Model, id=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    email_dest = paciente.email_responsavel
+
+    if not email_dest:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado para o responsável."})
+        messages.error(request, "Nenhum e-mail cadastrado para o responsável.")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+
+    from django.template.loader import render_to_string
+    link = request.build_absolute_uri(reverse(url_name, kwargs={"token": avaliacao.token}))
+    html = render_to_string("questionario/email_link_avaliacao.html", {"paciente": paciente, "link": link})
+    try:
+        send_mail(
+            subject=f"{label} — IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
+            from_email=None,
+            recipient_list=[email_dest],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha ao enviar e-mail: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    avaliacao.email_enviado_em = tz.now()
+    avaliacao.save(update_fields=["email_enviado_em"])
+    if is_ajax:
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
+    messages.success(request, f"E-mail enviado para {email_dest}.")
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
 
 @login_required
 def deletar_paciente(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
     if request.method == "POST":
+        logger.info("PACIENTE_EXCLUIDO user=%s paciente_uuid=%s", request.user.username, paciente_id)
         paciente.delete()
         messages.success(request, "Paciente excluído com sucesso.")
         return redirect("lista_pacientes")

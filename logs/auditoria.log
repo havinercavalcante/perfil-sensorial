@@ -1,0 +1,2 @@
+2026-05-16 20:46:55,701 INFO CONSENTIMENTO_OBTIDO paciente_uuid=efc00729-2ae2-435c-aba6-94e5aec3086e responsavel=sadfasdfasfd ip=127.0.0.1 tipo=sdq
+2026-05-16 20:48:00,684 INFO PACIENTE_EXCLUIDO user=dra.ana.lima paciente_uuid=efc00729-2ae2-435c-aba6-94e5aec3086e

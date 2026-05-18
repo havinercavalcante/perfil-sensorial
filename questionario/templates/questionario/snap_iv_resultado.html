@@ -1,0 +1,107 @@
+{% extends "questionario/base.html" %}
+{% block title %}SNAP-IV — Resultado — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --snap: #2980B9; }
+  .resultado-header {
+    background: linear-gradient(135deg, #1A4F7A, #2980B9);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .media-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .media-card { border-radius: 12px; padding: 1.1rem 1.2rem; border: 1.5px solid var(--border); background: #fff; text-align: center; }
+  .media-card .label { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: .4rem; }
+  .media-card .valor { font-size: 2rem; font-weight: 800; }
+  .media-card .max { font-size: .9rem; font-weight: 400; color: var(--text-muted); }
+  .media-card.sig { border-color: #F59E0B; background: #FFFBEB; }
+  .sig-badge { display: inline-block; padding: .2rem .65rem; border-radius: 6px; font-size: .72rem; font-weight: 700; background: #FEF3C7; color: #92400E; margin-top: .4rem; }
+  .ok-badge { display: inline-block; padding: .2rem .65rem; border-radius: 6px; font-size: .72rem; font-weight: 700; background: #D1FAE5; color: #065F46; margin-top: .4rem; }
+  .sub-row { display:flex; align-items:center; gap:.75rem; padding:.7rem 0; border-bottom:1px solid var(--border); }
+  .sub-row:last-child { border-bottom:none; }
+  .sub-nome { flex:0 0 200px; font-size:.88rem; font-weight:600; }
+  .bar-wrap { flex:1; background:#F3F4F6; border-radius:6px; height:16px; overflow:hidden; }
+  .bar-fill { height:16px; border-radius:6px; transition:width .5s; }
+  .score-num { min-width:50px; text-align:right; font-size:.88rem; font-weight:700; }
+  .obs-form textarea { width:100%; min-height:100px; border:1.5px solid var(--border); border-radius:8px; padding:.6rem; font-size:.88rem; resize:vertical; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+    .resultado-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="bar-chart-2" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>SNAP-IV — Resultado</h1>
+      <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Respondente: {{ avaliacao.get_respondente_display }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">← Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Médias por subescala -->
+<div class="media-cards">
+  {% for sub in resultado %}
+  <div class="media-card{% if sub.significativo %} sig{% endif %}">
+    <div class="label" style="color:{{ sub.cor }};">{{ sub.nome }}</div>
+    <div class="valor" style="color:{{ sub.cor }};">{{ sub.media|floatformat:2 }}</div>
+    <div class="max">/ 3.00</div>
+    {% if sub.significativo %}
+    <span class="sig-badge">⚠ Significativo</span>
+    {% else %}
+    <span class="ok-badge">Normal</span>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Barras -->
+<div class="card">
+  <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Comparativo por Subescala</div>
+  {% for sub in resultado %}
+  <div class="sub-row">
+    <span class="sub-nome" style="color:{{ sub.cor }};">{{ sub.nome }}</span>
+    <div class="bar-wrap">
+      {% widthratio sub.media 3 100 as pct %}
+      <div class="bar-fill" style="width:{{ pct }}%; background:{{ sub.cor }};"></div>
+    </div>
+    <span class="score-num">{{ sub.media|floatformat:2 }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Legenda -->
+<div class="card" style="font-size:.82rem;">
+  <div class="card-title"><i data-lucide="info" style="width:16px;height:16px;"></i> Interpretação</div>
+  <p style="color:var(--text-muted);">Média ≥ 1,5 em qualquer subescala é considerada <strong>clinicamente significativa</strong> e indica necessidade de avaliação aprofundada. Pontuação de 0 a 3 por item.</p>
+</div>
+
+<!-- Observações -->
+<div class="card obs-form">
+  <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form method="post" action="{% url 'salvar_observacoes_snap_iv' avaliacao.id %}">
+    {% csrf_token %}
+    <textarea name="observacoes" placeholder="Adicione suas observações clínicas aqui...">{{ avaliacao.observacoes }}</textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:.6rem; background:var(--snap); border-color:var(--snap);">
+      <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar Observações
+    </button>
+  </form>
+</div>
+
+{% endblock %}

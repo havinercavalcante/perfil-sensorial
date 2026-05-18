@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -8,9 +9,15 @@ from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
+logger = logging.getLogger("auditoria")
+
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
     AvaliacaoBebe, AvaliacaoSPM, AvaliacaoVineland3, AvaliacaoPEDI, AvaliacaoPortage, LinkConvite,
+    AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT,
+    AvaliacaoLinguagem, AvaliacaoAlimentacao, AvaliacaoDesenvolvimento, AvaliacaoSono,
+    AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
+    AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
 )
 from ..services import TIPO_INFO
 
@@ -34,6 +41,18 @@ def gerar_link(request):
         "beery": "beery",
         "pedi": "pedi",
         "portage": "portage",
+        "sdq": "sdq",
+        "snap_iv": "snap_iv",
+        "mchat": "mchat",
+        "cars": "cars",
+        "linguagem": "linguagem",
+        "alimentacao_seletiva": "alimentacao_seletiva",
+        "desenvolvimento": "desenvolvimento",
+        "sono_infantil": "sono_infantil",
+        "habilidades_adaptativas": "habilidades_adaptativas",
+        "comportamento_funcional": "comportamento_funcional",
+        "rastreio_cognitivo": "rastreio_cognitivo",
+        "psicopedagogica": "psicopedagogica",
     }
 
     modulos_liberados = set()
@@ -115,12 +134,20 @@ def iniciar_avaliacao(request, token):
         responsavel = request.POST.get("responsavel", "").strip()
         email = request.POST.get("email_responsavel", "").strip()
         telefone = request.POST.get("telefone", "").strip()
+        consentimento = request.POST.get("consentimento", "")
 
         if not nome or not data_nascimento or not responsavel:
             return render(request, "questionario/iniciar_avaliacao.html", {
                 "convite": convite,
                 "post": request.POST,
                 "erro": "Preencha os campos obrigatórios (nome, data de nascimento e responsável).",
+            })
+
+        if not consentimento:
+            return render(request, "questionario/iniciar_avaliacao.html", {
+                "convite": convite,
+                "post": request.POST,
+                "erro": "Você deve aceitar a Política de Privacidade para continuar.",
             })
 
         paciente = Paciente.objects.create(
@@ -130,6 +157,12 @@ def iniciar_avaliacao(request, token):
             responsavel=responsavel,
             email_responsavel=email,
             telefone=telefone,
+        )
+        logger.info(
+            "CONSENTIMENTO_OBTIDO paciente_uuid=%s responsavel=%s ip=%s tipo=%s",
+            paciente.uuid, responsavel,
+            request.META.get("REMOTE_ADDR", "desconhecido"),
+            convite.tipo,
         )
         convite.usado_em = tz.now()
         convite.save()
@@ -162,11 +195,43 @@ def iniciar_avaliacao(request, token):
             AvaliacaoPEDI.objects.create(paciente=paciente, token=t)
             return redirect("pedi_publico", token=t, pagina=1)
         elif tipo == "portage":
-            from ..models import AvaliacaoPortage
             AvaliacaoPortage.objects.create(paciente=paciente, token=t)
             return redirect("portage_publico", token=t, pagina=1)
+        elif tipo == "sdq":
+            AvaliacaoSDQ.objects.create(paciente=paciente, token=t, respondente="pais")
+            return redirect("sdq_publico", token=t)
+        elif tipo == "snap_iv":
+            AvaliacaoSNAPIV.objects.create(paciente=paciente, token=t, respondente="pais")
+            return redirect("snap_iv_publico", token=t)
+        elif tipo == "mchat":
+            AvaliacaoMCHAT.objects.create(paciente=paciente, token=t)
+            return redirect("mchat_publico", token=t)
+        elif tipo == "linguagem":
+            AvaliacaoLinguagem.objects.create(paciente=paciente, token=t)
+            return redirect("linguagem_publico", token=t)
+        elif tipo == "alimentacao_seletiva":
+            AvaliacaoAlimentacao.objects.create(paciente=paciente, token=t)
+            return redirect("alimentacao_publico", token=t)
+        elif tipo == "desenvolvimento":
+            AvaliacaoDesenvolvimento.objects.create(paciente=paciente, token=t)
+            return redirect("desenvolvimento_publico", token=t)
+        elif tipo == "sono_infantil":
+            AvaliacaoSono.objects.create(paciente=paciente, token=t)
+            return redirect("sono_publico", token=t)
+        elif tipo == "habilidades_adaptativas":
+            AvaliacaoHabilidadesAdaptativas.objects.create(paciente=paciente, token=t)
+            return redirect("habilidades_publico", token=t)
+        elif tipo == "comportamento_funcional":
+            AvaliacaoComportamentoFuncional.objects.create(paciente=paciente, token=t)
+            return redirect("comportamento_publico", token=t)
+        elif tipo == "rastreio_cognitivo":
+            AvaliacaoRastreioCognitivo.objects.create(paciente=paciente, token=t)
+            return redirect("cognitivo_publico", token=t)
+        elif tipo == "psicopedagogica":
+            AvaliacaoPsicopedagogica.objects.create(paciente=paciente, token=t)
+            return redirect("psicopedagogica_publico", token=t)
         else:
-            # EDM, MABC-2, Beery — avaliação presencial, só cadastra o paciente
+            # CARS-2, EDM, MABC-2, Beery — presencial, só cadastra o paciente
             return render(request, "questionario/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,
