@@ -9,8 +9,9 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
+from django.utils import timezone
 
-from ..models import PerfilMedico, Especialidade, HistoricoLogin, _parse_dispositivo
+from ..models import PerfilMedico, Especialidade, HistoricoLogin, ModuloAvaliacao, _parse_dispositivo
 
 
 def _get_ip(request):
@@ -90,6 +91,9 @@ def registrar_view(request):
         password2 = request.POST.get("password2", "")
         registro_profissional = request.POST.get("registro_profissional", "").strip()
         telefone = request.POST.get("telefone", "").strip()
+        plano = request.POST.get("plano", "trial").strip()
+        if plano not in ("trial", "start", "plus", "elite"):
+            plano = "trial"
         especialidades_ids = request.POST.getlist("especialidades")
 
         consentimento = request.POST.get("consentimento", "")
@@ -115,6 +119,7 @@ def registrar_view(request):
                 "post": request.POST,
                 "especialidades": especialidades,
                 "especialidades_selecionadas": especialidades_ids,
+                "plano_selecionado": plano,
             })
 
         partes = nome.strip().split(" ", 1)
@@ -127,9 +132,14 @@ def registrar_view(request):
             user=user,
             registro_profissional=registro_profissional,
             telefone=telefone,
+            plano=plano,
+            trial_inicio=timezone.now() if plano == "trial" else None,
         )
         if especialidades_ids:
             perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
+        if plano == "trial":
+            modulos_trial = ModuloAvaliacao.objects.filter(codigo__in=PerfilMedico.MODULOS_TRIAL)
+            perfil.modulos_liberados.set(modulos_trial)
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
@@ -153,9 +163,13 @@ def registrar_view(request):
             "email_destino": email,
         })
 
+    plano_inicial = request.GET.get("plano", "")
+    if plano_inicial not in ("trial", "start", "plus", "elite"):
+        plano_inicial = ""
     return render(request, "questionario/auth/registrar.html", {
         "especialidades": especialidades,
         "especialidades_selecionadas": [],
+        "plano_selecionado": plano_inicial,
     })
 
 
@@ -232,3 +246,8 @@ def meu_perfil(request):
 
 def politica_privacidade(request):
     return render(request, "questionario/auth/politica_privacidade.html")
+
+
+@login_required
+def trial_expirado(request):
+    return render(request, "questionario/auth/trial_expirado.html")

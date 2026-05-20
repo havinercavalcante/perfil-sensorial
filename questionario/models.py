@@ -149,6 +149,16 @@ class Especialidade(models.Model):
 
 
 class PerfilMedico(models.Model):
+    PLANO_CHOICES = [
+        ("trial", "Grátis 7 dias"),
+        ("start", "START"),
+        ("plus", "PLUS"),
+        ("elite", "ELITE"),
+    ]
+
+    # Módulos incluídos automaticamente no trial (mesmos do START)
+    MODULOS_TRIAL = ["sensorial", "bebe", "escolar", "spm"]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")
     registro_profissional = models.CharField("Registro Profissional", max_length=30, blank=True)
     especialidades = models.ManyToManyField(
@@ -158,6 +168,10 @@ class PerfilMedico(models.Model):
         related_name="profissionais",
     )
     telefone = models.CharField("Telefone", max_length=20, blank=True)
+    plano = models.CharField(
+        "Plano", max_length=10, choices=PLANO_CHOICES, default="trial"
+    )
+    trial_inicio = models.DateTimeField("Início do trial", null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     modulos_liberados = models.ManyToManyField(
         ModuloAvaliacao,
@@ -176,7 +190,22 @@ class PerfilMedico(models.Model):
     def __str__(self):
         return f"Dr(a). {self.user.get_full_name() or self.user.username}"
 
+    @property
+    def trial_ativo(self):
+        if self.plano != "trial" or self.trial_inicio is None:
+            return False
+        return (timezone.now() - self.trial_inicio).days < 7
+
+    @property
+    def trial_dias_restantes(self):
+        if self.plano != "trial" or self.trial_inicio is None:
+            return 0
+        restantes = 7 - (timezone.now() - self.trial_inicio).days
+        return max(restantes, 0)
+
     def tem_acesso(self, codigo_modulo):
+        if self.plano == "trial" and not self.trial_ativo:
+            return False
         return self.modulos_liberados.filter(codigo=codigo_modulo).exists()
 
 

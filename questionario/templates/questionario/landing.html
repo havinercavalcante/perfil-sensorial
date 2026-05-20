@@ -1,0 +1,1364 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegraMente — Avaliações Clínicas Infantis</title>
+  <meta name="description" content="Plataforma completa para avaliações clínicas multidisciplinares de crianças." />
+  <link rel="icon" type="image/png" href="{% static 'logotop.png' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:       #39abcb;
+      --primary-light: #6accdc;
+      --primary-dark:  #0c3c7b;
+      --bg:            #d5eef5;
+      --border:        #85cde2;
+      --white:         #ffffff;
+      --text:          #0c3c7b;
+      --text-muted:    #39abcb;
+      --grad: linear-gradient(135deg, #0c3c7b 0%, #39abcb 65%, #6accdc 100%);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--white);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 6vw;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(133,205,226,0.4);
+      box-shadow: 0 2px 16px rgba(12,60,123,0.07);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+    }
+
+    .nav-logo img { height: 30px; width: auto; border-radius: 10px; padding: 2px; }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--primary-dark);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+
+    .nav-cta { display: flex; gap: 0.65rem; align-items: center; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 1.3rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-outline {
+      color: var(--primary-dark);
+      border: 1.5px solid var(--border);
+      background: transparent;
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: rgba(57,171,203,0.06); }
+
+    .btn-primary {
+      background: var(--grad);
+      color: var(--white);
+      box-shadow: 0 4px 16px rgba(57,171,203,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(57,171,203,0.45); }
+
+    .btn-lg { padding: 0.85rem 2rem; font-size: 1rem; border-radius: 10px; }
+    .btn-xl { padding: 1rem 2.2rem; font-size: 1.05rem; border-radius: 12px; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 6vw 5rem;
+      position: relative;
+      overflow: hidden;
+      background: var(--grad);
+    }
+
+    .hero-noise {
+      position: absolute; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    .hero-circles {
+      position: absolute; inset: 0; z-index: 0; overflow: hidden;
+    }
+    .hero-circles span {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .hero-circles span:nth-child(1) { width: 500px; height: 500px; top: -150px; right: -100px; }
+    .hero-circles span:nth-child(2) { width: 300px; height: 300px; bottom: -80px; left: -60px; }
+    .hero-circles span:nth-child(3) { width: 180px; height: 180px; bottom: 120px; right: 15%; }
+
+    .hero-content { position: relative; z-index: 1; max-width: 780px; }
+
+    .hero-logo {
+      margin: 0 auto 2rem;
+      display: block;
+      height: 110px;
+      width: auto;
+      filter: drop-shadow(0 8px 32px rgba(0,0,0,0.2));
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 100px;
+      padding: 0.38rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.5); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--white);
+      margin-bottom: 1.2rem;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 560px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.75;
+      font-weight: 400;
+    }
+
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    .btn-hero-primary {
+      background: var(--primary-dark);
+      color: var(--white);
+      font-weight: 700;
+      box-shadow: 0 6px 24px rgba(12,60,123,0.35);
+    }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(12,60,123,0.5); }
+
+    .btn-hero-outline {
+      background: rgba(255,255,255,0.12);
+      color: var(--white);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      backdrop-filter: blur(8px);
+    }
+    .btn-hero-outline:hover { background: rgba(255,255,255,0.22); }
+
+    .hero-stats {
+      display: flex;
+      gap: 0;
+      justify-content: center;
+      margin-top: 4rem;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow: hidden;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-value { font-size: 1.7rem; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 1px 8px rgba(0,0,0,0.25); }
+    .stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.07em; }
+
+    /* ── WAVE DIVIDER ── */
+    .wave {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      line-height: 0;
+      background: var(--white);
+    }
+    .wave svg { display: block; }
+
+    /* ── SECTIONS ── */
+    section { padding: 5.5rem 6vw; }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--primary-dark);
+      margin-bottom: 0.85rem;
+    }
+
+    .section-sub {
+      font-size: 1rem;
+      color: #4a7a9b;
+      max-width: 500px;
+      line-height: 1.7;
+    }
+
+    .section-header { margin-bottom: 3rem; }
+
+    /* ── DISCIPLINES ── */
+    .disciplines { background: var(--white); }
+
+    .disciplines-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1.1rem;
+    }
+
+    .disc-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.6rem;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .disc-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--grad);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .disc-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(12,60,123,0.1);
+      border-color: var(--primary);
+    }
+    .disc-card:hover::after { opacity: 1; }
+
+    .disc-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+
+    .disc-card h3 { font-size: 0.97rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.5rem; }
+    .disc-card p { font-size: 0.85rem; color: #4a7a9b; line-height: 1.6; margin-bottom: 0.9rem; }
+
+    .disc-tools { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 5px;
+      background: rgba(57,171,203,0.12);
+      color: var(--primary-dark);
+      border: 1px solid rgba(57,171,203,0.25);
+    }
+
+    /* ── FEATURES ── */
+    .features { background: var(--bg); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      transition: all 0.25s;
+    }
+    .feat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(12,60,123,0.09); border-color: var(--primary); }
+
+    .feat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .feat-card h3 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.45rem; }
+    .feat-card p { font-size: 0.875rem; color: #4a7a9b; line-height: 1.65; }
+
+    /* ── HOW IT WORKS ── */
+    .how { background: var(--white); }
+
+    .how-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 1.75rem; }
+
+    .step { display: flex; gap: 1.1rem; align-items: flex-start; }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(57,171,203,0.35);
+    }
+
+    .step-content h4 { font-size: 0.97rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.25rem; }
+    .step-content p { font-size: 0.855rem; color: #4a7a9b; line-height: 1.65; }
+
+    /* mockup */
+    .mockup-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 24px 60px rgba(12,60,123,0.12);
+    }
+
+    .mockup-bar { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem; }
+    .mockup-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+    .mockup-chart { display: flex; gap: 0.5rem; align-items: flex-end; height: 110px; margin-bottom: 1.25rem; }
+    .bar-item { flex: 1; border-radius: 5px 5px 0 0; }
+
+    .mockup-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; font-size: 0.76rem; color: #4a7a9b; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── PRICING ── */
+    .pricing { background: var(--bg); }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem 1.75rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(12,60,123,0.13); }
+
+    .pricing-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--grad);
+    }
+
+    .pricing-card.popular {
+      border-color: var(--primary);
+      box-shadow: 0 16px 48px rgba(57,171,203,0.2);
+    }
+
+    .pricing-card.elite {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    .pricing-card.elite::before { background: linear-gradient(90deg, #39abcb, #6accdc); }
+
+    .popular-badge {
+      position: absolute;
+      top: -1px; left: 50%; transform: translateX(-50%);
+      background: var(--grad);
+      color: var(--white);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 1.1rem;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .plan-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; margin-top: 0.5rem; }
+
+    .plan-icon {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 2px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+      color: var(--primary);
+    }
+    .pricing-card.elite .plan-icon { border-color: var(--primary-light); color: var(--primary-light); }
+
+    .plan-name { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.01em; color: var(--primary-dark); }
+    .pricing-card.elite .plan-name { color: var(--white); }
+
+    .plan-price {
+      display: flex; align-items: baseline; gap: 0.15rem;
+      margin: 0.6rem 0 0.25rem;
+    }
+    .plan-currency { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .plan-amount { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em; color: var(--primary-dark); }
+    .plan-cents { font-size: 1rem; font-weight: 700; color: var(--primary-dark); align-self: flex-start; margin-top: 0.5rem; }
+    .plan-period { font-size: 0.8rem; color: var(--text-muted); }
+
+    .pricing-card.elite .plan-currency,
+    .pricing-card.elite .plan-amount,
+    .pricing-card.elite .plan-cents { color: var(--white); }
+    .pricing-card.elite .plan-period { color: rgba(255,255,255,0.55); }
+
+    .plan-desc { font-size: 0.82rem; color: #4a7a9b; line-height: 1.5; margin-bottom: 1.25rem; min-height: 2.5rem; }
+    .pricing-card.elite .plan-desc { color: rgba(255,255,255,0.65); }
+
+    .plan-divider { height: 1px; background: var(--border); margin: 1rem 0; }
+    .pricing-card.elite .plan-divider { background: rgba(255,255,255,0.12); }
+
+    .plan-section-title {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.75rem; font-weight: 700;
+      color: var(--primary-dark);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 0.6rem;
+    }
+    .pricing-card.elite .plan-section-title { color: rgba(255,255,255,0.7); }
+
+    .plan-modules {
+      list-style: none; margin-bottom: 1rem;
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .plan-modules li {
+      font-size: 0.82rem; color: #4a7a9b;
+      padding-left: 0.8rem; position: relative;
+    }
+    .plan-modules li::before { content: '•'; position: absolute; left: 0; color: var(--primary); font-weight: 700; }
+    .pricing-card.elite .plan-modules li { color: rgba(255,255,255,0.7); }
+    .pricing-card.elite .plan-modules li::before { color: var(--primary-light); }
+
+    .plan-features {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .plan-features li {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      font-size: 0.85rem; color: #4a7a9b; line-height: 1.4;
+    }
+    .plan-features li .check {
+      flex-shrink: 0; margin-top: 0.1rem;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: rgba(57,171,203,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; color: var(--primary); font-weight: 700;
+    }
+    .pricing-card.elite .plan-features li { color: rgba(255,255,255,0.75); }
+    .pricing-card.elite .plan-features li .check { background: rgba(106,204,220,0.2); color: var(--primary-light); }
+
+    .plan-highlights {
+      display: flex; flex-direction: column; gap: 0.35rem;
+      margin-bottom: 1.25rem;
+    }
+    .plan-highlight {
+      font-size: 0.82rem; font-weight: 700; color: var(--primary-dark);
+      background: rgba(57,171,203,0.1);
+      border-radius: 7px; padding: 0.4rem 0.7rem;
+      border-left: 3px solid var(--primary);
+    }
+    .pricing-card.elite .plan-highlight { background: rgba(255,255,255,0.08); border-color: var(--primary-light); color: var(--white); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: var(--grad);
+      text-align: center;
+      padding: 7rem 6vw;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");
+    }
+
+    .cta-logo { height: 80px; width: auto; display: block; margin: 0 auto 1.5rem; filter: brightness(0) invert(1) opacity(0.9); position: relative; z-index: 1; }
+
+    .cta-section h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; letter-spacing: -0.02em; color: var(--white); margin-bottom: 0.9rem; position: relative; z-index: 1; }
+    .cta-section p { font-size: 1rem; color: rgba(255,255,255,0.82); margin-bottom: 2.25rem; position: relative; z-index: 1; }
+    .cta-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #fff;
+      border-top: 1px solid #e8f4f9;
+      padding: 2.5rem 6vw;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+    }
+    .footer-logo { display: flex; align-items: center; text-decoration: none; }
+    .footer-logo img { height: 64px; width: auto; }
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      list-style: none;
+    }
+    .footer-links li { display: flex; align-items: center; }
+    .footer-links li + li::before {
+      content: "|";
+      color: #c5dde8;
+      margin: 0 0.75rem;
+      font-size: 0.75rem;
+    }
+    .footer-links a {
+      color: var(--primary);
+      font-size: 0.83rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--primary-dark); }
+    .footer-copy { font-size: 0.76rem; color: #aac4d2; }
+
+    /* ── SECTION NAV ── */
+    #sectionNav {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 900;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(57,171,203,0.45);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #sectionNav.visible { opacity: 1; pointer-events: auto; }
+    #sectionNav:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(12,60,123,0.4); }
+
+    /* ── TABLET ── */
+    @media (max-width: 900px) {
+      .how-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+      .mockup-card { max-width: 480px; margin: 0 auto; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+    }
+
+    /* ── MOBILE ── */
+    /* ── TRUST BADGES ── */
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.8rem;
+      color: #4a7a9b;
+      font-weight: 600;
+      background: transparent;
+    }
+
+    .trust-sep {
+      width: 1px;
+      height: 1.1rem;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── HAMBURGER ── */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem;
+      color: var(--primary-dark);
+      flex-direction: column;
+      gap: 5px;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px; height: 2px;
+      background: var(--primary-dark);
+      border-radius: 2px;
+      transition: all 0.25s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 58px; left: 0; right: 0;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 5vw 1.25rem;
+      z-index: 99;
+      box-shadow: 0 8px 24px rgba(12,60,123,0.1);
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      display: block;
+      padding: 0.7rem 0.5rem;
+      color: var(--primary-dark);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: background 0.2s;
+      border-bottom: 1px solid rgba(133,205,226,0.25);
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu a:hover { background: var(--bg); }
+
+    @media (max-width: 768px) {
+      nav { padding: 0.75rem 5vw; }
+      .nav-links { display: none; }
+      .nav-cta { gap: 0.5rem; }
+      .hamburger { display: flex; }
+
+      .hero { padding: 6.5rem 5vw 3.5rem; min-height: auto; }
+      .hero h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+      .hero p { font-size: 0.97rem; }
+      .hero-actions { flex-direction: column; align-items: center; gap: 0.75rem; }
+      .hero-actions .btn-xl { width: 100%; max-width: 320px; justify-content: center; }
+
+      .hero-stats {
+        margin-top: 2.5rem;
+        max-width: 100%;
+        flex-wrap: wrap;
+        border-radius: 12px;
+      }
+      .stat { flex: 1 1 50%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.15); padding: 1rem 0.75rem; }
+      .stat:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.15); }
+      .stat:nth-child(3), .stat:nth-child(4) { border-bottom: none; }
+      .stat-value { font-size: 1.4rem; }
+
+      section { padding: 3.5rem 5vw; }
+      .section-header { margin-bottom: 2rem; }
+
+      .disciplines-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+
+      .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+      .pricing-card { padding: 1.75rem 1.5rem; }
+
+      .cta-section { padding: 4.5rem 5vw; }
+      .cta-section h2 { font-size: clamp(1.5rem, 7vw, 2rem); }
+      .cta-actions { flex-direction: column; align-items: center; gap: 0.75rem; }
+      .cta-actions .btn-xl { width: 100%; max-width: 320px; justify-content: center; }
+      .cta-logo { height: 60px; }
+
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+
+      .trust-sep { display: none; }
+      .trust-badge { padding: 0.5rem 1rem; font-size: 0.74rem; }
+    }
+
+    /* ── SMALL MOBILE ── */
+    @media (max-width: 420px) {
+      .btn-outline.nav-entrar { display: none; }
+      .hero { padding: 6rem 4vw 3rem; }
+      .hero h1 { font-size: 1.75rem; }
+      .hero-badge { font-size: 0.68rem; padding: 0.3rem 0.75rem; }
+      .disc-card, .feat-card { padding: 1.25rem; }
+      .mockup-legend { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img src="{% static 'logonav.png' %}" alt="IntegraMente" />
+  </a>
+  <ul class="nav-links">
+    <li><a href="#disciplinas">Especialidades</a></li>
+    <li><a href="#funcionalidades">Funcionalidades</a></li>
+    <li><a href="#como-funciona">Como funciona</a></li>
+    <li><a href="#preco">Planos</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="{% url 'login' %}" class="btn btn-outline nav-entrar">Entrar</a>
+    <a href="{% url 'registrar' %}" class="btn btn-primary">Criar conta</a>
+    <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#disciplinas" onclick="closeMenu()">Especialidades</a>
+  <a href="#funcionalidades" onclick="closeMenu()">Funcionalidades</a>
+  <a href="#como-funciona" onclick="closeMenu()">Como funciona</a>
+  <a href="#preco" onclick="closeMenu()">Planos</a>
+  <a href="{% url 'login' %}" style="margin-top:0.5rem;background:var(--grad);color:var(--white);font-weight:700;border-radius:8px;text-align:center;">Entrar na plataforma</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-noise"></div>
+  <div class="hero-circles">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Plataforma Multidisciplinar Infantil
+    </div>
+    <h1>
+      Avaliações clínicas<br />
+      <em>precisas e organizadas</em><br />
+      em um só lugar
+    </h1>
+    <p>
+      O IntegraMente reúne os principais instrumentos de avaliação infantil —
+      da Terapia Ocupacional à Fonoaudiologia — com relatórios automáticos
+      e histórico completo por paciente.
+    </p>
+    <div class="hero-actions">
+      <a href="{% url 'registrar' %}" class="btn btn-xl btn-hero-primary">
+        Começar agora <i data-lucide="arrow-right" style="width:18px;height:18px;"></i>
+      </a>
+      <a href="#como-funciona" class="btn btn-xl btn-hero-outline">
+        Ver como funciona
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-value">27+</div>
+        <div class="stat-label">Instrumentos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Especialidades</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Automatizado</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">99%</div>
+        <div class="stat-label">Economia de tempo</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAVE -->
+<div class="wave">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 70" preserveAspectRatio="none" style="height:70px;width:100%;">
+    <path fill="#ffffff" d="M0,40 C360,80 1080,0 1440,40 L1440,70 L0,70 Z"/>
+    <path fill="#ffffff" opacity="0.5" d="M0,55 C480,20 960,70 1440,35 L1440,70 L0,70 Z"/>
+  </svg>
+</div>
+
+<!-- DISCIPLINAS -->
+<section class="disciplines" id="disciplinas">
+  <div class="section-header">
+    <div class="section-label">— Especialidades</div>
+    <h2 class="section-title">Feito para toda a equipe</h2>
+    <p class="section-sub">Instrumentos validados e amplamente utilizados, organizados por área clínica.</p>
+  </div>
+  <div class="disciplines-grid">
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="activity" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>Terapia Ocupacional</h3>
+      <p>Avaliações sensoriais, motoras e funcionais para identificar perfis de processamento e necessidades de integração sensorial.</p>
+      <div class="disc-tools">
+        <span class="tag">Perfil Sensorial</span>
+        <span class="tag">SPM</span>
+        <span class="tag">MABC-2</span>
+        <span class="tag">Beery VMI</span>
+        <span class="tag">PEDI</span>
+        <span class="tag">Vineland-3</span>
+        <span class="tag">Portage</span>
+        <span class="tag">EDM</span>
+      </div>
+    </div>
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="brain" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>Psicologia</h3>
+      <p>Rastreios de TDAH, autismo e dificuldades socioemocionais com pontuação automática e interpretação por faixa etária.</p>
+      <div class="disc-tools">
+        <span class="tag">SNAP-IV (TDAH)</span>
+        <span class="tag">M-CHAT-R</span>
+        <span class="tag">CARS-2</span>
+        <span class="tag">SDQ</span>
+      </div>
+    </div>
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="mic" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>Fonoaudiologia</h3>
+      <p>Triagens de linguagem, voz, alimentação e processamento auditivo em protocolos padronizados e digitais.</p>
+      <div class="disc-tools">
+        <span class="tag">Linguagem</span>
+        <span class="tag">pVHI</span>
+        <span class="tag">IDV-10</span>
+        <span class="tag">Hábitos Orais</span>
+        <span class="tag">Proc. Auditivo</span>
+        <span class="tag">Alimentação</span>
+      </div>
+    </div>
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="heart-pulse" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>Pediatria &amp; Neuro</h3>
+      <p>Acompanhamento de marcos de desenvolvimento e avaliação do sono para suporte à neuropediatria e pediatria geral.</p>
+      <div class="disc-tools">
+        <span class="tag">Marcos de Desenvolvimento</span>
+        <span class="tag">Sono Infantil</span>
+      </div>
+    </div>
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="bar-chart-2" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>ABA &amp; Neuropsicologia</h3>
+      <p>Ferramentas para análise do comportamento e rastreio cognitivo integradas ao histórico do paciente.</p>
+      <div class="disc-tools">
+        <span class="tag">Habilidades Adaptativas</span>
+        <span class="tag">Comportamento Funcional</span>
+        <span class="tag">Rastreio Cognitivo</span>
+      </div>
+    </div>
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="book-open" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>Psicopedagogia</h3>
+      <p>Avaliação psicopedagógica estruturada para identificar dificuldades de aprendizagem e traçar planos de intervenção.</p>
+      <div class="disc-tools">
+        <span class="tag">Avaliação Psicopedagógica</span>
+        <span class="tag">Histórico Escolar</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FUNCIONALIDADES -->
+<section class="features" id="funcionalidades">
+  <div class="section-header">
+    <div class="section-label">— Funcionalidades</div>
+    <h2 class="section-title">Tudo que você precisa,<br/>já integrado</h2>
+    <p class="section-sub">Do cadastro à interpretação clínica, sem planilhas ou papéis.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon"><i data-lucide="users" style="width:24px;height:24px;color:white;"></i></div>
+      <h3>Cadastro de Pacientes</h3>
+      <p>Dados completos do paciente, responsável e terapeuta. Histórico de atendimento centralizado e seguro.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i data-lucide="zap" style="width:24px;height:24px;color:white;"></i></div>
+      <h3>Pontuação Automática</h3>
+      <p>Correção instantânea de todos os questionários. Sem cálculos manuais, sem risco de erro humano.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i data-lucide="trending-up" style="width:24px;height:24px;color:white;"></i></div>
+      <h3>Dashboard Visual</h3>
+      <p>Gráficos radar, barras comparativas e classificações por faixa gerados automaticamente ao finalizar.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i data-lucide="clock" style="width:24px;height:24px;color:white;"></i></div>
+      <h3>Histórico de Avaliações</h3>
+      <p>Acompanhe a evolução do paciente ao longo do tempo com múltiplas avaliações registradas.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i data-lucide="shield-check" style="width:24px;height:24px;color:white;"></i></div>
+      <h3>Dados Seguros</h3>
+      <p>Acesso controlado por terapeuta. Cada profissional visualiza apenas seus próprios pacientes.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i data-lucide="smartphone" style="width:24px;height:24px;color:white;"></i></div>
+      <h3>Responsivo</h3>
+      <p>Funciona em qualquer dispositivo — computador, tablet ou celular — sem instalação.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="how" id="como-funciona">
+  <div class="how-layout">
+    <div>
+      <div class="section-label">— Como funciona</div>
+      <h2 class="section-title">De 0 a relatório<br/>em minutos</h2>
+      <p class="section-sub" style="margin-bottom:2.5rem;">Processo simples, resultado profissional.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>Gere o link da avaliação</h4>
+             <div class="stat-label">Acesso completo a partir de R$10/mês</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>O responsável preenche</h4>
+            <p>Envie o link por e-mail ou WhatsApp. O pai ou responsável acessa pelo celular ou computador e responde o questionário — sem precisar criar conta.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>Resultado no seu painel</h4>
+            <p>Assim que o responsável finalizar, pontuação, gráficos e classificação clínica ficam disponíveis automaticamente para você.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup-card">
+      <div class="mockup-bar">
+        <div class="mockup-dot" style="background:#FF5F57;"></div>
+        <div class="mockup-dot" style="background:#FFBD2E;"></div>
+        <div class="mockup-dot" style="background:#28CA41;"></div>
+        <span style="font-size:0.73rem;color:#4a7a9b;margin-left:0.5rem;font-weight:600;">Dashboard — Perfil Sensorial</span>
+      </div>
+      <div style="font-size:0.78rem;color:#4a7a9b;margin-bottom:0.65rem;font-weight:600;">Quadrantes Sensoriais</div>
+      <div class="mockup-chart">
+        <div class="bar-item" style="height:85%;background:linear-gradient(180deg,#39abcb,#0c3c7b);"></div>
+        <div class="bar-item" style="height:60%;background:linear-gradient(180deg,#6accdc,#39abcb);"></div>
+        <div class="bar-item" style="height:92%;background:linear-gradient(180deg,#0c3c7b,#1a5a9a);"></div>
+        <div class="bar-item" style="height:44%;background:linear-gradient(180deg,#85cde2,#39abcb);"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#4a7a9b;margin-bottom:1.25rem;font-weight:600;">
+        <span>EX<br/>Exploração</span>
+        <span>EV<br/>Esquiva</span>
+        <span>SN<br/>Sensib.</span>
+        <span>OB<br/>Observ.</span>
+      </div>
+      <div style="font-size:0.78rem;color:#4a7a9b;margin-bottom:0.65rem;font-weight:600;">Classificação por Seção</div>
+      <div class="mockup-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#39abcb;"></div><span>Proc. Auditivo — <strong style="color:#0c3c7b;">Típico</strong></span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0c3c7b;"></div><span>Proc. Visual — <strong style="color:#0c3c7b;">Mais</strong></span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6accdc;"></div><span>Tato — <strong style="color:#0c3c7b;">Muito mais</strong></span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#85cde2;"></div><span>Movimento — <strong style="color:#0c3c7b;">Menos</strong></span></div>
+      </div>
+      <div style="margin-top:1.25rem;padding:0.9rem;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
+        <div style="font-size:0.7rem;color:#4a7a9b;font-weight:600;margin-bottom:0.2rem;">TOTAL GERAL</div>
+        <div style="font-size:1.35rem;font-weight:900;color:var(--primary-dark);">142 <span style="font-size:0.82rem;font-weight:500;color:var(--primary);">pontos</span></div>
+        <div style="font-size:0.78rem;color:var(--primary);font-weight:600;margin-top:0.2rem;">↑ Perfil: Mais que os outros</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="preco">
+  <div class="section-header" style="text-align:center;margin-bottom:2.5rem;">
+    <div class="section-label" style="justify-content:center;">— Planos</div>
+    <h2 class="section-title">Escolha o plano ideal para você</h2>
+    <p class="section-sub" style="margin:0 auto;">Sem taxas ocultas. Cancele quando quiser.</p>
+  </div>
+
+  <div class="pricing-grid">
+
+    <!-- START -->
+    <div class="pricing-card">
+      <div class="plan-header">
+        <div class="plan-icon"><i data-lucide="rocket" style="width:20px;height:20px;"></i></div>
+        <span class="plan-name">START</span>
+      </div>
+      <div class="plan-price">
+        <span class="plan-currency">R$</span>
+        <span class="plan-amount">39</span>
+        <span class="plan-cents">,90</span>
+      </div>
+      <div class="plan-period">/mês</div>
+      <p class="plan-desc">Ideal para profissionais iniciantes ou atendimento individual.</p>
+
+      <div class="plan-highlights">
+        <div class="plan-highlight"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Até 30 avaliações/mês</div>
+        <div class="plan-highlight"><i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
+      </div>
+
+      <div class="plan-divider"></div>
+      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos disponíveis:</div>
+      <ul class="plan-modules">
+        <li>Perfil Sensorial</li>
+        <li>Perfil Sensorial Bebê/Criança Pequena</li>
+        <li>Questionário Sensorial Escolar</li>
+        <li>SPM — Sensory Processing Measure</li>
+      </ul>
+
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Dashboard completo</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Histórico do paciente</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Resultados automáticos com classificação</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Link compartilhável para preenchimento</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Exportação em PDF</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
+      </ul>
+      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-lg" style="width:100%;justify-content:center;background:#10B981;color:#fff;margin-bottom:.5rem;">
+        <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Testar Grátis 7 dias
+      </a>
+      <a href="{% url 'registrar' %}?plano=start" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;">
+        Começar com START
+      </a>
+    </div>
+
+    <!-- PLUS -->
+    <div class="pricing-card popular">
+      <div class="popular-badge"><i data-lucide="star" style="width:11px;height:11px;display:inline-block;vertical-align:middle;margin-right:3px;"></i> Mais Popular</div>
+      <div class="plan-header" style="margin-top:1.2rem;">
+        <div class="plan-icon"><i data-lucide="star" style="width:20px;height:20px;"></i></div>
+        <span class="plan-name">PLUS</span>
+      </div>
+      <div class="plan-price">
+        <span class="plan-currency">R$</span>
+        <span class="plan-amount">79</span>
+        <span class="plan-cents">,90</span>
+      </div>
+      <div class="plan-period">/mês</div>
+      <p class="plan-desc">Nosso plano mais popular para profissionais com maior demanda.</p>
+
+      <div class="plan-highlights">
+        <div class="plan-highlight"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Até 60 avaliações/mês</div>
+        <div class="plan-highlight"><i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
+      </div>
+
+      <div class="plan-divider"></div>
+      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos disponíveis:</div>
+      <ul class="plan-modules">
+        <li>Perfil Sensorial</li>
+        <li>Perfil Sensorial Bebê/Criança Pequena</li>
+        <li>Questionário Sensorial Escolar</li>
+        <li>SPM — Sensory Processing Measure</li>
+        <li>Escala Vineland</li>
+        <li>PEDI</li>
+        <li>Guia Portage</li>
+      </ul>
+
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Dashboard completo</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Histórico e evolução do paciente</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Resultados automáticos com classificação</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Exportação em PDF</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Suporte prioritário</li>
+      </ul>
+      <a href="{% url 'registrar' %}?plano=plus" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+        Começar com PLUS
+      </a>
+    </div>
+
+    <!-- ELITE -->
+    <div class="pricing-card elite">
+      <div class="plan-header">
+        <div class="plan-icon"><i data-lucide="gem" style="width:20px;height:20px;"></i></div>
+        <span class="plan-name">ELITE</span>
+      </div>
+      <div class="plan-price">
+        <span class="plan-currency">R$</span>
+        <span class="plan-amount">149</span>
+        <span class="plan-cents">,90</span>
+      </div>
+      <div class="plan-period">/mês</div>
+      <p class="plan-desc">Acesso completo para profissionais que precisam de todos os recursos.</p>
+
+      <div class="plan-highlights">
+        <div class="plan-highlight"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Avaliações ilimitadas</div>
+        <div class="plan-highlight"><i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
+      </div>
+
+      <div class="plan-divider"></div>
+      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Todos os módulos disponíveis:</div>
+      <ul class="plan-modules">
+        <li>Perfil Sensorial</li>
+        <li>Perfil Sensorial Bebê/Criança Pequena</li>
+        <li>Questionário Sensorial Escolar</li>
+        <li>SPM — Sensory Processing Measure</li>
+        <li>Escala Vineland</li>
+        <li>Vineland-3</li>
+        <li>PEDI</li>
+        <li>EDM Figueiredo</li>
+        <li>MABC-2</li>
+        <li>Beery VMI</li>
+        <li>Guia Portage</li>
+      </ul>
+
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Dashboard completo</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Histórico e comparação da evolução do paciente</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Relatórios profissionais em PDF</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Link compartilhável para preenchimento</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Suporte prioritário</li>
+        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Acesso antecipado a novos módulos</li>
+      </ul>
+      <a href="{% url 'registrar' %}?plano=elite" class="btn btn-lg" style="width:100%;justify-content:center;background:linear-gradient(135deg,#39abcb,#6accdc);color:#fff;box-shadow:0 4px 20px rgba(57,171,203,0.4);">
+        Começar com ELITE
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Trust badges -->
+  <div class="trust-badges" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border);">
+    <div class="trust-badge"><i data-lucide="shield" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Seguro e confiável</div>
+    <span class="trust-sep"></span>
+    <div class="trust-badge"><i data-lucide="cloud" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Acesso 100% online</div>
+    <span class="trust-sep"></span>
+    <div class="trust-badge"><i data-lucide="lock" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Proteção de dados</div>
+    <span class="trust-sep"></span>
+    <div class="trust-badge"><i data-lucide="bar-chart-2" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Evolução e comparativos</div>
+    <span class="trust-sep"></span>
+    <div class="trust-badge"><i data-lucide="send" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Resultados por e-mail</div>
+    <span class="trust-sep"></span>
+    <div class="trust-badge"><i data-lucide="file-text" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Exportação em PDF</div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Comece hoje mesmo<br />Sem complicação</h2>
+  <p>Gere o link, envie para o responsável e tenha o resultado no seu painel — tudo em poucos minutos.</p>
+  <div class="cta-actions">
+    <a href="{% url 'registrar' %}" class="btn btn-xl btn-hero-primary">Criar minha conta</a>
+    <a href="{% url 'login' %}" class="btn btn-xl" style="background:var(--white);color:var(--primary-dark);font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'">Entrar na plataforma</a>
+  </div>
+</section>
+
+<!-- SECTION NAV BUTTON -->
+<button id="sectionNav" aria-label="Navegar entre seções">
+  <i data-lucide="chevron-down" id="iconDown"></i>
+  <i data-lucide="chevron-up"   id="iconUp" style="display:none"></i>
+</button>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <a href="#" class="footer-logo">
+      <img src="{% static 'logo.png' %}" alt="IntegraMente" />
+    </a>
+    <ul class="footer-links">
+      <li><a href="{% url 'politica_privacidade' %}">Privacidade</a></li>
+      <li><a href="{% url 'login' %}">Entrar</a></li>
+      <li><a href="{% url 'registrar' %}">Cadastro</a></li>
+    </ul>
+    <p class="footer-copy">© 2026 IntegraMente · Todos os direitos reservados</p>
+  </div>
+</footer>
+
+<script>
+  lucide.createIcons();
+
+  function toggleMenu() {
+    const btn = document.getElementById('hamburger');
+    const menu = document.getElementById('mobileMenu');
+    btn.classList.toggle('open');
+    menu.classList.toggle('open');
+  }
+
+  function closeMenu() {
+    document.getElementById('hamburger').classList.remove('open');
+    document.getElementById('mobileMenu').classList.remove('open');
+  }
+
+  // Fecha ao clicar fora
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('mobileMenu');
+    const btn = document.getElementById('hamburger');
+    if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+      closeMenu();
+    }
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.disc-card, .feat-card, .step').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = `opacity 0.45s ease ${i * 0.05}s, transform 0.45s ease ${i * 0.05}s`;
+    observer.observe(el);
+  });
+
+  // ── Section navigator ──
+  const SECTIONS  = Array.from(document.querySelectorAll('.hero, section'));
+  const navBtn    = document.getElementById('sectionNav');
+  const iconDown  = document.getElementById('iconDown');
+  const iconUp    = document.getElementById('iconUp');
+
+  function getNextSection() {
+    const threshold = window.scrollY + window.innerHeight * 0.8;
+    for (let i = 0; i < SECTIONS.length; i++) {
+      if (SECTIONS[i].offsetTop > threshold) return i;
+    }
+    return -1;
+  }
+
+  function updateNav() {
+    const atTop = window.scrollY < 60;
+    const nextIdx = getNextSection();
+
+    if (atTop) {
+      navBtn.classList.remove('visible');
+      return;
+    }
+
+    navBtn.classList.add('visible');
+
+    if (nextIdx === -1) {
+      iconDown.style.display = 'none';
+      iconUp.style.display   = '';
+      navBtn.title = 'Voltar ao topo';
+    } else {
+      iconDown.style.display = '';
+      iconUp.style.display   = 'none';
+      navBtn.title = 'Próxima seção';
+    }
+  }
+
+  navBtn.addEventListener('click', () => {
+    const nextIdx = getNextSection();
+
+    if (nextIdx === -1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      SECTIONS[nextIdx].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+</script>
+
+</body>
+</html>

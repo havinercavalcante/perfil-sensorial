@@ -14,7 +14,7 @@ class PerfilInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = "Perfil e Módulos Liberados"
     filter_horizontal = ("especialidades", "modulos_liberados",)
-    fields = ("registro_profissional", "especialidades", "telefone", "modulos_liberados")
+    fields = ("registro_profissional", "especialidades", "telefone", "plano", "trial_inicio", "modulos_liberados")
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "modulos_liberados":
@@ -37,6 +37,15 @@ class PerfilInline(admin.StackedInline):
 
 class CustomUserAdmin(UserAdmin):
     inlines = [PerfilInline]
+    list_display = UserAdmin.list_display + ("get_plano",)
+    list_filter = UserAdmin.list_filter + ("perfil__plano",)
+
+    @admin.display(description="Plano", ordering="perfil__plano")
+    def get_plano(self, obj):
+        try:
+            return obj.perfil.get_plano_display()
+        except Exception:
+            return "—"
 
 
 admin.site.unregister(User)
@@ -66,8 +75,13 @@ class PacienteAdmin(admin.ModelAdmin):
 
 @admin.register(Avaliacao)
 class AvaliacaoAdmin(admin.ModelAdmin):
-    list_display = ["paciente", "data", "status", "pont_ex", "pont_ev", "pont_sn", "pont_ob"]
+    list_display = ["paciente", "get_profissional", "data", "status", "pont_ex", "pont_ev", "pont_sn", "pont_ob"]
     list_filter = ["status", "paciente__medico"]
+    search_fields = ["paciente__nome", "paciente__medico__username", "paciente__medico__first_name", "paciente__medico__last_name"]
+
+    @admin.display(description="Profissional", ordering="paciente__medico__first_name")
+    def get_profissional(self, obj):
+        return obj.paciente.medico.get_full_name() or obj.paciente.medico.username
 
 
 @admin.register(ModuloAvaliacao)
