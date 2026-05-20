@@ -5,8 +5,18 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from ..models import Paciente, AvaliacaoLinguagem, RespostaLinguagem
-from ..data.data_linguagem import LINGUAGEM_DOMINIOS, LINGUAGEM_OPCOES
+from ..data.data_linguagem import LINGUAGEM_DOMINIOS, LINGUAGEM_OPCOES, LINGUAGEM_CLASSIFICACAO
 from ..services import notificar_terapeuta
+
+TOTAL_PAGINAS = len(LINGUAGEM_DOMINIOS)
+
+_URL_NAMES = {
+    "url_form_name": "linguagem_form",
+    "url_publico_name": "linguagem_publico",
+    "url_visualizar_name": "linguagem_visualizar",
+    "url_resultado_name": "linguagem_resultado",
+    "avaliacao_titulo": "Avaliação de Linguagem",
+}
 
 
 def _calcular_linguagem(avaliacao):
@@ -17,6 +27,45 @@ def _calcular_linguagem(avaliacao):
         setattr(avaliacao, dom["campo"], total)
     return avaliacao
 
+
+def _classificar(pct, cortes):
+    for label, min_pct, max_pct in cortes:
+        if min_pct <= pct <= max_pct:
+            return label
+    return cortes[-1][0]
+
+
+def _processar_post_pagina(request, dom):
+    """Processa o POST de uma página, salva respostas e retorna (erros, novas, obs)."""
+    numeros = [n for n, _ in dom["itens"]]
+    valores_validos = {o["valor"] for o in LINGUAGEM_OPCOES}
+    erros, novas, obs = [], {}, {}
+    for numero in numeros:
+        val = request.POST.get(f"item_{numero}")
+        if val is None:
+            erros.append(numero)
+        else:
+            try:
+                v = int(val)
+                if v in valores_validos:
+                    novas[numero] = v
+                else:
+                    erros.append(numero)
+            except (ValueError, TypeError):
+                erros.append(numero)
+        obs[numero] = request.POST.get(f"obs_{numero}", "").strip()
+    return erros, novas, obs
+
+
+def _salvar_respostas(avaliacao, dom_key, novas, obs):
+    for numero, valor in novas.items():
+        RespostaLinguagem.objects.update_or_create(
+            avaliacao=avaliacao, dominio=dom_key, numero_item=numero,
+            defaults={"valor": valor, "observacao": obs.get(numero, "")}
+        )
+
+
+# ── Views autenticadas ────────────────────────────────────────────────────────
 
 @login_required
 def nova_avaliacao_linguagem(request, paciente_id):
@@ -29,128 +78,131 @@ def nova_avaliacao_linguagem(request, paciente_id):
     av = AvaliacaoLinguagem.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "id": av.id})
-    return redirect("linguagem_form", avaliacao_id=av.id)
+    return redirect("linguagem_form", avaliacao_id=av.id, pagina=1)
 
 
 @login_required
-def linguagem_form(request, avaliacao_id):
+def linguagem_form(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoLinguagem, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("linguagem_resultado", avaliacao_id=avaliacao_id)
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("linguagem_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    respostas_salvas = {
-        (r.dominio, r.numero_item): r.valor
-        for r in avaliacao.respostas.all()
-    }
+    dom = LINGUAGEM_DOMINIOS[pagina - 1]
+    numeros = [n for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+
+    itens_faltando = []
+    obs_render = {}
 
     if request.method == "POST":
-        import json as _json
-        erros, novas = [], {}
-        for dom in LINGUAGEM_DOMINIOS:
-            for numero, _ in dom["itens"]:
-                chave = f"{dom['key']}_{numero}"
-                val = request.POST.get(f"item_{chave}")
-                if val is None:
-                    erros.append(chave)
-                else:
-                    try:
-                        v = int(val)
-                        if v in {o["valor"] for o in LINGUAGEM_OPCOES}:
-                            novas[chave] = v
-                        else:
-                            erros.append(chave)
-                    except (ValueError, TypeError):
-                        erros.append(chave)
-        if erros:
-            respostas_form = {f"{d}_{n}": v for (d, n), v in respostas_salvas.items()}
-            respostas_form.update(novas)
-            return render(request, "questionario/avaliacoes/linguagem_form.html", {
-                "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-                "dominios": LINGUAGEM_DOMINIOS, "opcoes": LINGUAGEM_OPCOES,
-                "respostas_salvas": respostas_salvas,
-                "respostas_json": _json.dumps(respostas_form),
-                "erros_json": _json.dumps(erros),
-            })
-        for chave, v in novas.items():
-            dom_key, _, num_str = chave.rpartition("_")
-            RespostaLinguagem.objects.update_or_create(
-                avaliacao=avaliacao, dominio=dom_key, numero_item=int(num_str),
-                defaults={"valor": v}
-            )
-        avaliacao = _calcular_linguagem(avaliacao)
-        avaliacao.status = "concluida"
-        avaliacao.save()
-        return redirect("linguagem_resultado", avaliacao_id=avaliacao_id)
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_pagina(request, dom)
+        obs_render = obs
 
-    return render(request, "questionario/avaliacoes/linguagem_form.html", {
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_salvas)
+            resp_render.update(novas)
+            itens_faltando = erros
+            respostas_salvas = resp_render
+        else:
+            _salvar_respostas(avaliacao, dom["key"], novas, obs)
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_linguagem(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                return redirect("linguagem_resultado", avaliacao_id=avaliacao_id)
+            return redirect("linguagem_form", avaliacao_id=avaliacao_id, pagina=proxima)
+
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
+        for n, t in dom["itens"]
+    ]
+
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
-        "dominios": LINGUAGEM_DOMINIOS,
+        "dominio": dom,
+        "itens": itens_render,
         "opcoes": LINGUAGEM_OPCOES,
-        "respostas_salvas": respostas_salvas,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, LINGUAGEM_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
     })
 
 
-def linguagem_publico(request, token):
+def linguagem_publico(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoLinguagem, token=token)
     if avaliacao.status == "concluida":
         return render(request, "questionario/dashboard/concluido.html")
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("linguagem_publico", token=token, pagina=1)
 
-    respostas_salvas = {
-        (r.dominio, r.numero_item): r.valor
-        for r in avaliacao.respostas.all()
-    }
+    dom = LINGUAGEM_DOMINIOS[pagina - 1]
+    numeros = [n for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+
+    itens_faltando = []
+    obs_render = {}
 
     if request.method == "POST":
-        import json as _json
-        erros, novas = [], {}
-        for dom in LINGUAGEM_DOMINIOS:
-            for numero, _ in dom["itens"]:
-                chave = f"{dom['key']}_{numero}"
-                val = request.POST.get(f"item_{chave}")
-                if val is None:
-                    erros.append(chave)
-                else:
-                    try:
-                        v = int(val)
-                        if v in {o["valor"] for o in LINGUAGEM_OPCOES}:
-                            novas[chave] = v
-                        else:
-                            erros.append(chave)
-                    except (ValueError, TypeError):
-                        erros.append(chave)
-        if erros:
-            respostas_form = {f"{d}_{n}": v for (d, n), v in respostas_salvas.items()}
-            respostas_form.update(novas)
-            return render(request, "questionario/avaliacoes/linguagem_form.html", {
-                "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-                "dominios": LINGUAGEM_DOMINIOS, "opcoes": LINGUAGEM_OPCOES,
-                "respostas_salvas": respostas_salvas,
-                "respostas_json": _json.dumps(respostas_form),
-                "erros_json": _json.dumps(erros),
-                "publico": True, "token": token,
-            })
-        for chave, v in novas.items():
-            dom_key, _, num_str = chave.rpartition("_")
-            RespostaLinguagem.objects.update_or_create(
-                avaliacao=avaliacao, dominio=dom_key, numero_item=int(num_str),
-                defaults={"valor": v}
-            )
-        avaliacao = _calcular_linguagem(avaliacao)
-        avaliacao.status = "concluida"
-        avaliacao.save()
-        try:
-            notificar_terapeuta(avaliacao.paciente, "linguagem", request)
-        except Exception:
-            pass
-        return render(request, "questionario/dashboard/concluido.html")
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_pagina(request, dom)
+        obs_render = obs
 
-    return render(request, "questionario/avaliacoes/linguagem_form.html", {
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_salvas)
+            resp_render.update(novas)
+            itens_faltando = erros
+            respostas_salvas = resp_render
+        else:
+            _salvar_respostas(avaliacao, dom["key"], novas, obs)
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_linguagem(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                try:
+                    notificar_terapeuta(avaliacao.paciente, "linguagem", request)
+                except Exception:
+                    pass
+                return render(request, "questionario/dashboard/concluido.html")
+            return redirect("linguagem_publico", token=token, pagina=proxima)
+
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
+        for n, t in dom["itens"]
+    ]
+
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
-        "dominios": LINGUAGEM_DOMINIOS,
+        "dominio": dom,
+        "itens": itens_render,
         "opcoes": LINGUAGEM_OPCOES,
-        "respostas_salvas": respostas_salvas,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, LINGUAGEM_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
         "publico": True,
         "token": token,
     })
@@ -160,36 +212,68 @@ def linguagem_publico(request, token):
 def linguagem_resultado(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoLinguagem, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
-        return redirect("linguagem_form", avaliacao_id=avaliacao_id)
+        return redirect("linguagem_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
     resultado = []
+    total_score = 0
+    total_max = 0
     for dom in LINGUAGEM_DOMINIOS:
         score = getattr(avaliacao, dom["campo"]) or 0
-        max_score = len(dom["itens"]) * 2
+        max_score = len(dom["itens"]) * 3
+        pct = int(score / max_score * 100) if max_score else 0
+        total_score += score
+        total_max += max_score
         resultado.append({
             "key": dom["key"],
             "nome": dom["nome"],
             "cor": dom["cor"],
             "score": score,
             "max": max_score,
-            "pct": int(score / max_score * 100) if max_score else 0,
+            "pct": pct,
+            "classificacao": _classificar(pct, LINGUAGEM_CLASSIFICACAO[dom["key"]]),
         })
+    total_pct = int(total_score / total_max * 100) if total_max else 0
+    class_total = _classificar(total_pct, LINGUAGEM_CLASSIFICACAO["total"])
     return render(request, "questionario/avaliacoes/linguagem_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "resultado": resultado,
+        "total_score": total_score,
+        "total_max": total_max,
+        "total_pct": total_pct,
+        "class_total": class_total,
     })
 
 
 @login_required
-def linguagem_visualizar(request, avaliacao_id):
-    import json
+def linguagem_visualizar(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoLinguagem, id=avaliacao_id, paciente__medico=request.user)
-    respostas_salvas = {(r.dominio, r.numero_item): r.valor for r in avaliacao.respostas.all()}
-    respostas_json = json.dumps({f"{d}_{n}": v for (d, n), v in respostas_salvas.items()})
-    return render(request, "questionario/avaliacoes/linguagem_form.html", {
-        "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-        "dominios": LINGUAGEM_DOMINIOS, "opcoes": LINGUAGEM_OPCOES,
-        "respostas_salvas": respostas_salvas, "respostas_json": respostas_json, "readonly": True,
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("linguagem_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    dom = LINGUAGEM_DOMINIOS[pagina - 1]
+    numeros = [n for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_salvas.get(n, "")}
+        for n, t in dom["itens"]
+    ]
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "dominio": dom,
+        "itens": itens_render,
+        "opcoes": LINGUAGEM_OPCOES,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int(pagina / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, LINGUAGEM_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": [],
+        "readonly": True,
     })
 
 

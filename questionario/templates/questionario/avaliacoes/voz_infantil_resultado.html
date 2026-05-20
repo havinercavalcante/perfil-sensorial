@@ -1,12 +1,12 @@
 {% extends "questionario/base.html" %}
-{% block title %}Triagem de Alimentação Seletiva — Resultado — {{ paciente.nome }}{% endblock %}
+{% block title %}Triagem de Voz Infantil — Resultado — {{ paciente.nome }}{% endblock %}
 
 {% block extra_css %}
 <style>
-  :root { --mod: #27AE60; }
+  :root { --mod: #8E44AD; }
 
   .resultado-header {
-    background: linear-gradient(135deg, #145A32, #27AE60);
+    background: linear-gradient(135deg, #1B2631, #6C3483);
     color: #fff; border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
   }
   .resultado-header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: .3rem; }
@@ -89,7 +89,7 @@
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1><i data-lucide="bar-chart-2" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Triagem de Alimentação Seletiva — Resultado</h1>
+      <h1><i data-lucide="bar-chart-2" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Triagem de Voz Infantil — Resultado</h1>
       <p style="font-size:.9rem;opacity:.9;">{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
       <p style="font-size:.78rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
@@ -146,20 +146,20 @@
     <span class="legenda-chip atencao-clinica">Atenção Clínica — &lt; 50%</span>
   </div>
   <div style="margin-top:.65rem; line-height:1.6;">
-    Referências: <em>Escala Brasileira de Alimentação Infantil (EBAI) — validação br do Montreal CHF Feeding Scale (2021);</em>
-    Pedi-EAT; BAMBI; critérios ARFID/DSM-5; Perfil Sensorial (Winnie Dunn) — módulo oral.
+    Referências: <em>pVHI — Pediatric Voice Handicap Index (Zur et al., 2007); adaptação brasileira (CODAS 2019);</em>
+    Escala de Percepção Vocal GRBAS.
     Escala de resposta: Nunca (0) · Às vezes (1) · Frequentemente (2) · Sempre (3).
   </div>
 </div>
 
 <div class="aviso">
-  <strong>Aviso clínico:</strong> Esta triagem é um instrumento de rastreio de uso clínico e não substitui avaliação fonoaudiológica completa, diagnóstico médico ou nutricional. Resultados abaixo de 50% em qualquer domínio indicam necessidade de investigação aprofundada.
+  <strong>Aviso clínico:</strong> Esta triagem é um instrumento de rastreio de uso clínico e não substitui avaliação fonoaudiológica completa, diagnóstico médico ou laringológico. Resultados abaixo de 50% em qualquer domínio indicam necessidade de avaliação laringológica completa e encaminhamento para especialista em voz.
 </div>
 
 <!-- Observações -->
 <div class="card obs-form">
   <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
-  <form method="post" action="{% url 'salvar_observacoes_alimentacao' avaliacao.id %}">
+  <form method="post" action="{% url 'salvar_observacoes_voz_infantil' avaliacao.id %}">
     {% csrf_token %}
     <textarea name="observacoes" placeholder="Adicione suas observações clínicas aqui...">{{ avaliacao.observacoes }}</textarea>
     <button type="submit" class="btn btn-primary" style="margin-top:.6rem; background:var(--mod); border-color:var(--mod);">

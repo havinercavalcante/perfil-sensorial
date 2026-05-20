@@ -15,7 +15,9 @@ from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
     AvaliacaoBebe, AvaliacaoSPM, AvaliacaoVineland3, AvaliacaoPEDI, AvaliacaoPortage, LinkConvite,
     AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT,
-    AvaliacaoLinguagem, AvaliacaoAlimentacao, AvaliacaoDesenvolvimento, AvaliacaoSono,
+    AvaliacaoLinguagem, AvaliacaoAlimentacao,
+    AvaliacaoHabitosOrais, AvaliacaoVozInfantil, AvaliacaoProcessamentoAuditivo, AvaliacaoIDV10,
+    AvaliacaoDesenvolvimento, AvaliacaoSono,
     AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
     AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
 )
@@ -47,6 +49,10 @@ def gerar_link(request):
         "cars": "cars",
         "linguagem": "linguagem",
         "alimentacao_seletiva": "alimentacao_seletiva",
+        "habitos_orais": "habitos_orais",
+        "voz_infantil": "voz_infantil",
+        "processamento_auditivo": "processamento_auditivo",
+        "idv10": "idv10",
         "desenvolvimento": "desenvolvimento",
         "sono_infantil": "sono_infantil",
         "habilidades_adaptativas": "habilidades_adaptativas",
@@ -199,37 +205,49 @@ def iniciar_avaliacao(request, token):
             return redirect("portage_publico", token=t, pagina=1)
         elif tipo == "sdq":
             AvaliacaoSDQ.objects.create(paciente=paciente, token=t, respondente="pais")
-            return redirect("sdq_publico", token=t)
+            return redirect("sdq_publico", token=t, pagina=1)
         elif tipo == "snap_iv":
             AvaliacaoSNAPIV.objects.create(paciente=paciente, token=t, respondente="pais")
-            return redirect("snap_iv_publico", token=t)
+            return redirect("snap_iv_publico", token=t, pagina=1)
         elif tipo == "mchat":
             AvaliacaoMCHAT.objects.create(paciente=paciente, token=t)
             return redirect("mchat_publico", token=t)
         elif tipo == "linguagem":
             AvaliacaoLinguagem.objects.create(paciente=paciente, token=t)
-            return redirect("linguagem_publico", token=t)
+            return redirect("linguagem_publico", token=t, pagina=1)
         elif tipo == "alimentacao_seletiva":
             AvaliacaoAlimentacao.objects.create(paciente=paciente, token=t)
-            return redirect("alimentacao_publico", token=t)
+            return redirect("alimentacao_publico", token=t, pagina=1)
+        elif tipo == "habitos_orais":
+            AvaliacaoHabitosOrais.objects.create(paciente=paciente, token=t)
+            return redirect("habitos_publico", token=t, pagina=1)
+        elif tipo == "voz_infantil":
+            AvaliacaoVozInfantil.objects.create(paciente=paciente, token=t)
+            return redirect("voz_publico", token=t, pagina=1)
+        elif tipo == "processamento_auditivo":
+            AvaliacaoProcessamentoAuditivo.objects.create(paciente=paciente, token=t)
+            return redirect("auditivo_publico", token=t, pagina=1)
+        elif tipo == "idv10":
+            AvaliacaoIDV10.objects.create(paciente=paciente, token=t)
+            return redirect("idv_publico", token=t, pagina=1)
         elif tipo == "desenvolvimento":
             AvaliacaoDesenvolvimento.objects.create(paciente=paciente, token=t)
-            return redirect("desenvolvimento_publico", token=t)
+            return redirect("desenvolvimento_publico", token=t, pagina=1)
         elif tipo == "sono_infantil":
             AvaliacaoSono.objects.create(paciente=paciente, token=t)
-            return redirect("sono_publico", token=t)
+            return redirect("sono_publico", token=t, pagina=1)
         elif tipo == "habilidades_adaptativas":
             AvaliacaoHabilidadesAdaptativas.objects.create(paciente=paciente, token=t)
-            return redirect("habilidades_publico", token=t)
+            return redirect("habilidades_publico", token=t, pagina=1)
         elif tipo == "comportamento_funcional":
             AvaliacaoComportamentoFuncional.objects.create(paciente=paciente, token=t)
-            return redirect("comportamento_publico", token=t)
+            return redirect("comportamento_publico", token=t, pagina=1)
         elif tipo == "rastreio_cognitivo":
             AvaliacaoRastreioCognitivo.objects.create(paciente=paciente, token=t)
-            return redirect("cognitivo_publico", token=t)
+            return redirect("cognitivo_publico", token=t, pagina=1)
         elif tipo == "psicopedagogica":
             AvaliacaoPsicopedagogica.objects.create(paciente=paciente, token=t)
-            return redirect("psicopedagogica_publico", token=t)
+            return redirect("psicopedagogica_publico", token=t, pagina=1)
         else:
             # CARS-2, EDM, MABC-2, Beery — presencial, só cadastra o paciente
             return render(request, "questionario/dashboard/iniciar_avaliacao.html", {

@@ -214,6 +214,34 @@
         <span class="tc-desc">5 domínios · presencial</span>
       </button>
       {% endif %}
+      {% if 'habitos_orais' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('habitos_orais', this)">
+        <span class="tc-icon"><i data-lucide="smile" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Hábitos Orais</span>
+        <span class="tc-desc">5 domínios · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'voz_infantil' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('voz_infantil', this)">
+        <span class="tc-icon"><i data-lucide="mic" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Voz Infantil</span>
+        <span class="tc-desc">3 domínios · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'processamento_auditivo' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('processamento_auditivo', this)">
+        <span class="tc-icon"><i data-lucide="ear" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Processamento Auditivo</span>
+        <span class="tc-desc">5 domínios · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'idv10' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('idv10', this)">
+        <span class="tc-icon"><i data-lucide="volume-2" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">IDV-10</span>
+        <span class="tc-desc">Desvantagem vocal · remoto</span>
+      </button>
+      {% endif %}
       {% if 'desenvolvimento' in modulos_liberados %}
       <button class="tipo-card" onclick="gerarLink('desenvolvimento', this)">
         <span class="tc-icon"><i data-lucide="trending-up" style="width:1.8rem;height:1.8rem;"></i></span>

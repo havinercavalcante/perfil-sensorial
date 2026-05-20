@@ -12,6 +12,16 @@ from ..services import notificar_terapeuta
 # Numeração global: (index_dominio * 100) + numero_local
 # Ex.: domínio 0, item 1 → 1; domínio 1, item 1 → 101; domínio 2, item 3 → 203
 
+TOTAL_PAGINAS = len(COMPORTAMENTO_DOMINIOS)
+
+_URL_NAMES = {
+    "url_form_name": "comportamento_form",
+    "url_publico_name": "comportamento_publico",
+    "url_visualizar_name": "comportamento_visualizar",
+    "url_resultado_name": "comportamento_resultado",
+    "avaliacao_titulo": "Avaliação de Comportamento Funcional",
+}
+
 
 def _numero_global_comportamento(idx_dom, numero_local):
     return (idx_dom * 100) + numero_local
@@ -26,6 +36,8 @@ def _calcular_comportamento_funcional(avaliacao):
     return avaliacao
 
 
+# ── Views autenticadas ────────────────────────────────────────────────────────
+
 @login_required
 def nova_avaliacao_comportamento_funcional(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
@@ -37,74 +49,179 @@ def nova_avaliacao_comportamento_funcional(request, paciente_id):
     av = AvaliacaoComportamentoFuncional.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "id": av.id})
-    return redirect("comportamento_form", avaliacao_id=av.id)
+    return redirect("comportamento_form", avaliacao_id=av.id, pagina=1)
 
 
 @login_required
-def comportamento_funcional_form(request, avaliacao_id):
+def comportamento_funcional_form(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("comportamento_resultado", avaliacao_id=avaliacao_id)
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("comportamento_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    # respostas_salvas: {numero_global: valor}
-    respostas_salvas = {
-        r.numero_item: r.valor
-        for r in avaliacao.respostas.all()
-    }
+    idx = pagina - 1
+    dom = COMPORTAMENTO_DOMINIOS[idx]
+    numeros_globais = [_numero_global_comportamento(idx, n) for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(numero_item__in=numeros_globais))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas_globais = {r.numero_item: r.observacao for r in respostas_qs}
+    respostas_locais = {n: respostas_salvas.get(_numero_global_comportamento(idx, n)) for n, _ in dom["itens"]}
+    obs_locais = {n: obs_salvas_globais.get(_numero_global_comportamento(idx, n), "") for n, _ in dom["itens"]}
+
+    itens_faltando = []
+    obs_render = {}
 
     if request.method == "POST":
-        import json as _json
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
         valores_validos = {o["valor"] for o in COMPORTAMENTO_OPCOES}
-        erros, novas = [], {}
-        for idx, dom in enumerate(COMPORTAMENTO_DOMINIOS):
-            for numero, _ in dom["itens"]:
-                chave = f"{dom['key']}_{numero}"
-                val = request.POST.get(f"item_{chave}")
-                if val is None:
-                    erros.append(chave)
-                else:
-                    try:
-                        v = int(val)
-                        if v in valores_validos:
-                            novas[chave] = (v, _numero_global_comportamento(idx, numero))
-                        else:
-                            erros.append(chave)
-                    except (ValueError, TypeError):
-                        erros.append(chave)
-        if erros:
-            respostas_form = {}
-            for idx, dom in enumerate(COMPORTAMENTO_DOMINIOS):
-                for numero, _ in dom["itens"]:
-                    ng = _numero_global_comportamento(idx, numero)
-                    if ng in respostas_salvas:
-                        respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
-            for chave, (v, _ng) in novas.items():
-                respostas_form[chave] = v
-            return render(request, "questionario/avaliacoes/comportamento_form.html", {
-                "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-                "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
-                "respostas_salvas": respostas_salvas,
-                "numero_global": _numero_global_comportamento,
-                "respostas_json": _json.dumps(respostas_form),
-                "erros_json": _json.dumps(erros),
-            })
-        for chave, (v, num_global) in novas.items():
-            RespostaComportamentoFuncional.objects.update_or_create(
-                avaliacao=avaliacao, numero_item=num_global,
-                defaults={"valor": v}
-            )
-        avaliacao = _calcular_comportamento_funcional(avaliacao)
-        avaliacao.status = "concluida"
-        avaliacao.save()
-        return redirect("comportamento_resultado", avaliacao_id=avaliacao_id)
+        erros, novas, obs = [], {}, {}
+        for numero, _ in dom["itens"]:
+            val = request.POST.get(f"item_{numero}")
+            if val is None:
+                erros.append(numero)
+            else:
+                try:
+                    v = int(val)
+                    if v in valores_validos:
+                        novas[numero] = v
+                    else:
+                        erros.append(numero)
+                except (ValueError, TypeError):
+                    erros.append(numero)
+            obs[numero] = request.POST.get(f"obs_{numero}", "").strip()
+        obs_render = obs
 
-    return render(request, "questionario/avaliacoes/comportamento_form.html", {
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_locais)
+            resp_render.update(novas)
+            itens_faltando = erros
+            respostas_locais = resp_render
+        else:
+            for numero, valor in novas.items():
+                RespostaComportamentoFuncional.objects.update_or_create(
+                    avaliacao=avaliacao,
+                    numero_item=_numero_global_comportamento(idx, numero),
+                    defaults={"valor": valor, "observacao": obs.get(numero, "")}
+                )
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_comportamento_funcional(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                return redirect("comportamento_resultado", avaliacao_id=avaliacao_id)
+            return redirect("comportamento_form", avaliacao_id=avaliacao_id, pagina=proxima)
+
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_locais.get(n),
+         "observacao_salva": obs_render.get(n, obs_locais.get(n, ""))}
+        for n, t in dom["itens"]
+    ]
+
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
-        "dominios": COMPORTAMENTO_DOMINIOS,
+        "dominio": dom,
+        "itens": itens_render,
         "opcoes": COMPORTAMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas,
-        "numero_global": _numero_global_comportamento,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, COMPORTAMENTO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
+    })
+
+
+def comportamento_funcional_publico(request, token, pagina):
+    avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, token=token)
+    if avaliacao.status == "concluida":
+        return render(request, "questionario/dashboard/concluido.html")
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("comportamento_publico", token=token, pagina=1)
+
+    idx = pagina - 1
+    dom = COMPORTAMENTO_DOMINIOS[idx]
+    numeros_globais = [_numero_global_comportamento(idx, n) for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(numero_item__in=numeros_globais))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas_globais = {r.numero_item: r.observacao for r in respostas_qs}
+    respostas_locais = {n: respostas_salvas.get(_numero_global_comportamento(idx, n)) for n, _ in dom["itens"]}
+    obs_locais = {n: obs_salvas_globais.get(_numero_global_comportamento(idx, n), "") for n, _ in dom["itens"]}
+
+    itens_faltando = []
+    obs_render = {}
+
+    if request.method == "POST":
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        valores_validos = {o["valor"] for o in COMPORTAMENTO_OPCOES}
+        erros, novas, obs = [], {}, {}
+        for numero, _ in dom["itens"]:
+            val = request.POST.get(f"item_{numero}")
+            if val is None:
+                erros.append(numero)
+            else:
+                try:
+                    v = int(val)
+                    if v in valores_validos:
+                        novas[numero] = v
+                    else:
+                        erros.append(numero)
+                except (ValueError, TypeError):
+                    erros.append(numero)
+            obs[numero] = request.POST.get(f"obs_{numero}", "").strip()
+        obs_render = obs
+
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_locais)
+            resp_render.update(novas)
+            itens_faltando = erros
+            respostas_locais = resp_render
+        else:
+            for numero, valor in novas.items():
+                RespostaComportamentoFuncional.objects.update_or_create(
+                    avaliacao=avaliacao,
+                    numero_item=_numero_global_comportamento(idx, numero),
+                    defaults={"valor": valor, "observacao": obs.get(numero, "")}
+                )
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_comportamento_funcional(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                try:
+                    notificar_terapeuta(avaliacao.paciente, "comportamento_funcional", request)
+                except Exception:
+                    pass
+                return render(request, "questionario/dashboard/concluido.html")
+            return redirect("comportamento_publico", token=token, pagina=proxima)
+
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_locais.get(n),
+         "observacao_salva": obs_render.get(n, obs_locais.get(n, ""))}
+        for n, t in dom["itens"]
+    ]
+
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "dominio": dom,
+        "itens": itens_render,
+        "opcoes": COMPORTAMENTO_OPCOES,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, COMPORTAMENTO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
+        "publico": True,
+        "token": token,
     })
 
 
@@ -112,7 +229,7 @@ def comportamento_funcional_form(request, avaliacao_id):
 def comportamento_funcional_resultado(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
-        return redirect("comportamento_form", avaliacao_id=avaliacao_id)
+        return redirect("comportamento_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
     resultado = []
     max_por_item = max(o["valor"] for o in COMPORTAMENTO_OPCOES)
     for dom in COMPORTAMENTO_DOMINIOS:
@@ -134,23 +251,37 @@ def comportamento_funcional_resultado(request, avaliacao_id):
 
 
 @login_required
-def comportamento_funcional_visualizar(request, avaliacao_id):
-    import json
+def comportamento_funcional_visualizar(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, id=avaliacao_id, paciente__medico=request.user)
-    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
-    respostas_form = {}
-    for idx, dom in enumerate(COMPORTAMENTO_DOMINIOS):
-        for numero, _ in dom["itens"]:
-            ng = _numero_global_comportamento(idx, numero)
-            if ng in respostas_salvas:
-                respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
-    respostas_json = json.dumps(respostas_form)
-    return render(request, "questionario/avaliacoes/comportamento_form.html", {
-        "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-        "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas,
-        "numero_global": _numero_global_comportamento,
-        "respostas_json": respostas_json,
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("comportamento_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    idx = pagina - 1
+    dom = COMPORTAMENTO_DOMINIOS[idx]
+    numeros_globais = [_numero_global_comportamento(idx, n) for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(numero_item__in=numeros_globais))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas_globais = {r.numero_item: r.observacao for r in respostas_qs}
+    respostas_locais = {n: respostas_salvas.get(_numero_global_comportamento(idx, n)) for n, _ in dom["itens"]}
+    obs_locais = {n: obs_salvas_globais.get(_numero_global_comportamento(idx, n), "") for n, _ in dom["itens"]}
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_locais.get(n),
+         "observacao_salva": obs_locais.get(n, "")}
+        for n, t in dom["itens"]
+    ]
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "dominio": dom,
+        "itens": itens_render,
+        "opcoes": COMPORTAMENTO_OPCOES,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int(pagina / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, COMPORTAMENTO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": [],
         "readonly": True,
     })
 
@@ -177,77 +308,3 @@ def salvar_observacoes_comportamento_funcional(request, avaliacao_id):
             return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas.")
     return redirect("comportamento_resultado", avaliacao_id=avaliacao_id)
-
-
-def comportamento_funcional_publico(request, token):
-    avaliacao = get_object_or_404(AvaliacaoComportamentoFuncional, token=token)
-    if avaliacao.status == "concluida":
-        return render(request, "questionario/dashboard/concluido.html")
-
-    # respostas_salvas: {numero_global: valor}
-    respostas_salvas = {
-        r.numero_item: r.valor
-        for r in avaliacao.respostas.all()
-    }
-
-    if request.method == "POST":
-        import json as _json
-        valores_validos = {o["valor"] for o in COMPORTAMENTO_OPCOES}
-        erros, novas = [], {}
-        for idx, dom in enumerate(COMPORTAMENTO_DOMINIOS):
-            for numero, _ in dom["itens"]:
-                chave = f"{dom['key']}_{numero}"
-                val = request.POST.get(f"item_{chave}")
-                if val is None:
-                    erros.append(chave)
-                else:
-                    try:
-                        v = int(val)
-                        if v in valores_validos:
-                            novas[chave] = (v, _numero_global_comportamento(idx, numero))
-                        else:
-                            erros.append(chave)
-                    except (ValueError, TypeError):
-                        erros.append(chave)
-        if erros:
-            respostas_form = {}
-            for idx, dom in enumerate(COMPORTAMENTO_DOMINIOS):
-                for numero, _ in dom["itens"]:
-                    ng = _numero_global_comportamento(idx, numero)
-                    if ng in respostas_salvas:
-                        respostas_form[f"{dom['key']}_{numero}"] = respostas_salvas[ng]
-            for chave, (v, _ng) in novas.items():
-                respostas_form[chave] = v
-            return render(request, "questionario/avaliacoes/comportamento_form.html", {
-                "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-                "dominios": COMPORTAMENTO_DOMINIOS, "opcoes": COMPORTAMENTO_OPCOES,
-                "respostas_salvas": respostas_salvas,
-                "numero_global": _numero_global_comportamento,
-                "respostas_json": _json.dumps(respostas_form),
-                "erros_json": _json.dumps(erros),
-                "publico": True, "token": token,
-            })
-        for chave, (v, num_global) in novas.items():
-            RespostaComportamentoFuncional.objects.update_or_create(
-                avaliacao=avaliacao, numero_item=num_global,
-                defaults={"valor": v}
-            )
-        avaliacao = _calcular_comportamento_funcional(avaliacao)
-        avaliacao.status = "concluida"
-        avaliacao.save()
-        try:
-            notificar_terapeuta(avaliacao.paciente, "comportamento", request)
-        except Exception:
-            pass
-        return render(request, "questionario/dashboard/concluido.html")
-
-    return render(request, "questionario/avaliacoes/comportamento_form.html", {
-        "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
-        "dominios": COMPORTAMENTO_DOMINIOS,
-        "opcoes": COMPORTAMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas,
-        "numero_global": _numero_global_comportamento,
-        "publico": True,
-        "token": token,
-    })

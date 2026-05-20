@@ -10,6 +10,94 @@ from ..models import Paciente, AvaliacaoSDQ, RespostaSDQ
 from ..data.data_sdq import SDQ_ITENS, SDQ_SUBESCALAS, SDQ_OPCOES, SDQ_CORTE
 from ..services import notificar_terapeuta
 
+# ── Paginação por subescala ───────────────────────────────────────────────────
+
+SDQ_PAGINAS = [
+    {"key": "emocional",      "nome": "Sintomas Emocionais",       "cor": "#E74C3C", "campo": "pont_emocional"},
+    {"key": "conduta",        "nome": "Problemas de Conduta",      "cor": "#E67E22", "campo": "pont_conduta"},
+    {"key": "hiperatividade", "nome": "Hiperatividade/Desatenção", "cor": "#3498DB", "campo": "pont_hiperatividade"},
+    {"key": "pares",          "nome": "Problemas com Colegas",     "cor": "#9B59B6", "campo": "pont_pares"},
+    {"key": "prossocial",     "nome": "Comportamento Prossocial",  "cor": "#27AE60", "campo": "pont_prossocial"},
+]
+
+TOTAL_PAGINAS = len(SDQ_PAGINAS)
+
+_URL_NAMES = {
+    "url_form_name": "sdq_form",
+    "url_publico_name": "sdq_publico",
+    "url_visualizar_name": "sdq_visualizar",
+    "url_resultado_name": "sdq_resultado",
+    "avaliacao_titulo": "SDQ — Questionário de Capacidades e Dificuldades",
+}
+
+# Índice rápido: numero_item → dict do item
+_ITENS_INDEX = {item["numero"]: item for item in SDQ_ITENS}
+
+# Itens por subescala: key → lista de dicts
+_ITENS_POR_SUBESCALA = {
+    key: [item for item in SDQ_ITENS if item["subescala"] == key]
+    for key in SDQ_SUBESCALAS
+}
+
+
+def _itens_da_pagina(pagina_dict):
+    """Retorna lista de (numero, texto) para a subescala da página."""
+    key = pagina_dict["key"]
+    return [(item["numero"], item["texto"]) for item in _ITENS_POR_SUBESCALA[key]]
+
+
+def _processar_post_pagina_sdq(request, pagina_dict):
+    """Processa POST de uma página SDQ. Retorna (erros, novas, obs)."""
+    itens = _itens_da_pagina(pagina_dict)
+    valores_validos = {0, 1, 2}
+    erros, novas, obs = [], {}, {}
+    for numero, _ in itens:
+        val = request.POST.get(f"item_{numero}")
+        if val is None:
+            erros.append(numero)
+        else:
+            try:
+                v = int(val)
+                if v in valores_validos:
+                    novas[numero] = v
+                else:
+                    erros.append(numero)
+            except (ValueError, TypeError):
+                erros.append(numero)
+        obs[numero] = request.POST.get(f"obs_{numero}", "").strip()
+    return erros, novas, obs
+
+
+def _salvar_respostas_sdq(avaliacao, novas, obs):
+    for numero, valor in novas.items():
+        RespostaSDQ.objects.update_or_create(
+            avaliacao=avaliacao, numero_item=numero,
+            defaults={"valor": valor, "observacao": obs.get(numero, "")}
+        )
+
+
+def _context_pagina(avaliacao, pagina_dict, pagina, itens_render, respostas_salvas, itens_faltando, extra=None):
+    """Monta o contexto padrão para avaliacao_dominio_form.html."""
+    ctx = {
+        **_URL_NAMES,
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "dominio": pagina_dict,
+        "itens": itens_render,
+        "opcoes": SDQ_OPCOES,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, SDQ_PAGINAS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
+    }
+    if extra:
+        ctx.update(extra)
+    return ctx
+
+
+# ── Cálculo e resultado ───────────────────────────────────────────────────────
 
 def _calcular_sdq(avaliacao):
     """Calcula pontuações por subescala e total de dificuldades."""
@@ -72,68 +160,61 @@ def nova_avaliacao_sdq(request, paciente_id):
     av = AvaliacaoSDQ.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "id": av.id})
-    return redirect("sdq_form", avaliacao_id=av.id)
+    return redirect("sdq_form", avaliacao_id=av.id, pagina=1)
 
 
 @login_required
-def sdq_form(request, avaliacao_id):
+def sdq_form(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("sdq_resultado", avaliacao_id=avaliacao_id)
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("sdq_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    pagina_dict = SDQ_PAGINAS[pagina - 1]
+    itens_pagina = _itens_da_pagina(pagina_dict)
+    numeros_pagina = [n for n, _ in itens_pagina]
+
+    respostas_qs = list(avaliacao.respostas.filter(numero_item__in=numeros_pagina))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
     itens_faltando = []
+    obs_render = {}
 
     if request.method == "POST":
-        erros = []
-        novas = {}
-        for item in SDQ_ITENS:
-            val = request.POST.get(f"item_{item['numero']}")
-            if val is None:
-                erros.append(item["numero"])
-            else:
-                try:
-                    v = int(val)
-                    if v in (0, 1, 2):
-                        novas[item["numero"]] = v
-                    else:
-                        erros.append(item["numero"])
-                except (ValueError, TypeError):
-                    erros.append(item["numero"])
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_pagina_sdq(request, pagina_dict)
+        obs_render = obs
 
-        if erros and request.POST.get("confirmar_incompleto") != "1":
-            respostas_salvas.update(novas)
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_salvas)
+            resp_render.update(novas)
+            respostas_salvas = resp_render
             itens_faltando = erros
         else:
-            for numero, valor in novas.items():
-                RespostaSDQ.objects.update_or_create(
-                    avaliacao=avaliacao, numero_item=numero, defaults={"valor": valor}
-                )
-            avaliacao = _calcular_sdq(avaliacao)
-            avaliacao.status = "concluida"
-            avaliacao.save()
-            return redirect("sdq_resultado", avaliacao_id=avaliacao_id)
+            _salvar_respostas_sdq(avaliacao, novas, obs)
+            proxima = pagina + 1
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_sdq(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                return redirect("sdq_resultado", avaliacao_id=avaliacao_id)
+            return redirect("sdq_form", avaliacao_id=avaliacao_id, pagina=proxima)
 
     itens_render = [
-        {**item, "resposta_salva": respostas_salvas.get(item["numero"]),
-         "faltando": item["numero"] in itens_faltando}
-        for item in SDQ_ITENS
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
+        for n, t in itens_pagina
     ]
-    return render(request, "questionario/avaliacoes/sdq_form.html", {
-        "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
-        "itens": itens_render,
-        "opcoes": SDQ_OPCOES,
-        "subescalas": SDQ_SUBESCALAS,
-        "itens_faltando": itens_faltando,
-    })
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html",
+                  _context_pagina(avaliacao, pagina_dict, pagina, itens_render, respostas_salvas, itens_faltando))
 
 
 @login_required
 def sdq_resultado(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
-        return redirect("sdq_form", avaliacao_id=avaliacao_id)
+        return redirect("sdq_form", avaliacao_id=avaliacao_id, pagina=1)
     resultado, total, class_total = _build_resultado(avaliacao)
     return render(request, "questionario/avaliacoes/sdq_resultado.html", {
         "avaliacao": avaliacao,
@@ -145,23 +226,27 @@ def sdq_resultado(request, avaliacao_id):
 
 
 @login_required
-def sdq_visualizar(request, avaliacao_id):
+def sdq_visualizar(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
-    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("sdq_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    pagina_dict = SDQ_PAGINAS[pagina - 1]
+    itens_pagina = _itens_da_pagina(pagina_dict)
+    numeros_pagina = [n for n, _ in itens_pagina]
+
+    respostas_qs = list(avaliacao.respostas.filter(numero_item__in=numeros_pagina))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
     itens_render = [
-        {**item, "resposta_salva": respostas_salvas.get(item["numero"]), "faltando": False}
-        for item in SDQ_ITENS
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_salvas.get(n, "")}
+        for n, t in itens_pagina
     ]
-    return render(request, "questionario/avaliacoes/sdq_form.html", {
-        "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
-        "itens": itens_render,
-        "subescalas": SDQ_SUBESCALAS,
-        "opcoes": SDQ_OPCOES,
-        "respostas_salvas": respostas_salvas,
-        "itens_faltando": [],
-        "readonly": True,
-    })
+    ctx = _context_pagina(avaliacao, pagina_dict, pagina, itens_render, respostas_salvas, [])
+    ctx["progresso"] = int(pagina / TOTAL_PAGINAS * 100)
+    ctx["readonly"] = True
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", ctx)
 
 
 @login_required
@@ -205,7 +290,7 @@ def enviar_email_sdq(request, avaliacao_id):
         avaliacao.token = str(uuid.uuid4())
         avaliacao.save(update_fields=["token"])
     from django.template.loader import render_to_string
-    link = request.build_absolute_uri(reverse("sdq_publico", kwargs={"token": avaliacao.token}))
+    link = request.build_absolute_uri(reverse("sdq_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
         send_mail(
@@ -231,60 +316,52 @@ def enviar_email_sdq(request, avaliacao_id):
 
 # ── View pública (token) ──────────────────────────────────────────────────────
 
-def sdq_publico(request, token):
+def sdq_publico(request, token, pagina):
     avaliacao = get_object_or_404(AvaliacaoSDQ, token=token)
     if avaliacao.status == "concluida":
         return render(request, "questionario/dashboard/concluido.html")
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("sdq_publico", token=token, pagina=1)
 
-    respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    pagina_dict = SDQ_PAGINAS[pagina - 1]
+    itens_pagina = _itens_da_pagina(pagina_dict)
+    numeros_pagina = [n for n, _ in itens_pagina]
+
+    respostas_qs = list(avaliacao.respostas.filter(numero_item__in=numeros_pagina))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
     itens_faltando = []
+    obs_render = {}
 
     if request.method == "POST":
-        erros = []
-        novas = {}
-        for item in SDQ_ITENS:
-            val = request.POST.get(f"item_{item['numero']}")
-            if val is None:
-                erros.append(item["numero"])
-            else:
-                try:
-                    v = int(val)
-                    if v in (0, 1, 2):
-                        novas[item["numero"]] = v
-                    else:
-                        erros.append(item["numero"])
-                except (ValueError, TypeError):
-                    erros.append(item["numero"])
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_pagina_sdq(request, pagina_dict)
+        obs_render = obs
 
-        if erros and request.POST.get("confirmar_incompleto") != "1":
-            respostas_salvas.update(novas)
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_salvas)
+            resp_render.update(novas)
+            respostas_salvas = resp_render
             itens_faltando = erros
         else:
-            for numero, valor in novas.items():
-                RespostaSDQ.objects.update_or_create(
-                    avaliacao=avaliacao, numero_item=numero, defaults={"valor": valor}
-                )
-            avaliacao = _calcular_sdq(avaliacao)
-            avaliacao.status = "concluida"
-            avaliacao.save()
-            try:
-                notificar_terapeuta(avaliacao.paciente, "sdq", request)
-            except Exception:
-                pass
-            return render(request, "questionario/dashboard/concluido.html")
+            _salvar_respostas_sdq(avaliacao, novas, obs)
+            proxima = pagina + 1
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_sdq(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                try:
+                    notificar_terapeuta(avaliacao.paciente, "sdq", request)
+                except Exception:
+                    pass
+                return render(request, "questionario/dashboard/concluido.html")
+            return redirect("sdq_publico", token=token, pagina=proxima)
 
     itens_render = [
-        {**item, "resposta_salva": respostas_salvas.get(item["numero"]),
-         "faltando": item["numero"] in itens_faltando}
-        for item in SDQ_ITENS
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
+        for n, t in itens_pagina
     ]
-    return render(request, "questionario/avaliacoes/sdq_form.html", {
-        "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
-        "itens": itens_render,
-        "opcoes": SDQ_OPCOES,
-        "subescalas": SDQ_SUBESCALAS,
-        "itens_faltando": itens_faltando,
-        "publico": True,
-        "token": token,
-    })
+    ctx = _context_pagina(avaliacao, pagina_dict, pagina, itens_render, respostas_salvas, itens_faltando,
+                          extra={"publico": True, "token": token})
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", ctx)
