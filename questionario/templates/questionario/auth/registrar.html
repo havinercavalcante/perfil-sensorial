@@ -53,6 +53,54 @@
   .esp-item.checked { background: #e4f5fb; border-color: var(--primary); }
   .esp-label { font-size: .87rem; color: var(--text); font-weight: 500; line-height: 1.3; }
   .esp-hint { font-size: .78rem; color: var(--text-muted); font-style: italic; margin-bottom: .5rem; }
+  /* Planos */
+  .plano-grid { display: flex; flex-direction: column; gap: .45rem; margin-bottom: .5rem; }
+  .plano-card {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    position: relative;
+  }
+  .plano-card:hover { border-color: var(--primary); background: #f0f9ff; }
+  .plano-card.selected { border-color: var(--primary-dark); background: #e4f5fb; box-shadow: 0 0 0 3px rgba(57,171,203,.15); }
+  .plano-card.popular { border-color: var(--primary); }
+  .plano-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+  /* Radio circle */
+  .plano-radio {
+    width: 18px; height: 18px; flex-shrink: 0;
+    border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s;
+  }
+  .plano-radio::after {
+    content: ''; width: 8px; height: 8px;
+    border-radius: 50%; background: transparent;
+    transition: background .2s;
+  }
+  .plano-card.selected .plano-radio { border-color: var(--primary-dark); }
+  .plano-card.selected .plano-radio::after { background: var(--primary-dark); }
+
+  /* Trial overrides */
+  #card-trial { border-color: #10B981; }
+  #card-trial:hover { background: #f0fdf4; }
+  #card-trial.selected { border-color: #10B981; background: #ecfdf5; box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+  #card-trial.selected .plano-radio { border-color: #10B981; }
+  #card-trial.selected .plano-radio::after { background: #10B981; }
+
+  .plano-info { flex: 1; min-width: 0; }
+  .plano-nome { font-size: .9rem; font-weight: 800; color: var(--primary-dark); display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+  .plano-modulos { font-size: .71rem; color: var(--text-muted); margin-top: .18rem; line-height: 1.35; }
+
+  .plano-right { text-align: right; flex-shrink: 0; }
+  .plano-preco { font-size: 1rem; font-weight: 700; color: var(--primary); line-height: 1.2; }
+  .plano-preco small { font-size: .67rem; font-weight: 500; }
+  .plano-badge { display: inline-block; font-size: .63rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 20px; padding: .08rem .45rem; margin-bottom: .2rem; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -133,6 +181,62 @@
       <span>Li e concordo com a <a href="{% url 'politica_privacidade' %}" target="_blank">Política de Privacidade</a> e autorizo o tratamento dos meus dados pessoais conforme a LGPD (Lei nº 13.709/2018).</span>
     </label>
 
+    <div class="section-label"><i data-lucide="layers" style="width:13px;height:13px;vertical-align:middle;"></i> Plano de Assinatura</div>
+    <p class="esp-hint">Comece grátis por 7 dias ou escolha já o seu plano.</p>
+    <div class="plano-grid">
+
+      <label class="plano-card {% if plano_selecionado == 'trial' or not plano_selecionado %}selected{% endif %}" id="card-trial" onclick="selecionarPlano('trial')">
+        <input type="radio" name="plano" value="trial" {% if plano_selecionado == 'trial' or not plano_selecionado %}checked{% endif %}>
+        <div class="plano-radio"></div>
+        <div class="plano-info">
+          <div class="plano-nome" style="color:#065F46;"><i data-lucide="gift" style="width:14px;height:14px;"></i>GRÁTIS — 7 dias</div>
+          <div class="plano-modulos">Perfil Sensorial · Bebê · Escolar · SPM</div>
+        </div>
+        <div class="plano-right">
+          <div class="plano-badge" style="background:#10B981;">Recomendado</div>
+          <div class="plano-preco" style="color:#10B981;">R$&nbsp;0<small>/7 dias</small></div>
+        </div>
+      </label>
+
+      <label class="plano-card {% if plano_selecionado == 'start' %}selected{% endif %}" id="card-start" onclick="selecionarPlano('start')">
+        <input type="radio" name="plano" value="start" {% if plano_selecionado == 'start' %}checked{% endif %}>
+        <div class="plano-radio"></div>
+        <div class="plano-info">
+          <div class="plano-nome"><i data-lucide="rocket" style="width:14px;height:14px;"></i>START</div>
+          <div class="plano-modulos">Perfil Sensorial · Bebê · Escolar · SPM</div>
+        </div>
+        <div class="plano-right">
+          <div class="plano-preco">R$&nbsp;39<small>,90/mês</small></div>
+        </div>
+      </label>
+
+      <label class="plano-card popular {% if plano_selecionado == 'plus' %}selected{% endif %}" id="card-plus" onclick="selecionarPlano('plus')">
+        <input type="radio" name="plano" value="plus" {% if plano_selecionado == 'plus' %}checked{% endif %}>
+        <div class="plano-radio"></div>
+        <div class="plano-info">
+          <div class="plano-nome"><i data-lucide="star" style="width:14px;height:14px;"></i>PLUS</div>
+          <div class="plano-modulos">START + Vineland · PEDI · Portage</div>
+        </div>
+        <div class="plano-right">
+          <div class="plano-badge"><i data-lucide="star" style="width:8px;height:8px;vertical-align:middle;margin-right:2px;"></i>Mais Popular</div>
+          <div class="plano-preco">R$&nbsp;79<small>,90/mês</small></div>
+        </div>
+      </label>
+
+      <label class="plano-card {% if plano_selecionado == 'elite' %}selected{% endif %}" id="card-elite" onclick="selecionarPlano('elite')">
+        <input type="radio" name="plano" value="elite" {% if plano_selecionado == 'elite' %}checked{% endif %}>
+        <div class="plano-radio"></div>
+        <div class="plano-info">
+          <div class="plano-nome"><i data-lucide="gem" style="width:14px;height:14px;"></i>ELITE</div>
+          <div class="plano-modulos">Todos os módulos + ilimitado</div>
+        </div>
+        <div class="plano-right">
+          <div class="plano-preco">R$&nbsp;149<small>,90/mês</small></div>
+        </div>
+      </label>
+
+    </div>
+
     <button type="submit" class="btn">Criar Conta <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
   </form>
   <div class="link-row">Já tem conta? <a href="{% url 'login' %}">Entrar</a></div>
@@ -142,6 +246,13 @@
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
   lucide.createIcons();
+
+  function selecionarPlano(plano) {
+    document.querySelectorAll('.plano-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('card-' + plano).classList.add('selected');
+    document.querySelector('input[name=plano][value="' + plano + '"]').checked = true;
+  }
+
   document.getElementById('telefone').addEventListener('input', function (e) {
     let v = e.target.value.replace(/\D/g, '').slice(0, 11);
     if (v.length > 10)      v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');

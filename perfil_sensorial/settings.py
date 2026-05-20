@@ -34,6 +34,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'questionario.middleware.TrialExpiradoMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -103,6 +104,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
+CELERY_BEAT_SCHEDULE = {
+    "desativar-trials-expirados": {
+        "task": "questionario.tasks.desativar_trials_expirados",
+        "schedule": 86400,  # a cada 24 horas
+    },
+}
 
 # ── Logging de auditoria LGPD ─────────────────────────────────────────────────
 _logs_dir = BASE_DIR / 'logs'

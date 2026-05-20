@@ -373,16 +373,17 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
         <div class="tbl-hd"><span class="tbl-hd-t">Profissionais cadastrados</span></div>
         <div class="tbl-scroll">
           <table class="t">
-            <thead><tr><th>Nome</th><th>Pacientes</th><th>Módulos</th></tr></thead>
+            <thead><tr><th>Nome</th><th>Plano</th><th>Pacientes</th><th>Módulos</th></tr></thead>
             <tbody>
               {% for p in s.medicos %}
               <tr>
                 <td><a href="/admin/auth/user/{{ p.user.id }}/change/">{{ p.user.get_full_name|default:p.user.username }}</a></td>
+                <td><span class="tag {% if p.plano == 'elite' %}g{% elif p.plano == 'plus' %}b{% else %}{% endif %}">{{ p.get_plano_display }}</span></td>
                 <td><span class="tag b">{{ p.n_pacientes }}</span></td>
                 <td>{{ p.modulos_liberados.count }}</td>
               </tr>
               {% empty %}
-              <tr class="empty"><td colspan="3">Nenhum profissional</td></tr>
+              <tr class="empty"><td colspan="4">Nenhum profissional</td></tr>
               {% endfor %}
             </tbody>
           </table>
