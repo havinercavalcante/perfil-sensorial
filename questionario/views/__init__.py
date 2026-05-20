@@ -18,6 +18,10 @@ from .mchat import *
 from .cars import *
 from .linguagem import *
 from .alimentacao import *
+from .habitos_orais import *
+from .voz_infantil import *
+from .processamento_auditivo import *
+from .idv10 import *
 from .desenvolvimento import *
 from .sono import *
 from .habilidades_adaptativas import *
