@@ -62,6 +62,10 @@ class ModuloAvaliacao(models.Model):
         # ── Fonoaudiologia ───────────────────────────────────────────────
         ("linguagem",              "Avaliação de Linguagem"),
         ("alimentacao_seletiva",   "Triagem de Alimentação Seletiva"),
+        ("habitos_orais",          "Hábitos Orais Deletérios"),
+        ("voz_infantil",           "Triagem de Voz Infantil (pVHI)"),
+        ("processamento_auditivo", "Triagem de Processamento Auditivo"),
+        ("idv10",                  "IDV-10 — Índice de Desvantagem Vocal"),
         # ── Pediatria / Neuropediatria ───────────────────────────────────
         ("desenvolvimento",        "Marcos de Desenvolvimento Infantil"),
         ("sono_infantil",          "Avaliação de Sono Infantil"),
@@ -108,6 +112,7 @@ MODULOS_POR_ESPECIALIDADE = {
     ],
     "fonoaudiologo": [
         "linguagem", "alimentacao_seletiva",
+        "habitos_orais", "voz_infantil", "processamento_auditivo", "idv10",
     ],
     "neuropsicoplogo": [
         "rastreio_cognitivo", "sdq", "snap_iv", "mchat", "cars",
@@ -646,6 +651,10 @@ class LinkConvite(models.Model):
         # ── Fonoaudiologia ───────────────────────────────────────────────
         ("linguagem",               "Avaliação de Linguagem"),
         ("alimentacao_seletiva",    "Triagem de Alimentação Seletiva"),
+        ("habitos_orais",           "Hábitos Orais Deletérios"),
+        ("voz_infantil",            "Triagem de Voz Infantil (pVHI)"),
+        ("processamento_auditivo",  "Triagem de Processamento Auditivo"),
+        ("idv10",                   "IDV-10 — Índice de Desvantagem Vocal"),
         # ── Pediatria / Neuropediatria ───────────────────────────────────
         ("desenvolvimento",         "Marcos de Desenvolvimento Infantil"),
         ("sono_infantil",           "Avaliação de Sono Infantil"),
@@ -763,6 +772,7 @@ class RespostaSDQ(models.Model):
     avaliacao    = models.ForeignKey(AvaliacaoSDQ, on_delete=models.CASCADE, related_name="respostas")
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()  # 0 / 1 / 2
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "numero_item")
@@ -812,6 +822,7 @@ class RespostaSNAPIV(models.Model):
     avaliacao    = models.ForeignKey(AvaliacaoSNAPIV, on_delete=models.CASCADE, related_name="respostas")
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()  # 0–3
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "numero_item")
@@ -919,8 +930,8 @@ class RespostaCARS(models.Model):
 class AvaliacaoLinguagem(models.Model):
     """Checklist clínico de avaliação de linguagem — Fonoaudiologia.
     Áreas: Recepção/Compreensão, Expressão Oral, Pragmática,
-    Fonologia/Articulação.
-    Escala por item: 0=Ausente / 1=Emergente / 2=Presente.
+    Fonologia/Articulação, Fluência, Consciência Fonológica.
+    Escala por item: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
@@ -930,10 +941,12 @@ class AvaliacaoLinguagem(models.Model):
     status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
     pagina_atual     = models.IntegerField(default=1)
 
-    pont_recepcao    = models.IntegerField("Recepção/Compreensão",   null=True, blank=True)
-    pont_expressao   = models.IntegerField("Expressão Oral",         null=True, blank=True)
-    pont_pragmatica  = models.IntegerField("Pragmática",             null=True, blank=True)
-    pont_fonologia   = models.IntegerField("Fonologia/Articulação",  null=True, blank=True)
+    pont_recepcao        = models.IntegerField("Recepção/Compreensão",   null=True, blank=True)
+    pont_expressao       = models.IntegerField("Expressão Oral",         null=True, blank=True)
+    pont_pragmatica      = models.IntegerField("Pragmática",             null=True, blank=True)
+    pont_fonologia       = models.IntegerField("Fonologia/Articulação",  null=True, blank=True)
+    pont_fluencia        = models.IntegerField("Fluência",               null=True, blank=True)
+    pont_consciencia_fono = models.IntegerField("Consciência Fonológica", null=True, blank=True)
 
     observacoes      = models.TextField(blank=True, default="")
     email_enviado_em = models.DateTimeField(null=True, blank=True)
@@ -953,6 +966,7 @@ class RespostaLinguagem(models.Model):
     dominio      = models.CharField(max_length=30)
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()  # 0=ausente / 1=emergente / 2=presente
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
@@ -976,10 +990,11 @@ class AvaliacaoAlimentacao(models.Model):
     pagina_atual          = models.IntegerField(default=1)
 
     pont_variedade        = models.IntegerField("Variedade Alimentar",     null=True, blank=True)
-    pont_sensibilidade    = models.IntegerField("Sensibilidade Sensorial", null=True, blank=True)
-    pont_recusa_rituais   = models.IntegerField("Recusa/Rituais",          null=True, blank=True)
-    pont_motricidade_oral = models.IntegerField("Motricidade Oral",        null=True, blank=True)
-    pont_degluticao       = models.IntegerField("Deglutição",              null=True, blank=True)
+    pont_sensibilidade    = models.IntegerField("Tolerância Sensorial",    null=True, blank=True)
+    pont_recusa_rituais   = models.IntegerField("Comportamento Refeições", null=True, blank=True)
+    pont_interesse        = models.IntegerField("Interesse e Apetite",     null=True, blank=True)
+    pont_motricidade_oral = models.IntegerField("Motricidade Orofacial",   null=True, blank=True)
+    pont_degluticao       = models.IntegerField("Deglutição e Segurança",  null=True, blank=True)
 
     observacoes      = models.TextField(blank=True, default="")
     email_enviado_em = models.DateTimeField(null=True, blank=True)
@@ -999,6 +1014,176 @@ class RespostaAlimentacao(models.Model):
     dominio      = models.CharField(max_length=30)
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()
+    observacao   = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── Hábitos Orais Deletérios ─────────────────────────────────────────────────
+
+class AvaliacaoHabitosOrais(models.Model):
+    """Triagem de hábitos orais deletérios — Fonoaudiologia.
+    Áreas: Respiração Nasal, Sucção Não-Nutritiva, Mastigação,
+    Padrão de Deglutição, Postura e Bruxismo.
+    Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_habitos_orais")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_respiracao  = models.IntegerField("Respiração Nasal",     null=True, blank=True)
+    pont_succao      = models.IntegerField("Sucção Não-Nutritiva", null=True, blank=True)
+    pont_mastigacao  = models.IntegerField("Mastigação",           null=True, blank=True)
+    pont_degluticao  = models.IntegerField("Padrão de Deglutição", null=True, blank=True)
+    pont_postura     = models.IntegerField("Postura e Bruxismo",   null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Triagem de Hábitos Orais"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Hábitos Orais — {self.paciente.nome} — {self.data}"
+
+
+class RespostaHabitosOrais(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoHabitosOrais, on_delete=models.CASCADE, related_name="respostas")
+    dominio     = models.CharField(max_length=30)
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── Triagem de Voz Infantil (pVHI) ───────────────────────────────────────────
+
+class AvaliacaoVozInfantil(models.Model):
+    """Triagem de voz infantil — pVHI adaptado — Fonoaudiologia.
+    Áreas: Funcional, Físico, Emocional.
+    Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_voz_infantil")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_funcional   = models.IntegerField("Funcional",  null=True, blank=True)
+    pont_fisico      = models.IntegerField("Físico",     null=True, blank=True)
+    pont_emocional   = models.IntegerField("Emocional",  null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Triagem de Voz Infantil"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Voz Infantil — {self.paciente.nome} — {self.data}"
+
+
+class RespostaVozInfantil(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoVozInfantil, on_delete=models.CASCADE, related_name="respostas")
+    dominio     = models.CharField(max_length=30)
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── Triagem de Processamento Auditivo ────────────────────────────────────────
+
+class AvaliacaoProcessamentoAuditivo(models.Model):
+    """Triagem comportamental de processamento auditivo central — Fonoaudiologia.
+    Áreas: Atenção/Discriminação, Compreensão, Memória, Figura-Fundo, Impacto.
+    Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_processamento_auditivo")
+    token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data               = models.DateField(default=timezone.now)
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual       = models.IntegerField(default=1)
+    pont_atencao       = models.IntegerField("Atenção e Discriminação", null=True, blank=True)
+    pont_compreensao   = models.IntegerField("Compreensão Auditiva",    null=True, blank=True)
+    pont_memoria       = models.IntegerField("Memória Auditiva",        null=True, blank=True)
+    pont_figura_fundo  = models.IntegerField("Figura-Fundo",            null=True, blank=True)
+    pont_impacto       = models.IntegerField("Impacto Funcional",       null=True, blank=True)
+    observacoes        = models.TextField(blank=True, default="")
+    email_enviado_em   = models.DateTimeField(null=True, blank=True)
+    criado_em          = models.DateTimeField(auto_now_add=True)
+    atualizado_em      = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Triagem de Processamento Auditivo"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Processamento Auditivo — {self.paciente.nome} — {self.data}"
+
+
+class RespostaProcessamentoAuditivo(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoProcessamentoAuditivo, on_delete=models.CASCADE, related_name="respostas")
+    dominio     = models.CharField(max_length=30)
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering = ["dominio", "numero_item"]
+
+
+# ── IDV-10 (Índice de Desvantagem Vocal) ─────────────────────────────────────
+
+class AvaliacaoIDV10(models.Model):
+    """IDV-10 — Índice de Desvantagem Vocal (VHI-10 adaptado) — Fonoaudiologia.
+    Para adolescentes e adultos, auto-relato ou respondido pelo responsável.
+    Áreas: Impacto Comunicativo, Aspectos Físicos.
+    Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_idv10")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_comunicativo = models.IntegerField("Impacto Comunicativo", null=True, blank=True)
+    pont_fisico       = models.IntegerField("Aspectos Físicos",     null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "IDV-10"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"IDV-10 — {self.paciente.nome} — {self.data}"
+
+
+class RespostaIDV10(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoIDV10, on_delete=models.CASCADE, related_name="respostas")
+    dominio     = models.CharField(max_length=30)
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
@@ -1049,6 +1234,7 @@ class RespostaDesenvolvimento(models.Model):
     dominio      = models.CharField(max_length=30)
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()  # 0=Não atingido / 1=Em aquisição / 2=Atingido
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
@@ -1096,6 +1282,7 @@ class RespostaSono(models.Model):
     avaliacao    = models.ForeignKey(AvaliacaoSono, on_delete=models.CASCADE, related_name="respostas")
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()  # 1=Nunca / 2=Às vezes / 3=Sempre
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "numero_item")
@@ -1146,6 +1333,7 @@ class RespostaHabilidadesAdaptativas(models.Model):
     dominio      = models.CharField(max_length=30)
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()  # 0–3
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
@@ -1191,6 +1379,7 @@ class RespostaComportamentoFuncional(models.Model):
     avaliacao    = models.ForeignKey(AvaliacaoComportamentoFuncional, on_delete=models.CASCADE, related_name="respostas")
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "numero_item")
@@ -1242,6 +1431,7 @@ class RespostaRastreioCognitivo(models.Model):
     dominio      = models.CharField(max_length=30)
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
@@ -1291,6 +1481,7 @@ class RespostaPsicopedagogica(models.Model):
     dominio      = models.CharField(max_length=30)
     numero_item  = models.IntegerField()
     valor        = models.IntegerField()
+    observacao   = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")

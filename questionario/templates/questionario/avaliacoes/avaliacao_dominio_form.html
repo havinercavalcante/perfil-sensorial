@@ -1,5 +1,5 @@
 {% extends "questionario/base.html" %}
-{% block title %}Avaliação de Linguagem — {{ dominio.nome }} — {{ paciente.nome }}{% endblock %}
+{% block title %}{{ dominio.nome }} — {{ avaliacao_titulo }} — {{ paciente.nome }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -43,14 +43,14 @@
     border-color:var(--mod);
     background:color-mix(in srgb, var(--mod) 4%, #fff);
   }
-  .pergunta-card.faltando {
-    border-color:#EF4444; background:#FFF5F5;
-  }
+  .pergunta-card.faltando { border-color:#EF4444; background:#FFF5F5; }
   .pergunta-num  { font-size:.72rem; font-weight:700; color:var(--text-muted); margin-bottom:.3rem; }
   .pergunta-texto { font-size:.91rem; color:var(--text); line-height:1.55; margin-bottom:1rem; }
 
   .opcoes-grid {
-    display:grid; grid-template-columns:repeat(4,1fr); gap:.4rem;
+    display:grid;
+    grid-template-columns:repeat({{ opcoes|length }}, 1fr);
+    gap:.4rem;
   }
   .opcao-label {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -70,6 +70,25 @@
     padding:.3rem .75rem; font-size:.78rem; color:#666; margin-bottom:1rem;
   }
 
+  .obs-toggle {
+    display:inline-flex; align-items:center; gap:.3rem;
+    background:none; border:none; cursor:pointer;
+    font-size:.75rem; color:var(--text-muted); padding:.2rem 0; margin-top:.5rem;
+    transition:color .15s;
+  }
+  .obs-toggle:hover { color:var(--mod); }
+  .obs-toggle svg { width:13px; height:13px; flex-shrink:0; }
+  .obs-field { margin-top:.4rem; }
+  .obs-item-textarea {
+    width:100%; border:1.5px solid var(--border); border-radius:8px;
+    padding:.5rem .7rem; font-size:.8rem; color:var(--text); line-height:1.45;
+    resize:vertical; min-height:52px; background:#FAFAFA;
+    transition:border-color .15s;
+    font-family:inherit;
+  }
+  .obs-item-textarea:focus { outline:none; border-color:var(--mod); background:#fff; }
+  .obs-item-textarea:disabled { background:#f5f5f5; color:#888; cursor:not-allowed; }
+
   .nav-footer {
     display:flex; justify-content:space-between; align-items:center;
     flex-wrap:wrap; gap:.75rem; margin-top:1.75rem;
@@ -84,7 +103,7 @@
   .alerta-incompleto.visivel { display:block; }
 
   @media (max-width:480px) {
-    .opcoes-grid { grid-template-columns:repeat(2,1fr); }
+    .opcoes-grid { grid-template-columns:repeat(2,1fr) !important; }
   }
 </style>
 {% endblock %}
@@ -144,7 +163,7 @@
           onclick="confirmarIncompleto()">Continuar mesmo assim</button>
 </div>
 
-<form method="post" id="form-linguagem">
+<form method="post" id="form-avaliacao">
   {% csrf_token %}
   <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
 
@@ -166,6 +185,15 @@
       </label>
       {% endfor %}
     </div>
+    <button type="button" class="obs-toggle" onclick="toggleObs({{ item.numero }})">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Observação{% if item.observacao_salva %} <span style="color:var(--mod);">●</span>{% endif %}
+    </button>
+    <div class="obs-field" id="obs-{{ item.numero }}" {% if not item.observacao_salva %}style="display:none"{% endif %}>
+      <textarea name="obs_{{ item.numero }}" class="obs-item-textarea"
+                placeholder="Observação sobre este item (opcional)..."
+                {% if readonly %}disabled{% endif %}>{{ item.observacao_salva|default:"" }}</textarea>
+    </div>
   </div>
   {% endfor %}
 
@@ -173,15 +201,15 @@
     <div>
       {% if pagina_anterior %}
         {% if readonly %}
-        <a href="{% url 'linguagem_visualizar' avaliacao.id pagina_anterior %}" class="btn btn-secondary">
+        <a href="{% url url_visualizar_name avaliacao.id pagina_anterior %}" class="btn btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
         </a>
         {% elif publico %}
-        <a href="{% url 'linguagem_publico' token pagina_anterior %}" class="btn btn-secondary">
+        <a href="{% url url_publico_name token pagina_anterior %}" class="btn btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
         </a>
         {% else %}
-        <a href="{% url 'linguagem_form' avaliacao.id pagina_anterior %}" class="btn btn-secondary">
+        <a href="{% url url_form_name avaliacao.id pagina_anterior %}" class="btn btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
         </a>
         {% endif %}
@@ -204,11 +232,11 @@
         {% endif %}
       {% else %}
         {% if pagina < total %}
-        <a href="{% url 'linguagem_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
+        <a href="{% url url_visualizar_name avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
           Próximo <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 5 5-5 5"/><path d="m6 7 5 5-5 5"/></svg>
         </a>
         {% else %}
-        <a href="{% url 'linguagem_resultado' avaliacao.id %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
+        <a href="{% url url_resultado_name avaliacao.id %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
           <i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Ver Resultado
         </a>
         {% endif %}
@@ -231,7 +259,17 @@ function marcarRespondida(numero, input) {
 
 function confirmarIncompleto() {
   document.getElementById('confirmar-incompleto').value = '1';
-  document.getElementById('form-linguagem').submit();
+  document.getElementById('form-avaliacao').submit();
+}
+
+function toggleObs(numero) {
+  var el = document.getElementById('obs-' + numero);
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    el.querySelector('textarea').focus();
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 {% if itens_faltando %}
