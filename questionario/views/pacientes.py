@@ -36,8 +36,10 @@ def _build_pedi_lista(queryset, request):
     return result
 
 
-@login_required
 def index(request):
+    if not request.user.is_authenticated:
+        return render(request, "questionario/landing.html")
+
     from django.db.models import Count, Q, Avg
     from django.utils import timezone as tz
     pacientes = (

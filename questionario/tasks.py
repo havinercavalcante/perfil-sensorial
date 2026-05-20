@@ -64,3 +64,32 @@ def enviar_email_notificacao(self, paciente_id, tipo, link):
         )
     except Exception as exc:
         raise self.retry(exc=exc)
+
+
+@shared_task
+def desativar_trials_expirados():
+    """
+    Executa diariamente via Celery Beat.
+    Desativa contas cujo trial de 7 dias já encerrou:
+      - Define user.is_active = False
+      - Remove os módulos liberados (limpeza)
+    """
+    from django.utils import timezone
+    from django.contrib.auth.models import User
+    from .models import PerfilMedico
+
+    limite = timezone.now() - timezone.timedelta(days=7)
+    perfis_expirados = PerfilMedico.objects.filter(
+        plano="trial",
+        trial_inicio__lt=limite,
+        user__is_active=True,
+    ).select_related("user")
+
+    total = 0
+    for perfil in perfis_expirados:
+        perfil.user.is_active = False
+        perfil.user.save(update_fields=["is_active"])
+        perfil.modulos_liberados.clear()
+        total += 1
+
+    return f"{total} conta(s) de trial desativada(s)."

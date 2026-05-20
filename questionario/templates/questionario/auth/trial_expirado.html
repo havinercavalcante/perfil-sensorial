@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trial Expirado – IntegraMente</title>
+{% load static %}
+<style>
+  :root {
+    --primary: #39abcb; --primary-dark: #0c3c7b; --border: #85cde2; --bg: #d5eef5;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, #6accdc 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+  .box { background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.2); text-align: center; }
+  .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+  h1 { font-size: 1.4rem; color: var(--primary-dark); font-weight: 800; margin-bottom: .5rem; }
+  .sub { color: var(--primary); font-size: .92rem; margin-bottom: 1.8rem; line-height: 1.6; }
+  .divider { border: none; border-top: 1.5px solid var(--border); margin: 1.5rem 0; }
+  .planos { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: 1.2rem; }
+  @media(max-width:480px) { .planos { grid-template-columns: 1fr; } }
+  .plano-btn { display: flex; flex-direction: column; align-items: center; gap: .2rem; padding: .75rem .5rem; border: 2px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color .2s, background .2s; }
+  .plano-btn:hover { border-color: var(--primary); background: #f0f9ff; }
+  .plano-btn .nome { font-weight: 800; font-size: .9rem; color: var(--primary-dark); }
+  .plano-btn .preco { font-size: .78rem; color: var(--primary); }
+  .plano-btn .modulos { font-size: .68rem; color: #6b7280; margin-top: .15rem; }
+  .popular { border-color: var(--primary); }
+  .btn-logout { display: inline-block; margin-top: .5rem; font-size: .85rem; color: var(--primary); text-decoration: none; }
+  .btn-logout:hover { text-decoration: underline; }
+  .badge { display: inline-block; font-size: .65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 20px; padding: .1rem .45rem; margin-bottom: .15rem; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="icon">⏰</div>
+  <h1>Seu período de teste encerrou</h1>
+  <p class="sub">
+    Os 7 dias gratuitos do seu trial chegaram ao fim.<br>
+    Escolha um plano para continuar usando o IntegraMente.
+  </p>
+
+  <hr class="divider">
+  <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:.8rem;">Escolha seu plano</p>
+
+  <div class="planos">
+    <a href="{% url 'meu_perfil' %}?upgrade=start" class="plano-btn">
+      <span class="nome">START</span>
+      <span class="preco">R$&nbsp;39,90/mês</span>
+      <span class="modulos">Sensorial · Bebê · Escolar · SPM</span>
+    </a>
+    <a href="{% url 'meu_perfil' %}?upgrade=plus" class="plano-btn popular">
+      <span class="badge">Popular</span>
+      <span class="nome">PLUS</span>
+      <span class="preco">R$&nbsp;79,90/mês</span>
+      <span class="modulos">START + Vineland · PEDI · Portage</span>
+    </a>
+    <a href="{% url 'meu_perfil' %}?upgrade=elite" class="plano-btn">
+      <span class="nome">ELITE</span>
+      <span class="preco">R$&nbsp;149,90/mês</span>
+      <span class="modulos">Todos os módulos</span>
+    </a>
+  </div>
+
+  <p style="font-size:.78rem;color:#6b7280;">
+    Após escolher o plano, um administrador liberará seu acesso em até 24h.
+  </p>
+
+  <hr class="divider">
+  <a href="{% url 'logout' %}" class="btn-logout">Sair da conta</a>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>
