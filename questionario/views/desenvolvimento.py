@@ -8,6 +8,16 @@ from ..models import Paciente, AvaliacaoDesenvolvimento, RespostaDesenvolvimento
 from ..data.data_desenvolvimento import DESENVOLVIMENTO_DOMINIOS, DESENVOLVIMENTO_OPCOES
 from ..services import notificar_terapeuta
 
+TOTAL_PAGINAS = len(DESENVOLVIMENTO_DOMINIOS)
+
+_URL_NAMES = {
+    "url_form_name": "desenvolvimento_form",
+    "url_publico_name": "desenvolvimento_publico",
+    "url_visualizar_name": "desenvolvimento_visualizar",
+    "url_resultado_name": "desenvolvimento_resultado",
+    "avaliacao_titulo": "Avaliação de Desenvolvimento",
+}
+
 
 def _calcular_desenvolvimento(avaliacao):
     for dom in DESENVOLVIMENTO_DOMINIOS:
@@ -17,6 +27,38 @@ def _calcular_desenvolvimento(avaliacao):
         setattr(avaliacao, dom["campo"], total)
     return avaliacao
 
+
+def _processar_post_pagina(request, dom):
+    """Processa o POST de uma página, salva respostas e retorna (erros, novas, obs)."""
+    numeros = [n for n, _ in dom["itens"]]
+    valores_validos = {o["valor"] for o in DESENVOLVIMENTO_OPCOES}
+    erros, novas, obs = [], {}, {}
+    for numero in numeros:
+        val = request.POST.get(f"item_{numero}")
+        if val is None:
+            erros.append(numero)
+        else:
+            try:
+                v = int(val)
+                if v in valores_validos:
+                    novas[numero] = v
+                else:
+                    erros.append(numero)
+            except (ValueError, TypeError):
+                erros.append(numero)
+        obs[numero] = request.POST.get(f"obs_{numero}", "").strip()
+    return erros, novas, obs
+
+
+def _salvar_respostas(avaliacao, dom_key, novas, obs):
+    for numero, valor in novas.items():
+        RespostaDesenvolvimento.objects.update_or_create(
+            avaliacao=avaliacao, dominio=dom_key, numero_item=numero,
+            defaults={"valor": valor, "observacao": obs.get(numero, "")}
+        )
+
+
+# ── Views autenticadas ────────────────────────────────────────────────────────
 
 @login_required
 def nova_avaliacao_desenvolvimento(request, paciente_id):
@@ -29,65 +71,133 @@ def nova_avaliacao_desenvolvimento(request, paciente_id):
     av = AvaliacaoDesenvolvimento.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "id": av.id})
-    return redirect("desenvolvimento_form", avaliacao_id=av.id)
+    return redirect("desenvolvimento_form", avaliacao_id=av.id, pagina=1)
 
 
 @login_required
-def desenvolvimento_form(request, avaliacao_id):
+def desenvolvimento_form(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("desenvolvimento_resultado", avaliacao_id=avaliacao_id)
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("desenvolvimento_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    respostas_salvas = {
-        (r.dominio, r.numero_item): r.valor
-        for r in avaliacao.respostas.all()
-    }
+    dom = DESENVOLVIMENTO_DOMINIOS[pagina - 1]
+    numeros = [n for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+
+    itens_faltando = []
+    obs_render = {}
 
     if request.method == "POST":
-        import json as _json
-        erros, novas = [], {}
-        for dom in DESENVOLVIMENTO_DOMINIOS:
-            for numero, _ in dom["itens"]:
-                chave = f"{dom['key']}_{numero}"
-                val = request.POST.get(f"item_{chave}")
-                if val is None:
-                    erros.append(chave)
-                else:
-                    try:
-                        v = int(val)
-                        if v in {o["valor"] for o in DESENVOLVIMENTO_OPCOES}:
-                            novas[chave] = v
-                        else:
-                            erros.append(chave)
-                    except (ValueError, TypeError):
-                        erros.append(chave)
-        if erros:
-            respostas_form = {f"{d}_{n}": v for (d, n), v in respostas_salvas.items()}
-            respostas_form.update(novas)
-            return render(request, "questionario/avaliacoes/desenvolvimento_form.html", {
-                "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-                "dominios": DESENVOLVIMENTO_DOMINIOS, "opcoes": DESENVOLVIMENTO_OPCOES,
-                "respostas_salvas": respostas_salvas,
-                "respostas_json": _json.dumps(respostas_form),
-                "erros_json": _json.dumps(erros),
-            })
-        for chave, v in novas.items():
-            dom_key, _, num_str = chave.rpartition("_")
-            RespostaDesenvolvimento.objects.update_or_create(
-                avaliacao=avaliacao, dominio=dom_key, numero_item=int(num_str),
-                defaults={"valor": v}
-            )
-        avaliacao = _calcular_desenvolvimento(avaliacao)
-        avaliacao.status = "concluida"
-        avaliacao.save()
-        return redirect("desenvolvimento_resultado", avaliacao_id=avaliacao_id)
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_pagina(request, dom)
+        obs_render = obs
 
-    return render(request, "questionario/avaliacoes/desenvolvimento_form.html", {
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_salvas)
+            resp_render.update(novas)
+            itens_faltando = erros
+            respostas_salvas = resp_render
+        else:
+            _salvar_respostas(avaliacao, dom["key"], novas, obs)
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_desenvolvimento(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                return redirect("desenvolvimento_resultado", avaliacao_id=avaliacao_id)
+            return redirect("desenvolvimento_form", avaliacao_id=avaliacao_id, pagina=proxima)
+
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
+        for n, t in dom["itens"]
+    ]
+
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
-        "dominios": DESENVOLVIMENTO_DOMINIOS,
+        "dominio": dom,
+        "itens": itens_render,
         "opcoes": DESENVOLVIMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, DESENVOLVIMENTO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
+    })
+
+
+def desenvolvimento_publico(request, token, pagina):
+    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, token=token)
+    if avaliacao.status == "concluida":
+        return render(request, "questionario/dashboard/concluido.html")
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("desenvolvimento_publico", token=token, pagina=1)
+
+    dom = DESENVOLVIMENTO_DOMINIOS[pagina - 1]
+    numeros = [n for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+
+    itens_faltando = []
+    obs_render = {}
+
+    if request.method == "POST":
+        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_pagina(request, dom)
+        obs_render = obs
+
+        if erros and not confirmar_incompleto:
+            resp_render = dict(respostas_salvas)
+            resp_render.update(novas)
+            itens_faltando = erros
+            respostas_salvas = resp_render
+        else:
+            _salvar_respostas(avaliacao, dom["key"], novas, obs)
+            proxima = pagina + 1
+            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.save(update_fields=["pagina_atual"])
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_desenvolvimento(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                try:
+                    notificar_terapeuta(avaliacao.paciente, "desenvolvimento", request)
+                except Exception:
+                    pass
+                return render(request, "questionario/dashboard/concluido.html")
+            return redirect("desenvolvimento_publico", token=token, pagina=proxima)
+
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
+        for n, t in dom["itens"]
+    ]
+
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "dominio": dom,
+        "itens": itens_render,
+        "opcoes": DESENVOLVIMENTO_OPCOES,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, DESENVOLVIMENTO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": itens_faltando,
+        "publico": True,
+        "token": token,
     })
 
 
@@ -95,7 +205,7 @@ def desenvolvimento_form(request, avaliacao_id):
 def desenvolvimento_resultado(request, avaliacao_id):
     avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
-        return redirect("desenvolvimento_form", avaliacao_id=avaliacao_id)
+        return redirect("desenvolvimento_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
     resultado = []
     for dom in DESENVOLVIMENTO_DOMINIOS:
         score = getattr(avaliacao, dom["campo"]) or 0
@@ -116,15 +226,35 @@ def desenvolvimento_resultado(request, avaliacao_id):
 
 
 @login_required
-def desenvolvimento_visualizar(request, avaliacao_id):
-    import json
+def desenvolvimento_visualizar(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
-    respostas_salvas = {(r.dominio, r.numero_item): r.valor for r in avaliacao.respostas.all()}
-    respostas_json = json.dumps({f"{d}_{n}": v for (d, n), v in respostas_salvas.items()})
-    return render(request, "questionario/avaliacoes/desenvolvimento_form.html", {
-        "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-        "dominios": DESENVOLVIMENTO_DOMINIOS, "opcoes": DESENVOLVIMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas, "respostas_json": respostas_json, "readonly": True,
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("desenvolvimento_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+
+    dom = DESENVOLVIMENTO_DOMINIOS[pagina - 1]
+    numeros = [n for n, _ in dom["itens"]]
+    respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+    itens_render = [
+        {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
+         "observacao_salva": obs_salvas.get(n, "")}
+        for n, t in dom["itens"]
+    ]
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
+        **_URL_NAMES,
+        "avaliacao": avaliacao,
+        "paciente": avaliacao.paciente,
+        "dominio": dom,
+        "itens": itens_render,
+        "opcoes": DESENVOLVIMENTO_OPCOES,
+        "pagina": pagina,
+        "total": TOTAL_PAGINAS,
+        "progresso": int(pagina / TOTAL_PAGINAS * 100),
+        "paginas_dominios": [(i + 1, DESENVOLVIMENTO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "pagina_anterior": pagina - 1 if pagina > 1 else None,
+        "itens_faltando": [],
+        "readonly": True,
     })
 
 
@@ -150,68 +280,3 @@ def salvar_observacoes_desenvolvimento(request, avaliacao_id):
             return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas.")
     return redirect("desenvolvimento_resultado", avaliacao_id=avaliacao_id)
-
-
-def desenvolvimento_publico(request, token):
-    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, token=token)
-    if avaliacao.status == "concluida":
-        return render(request, "questionario/dashboard/concluido.html")
-
-    respostas_salvas = {
-        (r.dominio, r.numero_item): r.valor
-        for r in avaliacao.respostas.all()
-    }
-
-    if request.method == "POST":
-        import json as _json
-        erros, novas = [], {}
-        for dom in DESENVOLVIMENTO_DOMINIOS:
-            for numero, _ in dom["itens"]:
-                chave = f"{dom['key']}_{numero}"
-                val = request.POST.get(f"item_{chave}")
-                if val is None:
-                    erros.append(chave)
-                else:
-                    try:
-                        v = int(val)
-                        if v in {o["valor"] for o in DESENVOLVIMENTO_OPCOES}:
-                            novas[chave] = v
-                        else:
-                            erros.append(chave)
-                    except (ValueError, TypeError):
-                        erros.append(chave)
-        if erros:
-            respostas_form = {f"{d}_{n}": v for (d, n), v in respostas_salvas.items()}
-            respostas_form.update(novas)
-            return render(request, "questionario/avaliacoes/desenvolvimento_form.html", {
-                "avaliacao": avaliacao, "paciente": avaliacao.paciente,
-                "dominios": DESENVOLVIMENTO_DOMINIOS, "opcoes": DESENVOLVIMENTO_OPCOES,
-                "respostas_salvas": respostas_salvas,
-                "respostas_json": _json.dumps(respostas_form),
-                "erros_json": _json.dumps(erros),
-                "publico": True, "token": token,
-            })
-        for chave, v in novas.items():
-            dom_key, _, num_str = chave.rpartition("_")
-            RespostaDesenvolvimento.objects.update_or_create(
-                avaliacao=avaliacao, dominio=dom_key, numero_item=int(num_str),
-                defaults={"valor": v}
-            )
-        avaliacao = _calcular_desenvolvimento(avaliacao)
-        avaliacao.status = "concluida"
-        avaliacao.save()
-        try:
-            notificar_terapeuta(avaliacao.paciente, "desenvolvimento", request)
-        except Exception:
-            pass
-        return render(request, "questionario/dashboard/concluido.html")
-
-    return render(request, "questionario/avaliacoes/desenvolvimento_form.html", {
-        "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
-        "dominios": DESENVOLVIMENTO_DOMINIOS,
-        "opcoes": DESENVOLVIMENTO_OPCOES,
-        "respostas_salvas": respostas_salvas,
-        "publico": True,
-        "token": token,
-    })

@@ -4,24 +4,24 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from ..models import Paciente, AvaliacaoRastreioCognitivo, RespostaRastreioCognitivo
-from ..data.data_cognitivo import COGNITIVO_DOMINIOS, COGNITIVO_OPCOES
+from ..models import Paciente, AvaliacaoProcessamentoAuditivo, RespostaProcessamentoAuditivo
+from ..data.data_processamento_auditivo import AUDITIVO_DOMINIOS, AUDITIVO_OPCOES, AUDITIVO_CLASSIFICACAO
 from ..services import notificar_terapeuta
 
-TOTAL_PAGINAS = len(COGNITIVO_DOMINIOS)
+TOTAL_PAGINAS = len(AUDITIVO_DOMINIOS)
 
 _URL_NAMES = {
-    "url_form_name": "cognitivo_form",
-    "url_publico_name": "cognitivo_publico",
-    "url_visualizar_name": "cognitivo_visualizar",
-    "url_resultado_name": "cognitivo_resultado",
-    "avaliacao_titulo": "Rastreio Cognitivo",
+    "url_form_name": "auditivo_form",
+    "url_publico_name": "auditivo_publico",
+    "url_visualizar_name": "auditivo_visualizar",
+    "url_resultado_name": "auditivo_resultado",
+    "avaliacao_titulo": "Triagem de Processamento Auditivo",
 }
 
 
-def _calcular_cognitivo(avaliacao):
-    for dom in COGNITIVO_DOMINIOS:
-        itens = [n for n, _ in dom["itens"]]
+def _calcular_processamento_auditivo(avaliacao):
+    for dom in AUDITIVO_DOMINIOS:
+        itens = [n for n, _, _reverso in dom["itens"]]
         respostas = avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=itens)
         total = sum(r.valor for r in respostas)
         setattr(avaliacao, dom["campo"], total)
@@ -30,8 +30,8 @@ def _calcular_cognitivo(avaliacao):
 
 def _processar_post_pagina(request, dom):
     """Processa o POST de uma página, salva respostas e retorna (erros, novas, obs)."""
-    numeros = [n for n, _ in dom["itens"]]
-    valores_validos = {o["valor"] for o in COGNITIVO_OPCOES}
+    numeros = [n for n, _, _reverso in dom["itens"]]
+    valores_validos = {o["valor"] for o in AUDITIVO_OPCOES}
     erros, novas, obs = [], {}, {}
     for numero in numeros:
         val = request.POST.get(f"item_{numero}")
@@ -52,7 +52,7 @@ def _processar_post_pagina(request, dom):
 
 def _salvar_respostas(avaliacao, dom_key, novas, obs):
     for numero, valor in novas.items():
-        RespostaRastreioCognitivo.objects.update_or_create(
+        RespostaProcessamentoAuditivo.objects.update_or_create(
             avaliacao=avaliacao, dominio=dom_key, numero_item=numero,
             defaults={"valor": valor, "observacao": obs.get(numero, "")}
         )
@@ -61,29 +61,29 @@ def _salvar_respostas(avaliacao, dom_key, novas, obs):
 # ── Views autenticadas ────────────────────────────────────────────────────────
 
 @login_required
-def nova_avaliacao_cognitivo(request, paciente_id):
+def nova_avaliacao_processamento_auditivo(request, paciente_id):
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
-    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('rastreio_cognitivo'):
+    if not hasattr(request.user, 'perfil') or not request.user.perfil.tem_acesso('processamento_auditivo'):
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"ok": False, "error": "Módulo não disponível no seu plano."}, status=403)
-        messages.error(request, "Você não tem acesso ao módulo Rastreio Cognitivo.")
+        messages.error(request, "Você não tem acesso ao módulo Triagem de Processamento Auditivo.")
         return redirect('detalhe_paciente', paciente_id=paciente_id)
-    av = AvaliacaoRastreioCognitivo.objects.create(paciente=paciente, token=str(uuid.uuid4()))
+    av = AvaliacaoProcessamentoAuditivo.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "id": av.id})
-    return redirect("cognitivo_form", avaliacao_id=av.id, pagina=1)
+    return redirect("auditivo_form", avaliacao_id=av.id, pagina=1)
 
 
 @login_required
-def cognitivo_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, id=avaliacao_id, paciente__medico=request.user)
+def processamento_auditivo_form(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoProcessamentoAuditivo, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
-        return redirect("cognitivo_resultado", avaliacao_id=avaliacao_id)
+        return redirect("auditivo_resultado", avaliacao_id=avaliacao_id)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
-        return redirect("cognitivo_form", avaliacao_id=avaliacao_id, pagina=1)
+        return redirect("auditivo_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    dom = COGNITIVO_DOMINIOS[pagina - 1]
-    numeros = [n for n, _ in dom["itens"]]
+    dom = AUDITIVO_DOMINIOS[pagina - 1]
+    numeros = [n for n, _, _reverso in dom["itens"]]
     respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
     respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
     obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
@@ -107,16 +107,16 @@ def cognitivo_form(request, avaliacao_id, pagina):
             avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
             avaliacao.save(update_fields=["pagina_atual"])
             if proxima > TOTAL_PAGINAS:
-                avaliacao = _calcular_cognitivo(avaliacao)
+                avaliacao = _calcular_processamento_auditivo(avaliacao)
                 avaliacao.status = "concluida"
                 avaliacao.save()
-                return redirect("cognitivo_resultado", avaliacao_id=avaliacao_id)
-            return redirect("cognitivo_form", avaliacao_id=avaliacao_id, pagina=proxima)
+                return redirect("auditivo_resultado", avaliacao_id=avaliacao_id)
+            return redirect("auditivo_form", avaliacao_id=avaliacao_id, pagina=proxima)
 
     itens_render = [
         {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
          "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
-        for n, t in dom["itens"]
+        for n, t, _reverso in dom["itens"]
     ]
 
     return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
@@ -125,25 +125,25 @@ def cognitivo_form(request, avaliacao_id, pagina):
         "paciente": avaliacao.paciente,
         "dominio": dom,
         "itens": itens_render,
-        "opcoes": COGNITIVO_OPCOES,
+        "opcoes": AUDITIVO_OPCOES,
         "pagina": pagina,
         "total": TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
-        "paginas_dominios": [(i + 1, COGNITIVO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "paginas_dominios": [(i + 1, AUDITIVO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "itens_faltando": itens_faltando,
     })
 
 
-def cognitivo_publico(request, token, pagina):
-    avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, token=token)
+def processamento_auditivo_publico(request, token, pagina):
+    avaliacao = get_object_or_404(AvaliacaoProcessamentoAuditivo, token=token)
     if avaliacao.status == "concluida":
         return render(request, "questionario/dashboard/concluido.html")
     if pagina < 1 or pagina > TOTAL_PAGINAS:
-        return redirect("cognitivo_publico", token=token, pagina=1)
+        return redirect("auditivo_publico", token=token, pagina=1)
 
-    dom = COGNITIVO_DOMINIOS[pagina - 1]
-    numeros = [n for n, _ in dom["itens"]]
+    dom = AUDITIVO_DOMINIOS[pagina - 1]
+    numeros = [n for n, _, _reverso in dom["itens"]]
     respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
     respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
     obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
@@ -167,20 +167,20 @@ def cognitivo_publico(request, token, pagina):
             avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
             avaliacao.save(update_fields=["pagina_atual"])
             if proxima > TOTAL_PAGINAS:
-                avaliacao = _calcular_cognitivo(avaliacao)
+                avaliacao = _calcular_processamento_auditivo(avaliacao)
                 avaliacao.status = "concluida"
                 avaliacao.save()
                 try:
-                    notificar_terapeuta(avaliacao.paciente, "cognitivo", request)
+                    notificar_terapeuta(avaliacao.paciente, "processamento_auditivo", request)
                 except Exception:
                     pass
                 return render(request, "questionario/dashboard/concluido.html")
-            return redirect("cognitivo_publico", token=token, pagina=proxima)
+            return redirect("auditivo_publico", token=token, pagina=proxima)
 
     itens_render = [
         {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
          "observacao_salva": obs_render.get(n, obs_salvas.get(n, ""))}
-        for n, t in dom["itens"]
+        for n, t, _reverso in dom["itens"]
     ]
 
     return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
@@ -189,11 +189,11 @@ def cognitivo_publico(request, token, pagina):
         "paciente": avaliacao.paciente,
         "dominio": dom,
         "itens": itens_render,
-        "opcoes": COGNITIVO_OPCOES,
+        "opcoes": AUDITIVO_OPCOES,
         "pagina": pagina,
         "total": TOTAL_PAGINAS,
         "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
-        "paginas_dominios": [(i + 1, COGNITIVO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "paginas_dominios": [(i + 1, AUDITIVO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "itens_faltando": itens_faltando,
         "publico": True,
@@ -201,45 +201,64 @@ def cognitivo_publico(request, token, pagina):
     })
 
 
+def _classificar(pct, cortes):
+    for label, min_pct, max_pct in cortes:
+        if min_pct <= pct <= max_pct:
+            return label
+    return cortes[-1][0]
+
+
 @login_required
-def cognitivo_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, id=avaliacao_id, paciente__medico=request.user)
+def processamento_auditivo_resultado(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoProcessamentoAuditivo, id=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
-        return redirect("cognitivo_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
+        return redirect("auditivo_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
     resultado = []
-    for dom in COGNITIVO_DOMINIOS:
+    total_score = 0
+    total_max = 0
+    for dom in AUDITIVO_DOMINIOS:
         score = getattr(avaliacao, dom["campo"]) or 0
-        max_score = len(dom["itens"]) * 2
+        max_score = len(dom["itens"]) * 3
+        pct = int(score / max_score * 100) if max_score else 0
+        total_score += score
+        total_max += max_score
         resultado.append({
             "key": dom["key"],
             "nome": dom["nome"],
             "cor": dom["cor"],
             "score": score,
             "max": max_score,
-            "pct": int(score / max_score * 100) if max_score else 0,
+            "pct": pct,
+            "classificacao": _classificar(pct, AUDITIVO_CLASSIFICACAO[dom["key"]]),
         })
-    return render(request, "questionario/avaliacoes/cognitivo_resultado.html", {
+    total_pct = int(total_score / total_max * 100) if total_max else 0
+    class_total = _classificar(total_pct, AUDITIVO_CLASSIFICACAO["total"])
+    return render(request, "questionario/avaliacoes/processamento_auditivo_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": avaliacao.paciente,
         "resultado": resultado,
+        "total_score": total_score,
+        "total_max": total_max,
+        "total_pct": total_pct,
+        "class_total": class_total,
     })
 
 
 @login_required
-def cognitivo_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, id=avaliacao_id, paciente__medico=request.user)
+def processamento_auditivo_visualizar(request, avaliacao_id, pagina):
+    avaliacao = get_object_or_404(AvaliacaoProcessamentoAuditivo, id=avaliacao_id, paciente__medico=request.user)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
-        return redirect("cognitivo_visualizar", avaliacao_id=avaliacao_id, pagina=1)
+        return redirect("auditivo_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
-    dom = COGNITIVO_DOMINIOS[pagina - 1]
-    numeros = [n for n, _ in dom["itens"]]
+    dom = AUDITIVO_DOMINIOS[pagina - 1]
+    numeros = [n for n, _, _reverso in dom["itens"]]
     respostas_qs = list(avaliacao.respostas.filter(dominio=dom["key"], numero_item__in=numeros))
     respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
     obs_salvas = {r.numero_item: r.observacao for r in respostas_qs}
     itens_render = [
         {"numero": n, "texto": t, "resposta_salva": respostas_salvas.get(n),
          "observacao_salva": obs_salvas.get(n, "")}
-        for n, t in dom["itens"]
+        for n, t, _reverso in dom["itens"]
     ]
     return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html", {
         **_URL_NAMES,
@@ -247,11 +266,11 @@ def cognitivo_visualizar(request, avaliacao_id, pagina):
         "paciente": avaliacao.paciente,
         "dominio": dom,
         "itens": itens_render,
-        "opcoes": COGNITIVO_OPCOES,
+        "opcoes": AUDITIVO_OPCOES,
         "pagina": pagina,
         "total": TOTAL_PAGINAS,
         "progresso": int(pagina / TOTAL_PAGINAS * 100),
-        "paginas_dominios": [(i + 1, COGNITIVO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "paginas_dominios": [(i + 1, AUDITIVO_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "itens_faltando": [],
         "readonly": True,
@@ -259,24 +278,24 @@ def cognitivo_visualizar(request, avaliacao_id, pagina):
 
 
 @login_required
-def cognitivo_deletar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, id=avaliacao_id, paciente__medico=request.user)
+def processamento_auditivo_deletar(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoProcessamentoAuditivo, id=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return JsonResponse({"ok": True, "message": "Rastreio Cognitivo excluído com sucesso."})
-        messages.success(request, "Rastreio Cognitivo excluído com sucesso.")
+            return JsonResponse({"ok": True, "message": "Avaliação de Triagem de Processamento Auditivo excluída com sucesso."})
+        messages.success(request, "Avaliação de Triagem de Processamento Auditivo excluída com sucesso.")
     return redirect("detalhe_paciente", paciente_id=paciente_uuid)
 
 
 @login_required
-def salvar_observacoes_cognitivo(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoRastreioCognitivo, id=avaliacao_id, paciente__medico=request.user)
+def salvar_observacoes_processamento_auditivo(request, avaliacao_id):
+    avaliacao = get_object_or_404(AvaliacaoProcessamentoAuditivo, id=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas.")
-    return redirect("cognitivo_resultado", avaliacao_id=avaliacao_id)
+    return redirect("auditivo_resultado", avaliacao_id=avaliacao_id)

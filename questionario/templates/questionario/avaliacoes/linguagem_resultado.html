@@ -11,11 +11,16 @@
   .resultado-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
   .sub-row { display:flex; align-items:center; gap:.75rem; padding:.7rem 0; border-bottom:1px solid var(--border); }
   .sub-row:last-child { border-bottom:none; }
-  .sub-nome { flex:0 0 180px; font-size:.88rem; font-weight:600; }
+  .sub-nome { flex:0 0 200px; font-size:.88rem; font-weight:600; }
   .bar-wrap { flex:1; background:#F3F4F6; border-radius:6px; height:16px; overflow:hidden; }
   .bar-fill { height:16px; border-radius:6px; transition:width .5s; }
-  .score-num { min-width:70px; text-align:right; font-size:.88rem; font-weight:700; }
+  .score-num { min-width:60px; text-align:right; font-size:.88rem; font-weight:700; }
   .pct-num { min-width:45px; text-align:right; font-size:.82rem; color:var(--text-muted); }
+  .class-badge { padding:.2rem .65rem; border-radius:6px; font-size:.75rem; font-weight:700; white-space:nowrap; }
+  .class-Adequado          { background:#D1FAE5; color:#065F46; }
+  .class-Em-Desenvolvimento { background:#FEF3C7; color:#92400E; }
+  .class-Atencao-Clinica   { background:#FEE2E2; color:#991B1B; }
+  .total-box { border-radius:12px; padding:1.1rem 1.2rem; margin-bottom:1rem; }
   .obs-form textarea { width:100%; min-height:100px; border:1.5px solid var(--border); border-radius:8px; padding:.6rem; font-size:.88rem; resize:vertical; }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -48,6 +53,23 @@
   </div>
 </div>
 
+<!-- Pontuação Total -->
+{% with bg=class_total|lower|cut:" "|cut:"ç"|cut:"ã" %}
+<div class="card total-box" style="
+  background: {% if class_total == 'Adequado' %}#D1FAE5{% elif class_total == 'Em Desenvolvimento' %}#FEF3C7{% else %}#FEE2E2{% endif %};
+  border: 1.5px solid {% if class_total == 'Adequado' %}#6EE7B7{% elif class_total == 'Em Desenvolvimento' %}#FCD34D{% else %}#FECACA{% endif %};">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
+    <div>
+      <div style="font-size:.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; opacity:.7; margin-bottom:.2rem;">Pontuação Total</div>
+      <div style="font-size:2rem; font-weight:800;">{{ total_score }} <span style="font-size:1rem; font-weight:400;">/ {{ total_max }}</span></div>
+      <div style="font-size:.85rem; opacity:.75; margin-top:.1rem;">{{ total_pct }}% de aproveitamento</div>
+    </div>
+    <span class="class-badge {% if class_total == 'Adequado' %}class-Adequado{% elif class_total == 'Em Desenvolvimento' %}class-Em-Desenvolvimento{% else %}class-Atencao-Clinica{% endif %}" style="font-size:.85rem; padding:.35rem 1rem;">{{ class_total }}</span>
+  </div>
+</div>
+{% endwith %}
+
+<!-- Resultados por Domínio -->
 <div class="card">
   <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Resultados por Domínio</div>
   {% for dom in resultado %}
@@ -58,10 +80,24 @@
     </div>
     <span class="score-num">{{ dom.score }}/{{ dom.max }}</span>
     <span class="pct-num">{{ dom.pct }}%</span>
+    <span class="class-badge {% if dom.classificacao == 'Adequado' %}class-Adequado{% elif dom.classificacao == 'Em Desenvolvimento' %}class-Em-Desenvolvimento{% else %}class-Atencao-Clinica{% endif %}">{{ dom.classificacao }}</span>
   </div>
   {% endfor %}
 </div>
 
+<!-- Legenda -->
+<div class="card" style="font-size:.82rem;">
+  <div class="card-title"><i data-lucide="info" style="width:16px;height:16px;"></i> Pontos de Corte</div>
+  <p style="color:var(--text-muted); margin-bottom:.5rem;">Classificação por percentual de aproveitamento em cada domínio:</p>
+  <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+    <span class="class-badge class-Adequado">Adequado ≥ 75%</span>
+    <span class="class-badge class-Em-Desenvolvimento">Em Desenvolvimento 50–74%</span>
+    <span class="class-badge class-Atencao-Clinica">Atenção Clínica &lt; 50%</span>
+  </div>
+  <p style="color:var(--text-muted); margin-top:.75rem; font-size:.78rem;">Este instrumento é um checklist clínico funcional e não substitui avaliações normatizadas (ABFW, CLAMS, Peabody). Os pontos de corte baseiam-se em critério clínico e devem ser interpretados em conjunto com a faixa etária e o histórico do paciente.</p>
+</div>
+
+<!-- Observações -->
 <div class="card obs-form">
   <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form method="post" action="{% url 'salvar_observacoes_linguagem' avaliacao.id %}">
