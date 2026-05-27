@@ -62,10 +62,17 @@ def solicitar_plano(request):
         )
         return redirect("solicitar_plano")
 
+    # Histórico de pagamentos aprovados
+    historico_pagamentos = SolicitacaoPlano.objects.filter(
+        user=request.user, status="aprovado"
+    ).order_by("-aprovado_em")
+
     ctx = {
         "perfil": perfil,
         "plano_param": plano_param,
         "solicitacao_pendente": solicitacao_pendente,
+        "historico_pagamentos": historico_pagamentos,
+        "total_meses_pagos": historico_pagamentos.count(),
         "pix_key": settings.PIX_KEY,
         "pix_beneficiario": settings.PIX_BENEFICIARIO,
         "pix_banco": settings.PIX_BANCO,

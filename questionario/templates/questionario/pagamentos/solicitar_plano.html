@@ -70,6 +70,46 @@
   .pendente-badge{display:inline-flex;align-items:center;gap:.4rem;background:#f59e0b;
                   color:#fff;padding:.3rem .85rem;border-radius:20px;font-size:.78rem;
                   font-weight:700;margin-bottom:.75rem}
+
+  /* ── status card ── */
+  .status-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+               margin-bottom:1.25rem;overflow:hidden}
+  .status-header{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.1rem;
+                 background:var(--bg);border-bottom:1px solid var(--border);
+                 font-weight:700;font-size:.88rem;color:var(--primary-dark)}
+  .status-body{padding:1rem 1.1rem}
+  .status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+  @media(max-width:600px){.status-grid{grid-template-columns:repeat(2,1fr)}}
+  .status-item{display:flex;flex-direction:column;gap:.2rem}
+  .status-label{font-size:.72rem;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+  .status-value{font-size:.95rem;font-weight:700;color:var(--primary-dark)}
+  .txt-ok{color:#059669}
+  .txt-warn{color:#d97706}
+  .txt-danger{color:#dc2626}
+
+  /* ── badges de plano ── */
+  .badge-plano{display:inline-block;padding:.15rem .55rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .badge-trial{background:#f3f4f6;color:#374151}
+  .badge-start{background:#dbeafe;color:#1d4ed8}
+  .badge-plus{background:#0c3c7b;color:#fff}
+  .badge-elite{background:#7c3aed;color:#fff}
+
+  /* ── histórico ── */
+  .historico-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+                  margin-bottom:1.75rem;overflow:hidden}
+  .historico-header{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.1rem;
+                    background:var(--bg);border-bottom:1px solid var(--border);
+                    font-weight:700;font-size:.88rem;color:var(--primary-dark)}
+  .hist-count{margin-left:auto;background:#e0f2fe;color:#0369a1;padding:.15rem .6rem;
+              border-radius:20px;font-size:.72rem;font-weight:600}
+  .historico-body{overflow-x:auto}
+  .hist-table{width:100%;border-collapse:collapse;font-size:.82rem}
+  .hist-table th{padding:.55rem 1rem;text-align:left;font-size:.72rem;font-weight:600;
+                 color:#6b7280;text-transform:uppercase;letter-spacing:.04em;
+                 border-bottom:1px solid var(--border);background:var(--bg)}
+  .hist-table td{padding:.6rem 1rem;border-bottom:1px solid var(--border);color:var(--primary-dark)}
+  .hist-table tr:last-child td{border-bottom:none}
+  .hist-nota{color:#6b7280;font-size:.78rem}
 </style>
 {% endblock %}
 
@@ -86,6 +126,99 @@
   <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;font-size:.88rem;color:#991b1b;">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
     <span><strong>Seu acesso está suspenso.</strong> Realize o pagamento via PIX, solicite a ativação e aguarde a confirmação para voltar a usar o sistema.</span>
+  </div>
+  {% endif %}
+
+  <!-- ── Resumo do plano atual ─────────────────────────────────── -->
+  {% if perfil.plano != "trial" or total_meses_pagos > 0 %}
+  <div class="status-card">
+    <div class="status-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+      Meu Plano Atual
+    </div>
+    <div class="status-body">
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="status-label">Plano</span>
+          <span class="status-value">
+            {% if perfil.plano == "trial" %}
+              <span class="badge-plano badge-trial">Trial</span>
+            {% elif perfil.plano == "start" %}
+              <span class="badge-plano badge-start">START</span>
+            {% elif perfil.plano == "plus" %}
+              <span class="badge-plano badge-plus">PLUS</span>
+            {% elif perfil.plano == "elite" %}
+              <span class="badge-plano badge-elite">ELITE</span>
+            {% else %}
+              <span class="badge-plano badge-trial">—</span>
+            {% endif %}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Vencimento</span>
+          <span class="status-value">
+            {% if perfil.plano_expiracao %}
+              {{ perfil.plano_expiracao|date:"d/m/Y" }}
+            {% else %}
+              —
+            {% endif %}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Dias restantes</span>
+          {% with dias=perfil.plano_dias_restantes %}
+          <span class="status-value {% if dias <= 5 %}txt-danger{% elif dias <= 10 %}txt-warn{% else %}txt-ok{% endif %}">
+            {% if perfil.plano_expiracao %}
+              {{ dias }} dia{{ dias|pluralize }}
+            {% else %}
+              —
+            {% endif %}
+          </span>
+          {% endwith %}
+        </div>
+        <div class="status-item">
+          <span class="status-label">Meses pagos</span>
+          <span class="status-value txt-ok">{{ total_meses_pagos }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Histórico de pagamentos ───────────────────────────────── -->
+  {% if historico_pagamentos %}
+  <div class="historico-card">
+    <div class="historico-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Histórico de Pagamentos
+      <span class="hist-count">{{ total_meses_pagos }} registro{{ total_meses_pagos|pluralize }}</span>
+    </div>
+    <div class="historico-body">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Plano</th>
+            <th>Aprovado por</th>
+            <th>Obs.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pag in historico_pagamentos %}
+          <tr>
+            <td>{{ pag.aprovado_em|date:"d/m/Y" }}</td>
+            <td><span class="badge-plano badge-{{ pag.plano }}">{{ pag.get_plano_display }}</span></td>
+            <td>
+              {% if pag.aprovado_por %}
+                {{ pag.aprovado_por.get_full_name|default:pag.aprovado_por.username }}
+              {% else %}—{% endif %}
+            </td>
+            <td class="hist-nota">{{ pag.nota_admin|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
   {% endif %}
 

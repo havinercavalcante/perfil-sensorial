@@ -1638,7 +1638,7 @@ class SolicitacaoPlano(models.Model):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  Proxy — aparece no sidebar do admin como "💳 Painel de Pagamentos"
+#  Proxy — aparece no sidebar do admin como "Painel de Pagamentos"
 # ─────────────────────────────────────────────────────────────────────────────
 
 class PainelPagamentos(SolicitacaoPlano):
@@ -1646,5 +1646,5 @@ class PainelPagamentos(SolicitacaoPlano):
 
     class Meta:
         proxy        = True
-        verbose_name        = "💳 Painel de Pagamentos"
-        verbose_name_plural = "💳 Painel de Pagamentos"
+        verbose_name        = "Painel de Pagamentos"
+        verbose_name_plural = "Painel de Pagamentos"

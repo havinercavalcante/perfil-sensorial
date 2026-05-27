@@ -12,8 +12,8 @@ class Migration(migrations.Migration):
             name="PainelPagamentos",
             fields=[],
             options={
-                "verbose_name": "💳 Painel de Pagamentos",
-                "verbose_name_plural": "💳 Painel de Pagamentos",
+                "verbose_name": "Painel de Pagamentos",
+                "verbose_name_plural": "Painel de Pagamentos",
                 "proxy": True,
                 "indexes": [],
                 "constraints": [],
