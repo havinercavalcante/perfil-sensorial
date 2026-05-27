@@ -119,8 +119,9 @@ def index(request):
 @login_required
 def lista_pacientes(request):
     from django.core.paginator import Paginator
-    from django.db.models import Count, Q
+    from django.db.models import Count, Q, Exists, OuterRef
     q = request.GET.get("q", "").strip()
+    filtro = request.GET.get("filtro", "").strip()
     qs = (
         Paciente.objects.filter(medico=request.user)
         .annotate(
@@ -144,6 +145,17 @@ def lista_pacientes(request):
     )
     if q:
         qs = qs.filter(nome__icontains=q)
+    if filtro == "andamento":
+        # Apenas modelos que possuem campo `status`
+        # (AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery e AvaliacaoPEDI não têm status)
+        qs = qs.filter(
+            Exists(Avaliacao.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
+            | Exists(AvaliacaoVineland.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
+            | Exists(AvaliacaoEscolar.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
+            | Exists(AvaliacaoBebe.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
+            | Exists(AvaliacaoSPM.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
+            | Exists(AvaliacaoVineland3.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
+        )
     paginator = Paginator(qs, 10)
     page = paginator.get_page(request.GET.get("page"))
     for p in page.object_list:
@@ -151,7 +163,82 @@ def lista_pacientes(request):
                          + p.spm_total + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total + p.vinel3_total)
         p.total_concs = (p.sens_conc + p.vinel_conc + p.escolar_conc + p.bebe_conc + p.spm_conc
                          + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total + p.vinel3_total)
-    return render(request, "questionario/pacientes/lista_pacientes.html", {"pacientes": page, "q": q, "paginator": paginator})
+    return render(request, "questionario/pacientes/lista_pacientes.html", {"pacientes": page, "q": q, "filtro": filtro, "paginator": paginator})
+
+
+@login_required
+def avaliacoes_pendentes(request):
+    from django.core.paginator import Paginator
+
+    # Modelos com campo `status` (EDM, MABC2, Beery e PEDI não têm status)
+    MODELOS = [
+        (Avaliacao,                     "Perfil Sensorial",             "sensorial"),
+        (AvaliacaoVineland,             "Escala Vineland",              "vineland"),
+        (AvaliacaoEscolar,              "Sensorial Escolar",            "escolar"),
+        (AvaliacaoBebe,                 "Bebê / Criança Pequena",       "bebe"),
+        (AvaliacaoSPM,                  "SPM",                          "spm"),
+        (AvaliacaoVineland3,            "Vineland-3",                   "vineland3"),
+        (AvaliacaoPortage,              "Guia Portage",                 "portage"),
+        (AvaliacaoSDQ,                  "SDQ",                          "sdq"),
+        (AvaliacaoSNAPIV,               "SNAP-IV",                      "snap_iv"),
+        (AvaliacaoMCHAT,                "M-CHAT-R",                     "mchat"),
+        (AvaliacaoCARS,                 "CARS-2",                       "cars"),
+        (AvaliacaoLinguagem,            "Linguagem",                    "linguagem"),
+        (AvaliacaoAlimentacao,          "Alimentação Seletiva",         "alimentacao"),
+        (AvaliacaoHabitosOrais,         "Hábitos Orais",                "habitos_orais"),
+        (AvaliacaoVozInfantil,          "Voz Infantil",                 "voz_infantil"),
+        (AvaliacaoProcessamentoAuditivo,"Proc. Auditivo",               "proc_auditivo"),
+        (AvaliacaoIDV10,                "IDV-10",                       "idv10"),
+        (AvaliacaoDesenvolvimento,      "Desenvolvimento",              "desenvolvimento"),
+        (AvaliacaoSono,                 "Sono Infantil",                "sono"),
+        (AvaliacaoHabilidadesAdaptativas,"Habilidades Adaptativas",     "habilidades"),
+        (AvaliacaoComportamentoFuncional,"Comportamento Funcional",     "comportamento"),
+        (AvaliacaoRastreioCognitivo,    "Rastreio Cognitivo",           "cognitivo"),
+        (AvaliacaoPsicopedagogica,      "Psicopedagógica",              "psicopedagogica"),
+    ]
+
+    q = request.GET.get("q", "").strip()
+    tipo_filtro = request.GET.get("tipo", "").strip()
+
+    pendentes = []
+    for Model, label, slug in MODELOS:
+        if tipo_filtro and tipo_filtro != slug:
+            continue
+        qs = (
+            Model.objects.filter(paciente__medico=request.user, status="em_andamento")
+            .select_related("paciente")
+            .order_by("-criado_em")
+        )
+        if q:
+            qs = qs.filter(paciente__nome__icontains=q)
+        for av in qs:
+            pendentes.append({
+                "paciente_nome": av.paciente.nome,
+                "paciente_uuid": av.paciente.uuid,
+                "uuid": str(av.uuid),
+                "tipo": label,
+                "tipo_slug": slug,
+                "criado_em": av.criado_em,
+                "data": av.data,
+                "tem_token": bool(getattr(av, "token", None)),
+            })
+
+    pendentes.sort(key=lambda x: x["criado_em"], reverse=True)
+    total = len(pendentes)
+
+    paginator = Paginator(pendentes, 25)
+    page = paginator.get_page(request.GET.get("page"))
+
+    tipos_disponiveis = [(slug, label) for _, label, slug in MODELOS]
+
+    return render(request, "questionario/avaliacoes/pendentes.html", {
+        "pendentes": page,
+        "q": q,
+        "tipo_filtro": tipo_filtro,
+        "tipos_disponiveis": tipos_disponiveis,
+        "total": total,
+        "paginator": paginator,
+    })
 
 
 @login_required

@@ -5,3 +5,5 @@ db.sqlite3
 staticfiles/
 .qodo
 .claude
+.venv/
+venv/
