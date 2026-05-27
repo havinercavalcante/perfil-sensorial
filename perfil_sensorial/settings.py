@@ -64,6 +64,12 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# Permite que usuários com is_active=False façam login
+# (o middleware redireciona para /pagamentos/solicitar/ após o login)
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.AllowAllUsersModelBackend',
+]
+
 # ── Segurança HTTPS (ativas em produção, desligadas com DEBUG=True) ───────────
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0

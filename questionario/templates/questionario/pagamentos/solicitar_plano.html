@@ -82,6 +82,13 @@
 {% block content %}
 <div class="plano-wrap">
 
+  {% if not request.user.is_active %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;font-size:.88rem;color:#991b1b;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    <span><strong>Seu acesso está suspenso.</strong> Realize o pagamento via PIX, solicite a ativação e aguarde a confirmação para voltar a usar o sistema.</span>
+  </div>
+  {% endif %}
+
   <div class="page-header">
     <h1><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:middle;margin-right:.35rem;color:var(--primary-dark)"></i>Escolha seu plano</h1>
     <p>Selecione o plano, realize o pagamento via PIX e solicite a ativação.</p>
