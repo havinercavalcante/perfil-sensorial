@@ -507,6 +507,33 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                         f"{perfil.plano_expiracao.strftime('%d/%m/%Y')}."
                     )
 
+            # ── Desativar usuário (não pagou) ─────────────────────────────────
+            elif action == "desativar":
+                perfil_id = request.POST.get("perfil_id")
+                if perfil_id:
+                    perfil = get_object_or_404(PerfilMedico, pk=perfil_id)
+                    nome = perfil.user.get_full_name() or perfil.user.username
+                    perfil.user.is_active = False
+                    perfil.user.save(update_fields=["is_active"])
+                    perfil.modulos_liberados.clear()
+                    dj_messages.warning(
+                        request,
+                        f"🚫 {nome} desativado — acesso bloqueado."
+                    )
+
+            # ── Reativar usuário ──────────────────────────────────────────────
+            elif action == "reativar":
+                perfil_id = request.POST.get("perfil_id")
+                if perfil_id:
+                    perfil = get_object_or_404(PerfilMedico, pk=perfil_id)
+                    nome = perfil.user.get_full_name() or perfil.user.username
+                    perfil.user.is_active = True
+                    perfil.user.save(update_fields=["is_active"])
+                    dj_messages.success(
+                        request,
+                        f"✅ {nome} reativado."
+                    )
+
             return redirect("admin:pagamentos_painel")
 
         # ── Dados ─────────────────────────────────────────────────────────────
