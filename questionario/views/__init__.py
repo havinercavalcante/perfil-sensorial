@@ -28,3 +28,4 @@ from .habilidades_adaptativas import *
 from .comportamento_funcional import *
 from .cognitivo import *
 from .psicopedagogica import *
+from .laudos import laudo_generico

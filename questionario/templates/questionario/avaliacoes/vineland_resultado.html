@@ -110,6 +110,7 @@
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
         <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
       </button>
+      <a href="{% url 'vineland_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar</a>
     </div>
   </div>
@@ -233,15 +234,46 @@
 <!-- Visualizar respostas -->
 <div class="card no-print">
   <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
-  <a href="{% url 'vineland_visualizar' avaliacao.id 1 %}" class="btn btn-secondary btn-sm">
+  <a href="{% url 'vineland_visualizar' avaliacao.uuid 1 %}" class="btn btn-secondary btn-sm">
     <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
   </a>
 </div>
 
+{% if tem_comparativo %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal</div>
+  <div style="position:relative; height:300px;">
+    <canvas id="comparativoChart"></canvas>
+  </div>
+</div>
+{% endif %}
+
+{% if outras_avaliacoes %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="calendar" style="width:18px;height:18px;"></i> Outras Avaliações do Paciente</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Data</th><th>Com.</th><th>Loc.</th><th>Ocup.</th><th>Soc.</th><th>Autog.</th><th></th></tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td>{{ av.pont_comunicacao|default:"—" }}</td>
+      <td>{{ av.pont_locomocao|default:"—" }}</td>
+      <td>{{ av.pont_ocupacao|default:"—" }}</td>
+      <td>{{ av.pont_socializacao|default:"—" }}</td>
+      <td>{{ av.pont_autogoverno|default:"—" }}</td>
+      <td><a href="{% url 'vineland_resultado' av.uuid %}" class="btn btn-sm btn-secondary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
 <!-- OBSERVAÇÕES CLÍNICAS -->
 <div class="card">
   <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
-  <form id="formObsVin" method="post" action="{% url 'salvar_observacoes_vineland' avaliacao.id %}">
+  <form id="formObsVin" method="post" action="{% url 'salvar_observacoes_vineland' avaliacao.uuid %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
       <textarea name="observacoes" id="obsVinTextarea" rows="5"
@@ -257,7 +289,22 @@
   </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
+{% if tem_comparativo %}
+const compLabels = {{ comparativo_labels|safe }};
+const compDatasets = {{ comparativo_datasets|safe }};
+new Chart(document.getElementById('comparativoChart'), {
+  type: 'line',
+  data: { labels: compLabels, datasets: compDatasets },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+{% endif %}
+
 function salvarObsVin() {
   const form = document.getElementById('formObsVin');
   const status = document.getElementById('obs-vin-status');

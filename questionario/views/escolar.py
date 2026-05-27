@@ -30,13 +30,13 @@ def nova_avaliacao_escolar(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoEscolar.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("escolar_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("escolar_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def escolar_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("escolar_resultado", avaliacao_id=avaliacao_id)
 
@@ -99,7 +99,7 @@ def escolar_form(request, avaliacao_id, pagina):
 
 @login_required
 def escolar_concluir(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     total_itens = sum(len(s["itens"]) for s in ESCOLAR_SECOES)
     if avaliacao.respostas.count() < total_itens:
         messages.warning(request, "Ainda há itens sem resposta.")
@@ -119,7 +119,7 @@ def escolar_concluir(request, avaliacao_id):
 
 @login_required
 def escolar_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if avaliacao.status != "concluida":
@@ -156,17 +156,34 @@ def escolar_resultado(request, avaliacao_id):
             "classificacao": classificacao,
         })
 
+    todas_av = list(paciente.avaliacoes_escolar.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": d["nome"], "campo": f"pont_{d['id']}", "max": d["maximo"]}
+        for d in dominios
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [round((getattr(av, dom["campo"]) or 0) / dom["max"] * 100) if dom["max"] else 0 for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/escolar_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "dominios": dominios,
         "dominios_json": json.dumps([{"nome": d["nome"], "pct": d["pct"]} for d in dominios]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def escolar_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     if pagina < 1 or pagina > ESCOLAR_TOTAL_PAGINAS:
         return redirect("escolar_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
@@ -191,7 +208,7 @@ def escolar_visualizar(request, avaliacao_id, pagina):
 @login_required
 def escolar_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -204,7 +221,7 @@ def escolar_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_escolar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -220,7 +237,7 @@ def enviar_email_escolar(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoEscolar, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEscolar, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

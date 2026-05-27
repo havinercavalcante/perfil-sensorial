@@ -51,7 +51,7 @@
   <strong>Instruções:</strong> Para cada área, selecione o nível que melhor descreve o comportamento observado da criança. Escala de 1 (sem anormalidade) a 4 (anormalidade grave). Meio-pontos (1,5; 2,5; 3,5) são permitidos.
 </div>
 
-<form method="post" {% if not publico %}action="{% url 'cars_form' avaliacao.id %}"{% endif %}>
+<form method="post" {% if not publico %}action="{% url 'cars_form' avaliacao.uuid %}"{% endif %}>
   {% csrf_token %}
 
   {% for item in itens %}

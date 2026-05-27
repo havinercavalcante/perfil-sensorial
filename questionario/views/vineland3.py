@@ -64,13 +64,13 @@ def nova_avaliacao_vineland3(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoVineland3.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("vineland3_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("vineland3_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def vineland3_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("vineland3_resultado", avaliacao_id=avaliacao_id)
 
@@ -138,7 +138,7 @@ def vineland3_form(request, avaliacao_id, pagina):
 
 @login_required
 def vineland3_concluir(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     avaliacao = _v3_salvar_pontuacao(avaliacao)
     avaliacao.status = "concluida"
     avaliacao.save()
@@ -147,7 +147,7 @@ def vineland3_concluir(request, avaliacao_id):
 
 @login_required
 def vineland3_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if avaliacao.status != "concluida":
@@ -165,6 +165,23 @@ def vineland3_resultado(request, avaliacao_id):
     max_total = VINELAND3_MAXIMOS["com"] + VINELAND3_MAXIMOS["avd"] + VINELAND3_MAXIMOS["soc"] + VINELAND3_MAXIMOS["hmot"]
     pct_total = int((avaliacao.pont_total or 0) / max_total * 100) if max_total else 0
 
+    todas_av = list(paciente.avaliacoes_vineland3.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": "Comunicação",    "campo": "pont_com",   "max": VINELAND3_MAXIMOS["com"]},
+        {"nome": "AVD",            "campo": "pont_avd",   "max": VINELAND3_MAXIMOS["avd"]},
+        {"nome": "Social",         "campo": "pont_soc",   "max": VINELAND3_MAXIMOS["soc"]},
+        {"nome": "Motor",          "campo": "pont_hmot",  "max": VINELAND3_MAXIMOS["hmot"]},
+        {"nome": "Total",          "campo": "pont_total", "max": max_total},
+    ]
+    cores_linha = ["#1D6FA4", "#27AE60", "#8E44AD", "#E67E22", "#2E7D6B"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        mx = dom["max"] or 1
+        valores = [round((getattr(av, dom["campo"]) or 0) / mx * 100) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/vineland3_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
@@ -173,12 +190,16 @@ def vineland3_resultado(request, avaliacao_id):
         "pct_total": pct_total,
         "max_total": max_total,
         "dominios_json": json.dumps([{"nome": d["sigla"], "pct": d["pct"], "cor": d["cor"]} for d in dominios]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def vineland3_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     total_paginas = len(VINELAND3_SECOES)
 
     if pagina < 1 or pagina > total_paginas:
@@ -214,7 +235,7 @@ def vineland3_visualizar(request, avaliacao_id, pagina):
 @login_required
 def vineland3_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -227,7 +248,7 @@ def vineland3_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_vineland3(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -243,7 +264,7 @@ def enviar_email_vineland3(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoVineland3, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

@@ -188,7 +188,7 @@
   <div class="nav-footer">
     <div>
       {% if pagina_anterior %}
-      <a href="{% if readonly %}{% url 'questionario_visualizar' avaliacao.id pagina_anterior %}{% elif publico %}{% url 'questionario_publico' avaliacao.token pagina_anterior %}{% else %}{% url 'questionario' avaliacao.id pagina_anterior %}{% endif %}"
+      <a href="{% if readonly %}{% url 'questionario_visualizar' avaliacao.uuid pagina_anterior %}{% elif publico %}{% url 'questionario_publico' avaliacao.token pagina_anterior %}{% else %}{% url 'questionario' avaliacao.uuid pagina_anterior %}{% endif %}"
          class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
       {% endif %}
     </div>
@@ -196,7 +196,7 @@
       {% if pagina == total %}
       <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar ao paciente</a>
       {% else %}
-      <a href="{% url 'questionario_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary">Próxima Seção <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+      <a href="{% url 'questionario_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-primary">Próxima Seção <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
       {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary">

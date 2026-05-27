@@ -103,8 +103,8 @@ def registrar_view(request):
             erros.append("Preencha todos os campos obrigatórios.")
         if password != password2:
             erros.append("As senhas não coincidem.")
-        if len(password) < 6:
-            erros.append("A senha deve ter pelo menos 6 caracteres.")
+        if len(password) < 8:
+            erros.append("A senha deve ter pelo menos 8 caracteres.")
         if User.objects.filter(username=username).exists():
             erros.append("Este nome de usuário já está em uso.")
         if email and User.objects.filter(email=email).exists():
@@ -223,13 +223,13 @@ def meu_perfil(request):
         nova_senha = request.POST.get("nova_senha", "")
         if nova_senha:
             if nova_senha == request.POST.get("nova_senha2", ""):
-                if len(nova_senha) >= 6:
+                if len(nova_senha) >= 8:
                     u.set_password(nova_senha)
                     u.save()
                     update_session_auth_hash(request, u)
                     messages.success(request, "Senha alterada com sucesso.")
                 else:
-                    messages.error(request, "A nova senha deve ter pelo menos 6 caracteres.")
+                    messages.error(request, "A nova senha deve ter pelo menos 8 caracteres.")
             else:
                 messages.error(request, "As novas senhas não coincidem.")
 

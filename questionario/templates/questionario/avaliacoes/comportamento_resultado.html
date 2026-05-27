@@ -43,6 +43,7 @@
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
+      <a href="{% url 'comportamento_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar</a>
     </div>
   </div>
@@ -63,8 +64,39 @@
 </div>
 
 <div class="card obs-form">
+{% if tem_comparativo %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal</div>
+  <div style="position:relative; height:300px;">
+    <canvas id="comparativoChart"></canvas>
+  </div>
+</div>
+{% endif %}
+
+{% if outras_avaliacoes %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="calendar" style="width:18px;height:18px;"></i> Outras Avaliações do Paciente</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Data</th><th>Inicio.</th><th>Manut.</th><th>Flexib.</th><th>Comport.</th><th>Autoct.</th><th></th></tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td>{{ av.pont_iniciacao|default:"—" }}</td>
+      <td>{{ av.pont_manutencao|default:"—" }}</td>
+      <td>{{ av.pont_flexibilidade|default:"—" }}</td>
+      <td>{{ av.pont_comunicacao|default:"—" }}</td>
+      <td>{{ av.pont_autocontrole|default:"—" }}</td>
+      <td><a href="{% url 'comportamento_resultado' av.uuid %}" class="btn btn-sm btn-secondary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
   <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
-  <form method="post" action="{% url 'salvar_observacoes_comportamento' avaliacao.id %}">
+  <form method="post" action="{% url 'salvar_observacoes_comportamento' avaliacao.uuid %}">
     {% csrf_token %}
     <textarea name="observacoes" placeholder="Adicione suas observações clínicas aqui...">{{ avaliacao.observacoes }}</textarea>
     <button type="submit" class="btn btn-primary" style="margin-top:.6rem; background:var(--mod); border-color:var(--mod);">
@@ -73,4 +105,21 @@
   </form>
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+{% if tem_comparativo %}
+const compLabels = {{ comparativo_labels|safe }};
+const compDatasets = {{ comparativo_datasets|safe }};
+new Chart(document.getElementById('comparativoChart'), {
+  type: 'line',
+  data: { labels: compLabels, datasets: compDatasets },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+{% endif %}
+</script>
 {% endblock %}
