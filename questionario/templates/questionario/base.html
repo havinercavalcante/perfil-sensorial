@@ -287,7 +287,6 @@
           <span>{{ user.email }}</span>
         </div>
         <a href="{% url 'meu_perfil' %}"><i data-lucide="settings" style="width:15px;height:15px;"></i> Meu Perfil</a>
-        <button type="button" onclick="iniciarTour()"><i data-lucide="map" style="width:15px;height:15px;color:#39abcb;"></i> Tour do sistema</button>
         <div class="divider"></div>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}

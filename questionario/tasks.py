@@ -73,9 +73,13 @@ def desativar_trials_expirados():
     Desativa contas cujo trial de 7 dias já encerrou:
       - Define user.is_active = False
       - Remove os módulos liberados (limpeza)
+      - Envia e-mail ao admin com resumo dos trials expirados
+      - Envia e-mail ao usuário avisando que o trial expirou
     """
+    from django.conf import settings
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
     from django.utils import timezone
-    from django.contrib.auth.models import User
     from .models import PerfilMedico
 
     limite = timezone.now() - timezone.timedelta(days=7)
@@ -85,11 +89,56 @@ def desativar_trials_expirados():
         user__is_active=True,
     ).select_related("user")
 
-    total = 0
+    expirados = []
     for perfil in perfis_expirados:
         perfil.user.is_active = False
         perfil.user.save(update_fields=["is_active"])
         perfil.modulos_liberados.clear()
-        total += 1
+        expirados.append(perfil)
+
+        # Avisa o usuário que o trial expirou
+        if perfil.user.email:
+            try:
+                html = render_to_string("questionario/emails/email_trial_expirado.html", {
+                    "nome": perfil.user.first_name or perfil.user.username,
+                    "url_planos": "https://integramente.pro/pagamentos/solicitar/",
+                })
+                send_mail(
+                    subject="IntegraMente — Seu período de teste encerrou",
+                    message=f"Olá! Seu trial de 7 dias encerrou. Escolha um plano em: https://integramente.pro/pagamentos/solicitar/",
+                    from_email=None,
+                    recipient_list=[perfil.user.email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+    total = len(expirados)
+
+    # Notifica o admin com resumo dos trials expirados
+    if total > 0:
+        try:
+            admin_email = getattr(settings, "ADMIN_NOTIFY_EMAIL", None) or settings.EMAIL_HOST_USER
+            if admin_email:
+                linhas = "\n".join(
+                    f"- {p.user.get_full_name() or p.user.username} <{p.user.email}>"
+                    for p in expirados
+                )
+                html = render_to_string("questionario/emails/email_trials_expirados_admin.html", {
+                    "expirados": expirados,
+                    "total": total,
+                    "painel_url": "https://integramente.pro/pagamentos/painel/",
+                })
+                send_mail(
+                    subject=f"[IntegraMente] {total} trial(s) expirado(s) hoje",
+                    message=f"{total} trial(s) expirado(s):\n{linhas}",
+                    from_email=None,
+                    recipient_list=[admin_email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+        except Exception:
+            pass
 
     return f"{total} conta(s) de trial desativada(s)."
