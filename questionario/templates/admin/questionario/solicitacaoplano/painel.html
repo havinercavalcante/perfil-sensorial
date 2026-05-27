@@ -71,13 +71,18 @@
           font-size:.78rem;font-weight:700;cursor:pointer}
   .btn-rj:hover{background:#dc2626}
 
+  /* ── Botão renovar ── */
+  .btn-renew{background:#0c3c7b;color:#fff;border:none;padding:.35rem .75rem;border-radius:6px;
+             font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+  .btn-renew:hover{background:#39abcb}
+
+  /* ── Select inline de plano ── */
+  .sel-plano{border:1px solid #d1d5db;border-radius:5px;padding:.3rem .5rem;
+             font-size:.75rem;color:#374151;background:#fff;cursor:pointer}
+
   .empty-msg{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.85rem;
              background:#fff;border:1px solid #e5e7eb;border-radius:10px}
   .empty-icon{font-size:1.8rem;display:block;margin-bottom:.35rem}
-
-  /* collapsible todos */
-  details summary{cursor:pointer;font-size:.8rem;color:#39abcb;font-weight:600;margin-top:.5rem;user-select:none}
-  details summary::-webkit-details-marker{color:#39abcb}
 </style>
 
 {% if messages %}
@@ -143,7 +148,7 @@
           <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
           <div class="nota-wrap">
             <label>Nota para o usuário (opcional)</label>
-            <textarea name="nota_admin" rows="2" placeholder="Ex: Pagamento confirmado! Acesso liberado."></textarea>
+            <textarea name="nota_admin" rows="2" placeholder="Ex: Pagamento confirmado!"></textarea>
           </div>
           <button type="submit" class="btn-ap"
                   onclick="return confirm('Confirma aprovação do plano {{ sol.get_plano_display }} para {{ sol.user.get_full_name|default:sol.user.username }}?')">
@@ -177,7 +182,7 @@
   {% if assinantes_info %}
   <table class="pay-table">
     <thead><tr>
-      <th>Profissional</th><th>Plano</th><th>Validade</th><th>Vence em</th><th>Pacientes</th>
+      <th>Profissional</th><th>Plano</th><th>Validade</th><th>Vence em</th><th>Pacientes</th><th>Ação</th>
     </tr></thead>
     <tbody>
       {% for item in assinantes_info %}
@@ -190,9 +195,21 @@
         <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
         <td style="font-size:.79rem;color:#6b7280">
-          {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}—{% endif %}
+          {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}<span style="color:#f59e0b;font-weight:600">Sem data</span>{% endif %}
         </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
+        <td>
+          <form method="POST" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="renovar"/>
+            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+            <input type="hidden" name="novo_plano" value="{{ p.plano }}"/>
+            <button type="submit" class="btn-renew"
+                    onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
+              🔄 +30 dias
+            </button>
+          </form>
+        </td>
       </tr>
       {% endwith %}
       {% endfor %}
@@ -206,13 +223,18 @@
 <!-- ── TODOS OS PROFISSIONAIS ── -->
 <div class="pay-section">
   <h2>👥 Todos os Profissionais <span class="pay-count">{{ total_profissionais }}</span></h2>
-  <p style="font-size:.78rem;color:#6b7280;margin-bottom:.75rem">
-    Profissionais cadastrados — inclui trial e planos pagos. Útil para ver quem ainda não assinou.
+  <p style="font-size:.76rem;color:#6b7280;margin-bottom:.75rem">
+    Lista completa — inclui trial e planos pagos. Use o botão <strong>🔄 +30 dias</strong> para definir/renovar o vencimento de qualquer profissional sem precisar passar pela solicitação de plano.
   </p>
   {% if todos_info %}
   <table class="pay-table">
     <thead><tr>
-      <th>Profissional</th><th>Plano atual</th><th>Validade</th><th>Pacientes</th><th>Ativo?</th>
+      <th>Profissional</th>
+      <th>Plano</th>
+      <th>Validade</th>
+      <th>Vence em</th>
+      <th>Pacientes</th>
+      <th>Renovar / Alterar plano</th>
     </tr></thead>
     <tbody>
       {% for item in todos_info %}
@@ -222,16 +244,49 @@
           <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
           <small style="color:#6b7280">{{ p.user.email }}</small>
         </td>
-        <td>
-          <span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span>
-        </td>
+        <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
+        <td style="font-size:.78rem;color:#6b7280">
+          {% if p.plano_expiracao %}
+            {{ p.plano_expiracao|date:"d/m/Y" }}
+          {% else %}
+            <span style="color:#9ca3af">—</span>
+          {% endif %}
+        </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
         <td>
-          {% if p.user.is_active %}
-            <span style="color:#10b981;font-weight:700;font-size:.78rem">✅ Sim</span>
+          {% if p.plano != "trial" %}
+          {# Usuário já tem plano pago: renova o mesmo plano #}
+          <form method="POST" style="display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="renovar"/>
+            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+            <select name="novo_plano" class="sel-plano">
+              <option value="start" {% if p.plano == "start" %}selected{% endif %}>START</option>
+              <option value="plus"  {% if p.plano == "plus"  %}selected{% endif %}>PLUS</option>
+              <option value="elite" {% if p.plano == "elite" %}selected{% endif %}>ELITE</option>
+            </select>
+            <button type="submit" class="btn-renew"
+                    onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
+              🔄 +30 dias
+            </button>
+          </form>
           {% else %}
-            <span style="color:#ef4444;font-weight:700;font-size:.78rem">❌ Não</span>
+          {# Usuário em trial: pode ativar um plano pago direto #}
+          <form method="POST" style="display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="renovar"/>
+            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+            <select name="novo_plano" class="sel-plano">
+              <option value="start">START</option>
+              <option value="plus">PLUS</option>
+              <option value="elite">ELITE</option>
+            </select>
+            <button type="submit" class="btn-ap" style="font-size:.75rem;padding:.35rem .75rem"
+                    onclick="return confirm('Ativar plano +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
+              ▶ Ativar plano
+            </button>
+          </form>
           {% endif %}
         </td>
       </tr>
