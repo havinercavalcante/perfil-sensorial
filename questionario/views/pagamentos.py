@@ -80,11 +80,23 @@ def solicitar_plano(request):
 @staff_member_required
 def painel_pagamentos(request):
     """Painel para o admin ver e aprovar/rejeitar solicitações de plano."""
+    from django.contrib.auth.models import User
+
     pendentes  = SolicitacaoPlano.objects.filter(status="pendente").select_related("user", "user__perfil")
     historico  = SolicitacaoPlano.objects.exclude(status="pendente").select_related("user", "user__perfil", "aprovado_por").order_by("-aprovado_em")[:50]
+
+    # Assinantes ativos com plano pago — ordenados por quem vence mais cedo
+    assinantes = (
+        PerfilMedico.objects
+        .filter(plano__in=("start", "plus", "elite"), user__is_active=True)
+        .select_related("user")
+        .order_by("plano_expiracao")
+    )
+
     return render(request, "questionario/pagamentos/painel_pagamentos.html", {
-        "pendentes": pendentes,
-        "historico": historico,
+        "pendentes":  pendentes,
+        "historico":  historico,
+        "assinantes": assinantes,
     })
 
 
