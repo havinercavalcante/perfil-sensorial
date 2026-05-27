@@ -647,12 +647,12 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
         return "—"
 
 
-# ── Proxy: entrada direta "💳 Painel de Pagamentos" no sidebar do admin ───────
+# ── Proxy: entrada direta "Painel de Pagamentos" no sidebar do admin ───────
 
 @admin.register(PainelPagamentos)
 class PainelPagamentosAdmin(admin.ModelAdmin):
     """
-    Aparece no sidebar do admin como '💳 Painel de Pagamentos'.
+    Aparece no sidebar do admin como 'Painel de Pagamentos'.
     Redireciona para a painel_view registrada em SolicitacaoPlanoAdmin.
     """
 

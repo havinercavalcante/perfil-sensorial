@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content_title %}
-<h1 style="display:flex;align-items:center;gap:.5rem;">💳 Painel de Pagamentos</h1>
+<h1 style="display:flex;align-items:center;gap:.5rem;">Painel de Pagamentos</h1>
 {% endblock %}
 
 {% block content %}
@@ -58,31 +58,31 @@
   .sol-name{font-weight:700;color:#0c3c7b;font-size:.88rem}
   .sol-email{font-size:.74rem;color:#6b7280;margin-top:.1rem}
   .sol-date{font-size:.72rem;color:#9ca3af;margin-top:.1rem}
-  .sol-actions{padding:.7rem 1rem;display:flex;gap:.55rem;align-items:flex-end;flex-wrap:wrap;background:#fafafa}
-  .nota-wrap{flex:1;min-width:180px}
-  .nota-wrap label{font-size:.7rem;font-weight:600;color:#6b7280;display:block;margin-bottom:.25rem}
-  .nota-wrap textarea{width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:.4rem .6rem;
-                      font-size:.79rem;font-family:inherit;resize:none;color:#374151}
+  .sol-actions{padding:.7rem 1rem;display:flex;gap:.65rem;align-items:flex-end;flex-wrap:wrap;background:#fafafa}
+  .nota-wrap{flex:1 1 99%;min-width:0;max-width:99%}
+  .nota-wrap label{font-size:.68rem;font-weight:600;color:#6b7280;display:block;margin-bottom:.2rem}
+  .nota-wrap textarea{width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:.3rem .5rem;
+                      font-size:.74rem;font-family:inherit;resize:none;color:#374151;line-height:1.3}
   .nota-wrap textarea:focus{outline:none;border-color:#39abcb}
-  .btn-ap{background:#10b981;color:#fff;border:none;padding:.4rem .9rem;border-radius:6px;
-          font-size:.78rem;font-weight:700;cursor:pointer}
-  .btn-ap:hover{background:#059669}
-  .btn-rj{background:#ef4444;color:#fff;border:none;padding:.4rem .8rem;border-radius:6px;
-          font-size:.78rem;font-weight:700;cursor:pointer}
-  .btn-rj:hover{background:#dc2626}
+  .btn-ap{background:transparent;color:#059669;border:1.5px solid #059669;padding:.28rem .75rem;border-radius:6px;
+          font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-ap:hover{background:#059669;color:#fff}
+  .btn-rj{background:transparent;color:#dc2626;border:1.5px solid #dc2626;padding:.28rem .7rem;border-radius:6px;
+          font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-rj:hover{background:#dc2626;color:#fff}
 
   /* ── Botão renovar ── */
-  .btn-renew{background:#0c3c7b;color:#fff;border:none;padding:.35rem .75rem;border-radius:6px;
-             font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
-  .btn-renew:hover{background:#39abcb}
+  .btn-renew{background:transparent;color:#0c3c7b;border:1.5px solid #0c3c7b;padding:.28rem .65rem;border-radius:6px;
+             font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-renew:hover{background:#0c3c7b;color:#fff}
 
   /* ── Botão desativar / reativar ── */
-  .btn-off{background:#ef4444;color:#fff;border:none;padding:.35rem .7rem;border-radius:6px;
-           font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
-  .btn-off:hover{background:#dc2626}
-  .btn-on{background:#10b981;color:#fff;border:none;padding:.35rem .7rem;border-radius:6px;
-          font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
-  .btn-on:hover{background:#059669}
+  .btn-off{background:transparent;color:#dc2626;border:1.5px solid #dc2626;padding:.28rem .65rem;border-radius:6px;
+           font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-off:hover{background:#dc2626;color:#fff}
+  .btn-on{background:transparent;color:#059669;border:1.5px solid #059669;padding:.28rem .65rem;border-radius:6px;
+          font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-on:hover{background:#059669;color:#fff}
 
   /* ── Select inline de plano ── */
   .sel-plano{border:1px solid #d1d5db;border-radius:5px;padding:.3rem .5rem;
@@ -155,29 +155,42 @@
       </div>
       {% endif %}
       <div class="sol-actions">
-        <form method="POST" style="display:flex;gap:.55rem;align-items:flex-end;flex:1;flex-wrap:wrap">
-          {% csrf_token %}
-          <input type="hidden" name="action_painel" value="aprovar"/>
-          <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
-          <div class="nota-wrap">
-            <label>Nota para o usuário (opcional)</label>
-            <textarea name="nota_admin" rows="2" placeholder="Ex: Pagamento confirmado!"></textarea>
-          </div>
-          <button type="submit" class="btn-ap"
-                  onclick="return confirm('Confirma aprovação do plano {{ sol.get_plano_display }} para {{ sol.user.get_full_name|default:sol.user.username }}?')">
-            ✅ Aprovar e Ativar
-          </button>
-        </form>
-        <form method="POST">
-          {% csrf_token %}
-          <input type="hidden" name="action_painel" value="rejeitar"/>
-          <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
-          <input type="hidden" name="nota_admin" value="Pagamento não identificado. Por favor, tente novamente."/>
-          <button type="submit" class="btn-rj"
-                  onclick="return confirm('Rejeitar solicitação de {{ sol.user.get_full_name|default:sol.user.username }}?')">
-            ❌ Rejeitar
-          </button>
-        </form>
+        <div class="nota-wrap">
+          <label>Nota para o usuário (opcional)</label>
+          <textarea id="nota-{{ sol.id }}" rows="2" placeholder="Ex: Pagamento confirmado!"></textarea>
+        </div>
+        <div class="painel-actions">
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="aprovar"/>
+            <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
+            <input type="hidden" name="nota_admin" id="nota-ap-{{ sol.id }}" value=""/>
+            <button type="submit" class="btn-ap"
+                    onclick="document.getElementById('nota-ap-{{ sol.id }}').value=document.getElementById('nota-{{ sol.id }}').value;return confirm('Confirma aprovação do plano {{ sol.get_plano_display }} para {{ sol.user.get_full_name|default:sol.user.username }}?')">
+              ✅ Aprovar e Ativar
+            </button>
+          </form>
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="rejeitar"/>
+            <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
+            <input type="hidden" name="nota_admin" id="nota-rj-{{ sol.id }}" value="Pagamento não identificado. Por favor, tente novamente."/>
+            <button type="submit" class="btn-rj"
+                    onclick="document.getElementById('nota-rj-{{ sol.id }}').value=document.getElementById('nota-{{ sol.id }}').value||'Pagamento não identificado. Por favor, tente novamente.';return confirm('Rejeitar solicitação de {{ sol.user.get_full_name|default:sol.user.username }}?')">
+              ❌ Rejeitar
+            </button>
+          </form>
+        </div>
+      </style>
+
+      <style>
+        .painel-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.45rem;
+          width: 100%;
+        }
+      </style>
       </div>
     </div>
     {% endfor %}
@@ -299,7 +312,7 @@
               <button type="submit" class="btn-renew"
                       onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">🔄 +30d</button>
               {% else %}
-              <button type="submit" class="btn-ap" style="font-size:.74rem;padding:.32rem .65rem"
+              <button type="submit" class="btn-ap"
                       onclick="return confirm('Ativar plano para {{ p.user.get_full_name|default:p.user.username }}?')">▶ Ativar</button>
               {% endif %}
             </form>
