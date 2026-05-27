@@ -323,7 +323,7 @@
             <span class="badge b-rej">❌ Rejeitado</span>
           {% endif %}
         </td>
-        <td style="font-size:.78rem">{{ sol.aprovado_por.get_full_name|default:sol.aprovado_por.username|default:"—" }}</td>
+        <td style="font-size:.78rem">{% if sol.aprovado_por %}{{ sol.aprovado_por.get_full_name|default:sol.aprovado_por.username }}{% else %}—{% endif %}</td>
         <td style="font-size:.76rem;max-width:180px;color:#6b7280">{{ sol.nota_admin|default:"—" }}</td>
       </tr>
       {% endfor %}
