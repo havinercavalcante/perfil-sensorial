@@ -1635,3 +1635,16 @@ class SolicitacaoPlano(models.Model):
     @property
     def preco(self):
         return PRECO_PLANO.get(self.plano, "")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Proxy — aparece no sidebar do admin como "💳 Painel de Pagamentos"
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PainelPagamentos(SolicitacaoPlano):
+    """Proxy de SolicitacaoPlano — usado apenas para expor o Painel no admin."""
+
+    class Meta:
+        proxy        = True
+        verbose_name        = "💳 Painel de Pagamentos"
+        verbose_name_plural = "💳 Painel de Pagamentos"
