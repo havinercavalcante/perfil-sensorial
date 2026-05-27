@@ -287,7 +287,7 @@
           <span>{{ user.email }}</span>
         </div>
         <a href="{% url 'meu_perfil' %}"><i data-lucide="settings" style="width:15px;height:15px;"></i> Meu Perfil</a>
-        <a href="{% url 'solicitar_plano' %}"><i data-lucide="credit-card" style="width:15px;height:15px;color:#0c3c7b;"></i> <span style="color:#0c3c7b;font-weight:700">Meu Plano</span>
+        <a href="{% url 'solicitar_plano' %}"><i data-lucide="credit-card" style="width:15px;height:15px;"></i> Meu Plano
           {% if user.perfil.plano == 'trial' %}<span style="font-size:.68rem;background:#6366f1;color:#fff;padding:1px 6px;border-radius:10px;margin-left:2px">Trial</span>
           {% elif user.perfil.plano_expiracao %}<span style="font-size:.68rem;background:#10b981;color:#fff;padding:1px 6px;border-radius:10px;margin-left:2px">{{ user.perfil.plano|upper }}</span>
           {% endif %}
