@@ -38,7 +38,6 @@ def solicitar_plano(request):
 
     if request.method == "POST":
         plano = request.POST.get("plano", "").strip()
-        observacoes = request.POST.get("observacoes", "").strip()
 
         if plano not in ("start", "plus", "elite"):
             messages.error(request, "Plano inválido.")
@@ -52,7 +51,6 @@ def solicitar_plano(request):
         sol = SolicitacaoPlano.objects.create(
             user=request.user,
             plano=plano,
-            observacoes=observacoes,
         )
 
         # Notifica admin por e-mail
