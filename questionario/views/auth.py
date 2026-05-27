@@ -250,4 +250,17 @@ def politica_privacidade(request):
 
 @login_required
 def trial_expirado(request):
-    return render(request, "questionario/auth/trial_expirado.html")
+    """Página de bloqueio — trial vencido OU plano pago vencido."""
+    plano_pago_vencido = False
+    plano_nome = ""
+    try:
+        perfil = request.user.perfil
+        if perfil.plano in ("start", "plus", "elite") and perfil.plano_expiracao:
+            plano_pago_vencido = not perfil.plano_ativo
+            plano_nome = perfil.get_plano_display()
+    except Exception:
+        pass
+    return render(request, "questionario/auth/trial_expirado.html", {
+        "plano_pago_vencido": plano_pago_vencido,
+        "plano_nome": plano_nome,
+    })

@@ -128,7 +128,7 @@ def desativar_trials_expirados():
                 html = render_to_string("questionario/emails/email_trials_expirados_admin.html", {
                     "expirados": expirados,
                     "total": total,
-                    "painel_url": "https://integramente.pro/pagamentos/painel/",
+                    "painel_url": "https://integramente.pro/admin/questionario/solicitacaoplano/painel/",
                 })
                 send_mail(
                     subject=f"[IntegraMente] {total} trial(s) expirado(s) hoje",
@@ -229,7 +229,7 @@ def verificar_planos_expirando():
                 html = render_to_string("questionario/emails/email_planos_resumo_admin.html", {
                     "vencendo": list(prestes_a_vencer),
                     "vencidos": desativados,
-                    "painel_url": "https://integramente.pro/pagamentos/painel/",
+                    "painel_url": "https://integramente.pro/admin/questionario/solicitacaoplano/painel/",
                 })
                 send_mail(
                     subject=f"[IntegraMente] Resumo de planos — {agora.strftime('%d/%m/%Y')}",
