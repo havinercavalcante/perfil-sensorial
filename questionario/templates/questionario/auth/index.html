@@ -2,6 +2,7 @@
 {% block title %}Início – IntegraMente{% endblock %}
 {% block extra_css %}
 <style>
+  /* ── Estilos da página ── */
   .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
   .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
   .date-short { display: none; }
@@ -49,7 +50,7 @@
   </p>
 </div>
 
-<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+<div id="tour-stats" class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
   <div class="card" style="text-align:center; border-top:4px solid var(--primary); margin-bottom:0;">
     <div style="font-size:2rem; font-weight:800; color:var(--primary);">{{ total_pacientes }}</div>
     <div style="color:var(--text-muted); font-size:.85rem;">Pacientes</div>
@@ -74,17 +75,17 @@
     <i data-lucide="clock" style="width:15px;height:15px; flex-shrink:0;"></i>
     <span>Você tem <strong>{{ em_andamento }}</strong> avalia{{ em_andamento|pluralize:"ção,ções" }} em andamento aguardando conclusão.</span>
   </span>
-  <a href="{% url 'lista_pacientes' %}" style="color:#ffffff; font-weight:600; white-space:nowrap; flex-shrink:0;">Ver pacientes <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+  <a href="{% url 'avaliacoes_pendentes' %}" style="color:#ffffff; font-weight:600; white-space:nowrap; flex-shrink:0;">Ver avaliações <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
 </div>
 {% endif %}
 
 <div class="actions-grid">
-  <a href="{% url 'gerar_link' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
+  <a id="tour-card-gerar-link" href="{% url 'gerar_link' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
     <div class="card-title"><i data-lucide="link" style="width:18px;height:18px;"></i> Gerar Link de Questionário</div>
     <p style="color:var(--text-muted); font-size:.88rem;">Gere um link e envie pelo WhatsApp ou e-mail — o responsável preenche os dados.</p>
     <br><span class="btn btn-primary btn-sm">Gerar link</span>
   </a>
-  <a href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
+  <a id="tour-card-pacientes" href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
     <div class="card-title"><i data-lucide="users" style="width:18px;height:18px;"></i> Meus Pacientes</div>
     <p style="color:var(--text-muted); font-size:.88rem;">Veja o histórico e os dashboards de cada paciente.</p>
     <br><span class="btn btn-secondary btn-sm">Ver pacientes</span>
@@ -201,5 +202,131 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') fecharModalAvaliar();
   });
+</script>
+
+<!-- ══ Tour guiado ══════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_v1';
+
+  function isMobile() { return window.innerWidth < 768; }
+
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapasBase = [
+    {
+      popover: {
+        title: '<i data-lucide="house" ' + ICO + '></i> Bem-vindo ao IntegraMente!',
+        description: 'Vamos fazer um <strong>tour rápido</strong> para você conhecer as principais telas. Leva menos de 1 minuto — prometo!'
+      }
+    },
+    {
+      element: '#tour-stats',
+      popover: {
+        title: '<i data-lucide="bar-chart-2" ' + ICO + '></i> Seus números em tempo real',
+        description: 'Acompanhe aqui: <strong>pacientes cadastrados</strong>, avaliações totais, concluídas e quantas foram criadas neste mês.',
+        side: 'bottom',
+        align: 'start'
+      }
+    },
+    {
+      element: '#tour-card-gerar-link',
+      popover: {
+        title: '<i data-lucide="link" ' + ICO + '></i> Gerar Link — o fluxo mais ágil',
+        description: 'Gere um link de questionário e envie por <strong>WhatsApp ou e-mail</strong>. O responsável preenche no celular e o paciente é cadastrado automaticamente.',
+        side: 'top',
+        align: 'start'
+      }
+    },
+    {
+      element: '#tour-card-pacientes',
+      popover: {
+        title: '<i data-lucide="users" ' + ICO + '></i> Meus Pacientes',
+        description: 'Veja o histórico completo de cada paciente: <strong>avaliações aplicadas</strong>, dashboards com gráficos, laudos em PDF e comparação de resultados.',
+        side: 'top',
+        align: 'end'
+      }
+    }
+  ];
+
+  var etapasDesktop = [
+    {
+      element: '#nav-pendentes',
+      popover: {
+        title: '<i data-lucide="clock" ' + ICO + '></i> Avaliações Pendentes',
+        description: 'Aqui ficam todas as avaliações que foram <strong>enviadas mas ainda não foram concluídas</strong> pelo responsável. Reenvie o link com um clique.',
+        side: 'bottom',
+        align: 'start'
+      }
+    },
+    {
+      element: '#nav-gerar-link',
+      popover: {
+        title: '<i data-lucide="link" ' + ICO + '></i> Gerar Link (atalho rápido)',
+        description: 'Acesse a geração de novos questionários a qualquer momento pelo menu de navegação.',
+        side: 'bottom',
+        align: 'start'
+      }
+    },
+    {
+      element: '#userMenu',
+      popover: {
+        title: '<i data-lucide="settings" ' + ICO + '></i> Meu Perfil',
+        description: 'Configure seus dados profissionais: <strong>especialidade e número de registro</strong> (CRP, CREFITO, CRO…). Eles aparecem automaticamente em todos os laudos gerados.',
+        side: 'bottom',
+        align: 'end'
+      }
+    },
+    {
+      element: '#tour-help-btn',
+      popover: {
+        title: '<i data-lucide="help-circle" ' + ICO + '></i> Rever o tour a qualquer hora',
+        description: 'Este botão — ou o item <em>"Tour do sistema"</em> no menu do usuário — reinicia este tour sempre que quiser.',
+        side: 'bottom',
+        align: 'end'
+      }
+    }
+  ];
+
+  var etapaFinal = {
+    popover: {
+      title: '<i data-lucide="check-circle" ' + ICO + '></i> Tudo pronto!',
+      description: 'Agora você conhece o IntegraMente!<br><br><strong>Próximo passo sugerido:</strong> clique em <em>"Gerar Link"</em> para enviar o primeiro questionário a um responsável.<br><br><small style="color:#9ca3af;">Este tour fica sempre disponível no menu do usuário.</small>'
+    }
+  };
+
+  window.startTour = function (force) {
+    if (!window.driver || !window.driver.js) {
+      console.warn('Driver.js ainda não carregou.');
+      return;
+    }
+    var driverFn = window.driver.js.driver;
+    var steps = etapasBase.concat(isMobile() ? [] : etapasDesktop).concat([etapaFinal]);
+
+    var driverObj = driverFn({
+      showProgress: true,
+      progressText: 'Etapa {{current}} de {{total}}',
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function() { if (window.lucide) lucide.createIcons(); },
+      onDestroyed: function () {
+        localStorage.setItem(TOUR_KEY, 'done');
+      },
+      steps: steps
+    });
+
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone  = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function () { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}
