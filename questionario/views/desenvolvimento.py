@@ -1,3 +1,4 @@
+import json
 import uuid
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -70,13 +71,13 @@ def nova_avaliacao_desenvolvimento(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoDesenvolvimento.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("desenvolvimento_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("desenvolvimento_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def desenvolvimento_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("desenvolvimento_resultado", avaliacao_id=avaliacao_id)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
@@ -203,7 +204,7 @@ def desenvolvimento_publico(request, token, pagina):
 
 @login_required
 def desenvolvimento_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
         return redirect("desenvolvimento_form", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
     resultado = []
@@ -218,16 +219,31 @@ def desenvolvimento_resultado(request, avaliacao_id):
             "max": max_score,
             "pct": int(score / max_score * 100) if max_score else 0,
         })
+    paciente = avaliacao.paciente
+    todas_av = list(paciente.avaliacoes_desenvolvimento.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B"]
+    comparativo_datasets = []
+    for i, dom in enumerate(DESENVOLVIMENTO_DOMINIOS):
+        mx = len(dom["itens"]) * 2
+        valores = [round((getattr(av, dom["campo"]) or 0) / mx * 100) if mx else 0 for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i % len(cores_linha)], "backgroundColor": cores_linha[i % len(cores_linha)] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/desenvolvimento_resultado.html", {
         "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
+        "paciente": paciente,
         "resultado": resultado,
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def desenvolvimento_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, uuid=avaliacao_id, paciente__medico=request.user)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
         return redirect("desenvolvimento_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
@@ -260,7 +276,7 @@ def desenvolvimento_visualizar(request, avaliacao_id, pagina):
 
 @login_required
 def desenvolvimento_deletar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -272,7 +288,7 @@ def desenvolvimento_deletar(request, avaliacao_id):
 
 @login_required
 def salvar_observacoes_desenvolvimento(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoDesenvolvimento, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])

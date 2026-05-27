@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -46,13 +47,13 @@ def nova_avaliacao_mchat(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoMCHAT.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("mchat_form", avaliacao_id=av.id)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("mchat_form", avaliacao_id=av.uuid)
 
 
 @login_required
 def mchat_form(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("mchat_resultado", avaliacao_id=avaliacao_id)
 
@@ -97,21 +98,40 @@ def mchat_form(request, avaliacao_id):
 
 @login_required
 def mchat_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
         return redirect("mchat_form", avaliacao_id=avaliacao_id)
     risco_info = next((r for r in MCHAT_RISCO if r[0] == avaliacao.classificacao), MCHAT_RISCO[0])
+    paciente = avaliacao.paciente
+    todas_av = list(paciente.avaliacoes_mchat.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    cores_linha = ["#2E7D6B"]
+    comparativo_datasets = [
+        {
+            "label": "Score Total",
+            "data": [round((av.score_total or 0) / 20 * 100) for av in todas_av],
+            "borderColor": cores_linha[0],
+            "backgroundColor": cores_linha[0] + "33",
+            "tension": 0.3,
+        }
+    ]
+
     return render(request, "questionario/avaliacoes/mchat_resultado.html", {
         "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
+        "paciente": paciente,
         "risco_info": risco_info,
         "risco_lista": MCHAT_RISCO,
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def mchat_visualizar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
     itens_render = [
         {**item, "resposta_salva": respostas_salvas.get(item["numero"]), "faltando": False}
@@ -129,7 +149,7 @@ def mchat_visualizar(request, avaliacao_id):
 
 @login_required
 def mchat_deletar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -141,7 +161,7 @@ def mchat_deletar(request, avaliacao_id):
 
 @login_required
 def salvar_observacoes_mchat(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -155,7 +175,7 @@ def salvar_observacoes_mchat(request, avaliacao_id):
 def enviar_email_mchat(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoMCHAT, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

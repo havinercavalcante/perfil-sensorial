@@ -30,12 +30,12 @@ def nova_avaliacao_pedi(request, paciente_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         from django.http import JsonResponse
         return JsonResponse({"ok": True})
-    return redirect("pedi_form", avaliacao_id=av.id)
+    return redirect("pedi_form", avaliacao_id=av.uuid)
 
 
 @login_required
 def pedi_form(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if request.method == "POST":
@@ -101,7 +101,7 @@ def pedi_form(request, avaliacao_id):
 
 @login_required
 def pedi_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     def _ec(dominio, raw):
@@ -125,6 +125,20 @@ def pedi_resultado(request, avaliacao_id):
         {"nome": "Função Social", "raw": avaliacao.ca_funcao_social, "max": _PEDI_CA_MAX["funcao_social"], "escala": avaliacao.ca_funcao_social_escala},
     ]
 
+    todas_av = list(paciente.avaliacoes_pedi.order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": "FS Autocuidado",   "campo": "fs_autocuidado_escala"},
+        {"nome": "FS Mobilidade",    "campo": "fs_mobilidade_escala"},
+        {"nome": "FS Func. Social",  "campo": "fs_funcao_social_escala"},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [(getattr(av, dom["campo"]) or 0) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/pedi_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
@@ -135,13 +149,17 @@ def pedi_resultado(request, avaliacao_id):
             "fs": [d["escala"] or 0 for d in dominios_fs],
             "ca": [d["escala"] or 0 for d in dominios_ca],
         }),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def pedi_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -228,7 +246,7 @@ def pedi_publico(request, token, pagina=1):
 def pedi_salvar_progresso(request, avaliacao_id):
     from django.http import JsonResponse
     import json as _json
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         data = _json.loads(request.body)
         avaliacao.respostas_json = _json.dumps(data.get("respostas", {}))
@@ -256,7 +274,7 @@ def pedi_salvar_progresso_publico(request, token):
 @login_required
 def salvar_observacoes_pedi(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -270,7 +288,7 @@ def salvar_observacoes_pedi(request, avaliacao_id):
 def enviar_email_pedi(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -304,7 +322,7 @@ def enviar_email_pedi(request, avaliacao_id):
 
 @login_required
 def pedi_visualizar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoPEDI, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     steps = []

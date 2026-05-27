@@ -212,11 +212,11 @@
     <div>
       {% if pagina_anterior %}
         {% if readonly %}
-        <a href="{% url 'vineland_visualizar' avaliacao.id pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+        <a href="{% url 'vineland_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
         {% elif publico %}
         <a href="{% url 'vineland_publico' token pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
         {% else %}
-        <a href="{% url 'vineland_form' avaliacao.id pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+        <a href="{% url 'vineland_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
         {% endif %}
       {% elif not publico %}
       <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Paciente</a>
@@ -226,7 +226,7 @@
       {% if pagina == total %}
       <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar ao paciente</a>
       {% else %}
-      <a href="{% url 'vineland_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-primary">Próximo Grupo <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+      <a href="{% url 'vineland_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-primary">Próximo Grupo <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
       {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary">

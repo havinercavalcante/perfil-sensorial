@@ -131,7 +131,7 @@
     <div class="section-label">Dados Pessoais</div>
     <div class="form-group">
       <label>Nome completo <span class="req">*</span></label>
-      <input type="text" name="nome" value="{{ post.nome|default:'' }}" required placeholder="Dr(a). Nome Sobrenome">
+      <input type="text" name="nome" id="nome" value="{{ post.nome|default:'' }}" required placeholder="Dr(a). Nome Sobrenome">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -163,12 +163,13 @@
     <div class="section-label">Acesso ao Sistema</div>
     <div class="form-group">
       <label>Nome de usuário <span class="req">*</span></label>
-      <input type="text" name="username" value="{{ post.username|default:'' }}" required placeholder="Ex: dra.ana (sem espaços)">
+      <input type="text" name="username" id="username" value="{{ post.username|default:'' }}" required placeholder="Ex: dra.ana" autocomplete="username">
+      <small id="username-hint" style="display:none;margin-top:.3rem;color:#6B7280;font-size:.78rem;">Será salvo como: <strong id="username-preview"></strong></small>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Senha <span class="req">*</span></label>
-        <input type="password" name="password" required placeholder="Mínimo 6 caracteres">
+        <input type="password" name="password" required placeholder="Mínimo 8 caracteres">
       </div>
       <div class="form-group">
         <label>Confirmar senha <span class="req">*</span></label>
@@ -265,6 +266,44 @@
     chk.addEventListener('change', () => {
       chk.closest('.esp-item').classList.toggle('checked', chk.checked);
     });
+  });
+
+  function sanitizarUsername(v) {
+    return v
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, '.')
+      .replace(/[^a-z0-9._-]/g, '')
+      .replace(/\.{2,}/g, '.');
+  }
+
+  const usernameInput = document.getElementById('username');
+  const usernameHint  = document.getElementById('username-hint');
+  const usernamePreview = document.getElementById('username-preview');
+  let usernameTouched = usernameInput.value.length > 0;
+
+  usernameInput.addEventListener('input', function() {
+    usernameTouched = true;
+    const clean = sanitizarUsername(this.value);
+    if (clean !== this.value) {
+      this.value = clean;
+    }
+    if (clean) {
+      usernameHint.style.display = 'block';
+      usernamePreview.textContent = clean;
+    } else {
+      usernameHint.style.display = 'none';
+    }
+  });
+
+  document.getElementById('nome').addEventListener('blur', function() {
+    if (usernameTouched) return;
+    const sugerido = sanitizarUsername(this.value.replace(/^dr[ao]?\.\s*/i, ''));
+    if (sugerido) {
+      usernameInput.value = sugerido;
+      usernameHint.style.display = 'block';
+      usernamePreview.textContent = sugerido;
+    }
   });
 </script>
 </body>

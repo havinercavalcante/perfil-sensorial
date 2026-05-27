@@ -53,7 +53,7 @@
   <strong>Instruções:</strong> Marque para cada item a opção que melhor descreve o desempenho atual da criança/paciente.
 </div>
 
-<form method="post" data-require-all-radios {% if not publico %}action="{% url 'sono_form' avaliacao.id %}"{% endif %}>
+<form method="post" data-require-all-radios {% if not publico %}action="{% url 'sono_form' avaliacao.uuid %}"{% endif %}>
   {% csrf_token %}
 
   {% for dom in dominios %}
