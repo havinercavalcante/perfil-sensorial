@@ -83,14 +83,14 @@
 <div class="plano-wrap">
 
   <div class="page-header">
-    <h1>💳 Escolha seu plano</h1>
+    <h1><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:middle;margin-right:.35rem;color:var(--primary-dark)"></i>Escolha seu plano</h1>
     <p>Selecione o plano, realize o pagamento via PIX e solicite a ativação.</p>
   </div>
 
   {% if solicitacao_pendente %}
   <!-- Solicitação já enviada -->
   <div class="pendente-box">
-    <div class="pendente-badge">⏳ Aguardando confirmação</div>
+    <div class="pendente-badge"><i data-lucide="clock" style="width:14px;height:14px"></i> Aguardando confirmação</div>
     <h3>Sua solicitação está em análise</h3>
     <p>
       Você solicitou o plano <strong>{{ solicitacao_pendente.get_plano_display }}</strong>
@@ -125,7 +125,7 @@
         <input type="radio" name="plano" value="plus"
                {% if plano_param == 'plus' or not plano_param %}checked{% endif %}
                onchange="atualizarPlano('plus','R$ 79,90')"/>
-        <div class="badge-popular">⭐ Mais popular</div>
+        <div class="badge-popular"><i data-lucide="star" style="width:10px;height:10px;vertical-align:middle"></i> Mais popular</div>
         <div class="plano-nome">PLUS</div>
         <div class="plano-preco">R$ 79,90 <span>/mês</span></div>
         <div class="plano-desc">Nosso plano mais escolhido</div>
@@ -154,7 +154,10 @@
 
     <!-- Valor dinâmico -->
     <div class="valor-box">
-      <strong>💰 Valor a pagar: <span id="valor-plano">R$ 79,90</span>/mês</strong>
+      <strong style="display:inline-flex;align-items:center;gap:.4rem">
+        <i data-lucide="circle-dollar-sign" style="width:17px;height:17px;color:#065f46"></i>
+        Valor a pagar: <span id="valor-plano">R$ 79,90</span>/mês
+      </strong>
     </div>
 
     <!-- Dados do PIX -->
@@ -185,7 +188,7 @@
     </div>
 
     <button type="submit" class="btn-solicitar">
-      <i data-lucide="check-circle" style="width:18px;height:18px"></i>
+      <i data-lucide="send" style="width:18px;height:18px"></i>
       Já paguei — solicitar ativação
     </button>
 

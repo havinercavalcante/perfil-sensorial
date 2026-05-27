@@ -321,12 +321,12 @@
     {% with perfil=user.perfil %}
       {% if perfil.plano == 'trial' and perfil.trial_ativo %}
         <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:10px;padding:.7rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem;">
-          <span>⏳ <strong>Trial ativo</strong> — {{ perfil.trial_dias_restantes }} dia{{ perfil.trial_dias_restantes|pluralize:"s" }} restante{{ perfil.trial_dias_restantes|pluralize:"s" }}. Assine um plano para continuar.</span>
+          <span style="display:inline-flex;align-items:center;gap:.4rem"><i data-lucide="clock" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></i> <strong>Trial ativo</strong> — {{ perfil.trial_dias_restantes }} dia{{ perfil.trial_dias_restantes|pluralize:"s" }} restante{{ perfil.trial_dias_restantes|pluralize:"s" }}. Assine um plano para continuar.</span>
           <a href="{% url 'solicitar_plano' %}" style="background:#6366f1;color:#fff;padding:.35rem .9rem;border-radius:7px;text-decoration:none;font-weight:700;font-size:.82rem;white-space:nowrap;">💳 Ver planos</a>
         </div>
       {% elif perfil.plano in 'start,plus,elite' and not perfil.plano_expiracao %}
         <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:.7rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem;">
-          <span>⚠️ Plano <strong>{{ perfil.get_plano_display }}</strong> ativo mas <strong>sem data de vencimento</strong> definida.</span>
+          <span style="display:inline-flex;align-items:center;gap:.4rem"><i data-lucide="triangle-alert" style="width:15px;height:15px;color:#d97706;flex-shrink:0"></i> Plano <strong>{{ perfil.get_plano_display }}</strong> ativo mas <strong>sem data de vencimento</strong> definida.</span>
           <a href="{% url 'solicitar_plano' %}" style="background:#f59e0b;color:#fff;padding:.35rem .9rem;border-radius:7px;text-decoration:none;font-weight:700;font-size:.82rem;white-space:nowrap;">💳 Renovar</a>
         </div>
       {% endif %}
