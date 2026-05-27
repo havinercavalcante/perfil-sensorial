@@ -140,6 +140,14 @@
     .table-scores td:not(:nth-child(1)):not(.acoes-td) { display: none; }
     .btn-wa, .btn-email, .btn-copy, .btn-resultado, .btn-ver-respostas { padding: .32rem .55rem; }
   }
+
+  /* ── Highlight de avaliação vinda de âncora ── */
+  @keyframes av-highlight {
+    0%   { background: #bfecf8; }
+    70%  { background: #bfecf8; }
+    100% { background: transparent; }
+  }
+  tr.av-destaque td { animation: av-highlight 2.2s ease forwards; }
 </style>
 {% endblock %}
 
@@ -147,7 +155,7 @@
 {% block content %}
 
 <!-- Cabeçalho do paciente -->
-<div class="card" style="position:relative;">
+<div id="tour-dp-cabecalho" class="card" style="position:relative;">
   <button type="button" onclick="abrirModalDeletarPaciente()" title="Excluir paciente"
     style="position:absolute; top:.75rem; right:.75rem; background:#FEE2E2; border:1.5px solid #FECACA; cursor:pointer; color:#DC2626; padding:.35rem .45rem; border-radius:8px; line-height:1; transition:background .2s, border-color .2s;"
     onmouseover="this.style.background='#DC2626';this.style.color='#fff';this.style.borderColor='#DC2626'"
@@ -168,7 +176,7 @@
       <a href="{% url 'editar_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
         <i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar
       </a>
-      <button type="button" class="btn btn-primary btn-nova-avaliacao" onclick="abrirModalEscolha()">
+      <button id="tour-dp-nova-aval" type="button" class="btn btn-primary btn-nova-avaliacao" onclick="abrirModalEscolha()">
         + Nova Avaliação
       </button>
     </div>
@@ -177,13 +185,13 @@
 
 <!-- Perfil Sensorial -->
 {% if avaliacoes %}
-<div class="card">
+<div id="tour-dp-avaliacoes" class="card">
   <div class="card-title"><i data-lucide="brain" style="width:18px;height:18px;"></i> Perfil Sensorial</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento <small style="color:var(--text-muted);font-size:.75rem;">(Página {{ av.obj.pagina_atual }} de 9)</small>{% endif %}
@@ -239,7 +247,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_vineland %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento <small style="color:var(--text-muted);font-size:.75rem;">(Página {{ av.obj.pagina_atual }} de 16)</small>{% endif %}
@@ -296,7 +304,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_escolar %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento <small style="color:var(--text-muted);font-size:.75rem;">(Página {{ av.obj.pagina_atual }} de 5)</small>{% endif %}
@@ -351,7 +359,7 @@
     <thead><tr><th>Data</th><th>Faixa</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_bebe %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td class="td-faixa" style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_faixa_display }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
@@ -407,7 +415,7 @@
     <thead><tr><th>Data</th><th>Instrumento</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_spm %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td class="td-faixa" style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_faixa_display }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
@@ -463,7 +471,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_vineland3 %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento <small style="color:var(--text-muted);font-size:.75rem;">(Página {{ av.obj.pagina_atual }} de 6)</small>{% endif %}
@@ -518,7 +526,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_portage %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento <small style="color:var(--text-muted);font-size:.75rem;">(Página {{ av.obj.pagina_atual }} de 5)</small>{% endif %}
@@ -573,7 +581,7 @@
     <thead><tr><th>Data</th><th>Respondente</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_sdq %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_respondente_display }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
@@ -629,7 +637,7 @@
     <thead><tr><th>Data</th><th>Respondente</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_snap_iv %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td style="font-size:.8rem; color:var(--text-muted);">{{ av.obj.get_respondente_display }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
@@ -685,7 +693,7 @@
     <thead><tr><th>Data</th><th>Status</th><th>Risco</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_mchat %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -741,7 +749,7 @@
     <thead><tr><th>Data</th><th>Status</th><th>Pontuação</th><th>Classificação</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_cars %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -798,7 +806,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_linguagem %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -853,7 +861,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_alimentacao %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -908,7 +916,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_habitos_orais %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -963,7 +971,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_voz_infantil %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1018,7 +1026,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_processamento_auditivo %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1073,7 +1081,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_idv10 %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1128,7 +1136,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_desenvolvimento %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1183,7 +1191,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_sono %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1238,7 +1246,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_habilidades %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1293,7 +1301,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_comportamento %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1348,7 +1356,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_cognitivo %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -1403,7 +1411,7 @@
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_psicopedagogica %}
-    <tr>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
       <td>{{ av.obj.data|date:"d/m/Y" }}</td>
       <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
         {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
@@ -2106,5 +2114,92 @@
       fecharModalDeletarPaciente();
     }
   });
+
+  /* ── Scroll até a avaliação referenciada na URL ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    var hash = window.location.hash;
+    if (!hash || !hash.startsWith('#avaliacao-')) return;
+    var alvo = document.querySelector(hash);
+    if (!alvo) return;
+    setTimeout(function() {
+      alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      alvo.classList.add('av-destaque');
+    }, 300);
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_detalhe_v1';
+
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="user-round" ' + ICO + '></i> Perfil do Paciente',
+        description: 'Esta é a página central de cada paciente: informações pessoais, histórico de avaliações e acesso direto aos resultados.'
+      }
+    },
+    {
+      element: '#tour-dp-cabecalho',
+      popover: {
+        title: '<i data-lucide="user-round" ' + ICO + '></i> Dados do Paciente',
+        description: 'Nome, data de nascimento, responsável e contatos ficam aqui. Use <strong>"Editar"</strong> para atualizar qualquer informação.',
+        side: 'bottom', align: 'start'
+      }
+    },
+    {
+      element: '#tour-dp-nova-aval',
+      popover: {
+        title: '<i data-lucide="link" ' + ICO + '></i> Nova Avaliação',
+        description: 'Clique aqui para escolher um instrumento e gerar um novo link de avaliação para este paciente.',
+        side: 'bottom', align: 'end'
+      }
+    }
+  ];
+
+  if (document.getElementById('tour-dp-avaliacoes')) {
+    etapas.push({
+      element: '#tour-dp-avaliacoes',
+      popover: {
+        title: '<i data-lucide="bar-chart-2" ' + ICO + '></i> Histórico de Avaliações',
+        description: 'Todas as avaliações do paciente ficam listadas aqui. Acesse <strong>Resultado</strong> para ver o dashboard ou <strong>Ver respostas</strong> para rever cada item.',
+        side: 'top', align: 'start'
+      }
+    });
+  }
+
+  etapas.push({
+    popover: {
+      title: '<i data-lucide="check-circle" ' + ICO + '></i> Tudo pronto!',
+      description: 'Você já conhece o perfil do paciente. Clique em <strong>"+ Nova Avaliação"</strong> para iniciar uma nova avaliação ou acesse um resultado existente.'
+    }
+  });
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      showProgress: true,
+      progressText: 'Etapa {{current}} de {{total}}',
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function() { if (window.lucide) lucide.createIcons(); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}

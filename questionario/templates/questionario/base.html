@@ -123,6 +123,38 @@
   .btn-back:hover { color:var(--primary); }
 
   .hamburger { display: none; background: none; border: none; color: var(--primary-dark); font-size: 1.5rem; cursor: pointer; padding: .3rem .5rem; line-height: 1; flex-shrink: 0; }
+  #tour-help-btn-mobile { display: none; }
+
+  /* ── Driver.js tour: customização visual global ── */
+  .driver-popover {
+    border-radius: 14px !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,.22) !important;
+    border: 1px solid #85cde2 !important;
+    max-width: 320px !important;
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
+  }
+  .driver-popover-title {
+    color: #0c3c7b !important; font-size: .98rem !important;
+    font-weight: 700 !important; line-height: 1.3 !important; margin-bottom: .4rem !important;
+  }
+  .driver-popover-description { font-size: .85rem !important; color: #374151 !important; line-height: 1.6 !important; }
+  .driver-popover-footer { margin-top: .9rem !important; }
+  .driver-popover-progress-text { font-size: .75rem !important; color: #6b7280 !important; font-weight: 500 !important; }
+  .driver-popover-next-btn, .driver-popover-done-btn {
+    background: #39abcb !important; color: #fff !important; border-radius: 6px !important;
+    border: none !important; font-size: .8rem !important; font-weight: 600 !important;
+    padding: .35rem .85rem !important; text-shadow: none !important; cursor: pointer !important;
+  }
+  .driver-popover-next-btn:hover, .driver-popover-done-btn:hover { background: #0c3c7b !important; }
+  .driver-popover-prev-btn {
+    background: transparent !important; color: #39abcb !important; border: 1.5px solid #85cde2 !important;
+    border-radius: 6px !important; font-size: .8rem !important; font-weight: 600 !important;
+    padding: .35rem .85rem !important; text-shadow: none !important; cursor: pointer !important;
+  }
+  .driver-popover-prev-btn:hover { background: #39abcb !important; color: #fff !important; border-color: #39abcb !important; }
+  .driver-popover-close-btn { color: #9ca3af !important; font-size: 1.1rem !important; line-height: 1 !important; }
+  .driver-popover-close-btn:hover { color: #374151 !important; }
+  .driver-overlay { background: rgba(10,30,60,.55) !important; }
 
   @media (max-width: 768px) {
     nav { height: auto; padding: .6rem 1rem; }
@@ -174,6 +206,15 @@
 
     .drawer-section { padding: .75rem .75rem 0; flex: 1; margin-right: 150px; }
     .user-menu { display: none; }
+    #tour-help-btn { display: none !important; }
+    #tour-help-btn-mobile {
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: 1.5px solid var(--border);
+      color: var(--primary-dark); border-radius: 50%;
+      width: 30px; height: 30px; cursor: pointer;
+      transition: all .2s; flex-shrink: 0; padding: 0; line-height: 1;
+    }
+    #tour-help-btn-mobile:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
     nav a.nav-link {
       display: flex; align-items: center; gap: .75rem;
       padding: .8rem 1rem; font-size: .93rem; border-radius: 10px;
@@ -194,13 +235,19 @@
     .form-row { grid-template-columns: 1fr; }
   }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
 {% block extra_css %}{% endblock %}
 </head>
 <body>
 <nav>
-  <a href="{% url 'index' %}" class="brand" style="gap:0.7rem;">
-    <img src="/static/logonav.png" alt="Logo" style="height:30px; width:auto; display:inline; vertical-align:middle; border-radius:10px; padding:2px;">
-  </a>
+  <div style="display:flex;align-items:center;gap:.5rem;">
+    <a href="{% url 'index' %}" class="brand" style="gap:0.7rem;">
+      <img src="/static/logonav.png" alt="Logo" style="height:30px; width:auto; display:inline; vertical-align:middle; border-radius:10px; padding:2px;">
+    </a>
+    {% if user.is_authenticated %}
+    <button id="tour-help-btn-mobile" onclick="iniciarTour()" title="Tour guiado pelo sistema" aria-label="Tour do sistema"><i data-lucide="help-circle" style="width:15px;height:15px;display:block;flex-shrink:0;"></i></button>
+    {% endif %}
+  </div>
   {% if user.is_authenticated %}
   <button class="hamburger" onclick="toggleNav()" aria-label="Menu"><i data-lucide="menu" style="width:22px;height:22px;"></i></button>
   {% endif %}
@@ -216,11 +263,14 @@
     </div>
 
     <div class="drawer-section">
-    <a href="{% url 'index' %}" class="nav-link"><i data-lucide="house" style="width:16px;height:16px;"></i> Início</a>
-    <a href="{% url 'lista_pacientes' %}" class="nav-link"><i data-lucide="users" style="width:16px;height:16px;"></i> Pacientes</a>
-    <a href="{% url 'gerar_link' %}" class="nav-link"><i data-lucide="link" style="width:16px;height:16px;"></i> Gerar Link</a>
+    <a id="nav-inicio" href="{% url 'index' %}" class="nav-link"><i data-lucide="house" style="width:16px;height:16px;"></i> Início</a>
+    <a id="nav-pacientes" href="{% url 'lista_pacientes' %}" class="nav-link"><i data-lucide="users" style="width:16px;height:16px;"></i> Pacientes</a>
+    <a id="nav-pendentes" href="{% url 'avaliacoes_pendentes' %}" class="nav-link"><i data-lucide="clock" style="width:16px;height:16px;"></i> Pendentes</a>
+    <a id="nav-gerar-link" href="{% url 'gerar_link' %}" class="nav-link"><i data-lucide="link" style="width:16px;height:16px;"></i> Gerar Link</a>
     </div>
 
+    <button id="tour-help-btn" onclick="iniciarTour()" title="Tour guiado pelo sistema"
+      style="background:none;border:1.5px solid var(--border);color:var(--primary-dark);border-radius:50%;width:30px;height:30px;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-right:.3rem;padding:0;line-height:1;" onmouseover="this.style.background='var(--primary)';this.style.color='#fff';this.style.borderColor='var(--primary)'" onmouseout="this.style.background='none';this.style.color='var(--primary-dark)';this.style.borderColor='var(--border)'"><i data-lucide="help-circle" style="width:15px;height:15px;display:block;flex-shrink:0;"></i></button>
     <div class="user-menu" id="userMenu">
       <div class="user-btn" onclick="toggleDropdown()">
         <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
@@ -233,6 +283,7 @@
           <span>{{ user.email }}</span>
         </div>
         <a href="{% url 'meu_perfil' %}"><i data-lucide="settings" style="width:15px;height:15px;"></i> Meu Perfil</a>
+        <button type="button" onclick="iniciarTour()"><i data-lucide="map" style="width:15px;height:15px;color:#39abcb;"></i> Tour do sistema</button>
         <div class="divider"></div>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
@@ -311,6 +362,14 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeNav();
 });
 lucide.createIcons();
+
+function iniciarTour() {
+  if (typeof startTour === 'function') {
+    startTour(true);
+  } else {
+    window.location.href = '/?tour=1';
+  }
+}
 
 // Máscara de telefone: (00) 00000-0000
 function aplicarMascaraTelefone(input) {
