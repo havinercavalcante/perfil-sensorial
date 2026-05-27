@@ -558,7 +558,7 @@ document.getElementById("modalEmail").addEventListener("click", function(e) {
       nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
       prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
       doneBtnText: '✓ Concluir',
-      onPopoverRender: function() { if (window.lucide) lucide.createIcons(); },
+      onPopoverRender: function(popover) { if (window.lucide && popover && popover.wrapper) lucide.createIcons({ rootElement: popover.wrapper }); },
       onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
       steps: steps
     });
