@@ -67,6 +67,13 @@
     th{background:#f0f4f8;padding:.65rem 1rem;text-align:left;font-weight:700;color:var(--dark);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
     td{padding:.65rem 1rem;border-bottom:1px solid #f0f4f8;color:#444}
     tr:last-child td{border-bottom:none}
+
+    /* ── validade badge ── */
+    .val-ok   {display:inline-block;background:#ecfdf5;color:#059669;padding:3px 9px;border-radius:6px;font-size:.78rem;font-weight:700;white-space:nowrap}
+    .val-warn {display:inline-block;background:#fffbeb;color:#d97706;padding:3px 9px;border-radius:6px;font-size:.78rem;font-weight:700;white-space:nowrap}
+    .val-crit {display:inline-block;background:#fef2f2;color:#dc2626;padding:3px 9px;border-radius:6px;font-size:.78rem;font-weight:700;white-space:nowrap}
+    .val-exp  {display:inline-block;background:#fef2f2;color:#dc2626;padding:3px 9px;border-radius:6px;font-size:.78rem;font-weight:700;white-space:nowrap}
+    .val-none {display:inline-block;color:#10b981;font-size:.78rem;font-weight:600}
   </style>
 </head>
 <body>
@@ -92,8 +99,71 @@
     {% endif %}
   {% endfor %}
 
-  <!-- ── PENDENTES ── -->
+  <!-- ── ASSINANTES ATIVOS ── -->
   <div class="section-title">
+    <i data-lucide="users" style="width:18px;height:18px;color:#0c3c7b"></i>
+    Assinantes com Plano Ativo
+    <span class="count-badge">{{ assinantes.count }}</span>
+  </div>
+
+  {% if assinantes %}
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Profissional</th>
+          <th>Plano</th>
+          <th>Dias restantes</th>
+          <th>Vence em</th>
+          <th>Pacientes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in assinantes %}
+        {% with dias=p.plano_dias_restantes %}
+        <tr {% if dias is not None and dias <= 3 %}style="background:#fff8f8"{% elif dias is not None and dias <= 7 %}style="background:#fffdf0"{% endif %}>
+          <td>
+            <strong style="color:var(--dark)">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
+            <small style="color:#888">{{ p.user.email }}</small>
+          </td>
+          <td>
+            <span class="plano-badge plano-{{ p.plano }}">{{ p.get_plano_display }}</span>
+          </td>
+          <td>
+            {% if dias is None %}
+              <span class="val-none">✅ Sem vencimento</span>
+            {% elif dias <= 0 %}
+              <span class="val-exp">⛔ Vencido</span>
+            {% elif dias <= 3 %}
+              <span class="val-crit">🔴 {{ dias }} dia{{ dias|pluralize:"s" }}</span>
+            {% elif dias <= 7 %}
+              <span class="val-warn">🟡 {{ dias }} dias</span>
+            {% else %}
+              <span class="val-ok">🟢 {{ dias }} dias</span>
+            {% endif %}
+          </td>
+          <td style="font-size:.82rem;color:#555">
+            {% if p.plano_expiracao %}
+              {{ p.plano_expiracao|date:"d/m/Y" }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td style="font-weight:700;color:var(--dark)">{{ p.user.pacientes.count }}</td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="card">
+      <div class="empty">Nenhum assinante com plano ativo ainda.</div>
+    </div>
+  {% endif %}
+
+  <!-- ── PENDENTES ── -->
+  <div class="section-title" style="margin-top:2rem">
     <i data-lucide="clock" style="width:18px;height:18px;color:#f59e0b"></i>
     Solicitações Pendentes
     <span class="count-badge">{{ pendentes.count }}</span>
