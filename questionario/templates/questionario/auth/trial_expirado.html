@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trial Expirado – IntegraMente</title>
+<title>{% if plano_pago_vencido %}Plano Vencido{% else %}Trial Expirado{% endif %} – IntegraMente</title>
 {% load static %}
 <style>
   :root {
@@ -14,7 +14,7 @@
   .box { background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.2); text-align: center; }
   .icon { font-size: 3.5rem; margin-bottom: 1rem; }
   h1 { font-size: 1.4rem; color: var(--primary-dark); font-weight: 800; margin-bottom: .5rem; }
-  .sub { color: var(--primary); font-size: .92rem; margin-bottom: 1.8rem; line-height: 1.6; }
+  .sub { color: #4a7a9b; font-size: .92rem; margin-bottom: 1.8rem; line-height: 1.6; }
   .divider { border: none; border-top: 1.5px solid var(--border); margin: 1.5rem 0; }
   .planos { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: 1.2rem; }
   @media(max-width:480px) { .planos { grid-template-columns: 1fr; } }
@@ -27,19 +27,36 @@
   .btn-logout { display: inline-block; margin-top: .5rem; font-size: .85rem; color: var(--primary); text-decoration: none; }
   .btn-logout:hover { text-decoration: underline; }
   .badge { display: inline-block; font-size: .65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 20px; padding: .1rem .45rem; margin-bottom: .15rem; }
+  .alert-vencido { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: .9rem 1rem; margin-bottom: 1.4rem; font-size: .85rem; color: #991b1b; }
 </style>
 </head>
 <body>
 <div class="box">
-  <div class="icon">⏰</div>
-  <h1>Seu período de teste encerrou</h1>
-  <p class="sub">
-    Os 7 dias gratuitos do seu trial chegaram ao fim.<br>
-    Escolha um plano para continuar usando o IntegraMente.
-  </p>
+
+  {% if plano_pago_vencido %}
+    <div class="icon">💳</div>
+    <h1>Seu plano venceu</h1>
+    <div class="alert-vencido">
+      ⛔ O plano <strong>{{ plano_nome }}</strong> chegou ao fim e seu acesso foi suspenso.
+      Seus pacientes e histórico estão <strong>preservados</strong> — basta renovar.
+    </div>
+    <p class="sub">
+      Faça o pagamento via PIX e solicite a renovação.<br>
+      O acesso é liberado em até 24h em dias úteis.
+    </p>
+  {% else %}
+    <div class="icon">⏰</div>
+    <h1>Seu período de teste encerrou</h1>
+    <p class="sub">
+      Os 7 dias gratuitos do seu trial chegaram ao fim.<br>
+      Escolha um plano para continuar usando o IntegraMente.
+    </p>
+  {% endif %}
 
   <hr class="divider">
-  <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:.8rem;">Escolha seu plano</p>
+  <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:.8rem;">
+    {% if plano_pago_vencido %}Renovar plano{% else %}Escolha seu plano{% endif %}
+  </p>
 
   <div class="planos">
     <a href="{% url 'solicitar_plano' %}?plano=start" class="plano-btn">
@@ -67,8 +84,5 @@
   <hr class="divider">
   <a href="{% url 'logout' %}" class="btn-logout">Sair da conta</a>
 </div>
-
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script>lucide.createIcons();</script>
 </body>
 </html>

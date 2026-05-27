@@ -31,8 +31,8 @@ _TRIAL_EXEMPT = (
 
 class TrialExpiradoMiddleware:
     """
-    Redireciona para /trial-expirado/ quando o usuário logado tem plano trial
-    e o período de 7 dias já terminou.
+    Redireciona para /trial-expirado/ quando o plano (trial ou pago) está vencido.
+    Bloqueia em tempo real — independente de quando o Celery rodar.
     """
 
     def __init__(self, get_response):
@@ -45,8 +45,19 @@ class TrialExpiradoMiddleware:
         ):
             try:
                 perfil = request.user.perfil
+
+                # Trial vencido
                 if perfil.plano == "trial" and not perfil.trial_ativo:
                     return redirect("trial_expirado")
+
+                # Plano pago vencido (só bloqueia se tiver data definida)
+                if (
+                    perfil.plano in ("start", "plus", "elite")
+                    and perfil.plano_expiracao is not None
+                    and not perfil.plano_ativo
+                ):
+                    return redirect("trial_expirado")
+
             except Exception:
                 pass
 
