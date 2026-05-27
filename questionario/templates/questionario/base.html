@@ -287,6 +287,11 @@
           <span>{{ user.email }}</span>
         </div>
         <a href="{% url 'meu_perfil' %}"><i data-lucide="settings" style="width:15px;height:15px;"></i> Meu Perfil</a>
+        <a href="{% url 'solicitar_plano' %}"><i data-lucide="credit-card" style="width:15px;height:15px;color:#0c3c7b;"></i> <span style="color:#0c3c7b;font-weight:700">Meu Plano</span>
+          {% if user.perfil.plano == 'trial' %}<span style="font-size:.68rem;background:#6366f1;color:#fff;padding:1px 6px;border-radius:10px;margin-left:2px">Trial</span>
+          {% elif user.perfil.plano_expiracao %}<span style="font-size:.68rem;background:#10b981;color:#fff;padding:1px 6px;border-radius:10px;margin-left:2px">{{ user.perfil.plano|upper }}</span>
+          {% endif %}
+        </a>
         <div class="divider"></div>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
@@ -297,6 +302,7 @@
 
     <div class="mobile-profile">
       <a href="{% url 'meu_perfil' %}" class="nav-link"><i data-lucide="settings" style="width:16px;height:16px;"></i> Meu Perfil</a>
+      <a href="{% url 'solicitar_plano' %}" class="nav-link"><i data-lucide="credit-card" style="width:16px;height:16px;"></i> Meu Plano</a>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="mobile-logout-btn"><i data-lucide="power" style="width:14px;height:14px;color:#F87171;"></i> Sair da conta</button>
@@ -309,6 +315,24 @@
 
 <main>
   {% block back_button %}{% endblock %}
+
+  {# ── Banner de trial / plano sem vencimento ── #}
+  {% if user.is_authenticated %}
+    {% with perfil=user.perfil %}
+      {% if perfil.plano == 'trial' and perfil.trial_ativo %}
+        <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:10px;padding:.7rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem;">
+          <span>⏳ <strong>Trial ativo</strong> — {{ perfil.trial_dias_restantes }} dia{{ perfil.trial_dias_restantes|pluralize:"s" }} restante{{ perfil.trial_dias_restantes|pluralize:"s" }}. Assine um plano para continuar.</span>
+          <a href="{% url 'solicitar_plano' %}" style="background:#6366f1;color:#fff;padding:.35rem .9rem;border-radius:7px;text-decoration:none;font-weight:700;font-size:.82rem;white-space:nowrap;">💳 Ver planos</a>
+        </div>
+      {% elif perfil.plano in 'start,plus,elite' and not perfil.plano_expiracao %}
+        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:.7rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem;">
+          <span>⚠️ Plano <strong>{{ perfil.get_plano_display }}</strong> ativo mas <strong>sem data de vencimento</strong> definida.</span>
+          <a href="{% url 'solicitar_plano' %}" style="background:#f59e0b;color:#fff;padding:.35rem .9rem;border-radius:7px;text-decoration:none;font-weight:700;font-size:.82rem;white-space:nowrap;">💳 Renovar</a>
+        </div>
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+
   {% if messages %}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
