@@ -76,9 +76,21 @@
              font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
   .btn-renew:hover{background:#39abcb}
 
+  /* ── Botão desativar / reativar ── */
+  .btn-off{background:#ef4444;color:#fff;border:none;padding:.35rem .7rem;border-radius:6px;
+           font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+  .btn-off:hover{background:#dc2626}
+  .btn-on{background:#10b981;color:#fff;border:none;padding:.35rem .7rem;border-radius:6px;
+          font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+  .btn-on:hover{background:#059669}
+
   /* ── Select inline de plano ── */
   .sel-plano{border:1px solid #d1d5db;border-radius:5px;padding:.3rem .5rem;
              font-size:.75rem;color:#374151;background:#fff;cursor:pointer}
+
+  /* ── Tag inativo ── */
+  .tag-off{display:inline-block;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;
+           font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:5px}
 
   .empty-msg{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.85rem;
              background:#fff;border:1px solid #e5e7eb;border-radius:10px}
@@ -182,7 +194,7 @@
   {% if assinantes_info %}
   <table class="pay-table">
     <thead><tr>
-      <th>Profissional</th><th>Plano</th><th>Validade</th><th>Vence em</th><th>Pacientes</th><th>Ação</th>
+      <th>Profissional</th><th>Plano</th><th>Validade</th><th>Vence em</th><th>Pacientes</th><th>Ações</th>
     </tr></thead>
     <tbody>
       {% for item in assinantes_info %}
@@ -191,6 +203,7 @@
         <td>
           <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
           <small style="color:#6b7280">{{ p.user.email }}</small>
+          {% if not p.user.is_active %}<span class="tag-off">🚫 Desativado</span>{% endif %}
         </td>
         <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
@@ -198,7 +211,7 @@
           {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}<span style="color:#f59e0b;font-weight:600">Sem data</span>{% endif %}
         </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
-        <td>
+        <td style="white-space:nowrap">
           <form method="POST" style="display:inline">
             {% csrf_token %}
             <input type="hidden" name="action_painel" value="renovar"/>
@@ -206,9 +219,30 @@
             <input type="hidden" name="novo_plano" value="{{ p.plano }}"/>
             <button type="submit" class="btn-renew"
                     onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
-              🔄 +30 dias
+              🔄 +30d
             </button>
           </form>
+          {% if p.user.is_active %}
+          <form method="POST" style="display:inline;margin-left:.3rem">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="desativar"/>
+            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+            <button type="submit" class="btn-off"
+                    onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}? O acesso será bloqueado imediatamente.')">
+              🚫 Desativar
+            </button>
+          </form>
+          {% else %}
+          <form method="POST" style="display:inline;margin-left:.3rem">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="reativar"/>
+            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+            <button type="submit" class="btn-on"
+                    onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">
+              ✅ Reativar
+            </button>
+          </form>
+          {% endif %}
         </td>
       </tr>
       {% endwith %}
@@ -234,60 +268,73 @@
       <th>Validade</th>
       <th>Vence em</th>
       <th>Pacientes</th>
-      <th>Renovar / Alterar plano</th>
+      <th>Ações</th>
     </tr></thead>
     <tbody>
       {% for item in todos_info %}
       {% with p=item.perfil %}
-      <tr>
+      <tr {% if not p.user.is_active %}style="opacity:.6;background:#fafafa"{% endif %}>
         <td>
           <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
           <small style="color:#6b7280">{{ p.user.email }}</small>
+          {% if not p.user.is_active %}<br/><span class="tag-off">🚫 Desativado</span>{% endif %}
         </td>
         <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
         <td style="font-size:.78rem;color:#6b7280">
-          {% if p.plano_expiracao %}
-            {{ p.plano_expiracao|date:"d/m/Y" }}
-          {% else %}
-            <span style="color:#9ca3af">—</span>
-          {% endif %}
+          {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}<span style="color:#9ca3af">—</span>{% endif %}
         </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
         <td>
-          {% if p.plano != "trial" %}
-          {# Usuário já tem plano pago: renova o mesmo plano #}
-          <form method="POST" style="display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-            {% csrf_token %}
-            <input type="hidden" name="action_painel" value="renovar"/>
-            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-            <select name="novo_plano" class="sel-plano">
-              <option value="start" {% if p.plano == "start" %}selected{% endif %}>START</option>
-              <option value="plus"  {% if p.plano == "plus"  %}selected{% endif %}>PLUS</option>
-              <option value="elite" {% if p.plano == "elite" %}selected{% endif %}>ELITE</option>
-            </select>
-            <button type="submit" class="btn-renew"
-                    onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
-              🔄 +30 dias
-            </button>
-          </form>
-          {% else %}
-          {# Usuário em trial: pode ativar um plano pago direto #}
-          <form method="POST" style="display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-            {% csrf_token %}
-            <input type="hidden" name="action_painel" value="renovar"/>
-            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-            <select name="novo_plano" class="sel-plano">
-              <option value="start">START</option>
-              <option value="plus">PLUS</option>
-              <option value="elite">ELITE</option>
-            </select>
-            <button type="submit" class="btn-ap" style="font-size:.75rem;padding:.35rem .75rem"
-                    onclick="return confirm('Ativar plano +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
-              ▶ Ativar plano
-            </button>
-          </form>
-          {% endif %}
+          <div style="display:flex;flex-direction:column;gap:.35rem;min-width:160px">
+
+            {# ── Renovar / Ativar plano ── #}
+            <form method="POST" style="display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="renovar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <select name="novo_plano" class="sel-plano">
+                <option value="start" {% if p.plano == "start" %}selected{% endif %}>START</option>
+                <option value="plus"  {% if p.plano == "plus"  %}selected{% endif %}>PLUS</option>
+                <option value="elite" {% if p.plano == "elite" %}selected{% endif %}>ELITE</option>
+              </select>
+              {% if p.plano != "trial" %}
+              <button type="submit" class="btn-renew"
+                      onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
+                🔄 +30d
+              </button>
+              {% else %}
+              <button type="submit" class="btn-ap" style="font-size:.74rem;padding:.32rem .65rem"
+                      onclick="return confirm('Ativar plano para {{ p.user.get_full_name|default:p.user.username }}?')">
+                ▶ Ativar
+              </button>
+              {% endif %}
+            </form>
+
+            {# ── Desativar / Reativar ── #}
+            {% if p.user.is_active %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="desativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-off" style="width:100%"
+                      onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">
+                🚫 Desativar (não pagou)
+              </button>
+            </form>
+            {% else %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="reativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-on" style="width:100%"
+                      onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">
+                ✅ Reativar
+              </button>
+            </form>
+            {% endif %}
+
+          </div>
         </td>
       </tr>
       {% endwith %}
