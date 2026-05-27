@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 from .models import (
@@ -407,12 +409,126 @@ _aprovar_solicitacoes.short_description = "✅ Aprovar e ativar plano"
 
 @admin.register(SolicitacaoPlano)
 class SolicitacaoPlanoAdmin(admin.ModelAdmin):
-    list_display   = ["criado_em_fmt", "usuario_link", "plano_badge", "status_badge", "observacoes_resumo", "aprovado_por", "aprovado_em_fmt"]
-    list_filter    = ["status", "plano"]
-    search_fields  = ["user__username", "user__first_name", "user__last_name", "user__email"]
-    readonly_fields = ["user", "plano", "observacoes", "criado_em", "aprovado_por", "aprovado_em"]
-    ordering       = ["-criado_em"]
-    actions        = [_aprovar_solicitacoes]
+    list_display        = ["criado_em_fmt", "usuario_link", "plano_badge", "status_badge", "observacoes_resumo", "aprovado_por", "aprovado_em_fmt"]
+    list_filter         = ["status", "plano"]
+    search_fields       = ["user__username", "user__first_name", "user__last_name", "user__email"]
+    readonly_fields     = ["user", "plano", "observacoes", "criado_em", "aprovado_por", "aprovado_em"]
+    ordering            = ["-criado_em"]
+    actions             = [_aprovar_solicitacoes]
+    change_list_template = "admin/questionario/solicitacaoplano/change_list.html"
+
+    # ── URLs customizadas ─────────────────────────────────────────────────────
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                "painel/",
+                self.admin_site.admin_view(self.painel_view),
+                name="pagamentos_painel",
+            ),
+        ]
+        return custom + urls
+
+    def painel_view(self, request):
+        """Painel completo de pagamentos dentro do Django admin."""
+        from django.contrib import messages as dj_messages
+        from .views.pagamentos import _notificar_usuario_aprovado, _notificar_usuario_rejeitado
+
+        if request.method == "POST":
+            action  = request.POST.get("action_painel")
+            sol_id  = request.POST.get("sol_id")
+            nota    = request.POST.get("nota_admin", "").strip()
+
+            if action in ("aprovar", "rejeitar") and sol_id:
+                sol = get_object_or_404(SolicitacaoPlano, pk=sol_id)
+                if sol.status == "pendente":
+                    agora = timezone.now()
+                    sol.nota_admin   = nota
+                    sol.aprovado_por = request.user
+                    sol.aprovado_em  = agora
+
+                    if action == "aprovar":
+                        sol.status = "aprovado"
+                        sol.save()
+                        perfil, _ = PerfilMedico.objects.get_or_create(user=sol.user)
+                        perfil.plano = sol.plano
+                        if perfil.plano_expiracao and perfil.plano_expiracao > agora:
+                            perfil.plano_expiracao = perfil.plano_expiracao + timezone.timedelta(days=30)
+                        else:
+                            perfil.plano_expiracao = agora + timezone.timedelta(days=30)
+                        if not perfil.user.is_active:
+                            perfil.user.is_active = True
+                            perfil.user.save(update_fields=["is_active"])
+                        perfil.save(update_fields=["plano", "plano_expiracao"])
+                        codigos = MODULOS_POR_PLANO.get(sol.plano, [])
+                        perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
+                        _notificar_usuario_aprovado(sol, perfil.plano_expiracao)
+                        dj_messages.success(
+                            request,
+                            f"✅ Plano {sol.get_plano_display()} ativado para "
+                            f"{sol.user.get_full_name() or sol.user.username} — "
+                            f"vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}."
+                        )
+                    else:
+                        sol.status = "rejeitado"
+                        sol.save()
+                        _notificar_usuario_rejeitado(sol)
+                        dj_messages.warning(
+                            request,
+                            f"Solicitação de {sol.user.get_full_name() or sol.user.username} rejeitada."
+                        )
+
+            return redirect("admin:pagamentos_painel")
+
+        # ── Dados ─────────────────────────────────────────────────────────────
+        pendentes  = SolicitacaoPlano.objects.filter(status="pendente").select_related("user").order_by("-criado_em")
+        historico  = (
+            SolicitacaoPlano.objects
+            .exclude(status="pendente")
+            .select_related("user", "aprovado_por")
+            .order_by("-aprovado_em")[:30]
+        )
+        assinantes = (
+            PerfilMedico.objects
+            .filter(plano__in=("start", "plus", "elite"), user__is_active=True)
+            .select_related("user")
+            .order_by("plano_expiracao")
+        )
+
+        # Badges de dias restantes para cada assinante (computed)
+        assinantes_info = []
+        for p in assinantes:
+            dias = p.plano_dias_restantes
+            assinantes_info.append({
+                "perfil": p,
+                "dias": dias,
+                "badge": _validade_badge(p),
+            })
+
+        # Stats cards
+        total_assinantes = assinantes.count()
+        total_pendentes  = pendentes.count()
+        vencendo_3  = sum(1 for x in assinantes_info if x["dias"] is not None and 0 < x["dias"] <= 3)
+        vencendo_7  = sum(1 for x in assinantes_info if x["dias"] is not None and 0 < x["dias"] <= 7)
+        vencidos    = sum(1 for x in assinantes_info if x["dias"] is not None and x["dias"] <= 0)
+
+        ctx = {
+            **self.admin_site.each_context(request),
+            "title":            "Painel de Pagamentos",
+            "opts":             self.model._meta,
+            "pendentes":        pendentes,
+            "historico":        historico,
+            "assinantes_info":  assinantes_info,
+            "total_assinantes": total_assinantes,
+            "total_pendentes":  total_pendentes,
+            "vencendo_3":       vencendo_3,
+            "vencendo_7":       vencendo_7,
+            "vencidos":         vencidos,
+        }
+        return render(request, "admin/questionario/solicitacaoplano/painel.html", ctx)
+
+    # ── list_display ──────────────────────────────────────────────────────────
 
     @admin.display(description="Solicitado em", ordering="criado_em")
     def criado_em_fmt(self, obj):
