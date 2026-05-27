@@ -25,6 +25,7 @@ _TRIAL_EXEMPT = (
     "/media/",
     "/privacidade/",
     "/confirmar-email/",
+    "/pagamentos/",   # solicitar plano, painel admin
 )
 
 

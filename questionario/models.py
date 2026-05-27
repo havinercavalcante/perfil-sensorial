@@ -1560,3 +1560,56 @@ class HistoricoLogin(models.Model):
     def __str__(self):
         status = "✓" if self.sucesso else "✗"
         return f"{status} {self.user.username} — {self.ip} — {self.data_hora:%d/%m/%Y %H:%M}"
+
+
+# ── Solicitação de Upgrade de Plano ───────────────────────────────────────────
+
+# Módulos liberados automaticamente por plano
+MODULOS_POR_PLANO = {
+    "start": ["sensorial", "bebe", "escolar", "spm"],
+    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage"],
+    "elite": [c[0] for c in ModuloAvaliacao.MODULO_CHOICES],
+}
+
+PRECO_PLANO = {
+    "start": "R$ 39,90/mês",
+    "plus":  "R$ 79,90/mês",
+    "elite": "R$ 149,90/mês",
+}
+
+
+class SolicitacaoPlano(models.Model):
+    STATUS_CHOICES = [
+        ("pendente",  "Pendente"),
+        ("aprovado",  "Aprovado"),
+        ("rejeitado", "Rejeitado"),
+    ]
+    PLANO_CHOICES = [
+        ("start", "START — R$ 39,90/mês"),
+        ("plus",  "PLUS — R$ 79,90/mês"),
+        ("elite", "ELITE — R$ 149,90/mês"),
+    ]
+
+    user         = models.ForeignKey(User, on_delete=models.CASCADE, related_name="solicitacoes_plano")
+    plano        = models.CharField("Plano solicitado", max_length=10, choices=PLANO_CHOICES)
+    status       = models.CharField("Status", max_length=12, choices=STATUS_CHOICES, default="pendente")
+    observacoes  = models.TextField("Observações do usuário", blank=True)
+    nota_admin   = models.TextField("Nota do admin", blank=True)
+    aprovado_por = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="solicitacoes_aprovadas", verbose_name="Aprovado por"
+    )
+    aprovado_em  = models.DateTimeField("Aprovado/Rejeitado em", null=True, blank=True)
+    criado_em    = models.DateTimeField("Solicitado em", auto_now_add=True)
+
+    class Meta:
+        verbose_name        = "Solicitação de Plano"
+        verbose_name_plural = "Solicitações de Plano"
+        ordering            = ["-criado_em"]
+
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username} → {self.get_plano_display()} ({self.get_status_display()})"
+
+    @property
+    def preco(self):
+        return PRECO_PLANO.get(self.plano, "")
