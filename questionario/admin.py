@@ -439,11 +439,12 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
             action  = request.POST.get("action_painel")
             sol_id  = request.POST.get("sol_id")
             nota    = request.POST.get("nota_admin", "").strip()
+            agora   = timezone.now()
 
+            # ── Aprovar / Rejeitar solicitação ────────────────────────────────
             if action in ("aprovar", "rejeitar") and sol_id:
                 sol = get_object_or_404(SolicitacaoPlano, pk=sol_id)
                 if sol.status == "pendente":
-                    agora = timezone.now()
                     sol.nota_admin   = nota
                     sol.aprovado_por = request.user
                     sol.aprovado_em  = agora
@@ -478,6 +479,33 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                             request,
                             f"Solicitação de {sol.user.get_full_name() or sol.user.username} rejeitada."
                         )
+
+            # ── Renovar +30 dias (manual, sem SolicitacaoPlano) ───────────────
+            elif action == "renovar":
+                perfil_id = request.POST.get("perfil_id")
+                novo_plano = request.POST.get("novo_plano", "").strip()
+                if perfil_id:
+                    perfil = get_object_or_404(PerfilMedico, pk=perfil_id)
+                    # Atualiza plano se foi enviado
+                    if novo_plano in ("start", "plus", "elite"):
+                        perfil.plano = novo_plano
+                        codigos = MODULOS_POR_PLANO.get(novo_plano, [])
+                        perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
+                    # Renova vencimento: +30 dias a partir de hoje (ou da expiração atual se ainda vigente)
+                    if perfil.plano_expiracao and perfil.plano_expiracao > agora:
+                        perfil.plano_expiracao = perfil.plano_expiracao + timezone.timedelta(days=30)
+                    else:
+                        perfil.plano_expiracao = agora + timezone.timedelta(days=30)
+                    if not perfil.user.is_active:
+                        perfil.user.is_active = True
+                        perfil.user.save(update_fields=["is_active"])
+                    perfil.save(update_fields=["plano", "plano_expiracao"])
+                    nome = perfil.user.get_full_name() or perfil.user.username
+                    dj_messages.success(
+                        request,
+                        f"✅ {nome} — {perfil.get_plano_display()} renovado até "
+                        f"{perfil.plano_expiracao.strftime('%d/%m/%Y')}."
+                    )
 
             return redirect("admin:pagamentos_painel")
 
