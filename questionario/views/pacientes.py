@@ -287,7 +287,7 @@ def enviar_email_modulo(request, modulo, avaliacao_id):
         return JsonResponse({"ok": False, "message": "Módulo inválido."}, status=400)
 
     Model, url_name, label = MODULO_MAP[modulo]
-    avaliacao = get_object_or_404(Model, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Model, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
 
@@ -344,14 +344,14 @@ def nova_avaliacao(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     avaliacao = Avaliacao.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": avaliacao.id})
-    return redirect("questionario", avaliacao_id=avaliacao.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(avaliacao.uuid)})
+    return redirect("questionario", avaliacao_id=avaliacao.uuid, pagina=1)
 
 
 @login_required
 def deletar_avaliacao(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()

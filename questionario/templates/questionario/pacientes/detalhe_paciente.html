@@ -156,7 +156,7 @@
   </button>
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.75rem;">
     <div>
-      <div class="card-title">{{ paciente.nome }}</div>
+      <div class="card-title"><i data-lucide="user-round" style="width:18px;height:18px;"></i> {{ paciente.nome }}</div>
       <p style="color:var(--text-muted); font-size:.9rem;">
         <i data-lucide="calendar" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos &nbsp;·&nbsp;
         <i data-lucide="user" style="width:14px;height:14px;vertical-align:middle;"></i> Responsável: {{ paciente.responsavel }}
@@ -190,10 +190,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'dashboard' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'dashboard' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'questionario_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -203,7 +203,7 @@
         </button>
         {% if av.obj.paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_link' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_link' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -215,12 +215,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'questionario_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'questionario_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletar({{ av.obj.id }}, this)">
+                onclick="abrirModalDeletar('{% url 'deletar_avaliacao' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -246,10 +246,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'vineland_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'vineland_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'vineland_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -259,7 +259,7 @@
         </button>
         {% if av.obj.paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_link_vineland' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_link_vineland' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -271,12 +271,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'vineland_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'vineland_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarVineland({{ av.obj.id }}, this)">
+                onclick="abrirModalDeletarVineland('{% url 'vineland_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -303,10 +303,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'escolar_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'escolar_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'escolar_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -316,7 +316,7 @@
         </button>
         {% if av.obj.paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_escolar' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_escolar' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -328,12 +328,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'escolar_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'escolar_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'escolar_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'escolar_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -359,10 +359,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'bebe_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'bebe_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'bebe_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -372,7 +372,7 @@
         </button>
         {% if av.obj.paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_bebe' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_bebe' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -384,12 +384,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'bebe_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'bebe_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'bebe_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'bebe_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -415,10 +415,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'spm_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'spm_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'spm_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -428,7 +428,7 @@
         </button>
         {% if av.obj.paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_spm' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_spm' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -440,12 +440,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'spm_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'spm_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'spm_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'spm_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -470,10 +470,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'vineland3_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'vineland3_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'vineland3_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -483,7 +483,7 @@
         </button>
         {% if av.obj.paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_vineland3' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_vineland3' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -495,12 +495,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'vineland3_visualizar' av.obj.id 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'vineland3_visualizar' av.obj.uuid 1 %}" class="btn-ver-respostas btn-resultado" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'vineland3_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'vineland3_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -525,10 +525,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'portage_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'portage_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'portage_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -538,7 +538,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'portage' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'portage' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -550,12 +550,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'portage_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'portage_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'portage_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'portage_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -581,10 +581,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'sdq_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'sdq_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'sdq_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'sdq_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -594,7 +594,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_sdq' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_sdq' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -606,12 +606,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'sdq_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'sdq_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'sdq_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'sdq_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -637,10 +637,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'snap_iv_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'snap_iv_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'snap_iv_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'snap_iv_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -650,7 +650,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_snap_iv' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_snap_iv' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -662,12 +662,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'snap_iv_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'snap_iv_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'snap_iv_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'snap_iv_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -693,10 +693,10 @@
       <td style="font-size:.8rem;">{% if av.obj.classificacao %}{{ av.obj.classificacao }}{% else %}—{% endif %}</td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'mchat_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'mchat_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'mchat_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'mchat_visualizar' av.obj.uuid %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -706,7 +706,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_mchat' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_mchat' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -718,12 +718,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'mchat_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'mchat_form' av.obj.uuid %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'mchat_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'mchat_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -750,10 +750,10 @@
       <td style="font-size:.8rem;">{% if av.obj.classificacao %}{{ av.obj.get_classificacao_display }}{% else %}—{% endif %}</td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'cars_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'cars_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'cars_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'cars_visualizar' av.obj.uuid %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -763,7 +763,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_cars' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_cars' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -775,12 +775,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'cars_form' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'cars_form' av.obj.uuid %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'cars_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'cars_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -805,10 +805,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'linguagem_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'linguagem_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'linguagem_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'linguagem_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -818,7 +818,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'linguagem' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'linguagem' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -830,12 +830,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'linguagem_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'linguagem_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'linguagem_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'linguagem_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -860,10 +860,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'alimentacao_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'alimentacao_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'alimentacao_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'alimentacao_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -873,7 +873,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'alimentacao' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'alimentacao' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -885,12 +885,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'alimentacao_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'alimentacao_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'alimentacao_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'alimentacao_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -915,10 +915,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'habitos_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'habitos_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'habitos_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'habitos_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -928,7 +928,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'habitos_orais' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'habitos_orais' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -940,12 +940,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'habitos_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'habitos_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'habitos_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'habitos_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -970,10 +970,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'voz_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'voz_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'voz_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'voz_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -983,7 +983,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'voz_infantil' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'voz_infantil' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -995,12 +995,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'voz_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'voz_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'voz_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'voz_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1025,10 +1025,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'auditivo_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'auditivo_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'auditivo_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'auditivo_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1038,7 +1038,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'processamento_auditivo' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'processamento_auditivo' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1050,12 +1050,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'auditivo_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'auditivo_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'auditivo_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'auditivo_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1080,10 +1080,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'idv_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'idv_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'idv_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'idv_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1093,7 +1093,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'idv10' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'idv10' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1105,12 +1105,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'idv_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'idv_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'idv_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'idv_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1135,10 +1135,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'desenvolvimento_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'desenvolvimento_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'desenvolvimento_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'desenvolvimento_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1148,7 +1148,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'desenvolvimento' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'desenvolvimento' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1160,12 +1160,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'desenvolvimento_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'desenvolvimento_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'desenvolvimento_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'desenvolvimento_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1190,10 +1190,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'sono_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'sono_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'sono_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'sono_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1203,7 +1203,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'sono' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'sono' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1215,12 +1215,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'sono_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'sono_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'sono_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'sono_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1245,10 +1245,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'habilidades_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'habilidades_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'habilidades_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'habilidades_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1258,7 +1258,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'habilidades' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'habilidades' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1270,12 +1270,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'habilidades_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'habilidades_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'habilidades_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'habilidades_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1300,10 +1300,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'comportamento_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'comportamento_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'comportamento_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'comportamento_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1313,7 +1313,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'comportamento' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'comportamento' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1325,12 +1325,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'comportamento_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'comportamento_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'comportamento_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'comportamento_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1355,10 +1355,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'cognitivo_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'cognitivo_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'cognitivo_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'cognitivo_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1368,7 +1368,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'cognitivo' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'cognitivo' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1380,12 +1380,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'cognitivo_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'cognitivo_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'cognitivo_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'cognitivo_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1410,10 +1410,10 @@
       </span></td>
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
-        <a href="{% url 'psicopedagogica_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'psicopedagogica_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'psicopedagogica_visualizar' av.obj.id 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'psicopedagogica_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% else %}
@@ -1423,7 +1423,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_modulo' 'psicopedagogica' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_modulo' 'psicopedagogica' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1435,12 +1435,12 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'psicopedagogica_form' av.obj.id av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'psicopedagogica_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'psicopedagogica_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'psicopedagogica_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1462,11 +1462,11 @@
       <td>{{ av.data|date:"d/m/Y" }}</td>
       <td style="font-size:.85rem;">{% if av.quociente_motor %}{{ av.quociente_motor|floatformat:1 }}{% else %}—{% endif %}</td>
       <td class="acoes-td">
-        <a href="{% url 'edm_resultado' av.id %}" class="btn-resultado">
+        <a href="{% url 'edm_resultado' av.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'edm_deletar' av.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'edm_deletar' av.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1489,11 +1489,11 @@
       <td style="font-size:.8rem; color:var(--text-muted);">{{ av.get_faixa_etaria_display }}</td>
       <td style="font-size:.85rem;">{% if av.percentil %}≤{{ av.percentil }}%{% else %}—{% endif %}</td>
       <td class="acoes-td">
-        <a href="{% url 'mabc2_resultado' av.id %}" class="btn-resultado">
+        <a href="{% url 'mabc2_resultado' av.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'mabc2_deletar' av.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'mabc2_deletar' av.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1516,11 +1516,11 @@
       <td style="font-size:.85rem;">{% if av.vmi_escore %}{{ av.vmi_escore }}{% else %}—{% endif %}</td>
       <td style="font-size:.85rem;">{% if av.vmi_percentil %}{{ av.vmi_percentil }}%{% else %}—{% endif %}</td>
       <td class="acoes-td">
-        <a href="{% url 'beery_resultado' av.id %}" class="btn-resultado">
+        <a href="{% url 'beery_resultado' av.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'beery_deletar' av.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'beery_deletar' av.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
       </td>
@@ -1549,14 +1549,14 @@
       </td>
       <td class="acoes-td">
         {% if av.obj.fs_autocuidado is not None %}
-        <a href="{% url 'pedi_resultado' av.obj.id %}" class="btn-resultado">
+        <a href="{% url 'pedi_resultado' av.obj.uuid %}" class="btn-resultado">
           <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
         </a>
-        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'pedi_visualizar' av.obj.uuid %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
         {% else %}
@@ -1566,7 +1566,7 @@
         </button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;"
-                onclick="enviarEmail('{% url 'enviar_email_pedi' av.obj.id %}', this)">
+                onclick="enviarEmail('{% url 'enviar_email_pedi' av.obj.uuid %}', this)">
           <i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span>
         </button>
         {% endif %}
@@ -1578,11 +1578,11 @@
         </button>
         {% endif %}
         {% endif %}
-        <a href="{% url 'pedi_visualizar' av.obj.id %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+        <a href="{% url 'pedi_visualizar' av.obj.uuid %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
           <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
         </a>
         <button type="button" class="btn-del" style="margin-left:.3rem;"
-                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.obj.id %}', this)">
+                onclick="abrirModalDeletarGenerico('{% url 'pedi_deletar' av.obj.uuid %}', this)">
           <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
         </button>
         {% endif %}
@@ -1600,7 +1600,7 @@
     <h3>Nova Avaliação</h3>
     <p class="modal-sub">Selecione o instrumento para <strong>{{ paciente.nome }}</strong>:</p>
 
-    <div class="escolha-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="escolha-grid">
       {% if "sensorial" in modulos_liberados %}
       <button type="button" class="escolha-card sensorial" onclick="criarAvaliacao('sensorial')">
         <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
@@ -1979,11 +1979,10 @@
   });
 
   /* ── Excluir Perfil Sensorial ── */
-  const deletarBaseUrl = "{% url 'deletar_avaliacao' 0 %}";
   let _deletarUrl, _deletarLinha;
 
-  function abrirModalDeletar(id, btn) {
-    _deletarUrl = deletarBaseUrl.replace('/0/', '/' + id + '/');
+  function abrirModalDeletar(url, btn) {
+    _deletarUrl = url;
     _deletarLinha = btn.closest('tr');
     document.getElementById('modalDeletar').classList.add('active');
   }
@@ -2002,11 +2001,10 @@
   });
 
   /* ── Excluir Vineland ── */
-  const deletarVinelandBaseUrl = "{% url 'vineland_deletar' 0 %}";
   let _deletarVinelandUrl, _deletarVinelandLinha;
 
-  function abrirModalDeletarVineland(id, btn) {
-    _deletarVinelandUrl = deletarVinelandBaseUrl.replace('/0/', '/' + id + '/');
+  function abrirModalDeletarVineland(url, btn) {
+    _deletarVinelandUrl = url;
     _deletarVinelandLinha = btn.closest('tr');
     document.getElementById('modalDeletarVineland').classList.add('active');
   }

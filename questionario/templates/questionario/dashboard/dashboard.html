@@ -44,6 +44,9 @@
       <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.8rem; flex-wrap:wrap;">
+      <a href="{% url 'laudo_sensorial' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;">
+        <i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo
+      </a>
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;" onclick="window.print()">
         <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
       </button>
@@ -131,7 +134,7 @@
       <td>{{ av.pont_ev|default:"—" }}</td>
       <td>{{ av.pont_sn|default:"—" }}</td>
       <td>{{ av.pont_ob|default:"—" }}</td>
-      <td><a href="{% url 'dashboard' av.id %}" class="btn btn-sm btn-secondary">Ver</a></td>
+      <td><a href="{% url 'dashboard' av.uuid %}" class="btn btn-sm btn-secondary">Ver</a></td>
     </tr>
     {% endfor %}
     </tbody>
@@ -142,7 +145,7 @@
 <!-- OBSERVAÇÕES CLÍNICAS -->
 <div class="card">
   <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
-  <form id="formObs" method="post" action="{% url 'salvar_observacoes' avaliacao.id %}">
+  <form id="formObs" method="post" action="{% url 'salvar_observacoes' avaliacao.uuid %}">
     {% csrf_token %}
     <div class="form-group" style="margin-bottom:.75rem;">
       <textarea name="observacoes" id="obsTextarea" rows="5"

@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -34,13 +35,13 @@ def nova_avaliacao_cars(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoCARS.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("cars_form", avaliacao_id=av.id)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("cars_form", avaliacao_id=av.uuid)
 
 
 @login_required
 def cars_form(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("cars_resultado", avaliacao_id=avaliacao_id)
 
@@ -77,26 +78,45 @@ def cars_form(request, avaliacao_id):
 
 @login_required
 def cars_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
         return redirect("cars_form", avaliacao_id=avaliacao_id)
     class_info = next(
         (c for c in CARS_CLASSIFICACAO if c[0] == avaliacao.classificacao), CARS_CLASSIFICACAO[0]
     )
     respostas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
+    paciente = avaliacao.paciente
+    todas_av = list(paciente.avaliacoes_cars.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    cores_linha = ["#C0392B"]
+    comparativo_datasets = [
+        {
+            "label": "Score Total",
+            "data": [round(((av.score_total or 15) - 15) / 45 * 100) for av in todas_av],
+            "borderColor": cores_linha[0],
+            "backgroundColor": cores_linha[0] + "33",
+            "tension": 0.3,
+        }
+    ]
+
     return render(request, "questionario/avaliacoes/cars_resultado.html", {
         "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
+        "paciente": paciente,
         "itens": CARS_ITENS,
         "respostas": respostas,
         "class_info": class_info,
         "classificacoes": CARS_CLASSIFICACAO,
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def cars_visualizar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
     respostas_salvas = {r.numero_item: r.valor for r in avaliacao.respostas.all()}
     return render(request, "questionario/avaliacoes/cars_form.html", {
         "avaliacao": avaliacao,
@@ -110,7 +130,7 @@ def cars_visualizar(request, avaliacao_id):
 
 @login_required
 def cars_deletar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -122,7 +142,7 @@ def cars_deletar(request, avaliacao_id):
 
 @login_required
 def salvar_observacoes_cars(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -137,7 +157,7 @@ def enviar_email_cars(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.template.loader import render_to_string
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoCARS, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

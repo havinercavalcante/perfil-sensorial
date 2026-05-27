@@ -32,13 +32,13 @@ def nova_avaliacao_bebe(request, paciente_id):
         faixa = "bebe"
     av = AvaliacaoBebe.objects.create(paciente=paciente, faixa=faixa, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("bebe_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("bebe_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def bebe_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("bebe_resultado", avaliacao_id=avaliacao_id)
 
@@ -109,7 +109,7 @@ def bebe_form(request, avaliacao_id, pagina):
 
 @login_required
 def bebe_concluir(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     secoes = SECOES_BEBE if avaliacao.faixa == "bebe" else SECOES_PEQUENA
     total_itens = sum(len(s["itens"]) for s in secoes)
     if avaliacao.respostas.count() < total_itens:
@@ -129,7 +129,7 @@ def bebe_concluir(request, avaliacao_id):
 
 @login_required
 def bebe_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if avaliacao.status != "concluida":
@@ -166,17 +166,34 @@ def bebe_resultado(request, avaliacao_id):
             "classificacao": classificacao,
         })
 
+    todas_av = list(paciente.avaliacoes_bebe.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": q["nome"], "campo": f"pont_{q['id']}", "max": q["maximo"]}
+        for q in quadrantes
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [round((getattr(av, dom["campo"]) or 0) / dom["max"] * 100) if dom["max"] else 0 for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/bebe_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "quadrantes": quadrantes,
         "quadrantes_json": json.dumps([{"nome": q["nome"], "pct": q["pct"], "cor": q["cor"]} for q in quadrantes]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def bebe_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     secoes = SECOES_BEBE if avaliacao.faixa == "bebe" else SECOES_PEQUENA
     perguntas_data = PERGUNTAS_BEBE if avaliacao.faixa == "bebe" else PERGUNTAS_PEQUENA
     total_paginas = len(secoes)
@@ -205,7 +222,7 @@ def bebe_visualizar(request, avaliacao_id, pagina):
 @login_required
 def bebe_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -218,7 +235,7 @@ def bebe_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_bebe(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -234,7 +251,7 @@ def enviar_email_bebe(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoBebe, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

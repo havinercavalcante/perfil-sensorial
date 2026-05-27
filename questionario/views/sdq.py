@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -159,13 +160,13 @@ def nova_avaliacao_sdq(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoSDQ.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("sdq_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("sdq_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def sdq_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSDQ, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("sdq_resultado", avaliacao_id=avaliacao_id)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
@@ -212,22 +213,44 @@ def sdq_form(request, avaliacao_id, pagina):
 
 @login_required
 def sdq_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSDQ, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
         return redirect("sdq_form", avaliacao_id=avaliacao_id, pagina=1)
     resultado, total, class_total = _build_resultado(avaliacao)
+    paciente = avaliacao.paciente
+    todas_av = list(paciente.avaliacoes_sdq.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": "Emocional",        "campo": "pont_emocional",          "max": 10},
+        {"nome": "Conduta",          "campo": "pont_conduta",            "max": 10},
+        {"nome": "Hiperatividade",   "campo": "pont_hiperatividade",     "max": 10},
+        {"nome": "Pares",            "campo": "pont_pares",              "max": 10},
+        {"nome": "Prossocial",       "campo": "pont_prossocial",         "max": 10},
+        {"nome": "Total Dificul.",   "campo": "pont_total_dificuldades", "max": 40},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B", "#C0392B"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [round((getattr(av, dom["campo"]) or 0) / dom["max"] * 100) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/sdq_resultado.html", {
         "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
+        "paciente": paciente,
         "resultado": resultado,
         "total": total,
         "class_total": class_total,
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def sdq_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSDQ, uuid=avaliacao_id, paciente__medico=request.user)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
         return redirect("sdq_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
@@ -251,7 +274,7 @@ def sdq_visualizar(request, avaliacao_id, pagina):
 
 @login_required
 def sdq_deletar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSDQ, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -263,7 +286,7 @@ def sdq_deletar(request, avaliacao_id):
 
 @login_required
 def salvar_observacoes_sdq(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSDQ, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -277,7 +300,7 @@ def salvar_observacoes_sdq(request, avaliacao_id):
 def enviar_email_sdq(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoSDQ, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSDQ, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

@@ -51,12 +51,12 @@ def nova_avaliacao_beery(request, paciente_id):
         messages.error(request, "Você não tem acesso ao módulo Beery VMI.")
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoBeery.objects.create(paciente=paciente)
-    return redirect("beery_form", avaliacao_id=av.id)
+    return redirect("beery_form", avaliacao_id=av.uuid)
 
 
 @login_required
 def beery_form(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoBeery, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBeery, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if request.method == "POST":
@@ -89,7 +89,7 @@ def beery_form(request, avaliacao_id):
 
 @login_required
 def beery_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoBeery, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBeery, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     subtestes = [
@@ -116,6 +116,20 @@ def beery_resultado(request, avaliacao_id):
         },
     ]
 
+    todas_av = list(paciente.avaliacoes_beery.order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": "VMI",                 "campo": "vmi_escore", "max": 145},
+        {"nome": "Percepção Visual",    "campo": "vp_escore",  "max": 145},
+        {"nome": "Coord. Motora",       "campo": "mc_escore",  "max": 145},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [round((getattr(av, dom["campo"]) or 0) / dom["max"] * 100) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/beery_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
@@ -123,13 +137,17 @@ def beery_resultado(request, avaliacao_id):
         "subtestes_json": json.dumps([
             {"nome": s["nome"], "escore": s["escore"] or 0} for s in subtestes
         ]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def beery_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoBeery, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBeery, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -142,7 +160,7 @@ def beery_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_beery(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoBeery, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoBeery, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
