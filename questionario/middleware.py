@@ -31,8 +31,14 @@ _TRIAL_EXEMPT = (
 
 class TrialExpiradoMiddleware:
     """
-    Redireciona para /trial-expirado/ quando o plano (trial ou pago) está vencido.
-    Bloqueia em tempo real — independente de quando o Celery rodar.
+    Controla acesso baseado no estado do plano do usuário.
+
+    Usuário desativado (is_active=False, não-staff):
+      → Pode fazer login, mas todas as páginas redirecionam para /pagamentos/solicitar/
+      → Só consegue acessar /pagamentos/, /logout/, /static/, /admin/
+
+    Trial vencido ou plano pago vencido:
+      → Redireciona para /trial-expirado/ (tela de renovação)
     """
 
     def __init__(self, get_response):
@@ -43,14 +49,18 @@ class TrialExpiradoMiddleware:
             request.user.is_authenticated
             and not any(request.path.startswith(p) for p in _TRIAL_EXEMPT)
         ):
+            # ── Usuário desativado pelo admin (não pagou) ─────────────────────
+            if not request.user.is_active and not request.user.is_staff:
+                return redirect("solicitar_plano")
+
             try:
                 perfil = request.user.perfil
 
-                # Trial vencido
+                # ── Trial vencido ─────────────────────────────────────────────
                 if perfil.plano == "trial" and not perfil.trial_ativo:
                     return redirect("trial_expirado")
 
-                # Plano pago vencido (só bloqueia se tiver data definida)
+                # ── Plano pago vencido ────────────────────────────────────────
                 if (
                     perfil.plano in ("start", "plus", "elite")
                     and perfil.plano_expiracao is not None
