@@ -10,6 +10,70 @@ from .models import (
 )
 
 
+# ── Helper compartilhado: badge de validade ───────────────────────────────────
+
+def _validade_badge(perfil):
+    """Retorna HTML colorido com dias restantes do trial ou plano pago."""
+    p = perfil
+
+    # Plano pago com data de expiração
+    if p.plano != "trial" and p.plano_expiracao:
+        dias = p.plano_dias_restantes
+        if dias <= 0:
+            return format_html(
+                '<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;'
+                'border-radius:4px;font-size:.78rem;font-weight:700;">⛔ Vencido</span>'
+            )
+        elif dias <= 3:
+            return format_html(
+                '<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;'
+                'border-radius:4px;font-size:.78rem;font-weight:700;">'
+                '🔴 {} dias<br/><small style="font-weight:400">{}</small></span>',
+                dias, p.plano_expiracao.strftime("%d/%m/%Y")
+            )
+        elif dias <= 7:
+            return format_html(
+                '<span style="background:#fffbeb;color:#d97706;padding:2px 7px;'
+                'border-radius:4px;font-size:.78rem;font-weight:700;">'
+                '🟡 {} dias<br/><small style="font-weight:400">{}</small></span>',
+                dias, p.plano_expiracao.strftime("%d/%m/%Y")
+            )
+        else:
+            return format_html(
+                '<span style="background:#ecfdf5;color:#059669;padding:2px 7px;'
+                'border-radius:4px;font-size:.78rem;font-weight:700;">'
+                '🟢 {} dias<br/><small style="font-weight:400">{}</small></span>',
+                dias, p.plano_expiracao.strftime("%d/%m/%Y")
+            )
+
+    # Plano pago sem data de expiração
+    if p.plano != "trial" and not p.plano_expiracao:
+        return format_html(
+            '<span style="color:#10b981;font-weight:600;font-size:.8rem;">✅ Ativo</span>'
+        )
+
+    # Trial
+    if p.trial_inicio is None:
+        return format_html('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
+    dias = p.trial_dias_restantes
+    if dias <= 0:
+        return format_html(
+            '<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;'
+            'border-radius:4px;font-size:.78rem;font-weight:700;">⛔ Trial expirado</span>'
+        )
+    elif dias <= 2:
+        cor, bg = "#dc2626", "#fef2f2"
+    elif dias <= 4:
+        cor, bg = "#d97706", "#fffbeb"
+    else:
+        cor, bg = "#059669", "#ecfdf5"
+    return format_html(
+        '<span style="background:{};color:{};padding:2px 7px;border-radius:4px;'
+        'font-size:.78rem;font-weight:700;">⏳ {} dia{}</span>',
+        bg, cor, dias, "s" if dias != 1 else ""
+    )
+
+
 # ── Inline do perfil no User admin ───────────────────────────────────────────
 
 class PerfilInline(admin.StackedInline):
@@ -69,36 +133,14 @@ class CustomUserAdmin(UserAdmin):
         )
     get_plano_badge.short_description = "Plano"
 
-    @admin.display(description="Trial / Validade")
+    @admin.display(description="Validade")
     def get_trial_dias(self, obj):
         try:
             p = obj.perfil
         except Exception:
             return "—"
-
-        if p.plano != "trial":
-            return format_html('<span style="color:#10b981;font-weight:600;font-size:.8rem;">✅ Ativo</span>')
-
-        if p.trial_inicio is None:
-            return format_html('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
-
-        dias = p.trial_dias_restantes
-        if dias <= 0:
-            return format_html('<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;border-radius:4px;font-size:.78rem;font-weight:700;">⛔ Expirado</span>')
-        elif dias == 1:
-            cor, bg = "#dc2626", "#fef2f2"
-        elif dias <= 2:
-            cor, bg = "#d97706", "#fffbeb"
-        elif dias <= 4:
-            cor, bg = "#d97706", "#fffbeb"
-        else:
-            cor, bg = "#059669", "#ecfdf5"
-
-        return format_html(
-            '<span style="background:{};color:{};padding:2px 7px;border-radius:4px;font-size:.78rem;font-weight:700;">⏳ {} dia{}</span>',
-            bg, cor, dias, "s" if dias != 1 else ""
-        )
-    get_trial_dias.short_description = "Trial"
+        return _validade_badge(p)
+    get_trial_dias.short_description = "Validade"
 
     @admin.display(description="Pacientes")
     def get_pacientes(self, obj):
@@ -211,30 +253,9 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
             cor, obj.get_plano_display()
         )
 
-    @admin.display(description="Trial / Validade")
+    @admin.display(description="Validade")
     def trial_status(self, obj):
-        if obj.plano != "trial":
-            return format_html('<span style="color:#10b981;font-weight:600;font-size:.82rem;">✅ Plano ativo</span>')
-        if obj.trial_inicio is None:
-            return format_html('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
-        dias = obj.trial_dias_restantes
-        if dias <= 0:
-            return format_html(
-                '<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:.78rem;font-weight:700;">'
-                '⛔ Expirado<br/><small>{}</small></span>',
-                obj.trial_inicio.strftime("desde %d/%m")
-            )
-        elif dias <= 2:
-            cor, bg, ico = "#dc2626", "#fef2f2", "🔴"
-        elif dias <= 4:
-            cor, bg, ico = "#d97706", "#fffbeb", "🟡"
-        else:
-            cor, bg, ico = "#059669", "#ecfdf5", "🟢"
-        return format_html(
-            '<span style="background:{bg};color:{cor};padding:2px 8px;border-radius:4px;font-size:.78rem;font-weight:700;">'
-            '{ico} {dias} dia{s} restante{s}</span>',
-            bg=bg, cor=cor, ico=ico, dias=dias, s="s" if dias != 1 else ""
-        )
+        return _validade_badge(obj)
 
     @admin.display(description="Especialidades")
     def especialidades_resumo(self, obj):
@@ -262,10 +283,25 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
 
     # ── readonly fields ───────────────────────────────────────────────────────
 
-    @admin.display(description="Status do trial")
+    @admin.display(description="Validade do plano")
     def trial_info_display(self, obj):
-        if obj.plano != "trial":
-            return format_html('<span style="color:#10b981;font-weight:600;">Plano pago — sem trial</span>')
+        # Plano pago com data de expiração
+        if obj.plano != "trial" and obj.plano_expiracao:
+            dias = obj.plano_dias_restantes
+            if dias <= 0:
+                return format_html(
+                    '<strong style="color:#dc2626">⛔ Plano vencido</strong> em {}',
+                    obj.plano_expiracao.strftime("%d/%m/%Y")
+                )
+            return format_html(
+                '<strong style="color:#059669">✅ {} dia{} restante{}</strong> — vence em {}',
+                dias, "s" if dias != 1 else "", "s" if dias != 1 else "",
+                obj.plano_expiracao.strftime("%d/%m/%Y")
+            )
+        # Plano pago sem vencimento definido
+        if obj.plano != "trial" and not obj.plano_expiracao:
+            return format_html('<strong style="color:#10b981;">✅ Plano ativo</strong> — sem data de vencimento (aprovado manualmente)')
+        # Trial
         if obj.trial_inicio is None:
             return "—"
         dias = obj.trial_dias_restantes
@@ -276,7 +312,7 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
                 expira.strftime("%d/%m/%Y %H:%M")
             )
         return format_html(
-            '<strong style="color:#059669">⏳ {} dia{} restante{}</strong> — expira em {}',
+            '<strong style="color:#6366f1">⏳ {} dia{} de trial restante{}</strong> — expira em {}',
             dias, "s" if dias != 1 else "", "s" if dias != 1 else "",
             expira.strftime("%d/%m/%Y")
         )
@@ -340,21 +376,31 @@ class HistoricoLoginAdmin(admin.ModelAdmin):
 # ── Solicitações de Plano ─────────────────────────────────────────────────────
 
 def _aprovar_solicitacoes(modeladmin, request, queryset):
-    """Ação admin: aprovar solicitações selecionadas e ativar plano."""
+    """Ação admin: aprovar solicitações selecionadas, ativar plano e definir vencimento."""
+    aprovados = 0
+    agora = timezone.now()
     for sol in queryset.filter(status="pendente"):
         sol.status       = "aprovado"
         sol.aprovado_por = request.user
-        sol.aprovado_em  = timezone.now()
+        sol.aprovado_em  = agora
         sol.save()
 
         perfil, _ = PerfilMedico.objects.get_or_create(user=sol.user)
         perfil.plano = sol.plano
-        perfil.save(update_fields=["plano"])
-
+        # Renova vencimento: +30 dias
+        if perfil.plano_expiracao and perfil.plano_expiracao > agora:
+            perfil.plano_expiracao = perfil.plano_expiracao + timezone.timedelta(days=30)
+        else:
+            perfil.plano_expiracao = agora + timezone.timedelta(days=30)
+        if not perfil.user.is_active:
+            perfil.user.is_active = True
+            perfil.user.save(update_fields=["is_active"])
+        perfil.save(update_fields=["plano", "plano_expiracao"])
         codigos = MODULOS_POR_PLANO.get(sol.plano, [])
         perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
+        aprovados += 1
 
-    modeladmin.message_user(request, f"{queryset.filter(status='aprovado').count()} plano(s) ativado(s).")
+    modeladmin.message_user(request, f"{aprovados} plano(s) ativado(s) com vencimento em 30 dias.")
 
 _aprovar_solicitacoes.short_description = "✅ Aprovar e ativar plano"
 

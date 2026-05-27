@@ -116,6 +116,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "questionario.tasks.desativar_trials_expirados",
         "schedule": 86400,  # a cada 24 horas
     },
+    "verificar-planos-expirando": {
+        "task": "questionario.tasks.verificar_planos_expirando",
+        "schedule": 86400,  # a cada 24 horas
+    },
 }
 
 # ── Logging de auditoria LGPD ─────────────────────────────────────────────────
