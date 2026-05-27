@@ -96,6 +96,13 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# ── Configurações de pagamento manual (PIX) ────────────────────────────────────
+PIX_KEY          = os.environ.get('PIX_KEY', '06164397332')
+PIX_BENEFICIARIO = os.environ.get('PIX_BENEFICIARIO', 'Haviner Cavalcante Nunes de Souza')
+PIX_BANCO        = os.environ.get('PIX_BANCO', 'Nubank')
+# E-mail do admin que recebe notificação de nova solicitação de plano
+ADMIN_NOTIFY_EMAIL = os.environ.get('ADMIN_NOTIFY_EMAIL', EMAIL_HOST_USER)
+
 # ── Celery ────────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')

@@ -1,9 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.utils import timezone
+from django.utils.html import format_html
 from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
+    SolicitacaoPlano, MODULOS_POR_PLANO,
 )
 
 
@@ -152,3 +155,76 @@ class HistoricoLoginAdmin(admin.ModelAdmin):
     def status_icon(self, obj):
         return "✓ Sucesso" if obj.sucesso else "✗ Falha"
     status_icon.short_description = "Status"
+
+
+# ── Solicitações de Plano ─────────────────────────────────────────────────────
+
+def _aprovar_solicitacoes(modeladmin, request, queryset):
+    """Ação admin: aprovar solicitações selecionadas e ativar plano."""
+    for sol in queryset.filter(status="pendente"):
+        sol.status       = "aprovado"
+        sol.aprovado_por = request.user
+        sol.aprovado_em  = timezone.now()
+        sol.save()
+
+        perfil, _ = PerfilMedico.objects.get_or_create(user=sol.user)
+        perfil.plano = sol.plano
+        perfil.save(update_fields=["plano"])
+
+        codigos = MODULOS_POR_PLANO.get(sol.plano, [])
+        perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
+
+    modeladmin.message_user(request, f"{queryset.filter(status='aprovado').count()} plano(s) ativado(s).")
+
+_aprovar_solicitacoes.short_description = "✅ Aprovar e ativar plano"
+
+
+@admin.register(SolicitacaoPlano)
+class SolicitacaoPlanoAdmin(admin.ModelAdmin):
+    list_display   = ["criado_em_fmt", "usuario_link", "plano_badge", "status_badge", "observacoes_resumo", "aprovado_por", "aprovado_em_fmt"]
+    list_filter    = ["status", "plano"]
+    search_fields  = ["user__username", "user__first_name", "user__last_name", "user__email"]
+    readonly_fields = ["user", "plano", "observacoes", "criado_em", "aprovado_por", "aprovado_em"]
+    ordering       = ["-criado_em"]
+    actions        = [_aprovar_solicitacoes]
+
+    @admin.display(description="Solicitado em", ordering="criado_em")
+    def criado_em_fmt(self, obj):
+        return obj.criado_em.strftime("%d/%m/%Y %H:%M") if obj.criado_em else "—"
+
+    @admin.display(description="Aprovado em", ordering="aprovado_em")
+    def aprovado_em_fmt(self, obj):
+        return obj.aprovado_em.strftime("%d/%m/%Y %H:%M") if obj.aprovado_em else "—"
+
+    @admin.display(description="Usuário")
+    def usuario_link(self, obj):
+        nome = obj.user.get_full_name() or obj.user.username
+        return format_html('<strong>{}</strong><br/><small style="color:#666">{}</small>', nome, obj.user.email)
+
+    @admin.display(description="Plano")
+    def plano_badge(self, obj):
+        cores = {"start": "#3b82f6", "plus": "#8b5cf6", "elite": "#0c3c7b"}
+        cor = cores.get(obj.plano, "#888")
+        return format_html(
+            '<span style="background:{};color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:700;">{}</span>',
+            cor, obj.get_plano_display()
+        )
+
+    @admin.display(description="Status")
+    def status_badge(self, obj):
+        cfg = {
+            "pendente":  ("#f59e0b", "⏳ Pendente"),
+            "aprovado":  ("#10b981", "✅ Aprovado"),
+            "rejeitado": ("#ef4444", "❌ Rejeitado"),
+        }
+        cor, label = cfg.get(obj.status, ("#888", obj.get_status_display()))
+        return format_html(
+            '<span style="background:{};color:#fff;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:700;">{}</span>',
+            cor, label
+        )
+
+    @admin.display(description="Observações")
+    def observacoes_resumo(self, obj):
+        if obj.observacoes:
+            return obj.observacoes[:80] + ("…" if len(obj.observacoes) > 80 else "")
+        return "—"

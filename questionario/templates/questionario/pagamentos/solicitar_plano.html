@@ -1,0 +1,248 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Escolher Plano — IntegraMente</title>
+  <link rel="icon" type="image/png" href="{% static 'logotop.png' %}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--pri:#39abcb;--dark:#0c3c7b;--bg:#d5eef5;--border:#85cde2;--white:#fff;
+          --grad:linear-gradient(135deg,#0c3c7b 0%,#39abcb 65%,#6accdc 100%)}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--grad);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+    .card{background:#fff;border-radius:20px;max-width:800px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.2);overflow:hidden}
+    .card-header{background:var(--grad);padding:2rem 2.5rem;text-align:center}
+    .card-header img{height:50px;margin-bottom:1rem}
+    .card-header h1{color:#fff;font-size:1.5rem;font-weight:800;margin-bottom:.4rem}
+    .card-header p{color:rgba(255,255,255,.85);font-size:.9rem}
+    .card-body{padding:2rem 2.5rem}
+
+    /* mensagens */
+    .msg{padding:.85rem 1.1rem;border-radius:10px;margin-bottom:1.25rem;font-size:.875rem;font-weight:500}
+    .msg-success{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46}
+    .msg-warning{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+    .msg-error{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+
+    /* planos */
+    .planos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+    @media(max-width:640px){.planos-grid{grid-template-columns:1fr}}
+    .plano-card{border:2px solid var(--border);border-radius:14px;padding:1.4rem;cursor:pointer;transition:all .2s;position:relative}
+    .plano-card:hover,.plano-card.ativo{border-color:var(--dark);box-shadow:0 8px 24px rgba(12,60,123,.15)}
+    .plano-card.ativo::after{content:'✓';position:absolute;top:.6rem;right:.7rem;background:var(--dark);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800}
+    .plano-card input[type=radio]{display:none}
+    .plano-popular{background:#0c3c7b;border-color:#0c3c7b}
+    .plano-popular .plano-nome,.plano-popular .plano-preco,.plano-popular .plano-modulos li{color:#fff}
+    .plano-popular .plano-desc{color:rgba(255,255,255,.7)}
+    .plano-nome{font-size:1.1rem;font-weight:800;color:var(--dark);margin-bottom:.25rem}
+    .plano-preco{font-size:1.5rem;font-weight:900;color:var(--dark);margin-bottom:.5rem}
+    .plano-preco span{font-size:.8rem;font-weight:500}
+    .plano-desc{font-size:.78rem;color:#4a7a9b;margin-bottom:.75rem}
+    .plano-modulos{font-size:.75rem;color:#4a7a9b;padding-left:1rem}
+    .plano-modulos li{margin-bottom:.2rem}
+    .badge-popular{display:inline-block;background:#10b981;color:#fff;font-size:.65rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.06em}
+
+    /* pix */
+    .pix-box{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:1.4rem;margin-bottom:1.75rem}
+    .pix-title{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--dark);font-size:.95rem;margin-bottom:1rem}
+    .pix-row{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--border)}
+    .pix-row:last-child{border-bottom:none}
+    .pix-label{font-size:.8rem;color:#4a7a9b;font-weight:500}
+    .pix-value{font-size:.9rem;font-weight:700;color:var(--dark)}
+    .pix-value.highlight{font-size:1.1rem;color:#0c3c7b}
+    .copy-btn{background:none;border:1px solid var(--border);color:var(--pri);font-size:.75rem;font-weight:600;padding:.3rem .7rem;border-radius:6px;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{background:var(--pri);color:#fff;border-color:var(--pri)}
+
+    .valor-box{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:.9rem 1.2rem;margin-bottom:1.25rem;text-align:center}
+    .valor-box strong{color:#065f46;font-size:1rem}
+
+    /* observações */
+    textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:.75rem;font-size:.875rem;font-family:inherit;resize:vertical;color:#333;transition:border-color .2s}
+    textarea:focus{outline:none;border-color:var(--pri)}
+
+    /* botão */
+    .btn-submit{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:1rem;background:var(--grad);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:.75rem}
+    .btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(57,171,203,.4)}
+
+    /* pendente */
+    .pendente-box{background:#fffbeb;border:2px solid #fcd34d;border-radius:14px;padding:1.5rem;text-align:center}
+    .pendente-box h3{color:#92400e;font-size:1rem;font-weight:700;margin-bottom:.5rem}
+    .pendente-box p{color:#78350f;font-size:.875rem;line-height:1.6}
+    .pendente-badge{display:inline-flex;align-items:center;gap:.4rem;background:#f59e0b;color:#fff;padding:.3rem .85rem;border-radius:20px;font-size:.78rem;font-weight:700;margin-bottom:.75rem}
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <img src="{% static 'logo.png' %}" alt="IntegraMente"/>
+    <h1>Escolha seu plano</h1>
+    <p>Selecione o plano, realize o pagamento via PIX e solicite a ativação.</p>
+  </div>
+  <div class="card-body">
+
+    {% for message in messages %}
+      {% if message.tags == 'success' %}
+        <div class="msg msg-success">{{ message }}</div>
+      {% elif message.tags == 'warning' %}
+        <div class="msg msg-warning">{{ message }}</div>
+      {% else %}
+        <div class="msg msg-error">{{ message }}</div>
+      {% endif %}
+    {% endfor %}
+
+    {% if solicitacao_pendente %}
+    <!-- Solicitação já enviada -->
+    <div class="pendente-box">
+      <div class="pendente-badge">⏳ Aguardando confirmação</div>
+      <h3>Sua solicitação está em análise</h3>
+      <p>
+        Você solicitou o plano <strong>{{ solicitacao_pendente.get_plano_display }}</strong>
+        em <strong>{{ solicitacao_pendente.criado_em|date:"d/m/Y" }}</strong>.<br/>
+        Assim que confirmarmos seu pagamento, você receberá um e-mail e seu acesso será liberado automaticamente.
+        O prazo é de até <strong>24 horas</strong> em dias úteis.
+      </p>
+    </div>
+    <div style="margin-top:1.5rem;text-align:center">
+      <a href="{% url 'index' %}" style="color:var(--pri);font-size:.875rem;font-weight:600;text-decoration:none;">← Voltar ao painel</a>
+    </div>
+
+    {% else %}
+    <!-- Formulário de solicitação -->
+    <form method="POST" id="form-solicitacao">
+      {% csrf_token %}
+
+      <div class="planos-grid" id="planos-grid">
+
+        <label class="plano-card {% if plano_param == 'start' %}ativo{% endif %}">
+          <input type="radio" name="plano" value="start" {% if plano_param == 'start' %}checked{% endif %} onchange="atualizarPlano('start','R$ 39,90')"/>
+          <div class="plano-nome">START</div>
+          <div class="plano-preco">R$ 39,90 <span>/mês</span></div>
+          <div class="plano-desc">Ideal para quem está começando</div>
+          <ul class="plano-modulos">
+            <li>Perfil Sensorial</li>
+            <li>Perfil Sensorial Bebê</li>
+            <li>Sensorial Escolar</li>
+            <li>SPM</li>
+          </ul>
+        </label>
+
+        <label class="plano-card plano-popular {% if plano_param == 'plus' or not plano_param %}ativo{% endif %}">
+          <input type="radio" name="plano" value="plus" {% if plano_param == 'plus' or not plano_param %}checked{% endif %} onchange="atualizarPlano('plus','R$ 79,90')"/>
+          <div class="badge-popular">⭐ Mais popular</div>
+          <div class="plano-nome">PLUS</div>
+          <div class="plano-preco">R$ 79,90 <span>/mês</span></div>
+          <div class="plano-desc" style="color:rgba(255,255,255,.7)">Nosso plano mais escolhido</div>
+          <ul class="plano-modulos">
+            <li>Tudo do START</li>
+            <li>Escala Vineland</li>
+            <li>PEDI</li>
+            <li>Guia Portage</li>
+          </ul>
+        </label>
+
+        <label class="plano-card {% if plano_param == 'elite' %}ativo{% endif %}">
+          <input type="radio" name="plano" value="elite" {% if plano_param == 'elite' %}checked{% endif %} onchange="atualizarPlano('elite','R$ 149,90')"/>
+          <div class="plano-nome">ELITE</div>
+          <div class="plano-preco">R$ 149,90 <span>/mês</span></div>
+          <div class="plano-desc">Acesso a todos os módulos</div>
+          <ul class="plano-modulos">
+            <li>27+ instrumentos</li>
+            <li>Todas as especialidades</li>
+            <li>Avaliações ilimitadas</li>
+          </ul>
+        </label>
+
+      </div>
+
+      <!-- Valor dinâmico -->
+      <div class="valor-box">
+        <strong>💰 Valor a pagar: <span id="valor-plano">R$ 79,90</span>/mês</strong>
+      </div>
+
+      <!-- Dados do PIX -->
+      <div class="pix-box">
+        <div class="pix-title">
+          <i data-lucide="qr-code" style="width:18px;height:18px;color:var(--dark)"></i>
+          Pague via PIX
+        </div>
+        <div class="pix-row">
+          <span class="pix-label">Chave PIX</span>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="pix-value highlight" id="pix-key-val">{{ pix_key }}</span>
+            <button type="button" class="copy-btn" onclick="copiarPix()">Copiar</button>
+          </div>
+        </div>
+        <div class="pix-row">
+          <span class="pix-label">Beneficiário</span>
+          <span class="pix-value">{{ pix_beneficiario }}</span>
+        </div>
+        <div class="pix-row">
+          <span class="pix-label">Banco</span>
+          <span class="pix-value">{{ pix_banco }}</span>
+        </div>
+        <div class="pix-row">
+          <span class="pix-label">Valor</span>
+          <span class="pix-value highlight" id="pix-valor-row">R$ 79,90</span>
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div style="margin-bottom:1.25rem">
+        <label style="font-size:.875rem;font-weight:600;color:var(--dark);display:block;margin-bottom:.4rem">
+          Comprovante / Observações <span style="color:#888;font-weight:400">(opcional)</span>
+        </label>
+        <textarea name="observacoes" rows="3" placeholder="Cole o ID do comprovante PIX ou qualquer informação que ajude a confirmar seu pagamento..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i data-lucide="send" style="width:18px;height:18px"></i>
+        Enviei o PIX — Solicitar ativação
+      </button>
+    </form>
+
+    <p style="margin-top:1.25rem;font-size:.78rem;color:#aaa;text-align:center">
+      Após solicitar, você receberá uma confirmação por e-mail em até 24h em dias úteis.
+    </p>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  const valores = {start:'R$ 39,90', plus:'R$ 79,90', elite:'R$ 149,90'};
+
+  function atualizarPlano(plano, valor) {
+    document.getElementById('valor-plano').textContent  = valor + '/mês';
+    document.getElementById('pix-valor-row').textContent = valor;
+    document.querySelectorAll('.plano-card').forEach(c => c.classList.remove('ativo'));
+    const radio = document.querySelector(`input[value="${plano}"]`);
+    if (radio) radio.closest('.plano-card').classList.add('ativo');
+  }
+
+  // Init
+  const checked = document.querySelector('input[name="plano"]:checked');
+  if (checked) atualizarPlano(checked.value, valores[checked.value]);
+
+  document.querySelectorAll('input[name="plano"]').forEach(r => {
+    r.addEventListener('change', () => atualizarPlano(r.value, valores[r.value]));
+  });
+
+  function copiarPix() {
+    const key = document.getElementById('pix-key-val').textContent.trim();
+    navigator.clipboard.writeText(key).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      const orig = btn.textContent;
+      btn.textContent = 'Copiado!';
+      btn.style.background = 'var(--pri)';
+      btn.style.color = '#fff';
+      setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

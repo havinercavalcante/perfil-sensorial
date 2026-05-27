@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Nova Solicitação de Plano</title></head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.1);">
+    <div style="background:linear-gradient(135deg,#0c3c7b,#39abcb);padding:28px 32px;">
+      <h1 style="color:#fff;margin:0;font-size:1.2rem;">💰 Nova Solicitação de Plano</h1>
+      <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:.85rem;">IntegraMente — Painel Admin</p>
+    </div>
+    <div style="padding:28px 32px;">
+      <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+        <tr>
+          <td style="padding:8px 0;color:#666;width:140px;">Profissional</td>
+          <td style="padding:8px 0;font-weight:700;color:#0c3c7b;">{{ nome_user }}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#666;">E-mail</td>
+          <td style="padding:8px 0;color:#333;">{{ sol.user.email }}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#666;">Plano solicitado</td>
+          <td style="padding:8px 0;">
+            <span style="background:#0c3c7b;color:#fff;padding:3px 10px;border-radius:5px;font-size:.82rem;font-weight:700;">{{ sol.get_plano_display }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#666;">Solicitado em</td>
+          <td style="padding:8px 0;color:#333;">{{ sol.criado_em|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% if sol.observacoes %}
+        <tr>
+          <td style="padding:8px 0;color:#666;vertical-align:top;">Observações</td>
+          <td style="padding:8px 0;color:#333;">{{ sol.observacoes }}</td>
+        </tr>
+        {% endif %}
+      </table>
+
+      <div style="margin-top:24px;text-align:center;">
+        <a href="{{ painel_url }}" style="background:linear-gradient(135deg,#0c3c7b,#39abcb);color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.95rem;display:inline-block;">
+          Acessar Painel de Pagamentos →
+        </a>
+      </div>
+
+      <p style="margin-top:20px;font-size:.78rem;color:#aaa;text-align:center;">
+        Após confirmar o pagamento, clique em Aprovar para liberar o acesso automaticamente.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

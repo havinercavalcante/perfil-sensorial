@@ -42,18 +42,18 @@
   <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:.8rem;">Escolha seu plano</p>
 
   <div class="planos">
-    <a href="{% url 'meu_perfil' %}?upgrade=start" class="plano-btn">
+    <a href="{% url 'solicitar_plano' %}?plano=start" class="plano-btn">
       <span class="nome">START</span>
       <span class="preco">R$&nbsp;39,90/mês</span>
       <span class="modulos">Sensorial · Bebê · Escolar · SPM</span>
     </a>
-    <a href="{% url 'meu_perfil' %}?upgrade=plus" class="plano-btn popular">
+    <a href="{% url 'solicitar_plano' %}?plano=plus" class="plano-btn popular">
       <span class="badge">Popular</span>
       <span class="nome">PLUS</span>
       <span class="preco">R$&nbsp;79,90/mês</span>
       <span class="modulos">START + Vineland · PEDI · Portage</span>
     </a>
-    <a href="{% url 'meu_perfil' %}?upgrade=elite" class="plano-btn">
+    <a href="{% url 'solicitar_plano' %}?plano=elite" class="plano-btn">
       <span class="nome">ELITE</span>
       <span class="preco">R$&nbsp;149,90/mês</span>
       <span class="modulos">Todos os módulos</span>
@@ -61,7 +61,7 @@
   </div>
 
   <p style="font-size:.78rem;color:#6b7280;">
-    Após escolher o plano, um administrador liberará seu acesso em até 24h.
+    Pague via PIX e solicite a ativação — liberado em até 24h em dias úteis.
   </p>
 
   <hr class="divider">
