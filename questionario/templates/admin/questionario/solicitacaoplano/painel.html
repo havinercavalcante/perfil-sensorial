@@ -319,7 +319,7 @@
               <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
               <button type="submit" class="btn-off" style="width:100%"
                       onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">
-                🚫 Desativar (não pagou)
+                🚫 Desativar
               </button>
             </form>
             {% else %}
