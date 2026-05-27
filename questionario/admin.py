@@ -39,16 +39,85 @@ class PerfilInline(admin.StackedInline):
 
 
 class CustomUserAdmin(UserAdmin):
-    inlines = [PerfilInline]
-    list_display = UserAdmin.list_display + ("get_plano",)
-    list_filter = UserAdmin.list_filter + ("perfil__plano",)
+    inlines        = [PerfilInline]
+    list_display   = ("username", "email", "get_nome_completo", "get_plano_badge", "get_trial_dias", "get_pacientes", "get_ultimo_acesso", "is_active")
+    list_filter    = UserAdmin.list_filter + ("perfil__plano",)
+    search_fields  = ("username", "email", "first_name", "last_name")
+    ordering       = ("-date_joined",)
+
+    @admin.display(description="Nome")
+    def get_nome_completo(self, obj):
+        return obj.get_full_name() or "—"
 
     @admin.display(description="Plano", ordering="perfil__plano")
-    def get_plano(self, obj):
+    def get_plano_badge(self, obj):
         try:
-            return obj.perfil.get_plano_display()
+            p = obj.perfil
+        except Exception:
+            return format_html('<span style="color:#aaa">—</span>')
+        cores = {
+            "trial": "#6366f1",
+            "start": "#3b82f6",
+            "plus":  "#8b5cf6",
+            "elite": "#0c3c7b",
+        }
+        cor = cores.get(p.plano, "#888")
+        label = p.get_plano_display()
+        return format_html(
+            '<span style="background:{};color:#fff;padding:2px 9px;border-radius:5px;font-size:0.78rem;font-weight:700;">{}</span>',
+            cor, label
+        )
+    get_plano_badge.short_description = "Plano"
+
+    @admin.display(description="Trial / Validade")
+    def get_trial_dias(self, obj):
+        try:
+            p = obj.perfil
         except Exception:
             return "—"
+
+        if p.plano != "trial":
+            return format_html('<span style="color:#10b981;font-weight:600;font-size:.8rem;">✅ Ativo</span>')
+
+        if p.trial_inicio is None:
+            return format_html('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
+
+        dias = p.trial_dias_restantes
+        if dias <= 0:
+            return format_html('<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;border-radius:4px;font-size:.78rem;font-weight:700;">⛔ Expirado</span>')
+        elif dias == 1:
+            cor, bg = "#dc2626", "#fef2f2"
+        elif dias <= 2:
+            cor, bg = "#d97706", "#fffbeb"
+        elif dias <= 4:
+            cor, bg = "#d97706", "#fffbeb"
+        else:
+            cor, bg = "#059669", "#ecfdf5"
+
+        return format_html(
+            '<span style="background:{};color:{};padding:2px 7px;border-radius:4px;font-size:.78rem;font-weight:700;">⏳ {} dia{}</span>',
+            bg, cor, dias, "s" if dias != 1 else ""
+        )
+    get_trial_dias.short_description = "Trial"
+
+    @admin.display(description="Pacientes")
+    def get_pacientes(self, obj):
+        total = obj.pacientes.count()
+        return format_html('<span style="font-weight:700;color:#0c3c7b">{}</span>', total)
+
+    @admin.display(description="Último acesso", ordering="last_login")
+    def get_ultimo_acesso(self, obj):
+        if not obj.last_login:
+            return "—"
+        delta = timezone.now() - obj.last_login
+        if delta.days == 0:
+            return format_html('<span style="color:#10b981;font-size:.8rem;">Hoje</span>')
+        elif delta.days == 1:
+            return format_html('<span style="color:#3b82f6;font-size:.8rem;">Ontem</span>')
+        elif delta.days <= 7:
+            return format_html('<span style="color:#6366f1;font-size:.8rem;">{}d atrás</span>', delta.days)
+        else:
+            return format_html('<span style="color:#aaa;font-size:.8rem;">{}</span>', obj.last_login.strftime("%d/%m/%Y"))
 
 
 admin.site.unregister(User)
@@ -102,22 +171,133 @@ class ModuloAvaliacaoAdmin(admin.ModelAdmin):
 
 @admin.register(PerfilMedico)
 class PerfilMedicoAdmin(admin.ModelAdmin):
-    list_display  = ["user", "registro_profissional", "especialidades_resumo", "modulos_resumo"]
+    list_display      = ["usuario_info", "plano_badge", "trial_status", "especialidades_resumo", "modulos_count", "pacientes_count"]
+    list_filter       = ["plano", "especialidades"]
     filter_horizontal = ("especialidades", "modulos_liberados",)
-    search_fields = ["user__username", "user__first_name", "user__last_name"]
+    search_fields     = ["user__username", "user__first_name", "user__last_name", "user__email"]
+    ordering          = ["-user__date_joined"]
+    readonly_fields   = ["trial_info_display", "modulos_do_plano_display"]
+    fieldsets = (
+        ("Profissional", {
+            "fields": ("user", "registro_profissional", "especialidades", "telefone"),
+        }),
+        ("Plano e Acesso", {
+            "fields": ("plano", "trial_inicio", "trial_info_display"),
+        }),
+        ("Módulos", {
+            "fields": ("modulos_do_plano_display", "modulos_liberados"),
+            "description": "Os módulos abaixo correspondem ao plano atual. Você pode adicionar módulos extras manualmente.",
+        }),
+    )
 
+    # ── list_display ──────────────────────────────────────────────────────────
+
+    @admin.display(description="Profissional")
+    def usuario_info(self, obj):
+        nome  = obj.user.get_full_name() or obj.user.username
+        email = obj.user.email
+        return format_html(
+            '<strong style="color:#0c3c7b">{}</strong><br/>'
+            '<small style="color:#6b7280">{}</small>',
+            nome, email
+        )
+
+    @admin.display(description="Plano", ordering="plano")
+    def plano_badge(self, obj):
+        cores = {"trial": "#6366f1", "start": "#3b82f6", "plus": "#8b5cf6", "elite": "#0c3c7b"}
+        cor   = cores.get(obj.plano, "#888")
+        return format_html(
+            '<span style="background:{};color:#fff;padding:3px 10px;border-radius:5px;font-size:.8rem;font-weight:700;">{}</span>',
+            cor, obj.get_plano_display()
+        )
+
+    @admin.display(description="Trial / Validade")
+    def trial_status(self, obj):
+        if obj.plano != "trial":
+            return format_html('<span style="color:#10b981;font-weight:600;font-size:.82rem;">✅ Plano ativo</span>')
+        if obj.trial_inicio is None:
+            return format_html('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
+        dias = obj.trial_dias_restantes
+        if dias <= 0:
+            return format_html(
+                '<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:.78rem;font-weight:700;">'
+                '⛔ Expirado<br/><small>{}</small></span>',
+                obj.trial_inicio.strftime("desde %d/%m")
+            )
+        elif dias <= 2:
+            cor, bg, ico = "#dc2626", "#fef2f2", "🔴"
+        elif dias <= 4:
+            cor, bg, ico = "#d97706", "#fffbeb", "🟡"
+        else:
+            cor, bg, ico = "#059669", "#ecfdf5", "🟢"
+        return format_html(
+            '<span style="background:{bg};color:{cor};padding:2px 8px;border-radius:4px;font-size:.78rem;font-weight:700;">'
+            '{ico} {dias} dia{s} restante{s}</span>',
+            bg=bg, cor=cor, ico=ico, dias=dias, s="s" if dias != 1 else ""
+        )
+
+    @admin.display(description="Especialidades")
     def especialidades_resumo(self, obj):
         nomes = list(obj.especialidades.values_list("nome", flat=True))
-        return ", ".join(nomes) if nomes else "—"
-    especialidades_resumo.short_description = "Especialidades"
+        if not nomes:
+            return format_html('<span style="color:#aaa">—</span>')
+        return format_html(
+            "{}",
+            ", ".join(nomes)
+        )
 
-    def modulos_resumo(self, obj):
-        nomes = list(obj.modulos_liberados.values_list("nome", flat=True))
-        return ", ".join(nomes) if nomes else "— nenhum —"
-    modulos_resumo.short_description = "Módulos liberados"
+    @admin.display(description="Módulos")
+    def modulos_count(self, obj):
+        total = obj.modulos_liberados.count()
+        return format_html(
+            '<span style="font-weight:700;color:#0c3c7b">{}</span>'
+            '<span style="color:#aaa;font-size:.78rem"> / 27</span>',
+            total
+        )
+
+    @admin.display(description="Pacientes")
+    def pacientes_count(self, obj):
+        total = obj.user.pacientes.count()
+        return format_html('<span style="font-weight:700;color:#0c3c7b">{}</span>', total)
+
+    # ── readonly fields ───────────────────────────────────────────────────────
+
+    @admin.display(description="Status do trial")
+    def trial_info_display(self, obj):
+        if obj.plano != "trial":
+            return format_html('<span style="color:#10b981;font-weight:600;">Plano pago — sem trial</span>')
+        if obj.trial_inicio is None:
+            return "—"
+        dias = obj.trial_dias_restantes
+        expira = obj.trial_inicio + timezone.timedelta(days=7)
+        if dias <= 0:
+            return format_html(
+                '<strong style="color:#dc2626">⛔ Trial expirado</strong> em {}',
+                expira.strftime("%d/%m/%Y %H:%M")
+            )
+        return format_html(
+            '<strong style="color:#059669">⏳ {} dia{} restante{}</strong> — expira em {}',
+            dias, "s" if dias != 1 else "", "s" if dias != 1 else "",
+            expira.strftime("%d/%m/%Y")
+        )
+
+    @admin.display(description="Módulos do plano atual")
+    def modulos_do_plano_display(self, obj):
+        codigos = MODULOS_POR_PLANO.get(obj.plano, [])
+        if not codigos:
+            return "—"
+        nomes = list(ModuloAvaliacao.objects.filter(codigo__in=codigos).values_list("nome", flat=True))
+        tags = "".join(
+            f'<span style="display:inline-block;background:#d5eef5;color:#0c3c7b;'
+            f'border:1px solid #85cde2;padding:2px 8px;border-radius:5px;'
+            f'font-size:.75rem;font-weight:600;margin:2px;">{n}</span>'
+            for n in sorted(nomes)
+        )
+        return format_html(tags)
+
+    # ── formfield ─────────────────────────────────────────────────────────────
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        """Filtra modulos_liberados de acordo com as especialidades do profissional."""
         if db_field.name == "modulos_liberados":
             obj_id = request.resolver_match.kwargs.get("object_id")
             if obj_id:
