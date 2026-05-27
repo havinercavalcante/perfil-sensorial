@@ -153,11 +153,11 @@
     <div>
       {% if pagina_anterior %}
       {% if readonly %}
-      <a href="{% url 'portage_visualizar' avaliacao.id pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+      <a href="{% url 'portage_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
       {% elif publico %}
       <a href="{% url 'portage_publico' token pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
       {% else %}
-      <a href="{% url 'portage_form' avaliacao.id pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+      <a href="{% url 'portage_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
       {% endif %}
       {% elif readonly %}
       <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Paciente</a>
@@ -169,7 +169,7 @@
     {% if pagina == total %}
     <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">Fechar</a>
     {% else %}
-    <a href="{% url 'portage_visualizar' avaliacao.id pagina|add:1 %}" class="btn btn-secondary">Próximo Domínio <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+    <a href="{% url 'portage_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-secondary">Próximo Domínio <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
     {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary" style="background:var(--pc); border-color:var(--pc);">

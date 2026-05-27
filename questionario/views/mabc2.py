@@ -41,12 +41,12 @@ def nova_avaliacao_mabc2(request, paciente_id):
         messages.error(request, "Você não tem acesso ao módulo MABC-2.")
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoMABC2.objects.create(paciente=paciente, faixa_etaria="3_6")
-    return redirect("mabc2_form", avaliacao_id=av.id)
+    return redirect("mabc2_form", avaliacao_id=av.uuid)
 
 
 @login_required
 def mabc2_form(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMABC2, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMABC2, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if request.method == "POST":
@@ -92,7 +92,7 @@ def mabc2_form(request, avaliacao_id):
 
 @login_required
 def mabc2_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoMABC2, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMABC2, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     classificacao = _classificar_mabc2(avaliacao.percentil)
     faixa_label = dict(AvaliacaoMABC2.FAIXA_CHOICES).get(avaliacao.faixa_etaria, "—")
@@ -103,6 +103,21 @@ def mabc2_resultado(request, avaliacao_id):
         {"nome": "Equilíbrio", "escore": avaliacao.eq_escore},
     ]
 
+    todas_av = list(paciente.avaliacoes_mabc2.order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": "Destreza Manual",     "campo": "md_escore",    "max": 19},
+        {"nome": "Arremesso/Recepção",  "campo": "ac_escore",    "max": 19},
+        {"nome": "Equilíbrio",          "campo": "eq_escore",    "max": 19},
+        {"nome": "Total",               "campo": "escore_total", "max": 19},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [round((getattr(av, dom["campo"]) or 0) / dom["max"] * 100) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/mabc2_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
@@ -110,13 +125,17 @@ def mabc2_resultado(request, avaliacao_id):
         "classificacao": classificacao,
         "faixa_label": faixa_label,
         "componentes_json": json.dumps([{"nome": c["nome"], "escore": c["escore"] or 0} for c in componentes]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def mabc2_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoMABC2, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMABC2, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -129,7 +148,7 @@ def mabc2_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_mabc2(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoMABC2, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoMABC2, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])

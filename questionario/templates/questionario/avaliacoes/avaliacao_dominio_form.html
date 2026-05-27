@@ -201,7 +201,7 @@
     <div>
       {% if pagina_anterior %}
         {% if readonly %}
-        <a href="{% url url_visualizar_name avaliacao.id pagina_anterior %}" class="btn btn-secondary">
+        <a href="{% url url_visualizar_name avaliacao.uuid pagina_anterior %}" class="btn btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
         </a>
         {% elif publico %}
@@ -209,7 +209,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
         </a>
         {% else %}
-        <a href="{% url url_form_name avaliacao.id pagina_anterior %}" class="btn btn-secondary">
+        <a href="{% url url_form_name avaliacao.uuid pagina_anterior %}" class="btn btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
         </a>
         {% endif %}
@@ -232,11 +232,11 @@
         {% endif %}
       {% else %}
         {% if pagina < total %}
-        <a href="{% url url_visualizar_name avaliacao.id pagina|add:1 %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
+        <a href="{% url url_visualizar_name avaliacao.uuid pagina|add:1 %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
           Próximo <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 5 5-5 5"/><path d="m6 7 5 5-5 5"/></svg>
         </a>
         {% else %}
-        <a href="{% url url_resultado_name avaliacao.id %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
+        <a href="{% url url_resultado_name avaliacao.uuid %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
           <i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Ver Resultado
         </a>
         {% endif %}

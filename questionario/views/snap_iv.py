@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -132,13 +133,13 @@ def nova_avaliacao_snap_iv(request, paciente_id):
         paciente=paciente, token=str(uuid.uuid4()), respondente=respondente
     )
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("snap_iv_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("snap_iv_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def snap_iv_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("snap_iv_resultado", avaliacao_id=avaliacao_id)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
@@ -185,20 +186,39 @@ def snap_iv_form(request, avaliacao_id, pagina):
 
 @login_required
 def snap_iv_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status != "concluida":
         return redirect("snap_iv_form", avaliacao_id=avaliacao_id, pagina=1)
+    paciente = avaliacao.paciente
+    todas_av = list(paciente.avaliacoes_snap_iv.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    dominios_comp = [
+        {"nome": "Desatenção",     "campo": "media_desatencao",    "max": 3},
+        {"nome": "Hiperatividade", "campo": "media_hiperatividade","max": 3},
+        {"nome": "TOD",            "campo": "media_tod",           "max": 3},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        valores = [round((getattr(av, dom["campo"]) or 0) / dom["max"] * 100) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/snap_iv_resultado.html", {
         "avaliacao": avaliacao,
-        "paciente": avaliacao.paciente,
+        "paciente": paciente,
         "resultado": _build_resultado(avaliacao),
         "corte": SNAP_IV_CORTE,
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def snap_iv_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
         return redirect("snap_iv_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
@@ -222,7 +242,7 @@ def snap_iv_visualizar(request, avaliacao_id, pagina):
 
 @login_required
 def snap_iv_deletar(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -234,7 +254,7 @@ def snap_iv_deletar(request, avaliacao_id):
 
 @login_required
 def salvar_observacoes_snap_iv(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -248,7 +268,7 @@ def salvar_observacoes_snap_iv(request, avaliacao_id):
 def enviar_email_snap_iv(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoSNAPIV, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

@@ -83,13 +83,13 @@ def nova_avaliacao_spm(request, paciente_id):
         faixa = "spm_p"
     av = AvaliacaoSPM.objects.create(paciente=paciente, faixa=faixa, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "id": av.id})
-    return redirect("spm_form", avaliacao_id=av.id, pagina=1)
+        return JsonResponse({"ok": True, "uuid": str(av.uuid)})
+    return redirect("spm_form", avaliacao_id=av.uuid, pagina=1)
 
 
 @login_required
 def spm_form(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("spm_resultado", avaliacao_id=avaliacao_id)
 
@@ -153,7 +153,7 @@ def spm_form(request, avaliacao_id, pagina):
 
 @login_required
 def spm_concluir(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     secoes, _ = _spm_dados(avaliacao.faixa)
     total_itens = sum(len(s["itens"]) for s in secoes)
     if avaliacao.respostas.count() < total_itens:
@@ -168,7 +168,7 @@ def spm_concluir(request, avaliacao_id):
 
 @login_required
 def spm_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if avaliacao.status != "concluida":
@@ -184,6 +184,28 @@ def spm_resultado(request, avaliacao_id):
     t_tot = tscore_spm(raw_tot, "tot", avaliacao.faixa)
     t_tot_pct = max(0, min(100, int((t_tot - 40) / 40 * 100))) if t_tot else 0
 
+    todas_av = list(paciente.avaliacoes_spm.filter(status="concluida").order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    _max_scores = max_score_spm(avaliacao.faixa)
+    dominios_comp = [
+        {"nome": "Social",       "campo": "pont_soc", "max": _max_scores.get("soc", 1)},
+        {"nome": "Visão",        "campo": "pont_vis", "max": _max_scores.get("vis", 1)},
+        {"nome": "Audição",      "campo": "pont_hea", "max": _max_scores.get("hea", 1)},
+        {"nome": "Tato",         "campo": "pont_tou", "max": _max_scores.get("tou", 1)},
+        {"nome": "Sensorial",    "campo": "pont_sme", "max": _max_scores.get("sme", 1)},
+        {"nome": "Corporal",     "campo": "pont_bod", "max": _max_scores.get("bod", 1)},
+        {"nome": "Equilíbrio",   "campo": "pont_bal", "max": _max_scores.get("bal", 1)},
+        {"nome": "Planejamento", "campo": "pont_pla", "max": _max_scores.get("pla", 1)},
+        {"nome": "Total",        "campo": "pont_tot", "max": _max_scores.get("tot", 1)},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B", "#C0392B", "#16A085", "#1ABC9C", "#7DB87D"]
+    comparativo_datasets = []
+    for i, dom in enumerate(dominios_comp):
+        mx = dom["max"] or 1
+        valores = [round((getattr(av, dom["campo"]) or 0) / mx * 100) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/spm_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
@@ -196,12 +218,16 @@ def spm_resultado(request, avaliacao_id):
             {"nome": s["sigla"], "t_score": s["t_score"], "cor": s["cor"]}
             for s in secoes if s["t_score"] is not None
         ]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def spm_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     secoes, perguntas_data = _spm_dados(avaliacao.faixa)
     total_paginas = len(secoes)
 
@@ -229,7 +255,7 @@ def spm_visualizar(request, avaliacao_id, pagina):
 @login_required
 def spm_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -242,7 +268,7 @@ def spm_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_spm(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -258,7 +284,7 @@ def enviar_email_spm(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(AvaliacaoSPM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

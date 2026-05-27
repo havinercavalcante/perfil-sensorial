@@ -103,7 +103,7 @@ def questionario_publico_view(request, token, pagina):
 
 @login_required
 def questionario_view(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     if avaliacao.status == "concluida":
         return redirect("dashboard", avaliacao_id=avaliacao_id)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
@@ -160,7 +160,7 @@ def questionario_view(request, avaliacao_id, pagina):
 
 @login_required
 def concluir(request, avaliacao_id):
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     respostas_qs = avaliacao.respostas.all()
     if respostas_qs.count() < 86:
         messages.warning(request, "Ainda há perguntas sem resposta.")
@@ -189,7 +189,7 @@ def concluir(request, avaliacao_id):
 @login_required
 def salvar_observacoes(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
@@ -202,7 +202,7 @@ def salvar_observacoes(request, avaliacao_id):
 
 @login_required
 def dashboard(request, avaliacao_id):
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     if avaliacao.status != "concluida":
         return redirect("questionario", avaliacao_id=avaliacao_id, pagina=avaliacao.pagina_atual)
@@ -277,7 +277,7 @@ def dashboard(request, avaliacao_id):
 
 @login_required
 def questionario_visualizar(request, avaliacao_id, pagina):
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     if pagina < 1 or pagina > TOTAL_PAGINAS:
         return redirect("questionario_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
@@ -300,12 +300,247 @@ def questionario_visualizar(request, avaliacao_id, pagina):
     })
 
 
+# ─────────────────────────────────────────────────────────────
+#  LAUDO AUTOMÁTICO — textos clínicos por quadrante e seção
+# ─────────────────────────────────────────────────────────────
+
+def _texto_quadrante(q):
+    sid, cl, v, mx = q["id"], q["classificacao"], q["valor"], q["maximo"]
+    TEXTOS = {
+        "EX": {
+            "Muito mais": (
+                f"Pontuação significativamente elevada ({v}/{mx} pts), indicando forte tendência à Busca Sensorial. "
+                "A criança procura ativamente por experiências sensoriais intensas com frequência muito maior do que seus pares, "
+                "podendo apresentar alto nível de atividade, dificuldade de permanecer quieta e constante necessidade de estimulação."
+            ),
+            "Mais": (
+                f"Pontuação acima do esperado ({v}/{mx} pts), indicando tendência aumentada à Busca Sensorial. "
+                "A criança demonstra maior interesse por experiências sensoriais do que seus pares da mesma faixa etária."
+            ),
+            "Típico": f"Pontuação dentro do esperado ({v}/{mx} pts), com padrão de Exploração Sensorial adequado à faixa etária.",
+            "Menos": f"Pontuação abaixo do esperado ({v}/{mx} pts), indicando menor tendência a buscar ativamente experiências sensoriais.",
+            "Muito menos": (
+                f"Pontuação significativamente reduzida ({v}/{mx} pts), evidenciando muito baixa tendência à Exploração Sensorial. "
+                "A criança demonstra pouca iniciativa para buscar experiências sensoriais, podendo apresentar comportamento passivo e baixo nível de atividade."
+            ),
+        },
+        "EV": {
+            "Muito mais": (
+                f"Pontuação significativamente elevada ({v}/{mx} pts), indicando forte padrão de Esquiva Sensorial. "
+                "A criança demonstra intensa necessidade de evitar experiências sensoriais, podendo apresentar reações de recusa, "
+                "retirada ou angústia frente a texturas, sons, luzes ou outros estímulos do cotidiano."
+            ),
+            "Mais": (
+                f"Pontuação acima do esperado ({v}/{mx} pts), indicando tendência aumentada à Esquiva Sensorial. "
+                "A criança demonstra maior necessidade de evitar estímulos sensoriais do que seus pares."
+            ),
+            "Típico": f"Pontuação dentro do esperado ({v}/{mx} pts), com padrão de Esquiva Sensorial adequado à faixa etária.",
+            "Menos": f"Pontuação abaixo do esperado ({v}/{mx} pts), com menor tendência à Esquiva Sensorial.",
+            "Muito menos": (
+                f"Pontuação significativamente reduzida ({v}/{mx} pts), evidenciando muito baixa tendência à Esquiva Sensorial. "
+                "A criança demonstra tolerância incomum a estímulos sensoriais intensos."
+            ),
+        },
+        "SN": {
+            "Muito mais": (
+                f"Pontuação significativamente elevada ({v}/{mx} pts), indicando alta Sensibilidade Sensorial. "
+                "A criança percebe e reage a estímulos do ambiente com grande intensidade, notando detalhes que outros ignorariam, "
+                "o que pode interferir significativamente em suas atividades diárias e escolares."
+            ),
+            "Mais": (
+                f"Pontuação acima do esperado ({v}/{mx} pts), com Sensibilidade Sensorial aumentada. "
+                "A criança tende a perceber e reagir a estímulos com maior intensidade do que seus pares."
+            ),
+            "Típico": f"Pontuação dentro do esperado ({v}/{mx} pts), com padrão de Sensibilidade Sensorial adequado à faixa etária.",
+            "Menos": f"Pontuação abaixo do esperado ({v}/{mx} pts), com menor Sensibilidade Sensorial.",
+            "Muito menos": (
+                f"Pontuação significativamente reduzida ({v}/{mx} pts), indicando baixíssima Sensibilidade Sensorial. "
+                "A criança pode não perceber estímulos sensoriais que outros notariam com facilidade."
+            ),
+        },
+        "OB": {
+            "Muito mais": (
+                f"Pontuação significativamente elevada ({v}/{mx} pts), indicando importante Baixo Registro Sensorial. "
+                "A criança apresenta dificuldade em registrar e processar estímulos do ambiente de forma automática, "
+                "podendo não notar objetos, pessoas ou eventos ao redor, com respostas demoradas e aparente desatenção."
+            ),
+            "Mais": (
+                f"Pontuação acima do esperado ({v}/{mx} pts), com tendência ao Baixo Registro Sensorial. "
+                "A criança pode necessitar de input sensorial mais intenso para registrar e responder ao ambiente."
+            ),
+            "Típico": f"Pontuação dentro do esperado ({v}/{mx} pts), com padrão de Registro Sensorial adequado à faixa etária.",
+            "Menos": f"Pontuação abaixo do esperado ({v}/{mx} pts), com tendência aumentada ao Registro Sensorial ativo.",
+            "Muito menos": f"Pontuação significativamente reduzida ({v}/{mx} pts), com padrão de Observação muito abaixo do esperado para a faixa etária.",
+        },
+    }
+    return TEXTOS.get(sid, {}).get(cl, f"{q['nome']}: {v}/{mx} pts — {cl}.")
+
+
+def _texto_secao(s):
+    sid, cl, v, mx = s["id"], s["classificacao"], s["valor"], s["maximo"]
+    TEXTOS = {
+        "auditiva": {
+            "Muito mais": f"Processamento auditivo significativamente elevado ({v}/{mx} pts): reações intensas a sons do ambiente, possível dificuldade em locais barulhentos, tendência a tapar os ouvidos e distração frequente por sons de fundo.",
+            "Mais":       f"Processamento auditivo acima do esperado ({v}/{mx} pts): tendência a responder com maior intensidade a estímulos sonoros do que seus pares.",
+            "Típico":     f"Processamento auditivo dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Processamento auditivo abaixo do esperado ({v}/{mx} pts), com menor reatividade a estímulos sonoros.",
+            "Muito menos":f"Processamento auditivo significativamente reduzido ({v}/{mx} pts): baixa responsividade a estímulos sonoros do ambiente.",
+        },
+        "visual": {
+            "Muito mais": f"Processamento visual significativamente elevado ({v}/{mx} pts): reações intensas a luz intensa, ambientes visualmente complexos ou movimentos no campo visual.",
+            "Mais":       f"Processamento visual acima do esperado ({v}/{mx} pts): tendência aumentada a reagir e se distrair com estímulos visuais.",
+            "Típico":     f"Processamento visual dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Processamento visual abaixo do esperado ({v}/{mx} pts).",
+            "Muito menos":f"Processamento visual significativamente reduzido ({v}/{mx} pts): baixa responsividade a estímulos visuais do ambiente.",
+        },
+        "tato": {
+            "Muito mais": f"Processamento tátil significativamente elevado ({v}/{mx} pts): alta reatividade ao toque, possível evitação de texturas, reações negativas ao toque inesperado, dificuldade com roupas e resistência ao cuidado pessoal.",
+            "Mais":       f"Processamento tátil acima do esperado ({v}/{mx} pts): tendência a responder com maior intensidade ao toque e a diferentes texturas.",
+            "Típico":     f"Processamento tátil dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Processamento tátil abaixo do esperado ({v}/{mx} pts): pode buscar mais input tátil.",
+            "Muito menos":f"Processamento tátil significativamente reduzido ({v}/{mx} pts): baixa responsividade ao toque, podendo não perceber dor, temperatura ou texturas adequadamente.",
+        },
+        "movimento": {
+            "Muito mais": f"Processamento vestibular/movimento significativamente elevado ({v}/{mx} pts): alta busca por atividades que envolvam movimento, agitação motora e dificuldade de manter-se quieta.",
+            "Mais":       f"Processamento vestibular/movimento acima do esperado ({v}/{mx} pts): maior tendência a buscar experiências de movimento e atividade física.",
+            "Típico":     f"Processamento vestibular/movimento dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Processamento de movimento abaixo do esperado ({v}/{mx} pts): possível cautela ou hesitação em atividades que envolvam movimento.",
+            "Muito menos":f"Processamento de movimento significativamente reduzido ({v}/{mx} pts): possível baixa tolerância a mudanças posturais ou movimento.",
+        },
+        "posicao": {
+            "Muito mais": f"Processamento proprioceptivo significativamente elevado ({v}/{mx} pts): intensa busca por pressão e resistência muscular, podendo abraçar com força excessiva e preferir roupas justas.",
+            "Mais":       f"Processamento proprioceptivo acima do esperado ({v}/{mx} pts): tendência aumentada a buscar input de pressão e resistência.",
+            "Típico":     f"Processamento proprioceptivo dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Processamento proprioceptivo abaixo do esperado ({v}/{mx} pts): possíveis dificuldades com noção corporal e gradação de força.",
+            "Muito menos":f"Processamento proprioceptivo significativamente reduzido ({v}/{mx} pts): possíveis dificuldades de noção corporal, gradação de força e coordenação motora.",
+        },
+        "oral": {
+            "Muito mais": f"Processamento oral significativamente elevado ({v}/{mx} pts): seletividade alimentar importante, recusa de texturas/sabores, comportamentos orais alterados e reações intensas à higiene bucal.",
+            "Mais":       f"Processamento oral acima do esperado ({v}/{mx} pts): seletividade alimentar ou preferências orais acentuadas.",
+            "Típico":     f"Processamento oral dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Processamento oral abaixo do esperado ({v}/{mx} pts).",
+            "Muito menos":f"Processamento oral significativamente reduzido ({v}/{mx} pts): baixa responsividade oral, possível busca por input oral intenso.",
+        },
+        "conduta": {
+            "Muito mais": f"Conduta com pontuação significativamente elevada ({v}/{mx} pts): possível impulsividade, dificuldade de autorregulação e comportamentos desafiadores relacionados ao processamento sensorial.",
+            "Mais":       f"Conduta acima do esperado ({v}/{mx} pts): sinais de dificuldade de autorregulação comportamental.",
+            "Típico":     f"Conduta dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Conduta abaixo do esperado ({v}/{mx} pts).",
+            "Muito menos":f"Conduta com pontuação significativamente abaixo do esperado ({v}/{mx} pts).",
+        },
+        "socioemocional": {
+            "Muito mais": f"Área socioemocional com pontuação significativamente elevada ({v}/{mx} pts): possíveis dificuldades de regulação emocional, ansiedade, resistência a mudanças de rotina e desafios nas relações interpessoais.",
+            "Mais":       f"Área socioemocional acima do esperado ({v}/{mx} pts): possíveis dificuldades de regulação emocional ou interação social.",
+            "Típico":     f"Desenvolvimento socioemocional dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Área socioemocional abaixo do esperado ({v}/{mx} pts).",
+            "Muito menos":f"Área socioemocional com pontuação significativamente abaixo do esperado ({v}/{mx} pts).",
+        },
+        "atencao": {
+            "Muito mais": f"Atenção com pontuação significativamente elevada ({v}/{mx} pts): importantes dificuldades atencionais possivelmente relacionadas ao processamento sensorial, incluindo distratividade, dificuldade de manutenção do foco e impulsividade.",
+            "Mais":       f"Atenção acima do esperado ({v}/{mx} pts): sinais de dificuldades atencionais acima do esperado para a faixa etária.",
+            "Típico":     f"Padrão atencional dentro do esperado ({v}/{mx} pts) para a faixa etária.",
+            "Menos":      f"Atenção abaixo do esperado ({v}/{mx} pts).",
+            "Muito menos":f"Atenção com pontuação significativamente abaixo do esperado ({v}/{mx} pts).",
+        },
+    }
+    return TEXTOS.get(sid, {}).get(cl, f"{s['nome']}: {v}/{mx} pts — {cl}.")
+
+
+@login_required
+def laudo_sensorial(request, avaliacao_id):
+    from datetime import date
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    if avaliacao.status != "concluida":
+        return redirect("dashboard", avaliacao_id=avaliacao_id)
+
+    secao_map = {
+        "auditiva": avaliacao.pont_auditiva, "visual": avaliacao.pont_visual,
+        "tato": avaliacao.pont_tato, "movimento": avaliacao.pont_movimento,
+        "posicao": avaliacao.pont_posicao, "oral": avaliacao.pont_oral,
+        "conduta": avaliacao.pont_conduta, "socioemocional": avaliacao.pont_socioemocional,
+        "atencao": avaliacao.pont_atencao,
+    }
+    secoes_dados = []
+    for sid, config in SECOES_CONFIG.items():
+        valor = secao_map.get(sid, 0) or 0
+        maximo = config["max"]
+        classificacao = classificar(valor, config["faixas"])
+        s = {
+            "id": sid, "nome": config["nome"], "valor": valor, "maximo": maximo,
+            "pct": int(valor / maximo * 100) if maximo else 0,
+            "classificacao": classificacao, "classe_css": classe_css(classificacao),
+        }
+        s["texto"] = _texto_secao(s)
+        secoes_dados.append(s)
+
+    quad_map = {"EX": avaliacao.pont_ex or 0, "EV": avaliacao.pont_ev or 0,
+                "SN": avaliacao.pont_sn or 0, "OB": avaliacao.pont_ob or 0}
+    quadrantes_dados = []
+    for qid, config in QUADRANTES_CONFIG.items():
+        valor = quad_map.get(qid, 0)
+        maximo = config["max"]
+        classificacao = classificar(valor, config["faixas"])
+        q = {
+            "id": qid, "nome": config["nome"], "subtitulo": config["subtitulo"],
+            "valor": valor, "maximo": maximo,
+            "pct": int(valor / maximo * 100) if maximo else 0,
+            "classificacao": classificacao, "cor": config["cor"],
+            "classe_css": classe_css(classificacao),
+        }
+        q["texto"] = _texto_quadrante(q)
+        quadrantes_dados.append(q)
+
+    # Identificar achados mais relevantes para síntese
+    criticos = [q for q in quadrantes_dados if q["classificacao"] in ("Muito mais", "Muito menos")]
+    alertas  = [q for q in quadrantes_dados if q["classificacao"] in ("Mais", "Menos")]
+    if criticos:
+        nomes = " e ".join(q["nome"] for q in criticos)
+        intro_analise = (
+            f"A avaliação do Perfil Sensorial evidenciou alterações significativas nos quadrantes de {nomes}, "
+            "requerendo atenção clínica prioritária e planejamento terapêutico direcionado."
+        )
+    elif alertas:
+        nomes = " e ".join(q["nome"] for q in alertas)
+        intro_analise = (
+            f"A avaliação do Perfil Sensorial evidenciou padrões acima ou abaixo do esperado nos quadrantes de {nomes}."
+        )
+    else:
+        intro_analise = (
+            "A avaliação do Perfil Sensorial evidenciou processamento sensorial dentro do esperado "
+            "em todos os quadrantes avaliados."
+        )
+
+    # Calcular idade
+    hoje = date.today()
+    if paciente.data_nascimento:
+        anos = hoje.year - paciente.data_nascimento.year - (
+            (hoje.month, hoje.day) < (paciente.data_nascimento.month, paciente.data_nascimento.day)
+        )
+        meses = (hoje.month - paciente.data_nascimento.month - (
+            hoje.day < paciente.data_nascimento.day
+        )) % 12
+        idade_str = f"{anos} anos e {meses} meses" if meses else f"{anos} anos"
+    else:
+        idade_str = "—"
+
+    return render(request, "questionario/avaliacoes/laudo_sensorial.html", {
+        "avaliacao": avaliacao,
+        "paciente": paciente,
+        "secoes": secoes_dados,
+        "quadrantes": quadrantes_dados,
+        "intro_analise": intro_analise,
+        "idade_str": idade_str,
+        "data_hoje": hoje.strftime("%d/%m/%Y"),
+    })
+
+
 @login_required
 def enviar_email_link(request, avaliacao_id):
     from django.core.mail import send_mail
     from django.template.loader import render_to_string
     from django.utils import timezone as tz
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
     email_dest = paciente.email_responsavel
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"

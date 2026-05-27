@@ -152,7 +152,7 @@
       <td>{{ av.pont_ev|default:"—" }}</td>
       <td>{{ av.pont_sn|default:"—" }}</td>
       <td>{{ av.pont_ob|default:"—" }}</td>
-      <td><a href="{% url 'dashboard' av.id %}" class="btn btn-sm btn-primary">Ver</a></td>
+      <td><a href="{% url 'dashboard' av.uuid %}" class="btn btn-sm btn-primary">Ver</a></td>
     </tr>
     {% endfor %}
     </tbody>

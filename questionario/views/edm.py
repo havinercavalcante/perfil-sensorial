@@ -31,12 +31,12 @@ def nova_avaliacao_edm(request, paciente_id):
         messages.error(request, "Você não tem acesso ao módulo EDM.")
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoEDM.objects.create(paciente=paciente)
-    return redirect("edm_form", avaliacao_id=av.id)
+    return redirect("edm_form", avaliacao_id=av.uuid)
 
 
 @login_required
 def edm_form(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoEDM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEDM, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     if request.method == "POST":
@@ -90,7 +90,7 @@ def edm_form(request, avaliacao_id):
 
 @login_required
 def edm_resultado(request, avaliacao_id):
-    avaliacao = get_object_or_404(AvaliacaoEDM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEDM, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
 
     dominios = [
@@ -104,6 +104,23 @@ def edm_resultado(request, avaliacao_id):
 
     lat_label = dict(AvaliacaoEDM.LATERALIDADE_CHOICES).get(avaliacao.lateralidade, "—") if avaliacao.lateralidade else "—"
 
+    todas_av = list(paciente.avaliacoes_edm.order_by("data"))
+    outras = [av for av in todas_av if av.id != avaliacao.id]
+    comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
+    campos_edm = [
+        {"nome": "Mot. Fina",       "campo": "idade_motricidade_fina"},
+        {"nome": "Mot. Ampla",      "campo": "idade_motricidade_ampla"},
+        {"nome": "Equilíbrio",      "campo": "idade_equilibrio"},
+        {"nome": "Esq. Corporal",   "campo": "idade_esquema_corporal"},
+        {"nome": "Org. Espacial",   "campo": "idade_organizacao_espacial"},
+        {"nome": "Org. Temporal",   "campo": "idade_organizacao_temporal"},
+    ]
+    cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B", "#C0392B"]
+    comparativo_datasets = []
+    for i, dom in enumerate(campos_edm):
+        valores = [(getattr(av, dom["campo"]) or 0) for av in todas_av]
+        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
     return render(request, "questionario/avaliacoes/edm_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
@@ -111,13 +128,17 @@ def edm_resultado(request, avaliacao_id):
         "lat_label": lat_label,
         "qm_classificacao": _classificar_qm(avaliacao.quociente_motor),
         "dominios_json": json.dumps([{"nome": d["nome"], "valor": d["valor"] or 0} for d in dominios]),
+        "comparativo_labels": comparativo_labels,
+        "comparativo_datasets": json.dumps(comparativo_datasets),
+        "tem_comparativo": len(todas_av) > 1,
+        "outras_avaliacoes": outras,
     })
 
 
 @login_required
 def edm_deletar(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoEDM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEDM, uuid=avaliacao_id, paciente__medico=request.user)
     paciente_uuid = avaliacao.paciente.uuid
     if request.method == "POST":
         avaliacao.delete()
@@ -130,7 +151,7 @@ def edm_deletar(request, avaliacao_id):
 @login_required
 def salvar_observacoes_edm(request, avaliacao_id):
     from django.http import JsonResponse
-    avaliacao = get_object_or_404(AvaliacaoEDM, id=avaliacao_id, paciente__medico=request.user)
+    avaliacao = get_object_or_404(AvaliacaoEDM, uuid=avaliacao_id, paciente__medico=request.user)
     if request.method == "POST":
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])

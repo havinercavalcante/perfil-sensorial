@@ -241,6 +241,7 @@ class Avaliacao(models.Model):
         ("em_andamento", "Em andamento"),
         ("concluida", "Concluída"),
     ]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes")
     data = models.DateField("Data da avaliação", default=timezone.now)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
@@ -301,6 +302,7 @@ class AvaliacaoVineland(models.Model):
         ("concluida", "Concluída"),
     ]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vineland")
     token = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data = models.DateField("Data da avaliação", default=timezone.now)
@@ -361,6 +363,7 @@ class RespostaVineland(models.Model):
 
 class AvaliacaoEscolar(models.Model):
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_escolar")
     token = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data = models.DateField("Data da avaliação", default=timezone.now)
@@ -402,6 +405,7 @@ class AvaliacaoBebe(models.Model):
         ("crianca_pequena", "Criança Pequena (7–36 meses)"),
     ]
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_bebe")
     token = models.CharField(max_length=64, unique=True, blank=True, null=True)
     faixa = models.CharField(max_length=20, choices=FAIXA_CHOICES)
@@ -444,6 +448,7 @@ class AvaliacaoEDM(models.Model):
         ("cruzada", "Cruzada"),
         ("indefinida", "Indefinida"),
     ]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_edm")
     data = models.DateField("Data da avaliação", default=timezone.now)
     idade_motricidade_fina = models.IntegerField("Motricidade Fina (meses)", null=True, blank=True)
@@ -474,6 +479,7 @@ class AvaliacaoMABC2(models.Model):
         ("7_10", "7–10 anos"),
         ("11_16", "11–16 anos"),
     ]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_mabc2")
     faixa_etaria = models.CharField("Faixa etária", max_length=10, choices=FAIXA_CHOICES)
     data = models.DateField("Data da avaliação", default=timezone.now)
@@ -504,6 +510,7 @@ class AvaliacaoMABC2(models.Model):
 # ── Beery VMI ─────────────────────────────────────────────────────────────────
 
 class AvaliacaoBeery(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_beery")
     data = models.DateField("Data da avaliação", default=timezone.now)
     idade_anos = models.IntegerField("Idade (anos)", null=True, blank=True)
@@ -531,6 +538,7 @@ class AvaliacaoBeery(models.Model):
 # ── PEDI ──────────────────────────────────────────────────────────────────────
 
 class AvaliacaoPEDI(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_pedi")
     data = models.DateField("Data da avaliação", default=timezone.now)
     fs_autocuidado = models.IntegerField("FS — Autocuidado (bruto, 0–73)", null=True, blank=True)
@@ -568,6 +576,7 @@ class AvaliacaoSPM(models.Model):
     ]
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente      = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_spm")
     token         = models.CharField(max_length=64, unique=True, blank=True, null=True)
     faixa         = models.CharField(max_length=10, choices=FAIXA_CHOICES)
@@ -613,6 +622,7 @@ class RespostaSPM(models.Model):
 class AvaliacaoVineland3(models.Model):
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente      = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vineland3")
     token         = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data          = models.DateField("Data da avaliação", default=timezone.now)
@@ -715,6 +725,7 @@ class LinkConvite(models.Model):
 class AvaliacaoPortage(models.Model):
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente      = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_portage")
     token         = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data          = models.DateField("Data da avaliação", default=timezone.now)
@@ -769,6 +780,7 @@ class AvaliacaoSDQ(models.Model):
     ]
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente                  = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_sdq")
     token                     = models.CharField(max_length=64, unique=True, blank=True, null=True)
     respondente               = models.CharField(max_length=10, choices=RESPONDENTE_CHOICES, default="pais")
@@ -822,6 +834,7 @@ class AvaliacaoSNAPIV(models.Model):
     ]
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente                     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_snap_iv")
     token                        = models.CharField(max_length=64, unique=True, blank=True, null=True)
     respondente                  = models.CharField(max_length=10, choices=RESPONDENTE_CHOICES, default="pais")
@@ -872,6 +885,7 @@ class AvaliacaoMCHAT(models.Model):
     ]
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_mchat")
     token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data             = models.DateField(default=timezone.now)
@@ -918,6 +932,7 @@ class AvaliacaoCARS(models.Model):
     ]
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_cars")
     token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data             = models.DateField(default=timezone.now)
@@ -964,6 +979,7 @@ class AvaliacaoLinguagem(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_linguagem")
     token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data             = models.DateField(default=timezone.now)
@@ -1012,6 +1028,7 @@ class AvaliacaoAlimentacao(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente              = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_alimentacao")
     token                 = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data                  = models.DateField(default=timezone.now)
@@ -1059,6 +1076,7 @@ class AvaliacaoHabitosOrais(models.Model):
     Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_habitos_orais")
     token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data             = models.DateField(default=timezone.now)
@@ -1102,6 +1120,7 @@ class AvaliacaoVozInfantil(models.Model):
     Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_voz_infantil")
     token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data             = models.DateField(default=timezone.now)
@@ -1143,6 +1162,7 @@ class AvaliacaoProcessamentoAuditivo(models.Model):
     Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_processamento_auditivo")
     token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data               = models.DateField(default=timezone.now)
@@ -1187,6 +1207,7 @@ class AvaliacaoIDV10(models.Model):
     Escala: 0=Nunca / 1=Às vezes / 2=Frequentemente / 3=Sempre.
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_idv10")
     token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data             = models.DateField(default=timezone.now)
@@ -1233,6 +1254,7 @@ class AvaliacaoDesenvolvimento(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_desenvolvimento")
     token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data               = models.DateField(default=timezone.now)
@@ -1280,6 +1302,7 @@ class AvaliacaoSono(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente          = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_sono")
     token             = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data              = models.DateField(default=timezone.now)
@@ -1332,6 +1355,7 @@ class AvaliacaoHabilidadesAdaptativas(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente               = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_habilidades_adaptativas")
     token                  = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data                   = models.DateField(default=timezone.now)
@@ -1378,6 +1402,7 @@ class AvaliacaoComportamentoFuncional(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_comportamento_funcional")
     token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data               = models.DateField(default=timezone.now)
@@ -1429,6 +1454,7 @@ class AvaliacaoRastreioCognitivo(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente                  = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_cognitivo")
     token                     = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data                      = models.DateField(default=timezone.now)
@@ -1480,6 +1506,7 @@ class AvaliacaoPsicopedagogica(models.Model):
     """
     STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente             = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_psicopedagogica")
     token                = models.CharField(max_length=64, unique=True, blank=True, null=True)
     data                 = models.DateField(default=timezone.now)
