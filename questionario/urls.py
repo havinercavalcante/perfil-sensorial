@@ -16,11 +16,8 @@ urlpatterns = [
     path("meu-perfil/", views.meu_perfil, name="meu_perfil"),
     path("privacidade/", views.politica_privacidade, name="politica_privacidade"),
     path("trial-expirado/", views.trial_expirado, name="trial_expirado"),
-    # Pagamentos (fluxo manual com PIX)
+    # Pagamentos (fluxo manual com PIX) — painel gerenciado pelo admin Django
     path("pagamentos/solicitar/", views.solicitar_plano, name="solicitar_plano"),
-    path("pagamentos/painel/", views.painel_pagamentos, name="painel_pagamentos"),
-    path("pagamentos/aprovar/<int:sol_id>/", views.aprovar_solicitacao, name="aprovar_solicitacao"),
-    path("pagamentos/rejeitar/<int:sol_id>/", views.rejeitar_solicitacao, name="rejeitar_solicitacao"),
     # App
     path("", views.index, name="index"),
     path("avaliacoes/pendentes/", views.avaliacoes_pendentes, name="avaliacoes_pendentes"),
