@@ -89,8 +89,9 @@
              font-size:.75rem;color:#374151;background:#fff;cursor:pointer}
 
   /* ── Tag inativo ── */
-  .tag-off{display:inline-block;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;
-           font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:5px}
+  .tag-off{display:inline-block;background:#ef4444;color:#fff;
+           font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:5px}
+  .row-off{background:#fef2f2 !important}
 
   .empty-msg{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.85rem;
              background:#fff;border:1px solid #e5e7eb;border-radius:10px}
@@ -201,9 +202,9 @@
       {% with p=item.perfil dias=item.dias %}
       <tr {% if dias is not None and dias <= 3 %}class="row-crit"{% elif dias is not None and dias <= 7 %}class="row-warn"{% endif %}>
         <td>
-          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
+          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong>
+          {% if not p.user.is_active %} <span class="tag-off">🚫 Desativado</span>{% endif %}<br/>
           <small style="color:#6b7280">{{ p.user.email }}</small>
-          {% if not p.user.is_active %}<span class="tag-off">🚫 Desativado</span>{% endif %}
         </td>
         <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
@@ -212,37 +213,33 @@
         </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
         <td style="white-space:nowrap">
-          <form method="POST" style="display:inline">
-            {% csrf_token %}
-            <input type="hidden" name="action_painel" value="renovar"/>
-            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-            <input type="hidden" name="novo_plano" value="{{ p.plano }}"/>
-            <button type="submit" class="btn-renew"
-                    onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
-              🔄 +30d
-            </button>
-          </form>
-          {% if p.user.is_active %}
-          <form method="POST" style="display:inline;margin-left:.3rem">
-            {% csrf_token %}
-            <input type="hidden" name="action_painel" value="desativar"/>
-            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-            <button type="submit" class="btn-off"
-                    onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}? O acesso será bloqueado imediatamente.')">
-              🚫 Desativar
-            </button>
-          </form>
-          {% else %}
-          <form method="POST" style="display:inline;margin-left:.3rem">
-            {% csrf_token %}
-            <input type="hidden" name="action_painel" value="reativar"/>
-            <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-            <button type="submit" class="btn-on"
-                    onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">
-              ✅ Reativar
-            </button>
-          </form>
-          {% endif %}
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="renovar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <input type="hidden" name="novo_plano" value="{{ p.plano }}"/>
+              <button type="submit" class="btn-renew"
+                      onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">🔄 +30d</button>
+            </form>
+            {% if p.user.is_active %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="desativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-off"
+                      onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">🚫 Desativar</button>
+            </form>
+            {% else %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="reativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-on"
+                      onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">✅ Reativar</button>
+            </form>
+            {% endif %}
+          </div>
         </td>
       </tr>
       {% endwith %}
@@ -273,11 +270,11 @@
     <tbody>
       {% for item in todos_info %}
       {% with p=item.perfil %}
-      <tr {% if not p.user.is_active %}style="opacity:.6;background:#fafafa"{% endif %}>
+      <tr {% if not p.user.is_active %}class="row-off"{% endif %}>
         <td>
-          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
+          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong>
+          {% if not p.user.is_active %} <span class="tag-off">🚫 Desativado</span>{% endif %}<br/>
           <small style="color:#6b7280">{{ p.user.email }}</small>
-          {% if not p.user.is_active %}<br/><span class="tag-off">🚫 Desativado</span>{% endif %}
         </td>
         <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
@@ -285,11 +282,11 @@
           {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}<span style="color:#9ca3af">—</span>{% endif %}
         </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
-        <td>
-          <div style="display:flex;flex-direction:column;gap:.35rem;min-width:160px">
+        <td style="white-space:nowrap">
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
 
             {# ── Renovar / Ativar plano ── #}
-            <form method="POST" style="display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <form method="POST" style="display:inline-flex;align-items:center;gap:.3rem">
               {% csrf_token %}
               <input type="hidden" name="action_painel" value="renovar"/>
               <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
@@ -300,14 +297,10 @@
               </select>
               {% if p.plano != "trial" %}
               <button type="submit" class="btn-renew"
-                      onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">
-                🔄 +30d
-              </button>
+                      onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">🔄 +30d</button>
               {% else %}
               <button type="submit" class="btn-ap" style="font-size:.74rem;padding:.32rem .65rem"
-                      onclick="return confirm('Ativar plano para {{ p.user.get_full_name|default:p.user.username }}?')">
-                ▶ Ativar
-              </button>
+                      onclick="return confirm('Ativar plano para {{ p.user.get_full_name|default:p.user.username }}?')">▶ Ativar</button>
               {% endif %}
             </form>
 
@@ -317,20 +310,16 @@
               {% csrf_token %}
               <input type="hidden" name="action_painel" value="desativar"/>
               <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-              <button type="submit" class="btn-off" style="width:100%"
-                      onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">
-                🚫 Desativar
-              </button>
+              <button type="submit" class="btn-off"
+                      onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">🚫 Desativar</button>
             </form>
             {% else %}
             <form method="POST" style="display:inline">
               {% csrf_token %}
               <input type="hidden" name="action_painel" value="reativar"/>
               <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
-              <button type="submit" class="btn-on" style="width:100%"
-                      onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">
-                ✅ Reativar
-              </button>
+              <button type="submit" class="btn-on"
+                      onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">✅ Reativar</button>
             </form>
             {% endif %}
 
