@@ -171,7 +171,8 @@ class PerfilMedico(models.Model):
     plano = models.CharField(
         "Plano", max_length=10, choices=PLANO_CHOICES, default="trial"
     )
-    trial_inicio = models.DateTimeField("Início do trial", null=True, blank=True)
+    trial_inicio    = models.DateTimeField("Início do trial", null=True, blank=True)
+    plano_expiracao = models.DateTimeField("Expiração do plano", null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     modulos_liberados = models.ManyToManyField(
         ModuloAvaliacao,
@@ -203,8 +204,29 @@ class PerfilMedico(models.Model):
         restantes = 7 - (timezone.now() - self.trial_inicio).days
         return max(restantes, 0)
 
+    @property
+    def plano_ativo(self):
+        """True quando o plano pago (start/plus/elite) ainda está dentro da vigência."""
+        if self.plano == "trial":
+            return self.trial_ativo
+        if self.plano_expiracao is None:
+            return True   # sem data = aprovado manualmente sem vencimento
+        return timezone.now() < self.plano_expiracao
+
+    @property
+    def plano_dias_restantes(self):
+        """Dias restantes do plano pago. Retorna None se não houver data de expiração."""
+        if self.plano == "trial":
+            return self.trial_dias_restantes
+        if self.plano_expiracao is None:
+            return None
+        delta = self.plano_expiracao - timezone.now()
+        return max(delta.days, 0)
+
     def tem_acesso(self, codigo_modulo):
         if self.plano == "trial" and not self.trial_ativo:
+            return False
+        if self.plano != "trial" and not self.plano_ativo:
             return False
         return self.modulos_liberados.filter(codigo=codigo_modulo).exists()
 

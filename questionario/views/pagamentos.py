@@ -102,7 +102,18 @@ def aprovar_solicitacao(request, sol_id):
         # Atualiza perfil do usuário
         perfil, _ = PerfilMedico.objects.get_or_create(user=sol.user)
         perfil.plano = sol.plano
-        perfil.save(update_fields=["plano"])
+        # Renova ou define vencimento: +30 dias a partir de hoje
+        # Se já tinha um plano ativo e não venceu, renova a partir da data atual de expiração
+        agora = timezone.now()
+        if perfil.plano_expiracao and perfil.plano_expiracao > agora:
+            perfil.plano_expiracao = perfil.plano_expiracao + timezone.timedelta(days=30)
+        else:
+            perfil.plano_expiracao = agora + timezone.timedelta(days=30)
+        # Garante que user está ativo
+        if not perfil.user.is_active:
+            perfil.user.is_active = True
+            perfil.user.save(update_fields=["is_active"])
+        perfil.save(update_fields=["plano", "plano_expiracao"])
 
         # Libera módulos do plano
         codigos = MODULOS_POR_PLANO.get(sol.plano, [])
@@ -110,9 +121,14 @@ def aprovar_solicitacao(request, sol_id):
         perfil.modulos_liberados.set(modulos)
 
         # Notifica usuário
-        _notificar_usuario_aprovado(sol)
+        _notificar_usuario_aprovado(sol, perfil.plano_expiracao)
 
-        messages.success(request, f"✅ Plano {sol.get_plano_display()} ativado para {sol.user.get_full_name() or sol.user.username}.")
+        messages.success(
+            request,
+            f"✅ Plano {sol.get_plano_display()} ativado para "
+            f"{sol.user.get_full_name() or sol.user.username} — "
+            f"vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}."
+        )
     return redirect("painel_pagamentos")
 
 
@@ -160,7 +176,7 @@ def _notificar_admin_nova_solicitacao(sol: SolicitacaoPlano, request):
         pass
 
 
-def _notificar_usuario_aprovado(sol: SolicitacaoPlano):
+def _notificar_usuario_aprovado(sol: SolicitacaoPlano, expiracao=None):
     """Envia e-mail ao usuário quando o plano é aprovado."""
     if not sol.user.email:
         return
@@ -169,6 +185,7 @@ def _notificar_usuario_aprovado(sol: SolicitacaoPlano):
         html = render_to_string("questionario/emails/email_plano_aprovado.html", {
             "sol": sol,
             "nome": nome,
+            "expiracao": expiracao,
         })
         send_mail(
             subject=f"IntegraMente — Seu plano {sol.get_plano_display()} foi ativado! 🎉",

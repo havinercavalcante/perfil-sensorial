@@ -142,3 +142,104 @@ def desativar_trials_expirados():
             pass
 
     return f"{total} conta(s) de trial desativada(s)."
+
+
+@shared_task
+def verificar_planos_expirando():
+    """
+    Executa diariamente via Celery Beat.
+    1) Avisa usuários e admin sobre planos vencendo em 3 dias
+    2) Desativa planos vencidos (bloqueia acesso e limpa módulos)
+    3) Envia e-mail ao admin com resumo do dia
+    """
+    from django.conf import settings
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
+    from django.utils import timezone
+    from .models import PerfilMedico
+
+    agora     = timezone.now()
+    em_3_dias = agora + timezone.timedelta(days=3)
+
+    # ── 1) Alertar planos que vencem em exatamente 3 dias ──────────────────────
+    prestes_a_vencer = PerfilMedico.objects.filter(
+        plano__in=("start", "plus", "elite"),
+        plano_expiracao__date=em_3_dias.date(),
+        user__is_active=True,
+    ).select_related("user")
+
+    for perfil in prestes_a_vencer:
+        if perfil.user.email:
+            try:
+                html = render_to_string("questionario/emails/email_plano_vencendo.html", {
+                    "nome": perfil.user.first_name or perfil.user.username,
+                    "plano": perfil.get_plano_display(),
+                    "expiracao": perfil.plano_expiracao,
+                    "url_renovar": "https://integramente.pro/pagamentos/solicitar/",
+                })
+                send_mail(
+                    subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} vence em 3 dias",
+                    message=f"Seu plano vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}. Renove em: https://integramente.pro/pagamentos/solicitar/",
+                    from_email=None,
+                    recipient_list=[perfil.user.email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+    # ── 2) Desativar planos vencidos ───────────────────────────────────────────
+    vencidos = PerfilMedico.objects.filter(
+        plano__in=("start", "plus", "elite"),
+        plano_expiracao__lt=agora,
+        user__is_active=True,
+    ).select_related("user")
+
+    desativados = []
+    for perfil in vencidos:
+        perfil.user.is_active = False
+        perfil.user.save(update_fields=["is_active"])
+        perfil.modulos_liberados.clear()
+        desativados.append(perfil)
+
+        # Avisa o usuário
+        if perfil.user.email:
+            try:
+                html = render_to_string("questionario/emails/email_plano_vencido.html", {
+                    "nome": perfil.user.first_name or perfil.user.username,
+                    "plano": perfil.get_plano_display(),
+                    "url_renovar": "https://integramente.pro/pagamentos/solicitar/",
+                })
+                send_mail(
+                    subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} venceu",
+                    message=f"Seu plano venceu. Renove em: https://integramente.pro/pagamentos/solicitar/",
+                    from_email=None,
+                    recipient_list=[perfil.user.email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+    # ── 3) Resumo para o admin ─────────────────────────────────────────────────
+    if prestes_a_vencer.count() > 0 or len(desativados) > 0:
+        try:
+            admin_email = getattr(settings, "ADMIN_NOTIFY_EMAIL", None) or settings.EMAIL_HOST_USER
+            if admin_email:
+                html = render_to_string("questionario/emails/email_planos_resumo_admin.html", {
+                    "vencendo": list(prestes_a_vencer),
+                    "vencidos": desativados,
+                    "painel_url": "https://integramente.pro/pagamentos/painel/",
+                })
+                send_mail(
+                    subject=f"[IntegraMente] Resumo de planos — {agora.strftime('%d/%m/%Y')}",
+                    message=f"Vencendo em 3 dias: {prestes_a_vencer.count()} | Vencidos hoje: {len(desativados)}",
+                    from_email=None,
+                    recipient_list=[admin_email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+        except Exception:
+            pass
+
+    return f"Alertas: {prestes_a_vencer.count()} | Desativados: {len(desativados)}"
