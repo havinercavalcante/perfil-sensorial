@@ -8,7 +8,7 @@ from django.utils.html import format_html
 from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
-    SolicitacaoPlano, MODULOS_POR_PLANO,
+    SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos,
 )
 
 
@@ -489,11 +489,20 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
             .select_related("user", "aprovado_por")
             .order_by("-aprovado_em")[:30]
         )
+
+        # Assinantes com plano pago
         assinantes = (
             PerfilMedico.objects
             .filter(plano__in=("start", "plus", "elite"), user__is_active=True)
             .select_related("user")
             .order_by("plano_expiracao")
+        )
+
+        # TODOS os profissionais (para visão geral — inclui trial e planos pagos)
+        todos_perfis = (
+            PerfilMedico.objects
+            .select_related("user")
+            .order_by("plano", "user__first_name", "user__last_name")
         )
 
         # Badges de dias restantes para cada assinante (computed)
@@ -506,25 +515,36 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                 "badge": _validade_badge(p),
             })
 
+        # Todos os profissionais com badge
+        todos_info = []
+        for p in todos_perfis:
+            todos_info.append({
+                "perfil": p,
+                "badge": _validade_badge(p),
+            })
+
         # Stats cards
-        total_assinantes = assinantes.count()
-        total_pendentes  = pendentes.count()
+        total_assinantes  = assinantes.count()
+        total_pendentes   = pendentes.count()
+        total_profissionais = todos_perfis.count()
         vencendo_3  = sum(1 for x in assinantes_info if x["dias"] is not None and 0 < x["dias"] <= 3)
         vencendo_7  = sum(1 for x in assinantes_info if x["dias"] is not None and 0 < x["dias"] <= 7)
         vencidos    = sum(1 for x in assinantes_info if x["dias"] is not None and x["dias"] <= 0)
 
         ctx = {
             **self.admin_site.each_context(request),
-            "title":            "Painel de Pagamentos",
-            "opts":             self.model._meta,
-            "pendentes":        pendentes,
-            "historico":        historico,
-            "assinantes_info":  assinantes_info,
-            "total_assinantes": total_assinantes,
-            "total_pendentes":  total_pendentes,
-            "vencendo_3":       vencendo_3,
-            "vencendo_7":       vencendo_7,
-            "vencidos":         vencidos,
+            "title":               "Painel de Pagamentos",
+            "opts":                self.model._meta,
+            "pendentes":           pendentes,
+            "historico":           historico,
+            "assinantes_info":     assinantes_info,
+            "todos_info":          todos_info,
+            "total_assinantes":    total_assinantes,
+            "total_pendentes":     total_pendentes,
+            "total_profissionais": total_profissionais,
+            "vencendo_3":          vencendo_3,
+            "vencendo_7":          vencendo_7,
+            "vencidos":            vencidos,
         }
         return render(request, "admin/questionario/solicitacaoplano/painel.html", ctx)
 
@@ -570,3 +590,28 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
         if obj.observacoes:
             return obj.observacoes[:80] + ("…" if len(obj.observacoes) > 80 else "")
         return "—"
+
+
+# ── Proxy: entrada direta "💳 Painel de Pagamentos" no sidebar do admin ───────
+
+@admin.register(PainelPagamentos)
+class PainelPagamentosAdmin(admin.ModelAdmin):
+    """
+    Aparece no sidebar do admin como '💳 Painel de Pagamentos'.
+    Redireciona para a painel_view registrada em SolicitacaoPlanoAdmin.
+    """
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect("admin:pagamentos_painel")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff

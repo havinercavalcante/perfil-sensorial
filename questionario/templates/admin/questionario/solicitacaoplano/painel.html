@@ -12,79 +12,72 @@
 {% endblock %}
 
 {% block content_title %}
-<h1 style="display:flex;align-items:center;gap:.5rem;">
-  💳 Painel de Pagamentos
-</h1>
+<h1 style="display:flex;align-items:center;gap:.5rem;">💳 Painel de Pagamentos</h1>
 {% endblock %}
 
 {% block content %}
 <style>
-  /* ── Cards de estatística ── */
-  .pay-stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.75rem}
-  .pay-stat{flex:1;min-width:130px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;
-            padding:1rem 1.1rem;box-shadow:0 1px 6px rgba(0,0,0,.06);text-align:center}
-  .pay-stat .num{font-size:1.9rem;font-weight:800;line-height:1.1}
-  .pay-stat .lbl{font-size:.75rem;color:#6b7280;margin-top:.25rem;font-weight:500}
-  .stat-blue  .num{color:#0c3c7b}
-  .stat-warn  .num{color:#d97706}
-  .stat-crit  .num{color:#dc2626}
-  .stat-ok    .num{color:#059669}
-  .stat-pend  .num{color:#f59e0b}
+  /* ── Stats ── */
+  .pay-stats{display:flex;gap:.85rem;flex-wrap:wrap;margin-bottom:1.75rem}
+  .pay-stat{flex:1;min-width:110px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;
+            padding:.85rem 1rem;box-shadow:0 1px 5px rgba(0,0,0,.06);text-align:center}
+  .pay-stat .num{font-size:1.8rem;font-weight:800;line-height:1.1}
+  .pay-stat .lbl{font-size:.72rem;color:#6b7280;margin-top:.2rem;font-weight:500}
+  .stat-blue .num{color:#0c3c7b}  .stat-ok .num{color:#059669}
+  .stat-warn .num{color:#d97706}  .stat-crit .num{color:#dc2626}
+  .stat-pend .num{color:#f59e0b}  .stat-gray .num{color:#6b7280}
 
   /* ── Seções ── */
   .pay-section{margin-bottom:2rem}
-  .pay-section h2{font-size:.95rem;font-weight:800;color:#0c3c7b;
-                  border-bottom:2px solid #e5e7eb;padding-bottom:.5rem;margin-bottom:1rem;
+  .pay-section h2{font-size:.92rem;font-weight:800;color:#0c3c7b;
+                  border-bottom:2px solid #e5e7eb;padding-bottom:.45rem;margin-bottom:.9rem;
                   display:flex;align-items:center;gap:.5rem}
-  .pay-count{background:#0c3c7b;color:#fff;font-size:.68rem;padding:.15rem .5rem;border-radius:20px;font-weight:700}
+  .pay-count{background:#0c3c7b;color:#fff;font-size:.66rem;padding:.15rem .5rem;border-radius:20px;font-weight:700}
 
   /* ── Tabela ── */
   .pay-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;
-             box-shadow:0 1px 6px rgba(0,0,0,.06);border:1px solid #e5e7eb;font-size:.83rem}
-  .pay-table th{background:#f0f4f8;padding:.6rem 1rem;text-align:left;font-weight:700;
-                color:#374151;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
-  .pay-table td{padding:.65rem 1rem;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:middle}
+             box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e5e7eb;font-size:.82rem}
+  .pay-table th{background:#f0f4f8;padding:.55rem .9rem;text-align:left;font-weight:700;
+                color:#374151;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+  .pay-table td{padding:.6rem .9rem;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:middle}
   .pay-table tr:last-child td{border-bottom:none}
-
-  /* ── Badges ── */
-  .badge{display:inline-block;padding:2px 9px;border-radius:5px;font-size:.76rem;font-weight:700;color:#fff;white-space:nowrap}
-  .b-start{background:#3b82f6}.b-plus{background:#8b5cf6}.b-elite{background:#0c3c7b}
-  .b-trial{background:#6366f1}.b-pend{background:#f59e0b}.b-ok{background:#10b981}.b-rej{background:#ef4444}
-  .b-val-ok  {background:#ecfdf5;color:#059669;border:1px solid #6ee7b7}
-  .b-val-warn{background:#fffbeb;color:#d97706;border:1px solid #fcd34d}
-  .b-val-crit{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5}
-
-  /* ── Cards de solicitação pendente ── */
-  .sol-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:.85rem;
-            box-shadow:0 1px 6px rgba(0,0,0,.05);overflow:hidden}
-  .sol-head{display:flex;align-items:center;gap:.85rem;padding:.85rem 1.1rem;
-            border-bottom:1px solid #f3f4f6;flex-wrap:wrap}
-  .sol-info{flex:1;min-width:160px}
-  .sol-name{font-weight:700;color:#0c3c7b;font-size:.9rem}
-  .sol-email{font-size:.76rem;color:#6b7280;margin-top:.1rem}
-  .sol-date{font-size:.73rem;color:#9ca3af;margin-top:.1rem}
-
-  .sol-actions{padding:.75rem 1.1rem;display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap;background:#fafafa}
-  .nota-wrap{flex:1;min-width:180px}
-  .nota-wrap label{font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:.25rem}
-  .nota-wrap textarea{width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:.45rem .65rem;
-                      font-size:.8rem;font-family:inherit;resize:none;color:#374151}
-  .nota-wrap textarea:focus{outline:none;border-color:#39abcb}
-
-  .btn-ap{background:#10b981;color:#fff;border:none;padding:.45rem 1rem;border-radius:6px;
-          font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
-  .btn-ap:hover{background:#059669}
-  .btn-rj{background:#ef4444;color:#fff;border:none;padding:.45rem .9rem;border-radius:6px;
-          font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem}
-  .btn-rj:hover{background:#dc2626}
-
-  .empty-msg{text-align:center;padding:1.75rem 1rem;color:#9ca3af;font-size:.88rem;
-             background:#fff;border:1px solid #e5e7eb;border-radius:10px}
-  .empty-msg .em-icon{font-size:2rem;display:block;margin-bottom:.4rem}
-
-  /* linha colorida para vencimentos urgentes */
   .row-crit{background:#fff8f8 !important}
   .row-warn{background:#fffef0 !important}
+
+  /* ── Badges ── */
+  .badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.75rem;font-weight:700;color:#fff;white-space:nowrap}
+  .b-start{background:#3b82f6}.b-plus{background:#8b5cf6}.b-elite{background:#0c3c7b}
+  .b-trial{background:#6366f1}.b-pend{background:#f59e0b}.b-ok{background:#10b981}.b-rej{background:#ef4444}
+
+  /* ── Solicitações pendentes ── */
+  .sol-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:.8rem;
+            box-shadow:0 1px 5px rgba(0,0,0,.05);overflow:hidden}
+  .sol-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;
+            border-bottom:1px solid #f3f4f6;flex-wrap:wrap}
+  .sol-info{flex:1;min-width:160px}
+  .sol-name{font-weight:700;color:#0c3c7b;font-size:.88rem}
+  .sol-email{font-size:.74rem;color:#6b7280;margin-top:.1rem}
+  .sol-date{font-size:.72rem;color:#9ca3af;margin-top:.1rem}
+  .sol-actions{padding:.7rem 1rem;display:flex;gap:.55rem;align-items:flex-end;flex-wrap:wrap;background:#fafafa}
+  .nota-wrap{flex:1;min-width:180px}
+  .nota-wrap label{font-size:.7rem;font-weight:600;color:#6b7280;display:block;margin-bottom:.25rem}
+  .nota-wrap textarea{width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:.4rem .6rem;
+                      font-size:.79rem;font-family:inherit;resize:none;color:#374151}
+  .nota-wrap textarea:focus{outline:none;border-color:#39abcb}
+  .btn-ap{background:#10b981;color:#fff;border:none;padding:.4rem .9rem;border-radius:6px;
+          font-size:.78rem;font-weight:700;cursor:pointer}
+  .btn-ap:hover{background:#059669}
+  .btn-rj{background:#ef4444;color:#fff;border:none;padding:.4rem .8rem;border-radius:6px;
+          font-size:.78rem;font-weight:700;cursor:pointer}
+  .btn-rj:hover{background:#dc2626}
+
+  .empty-msg{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.85rem;
+             background:#fff;border:1px solid #e5e7eb;border-radius:10px}
+  .empty-icon{font-size:1.8rem;display:block;margin-bottom:.35rem}
+
+  /* collapsible todos */
+  details summary{cursor:pointer;font-size:.8rem;color:#39abcb;font-weight:600;margin-top:.5rem;user-select:none}
+  details summary::-webkit-details-marker{color:#39abcb}
 </style>
 
 {% if messages %}
@@ -95,15 +88,19 @@
 </ul>
 {% endif %}
 
-<!-- ── CARDS DE ESTATÍSTICA ── -->
+<!-- ── STATS ── -->
 <div class="pay-stats">
+  <div class="pay-stat stat-gray">
+    <div class="num">{{ total_profissionais }}</div>
+    <div class="lbl">Total de<br/>profissionais</div>
+  </div>
   <div class="pay-stat stat-blue">
     <div class="num">{{ total_assinantes }}</div>
-    <div class="lbl">Assinantes<br/>ativos</div>
+    <div class="lbl">Planos<br/>pagos ativos</div>
   </div>
   <div class="pay-stat stat-pend">
     <div class="num">{{ total_pendentes }}</div>
-    <div class="lbl">Solicitações<br/>pendentes</div>
+    <div class="lbl">Pendentes<br/>de aprovação</div>
   </div>
   <div class="pay-stat stat-warn">
     <div class="num">{{ vencendo_7 }}</div>
@@ -122,7 +119,6 @@
 <!-- ── PENDENTES ── -->
 <div class="pay-section">
   <h2>⏳ Solicitações Pendentes <span class="pay-count">{{ total_pendentes }}</span></h2>
-
   {% if pendentes %}
     {% for sol in pendentes %}
     <div class="sol-card">
@@ -135,30 +131,25 @@
         <span class="badge b-{{ sol.plano }}">{{ sol.get_plano_display }}</span>
         <span class="badge b-pend">⏳ Pendente</span>
       </div>
-
       {% if sol.observacoes %}
-      <div style="padding:.6rem 1.1rem;background:#f0f9ff;font-size:.8rem;color:#374151;border-bottom:1px solid #e0f2fe">
+      <div style="padding:.5rem 1rem;background:#f0f9ff;font-size:.78rem;color:#374151;border-bottom:1px solid #e0f2fe">
         <strong style="color:#0c3c7b">Obs:</strong> {{ sol.observacoes }}
       </div>
       {% endif %}
-
       <div class="sol-actions">
-        <!-- Aprovar -->
-        <form method="POST" style="display:flex;gap:.6rem;align-items:flex-end;flex:1;flex-wrap:wrap">
+        <form method="POST" style="display:flex;gap:.55rem;align-items:flex-end;flex:1;flex-wrap:wrap">
           {% csrf_token %}
           <input type="hidden" name="action_painel" value="aprovar"/>
           <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
           <div class="nota-wrap">
             <label>Nota para o usuário (opcional)</label>
-            <textarea name="nota_admin" rows="2" placeholder="Ex: Pagamento confirmado! Acesso liberado até dd/mm/aaaa"></textarea>
+            <textarea name="nota_admin" rows="2" placeholder="Ex: Pagamento confirmado! Acesso liberado."></textarea>
           </div>
           <button type="submit" class="btn-ap"
                   onclick="return confirm('Confirma aprovação do plano {{ sol.get_plano_display }} para {{ sol.user.get_full_name|default:sol.user.username }}?')">
             ✅ Aprovar e Ativar
           </button>
         </form>
-
-        <!-- Rejeitar -->
         <form method="POST">
           {% csrf_token %}
           <input type="hidden" name="action_painel" value="rejeitar"/>
@@ -174,27 +165,20 @@
     {% endfor %}
   {% else %}
     <div class="empty-msg">
-      <span class="em-icon">🎉</span>
+      <span class="empty-icon">🎉</span>
       Nenhuma solicitação pendente. Tudo em dia!
     </div>
   {% endif %}
 </div>
 
-<!-- ── ASSINANTES ATIVOS ── -->
+<!-- ── ASSINANTES PAGOS ── -->
 <div class="pay-section">
-  <h2>👥 Assinantes com Plano Ativo <span class="pay-count">{{ total_assinantes }}</span></h2>
-
+  <h2>💰 Planos Pagos Ativos <span class="pay-count">{{ total_assinantes }}</span></h2>
   {% if assinantes_info %}
   <table class="pay-table">
-    <thead>
-      <tr>
-        <th>Profissional</th>
-        <th>Plano</th>
-        <th>Dias restantes</th>
-        <th>Vence em</th>
-        <th>Pacientes</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Profissional</th><th>Plano</th><th>Validade</th><th>Vence em</th><th>Pacientes</th>
+    </tr></thead>
     <tbody>
       {% for item in assinantes_info %}
       {% with p=item.perfil dias=item.dias %}
@@ -205,7 +189,7 @@
         </td>
         <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
         <td>{{ item.badge }}</td>
-        <td style="font-size:.8rem;color:#6b7280">
+        <td style="font-size:.79rem;color:#6b7280">
           {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}—{% endif %}
         </td>
         <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
@@ -215,30 +199,63 @@
     </tbody>
   </table>
   {% else %}
-    <div class="empty-msg">Nenhum assinante com plano ativo ainda.</div>
+    <div class="empty-msg">Nenhum assinante com plano pago ativo ainda.</div>
+  {% endif %}
+</div>
+
+<!-- ── TODOS OS PROFISSIONAIS ── -->
+<div class="pay-section">
+  <h2>👥 Todos os Profissionais <span class="pay-count">{{ total_profissionais }}</span></h2>
+  <p style="font-size:.78rem;color:#6b7280;margin-bottom:.75rem">
+    Profissionais cadastrados — inclui trial e planos pagos. Útil para ver quem ainda não assinou.
+  </p>
+  {% if todos_info %}
+  <table class="pay-table">
+    <thead><tr>
+      <th>Profissional</th><th>Plano atual</th><th>Validade</th><th>Pacientes</th><th>Ativo?</th>
+    </tr></thead>
+    <tbody>
+      {% for item in todos_info %}
+      {% with p=item.perfil %}
+      <tr>
+        <td>
+          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong><br/>
+          <small style="color:#6b7280">{{ p.user.email }}</small>
+        </td>
+        <td>
+          <span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span>
+        </td>
+        <td>{{ item.badge }}</td>
+        <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
+        <td>
+          {% if p.user.is_active %}
+            <span style="color:#10b981;font-weight:700;font-size:.78rem">✅ Sim</span>
+          {% else %}
+            <span style="color:#ef4444;font-weight:700;font-size:.78rem">❌ Não</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div class="empty-msg">Nenhum profissional cadastrado ainda.</div>
   {% endif %}
 </div>
 
 <!-- ── HISTÓRICO ── -->
 <div class="pay-section">
-  <h2>📋 Histórico Recente</h2>
-
+  <h2>📋 Histórico de Aprovações/Rejeições</h2>
   {% if historico %}
   <table class="pay-table">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Profissional</th>
-        <th>Plano</th>
-        <th>Status</th>
-        <th>Aprovado por</th>
-        <th>Nota</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Data</th><th>Profissional</th><th>Plano</th><th>Status</th><th>Aprovado por</th><th>Nota</th>
+    </tr></thead>
     <tbody>
       {% for sol in historico %}
       <tr>
-        <td style="white-space:nowrap;font-size:.8rem">{{ sol.aprovado_em|date:"d/m/Y H:i"|default:"—" }}</td>
+        <td style="white-space:nowrap;font-size:.78rem">{{ sol.aprovado_em|date:"d/m/Y H:i"|default:"—" }}</td>
         <td>
           <strong style="color:#0c3c7b">{{ sol.user.get_full_name|default:sol.user.username }}</strong><br/>
           <small style="color:#6b7280">{{ sol.user.email }}</small>
@@ -251,8 +268,8 @@
             <span class="badge b-rej">❌ Rejeitado</span>
           {% endif %}
         </td>
-        <td style="font-size:.8rem">{{ sol.aprovado_por.get_full_name|default:sol.aprovado_por.username|default:"—" }}</td>
-        <td style="font-size:.78rem;max-width:180px;color:#6b7280">{{ sol.nota_admin|default:"—" }}</td>
+        <td style="font-size:.78rem">{{ sol.aprovado_por.get_full_name|default:sol.aprovado_por.username|default:"—" }}</td>
+        <td style="font-size:.76rem;max-width:180px;color:#6b7280">{{ sol.nota_admin|default:"—" }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -264,8 +281,8 @@
 
 <div style="margin-bottom:2rem;text-align:right">
   <a href="{% url 'painel_pagamentos' %}" target="_blank"
-     style="font-size:.8rem;color:#39abcb;text-decoration:none;font-weight:600">
-    🔗 Abrir painel externo (/pagamentos/painel/) →
+     style="font-size:.78rem;color:#39abcb;text-decoration:none;font-weight:600">
+    🔗 Abrir painel externo →
   </a>
 </div>
 
