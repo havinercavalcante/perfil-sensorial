@@ -36,7 +36,7 @@
 {% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
 {% block content %}
 
-<div class="dashboard-header">
+<div id="tour-dash-header" class="dashboard-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
       <h1><i data-lucide="bar-chart-2" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>{{ paciente.nome }}</h1>
@@ -56,7 +56,7 @@
 </div>
 
 <!-- QUADRANTES -->
-<div class="quadrantes-grid">
+<div id="tour-dash-quadrantes" class="quadrantes-grid">
   {% for q in quadrantes %}
   <div class="quad-card" style="background:{{ q.cor }};">
     <div class="quad-nome">{{ q.id }} · {{ q.nome }}</div>
@@ -69,7 +69,7 @@
 </div>
 
 <!-- GRÁFICOS -->
-<div class="charts-row">
+<div id="tour-dash-graficos" class="charts-row">
   <div class="card">
     <div class="card-title">🕸 Perfil por Seção Sensorial</div>
     <canvas id="radarChart" height="260"></canvas>
@@ -81,7 +81,7 @@
 </div>
 
 <!-- SEÇÕES DETALHADAS -->
-<div class="card">
+<div id="tour-dash-secoes" class="card">
   <div class="card-title"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> Pontuações por Seção</div>
   <div class="secoes-grid">
     {% for s in secoes %}
@@ -243,5 +243,84 @@ function salvarObs() {
     setTimeout(() => status.textContent = '', 3000);
   });
 }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_dashboard_v1';
+
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="bar-chart-2" ' + ICO + '></i> Dashboard de Avaliação',
+        description: 'Este é o resultado completo da avaliação sensorial. Aqui você interpreta os dados e planeja as intervenções.'
+      }
+    },
+    {
+      element: '#tour-dash-header',
+      popover: {
+        title: '<i data-lucide="file-text" ' + ICO + '></i> Cabeçalho do Resultado',
+        description: 'Dados do paciente, data da avaliação e ações rápidas: <strong>Gerar Laudo</strong> (relatório em texto) e <strong>Exportar PDF</strong> para imprimir.',
+        side: 'bottom', align: 'start'
+      }
+    },
+    {
+      element: '#tour-dash-quadrantes',
+      popover: {
+        title: '<i data-lucide="layout-grid" ' + ICO + '></i> Quadrantes Sensoriais',
+        description: 'Os 4 quadrantes (EX, EV, SN, OB) mostram a pontuação em cada padrão de processamento sensorial, com classificação colorida.',
+        side: 'bottom', align: 'start'
+      }
+    },
+    {
+      element: '#tour-dash-graficos',
+      popover: {
+        title: '<i data-lucide="trending-up" ' + ICO + '></i> Gráficos',
+        description: 'O gráfico de radar mostra o perfil por seção sensorial. O gráfico de barras compara os quadrantes — facilitando a visualização do padrão predominante.',
+        side: 'top', align: 'start'
+      }
+    },
+    {
+      element: '#tour-dash-secoes',
+      popover: {
+        title: '<i data-lucide="clipboard-list" ' + ICO + '></i> Pontuações por Seção',
+        description: 'Cada seção sensorial (Auditivo, Visual, Tátil, etc.) com sua pontuação e classificação individual, representada em barras de progresso.',
+        side: 'top', align: 'start'
+      }
+    },
+    {
+      popover: {
+        title: '<i data-lucide="check-circle" ' + ICO + '></i> Resultado interpretado!',
+        description: 'Use o campo de <strong>Observações Clínicas</strong> no final da página para registrar suas hipóteses e recomendações. Depois clique em <strong>Gerar Laudo</strong> para criar o relatório.'
+      }
+    }
+  ];
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      showProgress: true,
+      progressText: 'Etapa {{current}} de {{total}}',
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function() { if (window.lucide) lucide.createIcons(); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}

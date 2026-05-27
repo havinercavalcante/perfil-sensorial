@@ -77,14 +77,14 @@
 {% block content %}
 <div style="max-width: 680px; margin: 0 auto;">
 
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;"><i data-lucide="link" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Gerar Link de Questionário</h2>
+  <h2 id="tour-gl-titulo" style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;"><i data-lucide="link" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Gerar Link de Questionário</h2>
   <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:1.5rem;">
     Selecione o tipo de avaliação, copie o link e envie para o responsável.
   </p>
 
   <div class="card">
     <div class="card-title">Tipo de avaliação</div>
-    <div class="tipos-grid">
+    <div id="tour-gl-tipos" class="tipos-grid">
       {% if 'sensorial' in modulos_liberados %}
       <button class="tipo-card" onclick="gerarLink('sensorial', this)">
         <span class="tc-icon"><i data-lucide="brain" style="width:1.8rem;height:1.8rem;"></i></span>
@@ -503,5 +503,75 @@ function mostrarMsgEmail(texto, cor) {
 document.getElementById("modalEmail").addEventListener("click", function(e) {
   if (e.target === this) fecharModalEmail();
 });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_gerar_v1';
+
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="link" ' + ICO + '></i> Gerar Link de Questionário',
+        description: 'Aqui você cria links de avaliação para enviar ao responsável do paciente. Rápido, sem precisar cadastrar antes.'
+      }
+    },
+    {
+      element: '#tour-gl-tipos',
+      popover: {
+        title: '<i data-lucide="clipboard-list" ' + ICO + '></i> Escolha o tipo de avaliação',
+        description: 'Selecione o instrumento desejado — Perfil Sensorial, Vineland, SPM, entre outros. Os tipos disponíveis dependem do seu plano.',
+        side: 'top', align: 'start'
+      }
+    },
+    {
+      element: '#linkResult',
+      popover: {
+        title: '<i data-lucide="mail" ' + ICO + '></i> Link gerado',
+        description: 'Após selecionar, o link aparece aqui. Copie, envie pelo <strong>WhatsApp</strong> ou por <strong>e-mail</strong> diretamente desta tela.',
+        side: 'top', align: 'start'
+      }
+    },
+    {
+      popover: {
+        title: '<i data-lucide="check-circle" ' + ICO + '></i> Pronto!',
+        description: 'Selecione um tipo de avaliação para gerar o link agora mesmo. O responsável acessa pelo celular e preenche sem precisar criar conta.'
+      }
+    }
+  ];
+
+  window.startTour = function(force) {
+    // Se o linkResult estiver oculto, remover esse passo do tour
+    var steps = etapas.filter(function(s) {
+      if (!s.element) return true;
+      var el = document.querySelector(s.element);
+      return el && el.offsetParent !== null;
+    });
+
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      showProgress: true,
+      progressText: 'Etapa {{current}} de {{total}}',
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function() { if (window.lucide) lucide.createIcons(); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: steps
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}

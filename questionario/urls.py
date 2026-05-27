@@ -18,6 +18,7 @@ urlpatterns = [
     path("trial-expirado/", views.trial_expirado, name="trial_expirado"),
     # App
     path("", views.index, name="index"),
+    path("avaliacoes/pendentes/", views.avaliacoes_pendentes, name="avaliacoes_pendentes"),
     path("pacientes/", views.lista_pacientes, name="lista_pacientes"),
     path("pacientes/novo/", views.novo_paciente, name="novo_paciente"),
     path("pacientes/<uuid:paciente_id>/", views.detalhe_paciente, name="detalhe_paciente"),
