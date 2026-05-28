@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
@@ -22,7 +22,7 @@ def _validade_badge(perfil):
     if p.plano != "trial" and p.plano_expiracao:
         dias = p.plano_dias_restantes
         if dias <= 0:
-            return format_html(
+            return mark_safe(
                 '<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;'
                 'border-radius:4px;font-size:.78rem;font-weight:700;">⛔ Vencido</span>'
             )
@@ -50,16 +50,16 @@ def _validade_badge(perfil):
 
     # Plano pago sem data de expiração
     if p.plano != "trial" and not p.plano_expiracao:
-        return format_html(
+        return mark_safe(
             '<span style="color:#10b981;font-weight:600;font-size:.8rem;">✅ Ativo</span>'
         )
 
     # Trial
     if p.trial_inicio is None:
-        return format_html('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
+        return mark_safe('<span style="color:#aaa;font-size:.8rem;">sem data</span>')
     dias = p.trial_dias_restantes
     if dias <= 0:
-        return format_html(
+        return mark_safe(
             '<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;'
             'border-radius:4px;font-size:.78rem;font-weight:700;">⛔ Trial expirado</span>'
         )
