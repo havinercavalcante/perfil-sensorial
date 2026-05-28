@@ -64,6 +64,12 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# Permite que usuários com is_active=False façam login
+# (o middleware redireciona para /planos/ após o login)
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.AllowAllUsersModelBackend',
+]
+
 # ── Segurança HTTPS (ativas em produção, desligadas com DEBUG=True) ───────────
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
@@ -96,6 +102,13 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# ── Configurações de pagamento manual (PIX) ────────────────────────────────────
+PIX_KEY          = os.environ.get('PIX_KEY', '06164397332')
+PIX_BENEFICIARIO = os.environ.get('PIX_BENEFICIARIO', 'Haviner Cavalcante Nunes de Souza')
+PIX_BANCO        = os.environ.get('PIX_BANCO', 'Nubank')
+# E-mail do admin que recebe notificação de nova solicitação de plano
+ADMIN_NOTIFY_EMAIL = os.environ.get('ADMIN_NOTIFY_EMAIL', EMAIL_HOST_USER)
+
 # ── Celery ────────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
@@ -107,6 +120,10 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_BEAT_SCHEDULE = {
     "desativar-trials-expirados": {
         "task": "questionario.tasks.desativar_trials_expirados",
+        "schedule": 86400,  # a cada 24 horas
+    },
+    "verificar-planos-expirando": {
+        "task": "questionario.tasks.verificar_planos_expirando",
         "schedule": 86400,  # a cada 24 horas
     },
 }

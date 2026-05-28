@@ -1,0 +1,375 @@
+{% extends "questionario/base.html" %}
+{% load static %}
+
+{% block title %}Escolher Plano — IntegraMente{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── layout ── */
+  .plano-wrap{max-width:780px;margin:0 auto}
+  .page-header{text-align:center;margin-bottom:2rem}
+  .page-header h1{font-size:1.5rem;font-weight:800;color:var(--primary-dark);margin-bottom:.35rem}
+  .page-header p{color:#4a7a9b;font-size:.92rem}
+
+  /* ── grid de planos ── */
+  .planos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.75rem}
+  @media(max-width:640px){.planos-grid{grid-template-columns:1fr}}
+  .plano-card{border:2px solid var(--border);border-radius:14px;padding:1.3rem;cursor:pointer;
+              transition:all .2s;position:relative;background:#fff}
+  .plano-card:hover,.plano-card.ativo{border-color:var(--primary-dark);
+              box-shadow:0 8px 24px rgba(12,60,123,.13)}
+  .plano-card.ativo::after{content:'✓';position:absolute;top:.6rem;right:.7rem;
+              background:var(--primary-dark);color:#fff;width:22px;height:22px;border-radius:50%;
+              display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800}
+  .plano-card input[type=radio]{display:none}
+  .plano-popular{background:#0c3c7b;border-color:#0c3c7b}
+  .plano-popular .plano-nome,.plano-popular .plano-preco,.plano-popular .plano-modulos li{color:#fff}
+  .plano-popular .plano-desc{color:rgba(255,255,255,.7)}
+  .plano-nome{font-size:1.05rem;font-weight:800;color:var(--primary-dark);margin-bottom:.25rem}
+  .plano-preco{font-size:1.4rem;font-weight:900;color:var(--primary-dark);margin-bottom:.5rem}
+  .plano-preco span{font-size:.8rem;font-weight:500}
+  .plano-desc{font-size:.78rem;color:#4a7a9b;margin-bottom:.7rem}
+  .plano-modulos{font-size:.75rem;color:#4a7a9b;padding-left:1rem}
+  .plano-modulos li{margin-bottom:.2rem}
+  .badge-popular{display:inline-block;background:#10b981;color:#fff;font-size:.65rem;font-weight:700;
+                 padding:.15rem .5rem;border-radius:20px;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.06em}
+
+  /* ── valor ── */
+  .valor-box{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;
+             padding:.85rem 1.2rem;margin-bottom:1.25rem;text-align:center}
+  .valor-box strong{color:#065f46;font-size:.97rem}
+
+  /* ── pix ── */
+  .pix-box{background:var(--bg);border:1px solid var(--border);border-radius:14px;
+           padding:1.3rem;margin-bottom:1.75rem}
+  .pix-title{display:flex;align-items:center;gap:.5rem;font-weight:700;
+             color:var(--primary-dark);font-size:.93rem;margin-bottom:.9rem}
+  .pix-row{display:flex;justify-content:space-between;align-items:center;
+           padding:.5rem 0;border-bottom:1px solid var(--border)}
+  .pix-row:last-child{border-bottom:none}
+  .pix-label{font-size:.8rem;color:#4a7a9b;font-weight:500}
+  .pix-value{font-size:.88rem;font-weight:700;color:var(--primary-dark)}
+  .pix-value.highlight{font-size:1.05rem;color:#0c3c7b}
+  .copy-btn{background:none;border:1px solid var(--border);color:var(--primary);
+            font-size:.75rem;font-weight:600;padding:.28rem .65rem;border-radius:6px;
+            cursor:pointer;transition:all .15s}
+  .copy-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  /* ── botão submit ── */
+  .btn-solicitar{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;
+                 padding:.95rem;background:linear-gradient(135deg,#0c3c7b,#39abcb);
+                 color:#fff;border:none;border-radius:12px;font-size:.97rem;font-weight:700;
+                 cursor:pointer;transition:all .2s;margin-top:.5rem}
+  .btn-solicitar:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(57,171,203,.4)}
+
+  /* ── pendente ── */
+  .pendente-box{background:#fffbeb;border:2px solid #fcd34d;border-radius:14px;
+                padding:1.5rem;text-align:center}
+  .pendente-box h3{color:#92400e;font-size:1rem;font-weight:700;margin-bottom:.5rem}
+  .pendente-box p{color:#78350f;font-size:.875rem;line-height:1.6}
+  .pendente-badge{display:inline-flex;align-items:center;gap:.4rem;background:#f59e0b;
+                  color:#fff;padding:.3rem .85rem;border-radius:20px;font-size:.78rem;
+                  font-weight:700;margin-bottom:.75rem}
+
+  /* ── status card ── */
+  .status-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+               margin-bottom:1.25rem;overflow:hidden}
+  .status-header{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.1rem;
+                 background:var(--bg);border-bottom:1px solid var(--border);
+                 font-weight:700;font-size:.88rem;color:var(--primary-dark)}
+  .status-body{padding:1rem 1.1rem}
+  .status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+  @media(max-width:600px){.status-grid{grid-template-columns:repeat(2,1fr)}}
+  .status-item{display:flex;flex-direction:column;gap:.2rem}
+  .status-label{font-size:.72rem;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+  .status-value{font-size:.95rem;font-weight:700;color:var(--primary-dark)}
+  .txt-ok{color:#059669}
+  .txt-warn{color:#d97706}
+  .txt-danger{color:#dc2626}
+
+  /* ── badges de plano ── */
+  .badge-plano{display:inline-block;padding:.15rem .55rem;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .badge-trial{background:#f3f4f6;color:#374151}
+  .badge-start{background:#dbeafe;color:#1d4ed8}
+  .badge-plus{background:#0c3c7b;color:#fff}
+  .badge-elite{background:#7c3aed;color:#fff}
+
+  /* ── histórico ── */
+  .historico-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+                  margin-bottom:1.75rem;overflow:hidden}
+  .historico-header{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.1rem;
+                    background:var(--bg);border-bottom:1px solid var(--border);
+                    font-weight:700;font-size:.88rem;color:var(--primary-dark)}
+  .hist-count{margin-left:auto;background:#e0f2fe;color:#0369a1;padding:.15rem .6rem;
+              border-radius:20px;font-size:.72rem;font-weight:600}
+  .historico-body{overflow-x:auto}
+  .hist-table{width:100%;border-collapse:collapse;font-size:.82rem}
+  .hist-table th{padding:.55rem 1rem;text-align:left;font-size:.72rem;font-weight:600;
+                 color:#6b7280;text-transform:uppercase;letter-spacing:.04em;
+                 border-bottom:1px solid var(--border);background:var(--bg)}
+  .hist-table td{padding:.6rem 1rem;border-bottom:1px solid var(--border);color:var(--primary-dark)}
+  .hist-table tr:last-child td{border-bottom:none}
+  .hist-nota{color:#6b7280;font-size:.78rem}
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'index' %}" class="btn-back">
+  <i data-lucide="arrow-left" style="width:15px;height:15px"></i> Voltar ao painel
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="plano-wrap">
+
+  {% if not request.user.is_active %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;font-size:.88rem;color:#991b1b;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    <span><strong>Seu acesso está suspenso.</strong> Realize o pagamento via PIX, solicite a ativação e aguarde a confirmação para voltar a usar o sistema.</span>
+  </div>
+  {% endif %}
+
+  <!-- ── Resumo do plano atual ─────────────────────────────────── -->
+  {% if perfil.plano != "trial" or total_meses_pagos > 0 %}
+  <div class="status-card">
+    <div class="status-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+      Meu Plano Atual
+    </div>
+    <div class="status-body">
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="status-label">Plano</span>
+          <span class="status-value">
+            {% if perfil.plano == "trial" %}
+              <span class="badge-plano badge-trial">Trial</span>
+            {% elif perfil.plano == "start" %}
+              <span class="badge-plano badge-start">START</span>
+            {% elif perfil.plano == "plus" %}
+              <span class="badge-plano badge-plus">PLUS</span>
+            {% elif perfil.plano == "elite" %}
+              <span class="badge-plano badge-elite">ELITE</span>
+            {% else %}
+              <span class="badge-plano badge-trial">—</span>
+            {% endif %}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Vencimento</span>
+          <span class="status-value">
+            {% if perfil.plano_expiracao %}
+              {{ perfil.plano_expiracao|date:"d/m/Y" }}
+            {% else %}
+              —
+            {% endif %}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Dias restantes</span>
+          {% with dias=perfil.plano_dias_restantes %}
+          <span class="status-value {% if dias <= 5 %}txt-danger{% elif dias <= 10 %}txt-warn{% else %}txt-ok{% endif %}">
+            {% if perfil.plano_expiracao %}
+              {{ dias }} dia{{ dias|pluralize }}
+            {% else %}
+              —
+            {% endif %}
+          </span>
+          {% endwith %}
+        </div>
+        <div class="status-item">
+          <span class="status-label">Meses pagos</span>
+          <span class="status-value txt-ok">{{ total_meses_pagos }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Histórico de pagamentos ───────────────────────────────── -->
+  {% if historico_pagamentos %}
+  <div class="historico-card">
+    <div class="historico-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Histórico de Pagamentos
+      <span class="hist-count">{{ total_meses_pagos }} registro{{ total_meses_pagos|pluralize }}</span>
+    </div>
+    <div class="historico-body">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Plano</th>
+            <th>Aprovado por</th>
+            <th>Obs.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pag in historico_pagamentos %}
+          <tr>
+            <td>{{ pag.aprovado_em|date:"d/m/Y" }}</td>
+            <td><span class="badge-plano badge-{{ pag.plano }}">{{ pag.get_plano_display }}</span></td>
+            <td>
+              {% if pag.aprovado_por %}
+                {{ pag.aprovado_por.get_full_name|default:pag.aprovado_por.username }}
+              {% else %}—{% endif %}
+            </td>
+            <td class="hist-nota">{{ pag.nota_admin|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="page-header">
+    <h1><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:middle;margin-right:.35rem;color:var(--primary-dark)"></i>Escolha seu plano</h1>
+    <p>Selecione o plano, realize o pagamento via PIX e solicite a ativação.</p>
+  </div>
+
+  {% if solicitacao_pendente %}
+  <!-- Solicitação já enviada -->
+  <div class="pendente-box">
+    <div class="pendente-badge"><i data-lucide="clock" style="width:14px;height:14px"></i> Aguardando confirmação</div>
+    <h3>Sua solicitação está em análise</h3>
+    <p>
+      Você solicitou o plano <strong>{{ solicitacao_pendente.get_plano_display }}</strong>
+      em <strong>{{ solicitacao_pendente.criado_em|date:"d/m/Y" }}</strong>.<br/>
+      Assim que confirmarmos seu pagamento, você receberá um e-mail e seu acesso será liberado automaticamente.
+      O prazo é de até <strong>24 horas</strong> em dias úteis.
+    </p>
+  </div>
+
+  {% else %}
+  <!-- Formulário -->
+  <form method="POST" id="form-solicitacao">
+    {% csrf_token %}
+
+    <div class="planos-grid" id="planos-grid">
+
+      <label class="plano-card {% if plano_param == 'start' %}ativo{% endif %}">
+        <input type="radio" name="plano" value="start" {% if plano_param == 'start' %}checked{% endif %}
+               onchange="atualizarPlano('start','R$ 39,90')"/>
+        <div class="plano-nome">START</div>
+        <div class="plano-preco">R$ 39,90 <span>/mês</span></div>
+        <div class="plano-desc">Ideal para quem está começando</div>
+        <ul class="plano-modulos">
+          <li>Perfil Sensorial</li>
+          <li>Perfil Sensorial Bebê</li>
+          <li>Sensorial Escolar</li>
+          <li>SPM</li>
+        </ul>
+      </label>
+
+      <label class="plano-card plano-popular {% if plano_param == 'plus' or not plano_param %}ativo{% endif %}">
+        <input type="radio" name="plano" value="plus"
+               {% if plano_param == 'plus' or not plano_param %}checked{% endif %}
+               onchange="atualizarPlano('plus','R$ 79,90')"/>
+        <div class="badge-popular"><i data-lucide="star" style="width:10px;height:10px;vertical-align:middle"></i> Mais popular</div>
+        <div class="plano-nome">PLUS</div>
+        <div class="plano-preco">R$ 79,90 <span>/mês</span></div>
+        <div class="plano-desc">Nosso plano mais escolhido</div>
+        <ul class="plano-modulos">
+          <li>Tudo do START</li>
+          <li>Escala Vineland</li>
+          <li>PEDI</li>
+          <li>Guia Portage</li>
+        </ul>
+      </label>
+
+      <label class="plano-card {% if plano_param == 'elite' %}ativo{% endif %}">
+        <input type="radio" name="plano" value="elite" {% if plano_param == 'elite' %}checked{% endif %}
+               onchange="atualizarPlano('elite','R$ 149,90')"/>
+        <div class="plano-nome">ELITE</div>
+        <div class="plano-preco">R$ 149,90 <span>/mês</span></div>
+        <div class="plano-desc">Acesso a todos os módulos</div>
+        <ul class="plano-modulos">
+          <li>27+ instrumentos</li>
+          <li>Todas as especialidades</li>
+          <li>Avaliações ilimitadas</li>
+        </ul>
+      </label>
+
+    </div>
+
+    <!-- Valor dinâmico -->
+    <div class="valor-box">
+      <strong style="display:inline-flex;align-items:center;gap:.4rem">
+        <i data-lucide="circle-dollar-sign" style="width:17px;height:17px;color:#065f46"></i>
+        Valor a pagar: <span id="valor-plano">R$ 79,90</span>/mês
+      </strong>
+    </div>
+
+    <!-- Dados do PIX -->
+    <div class="pix-box">
+      <div class="pix-title">
+        <i data-lucide="qr-code" style="width:18px;height:18px;color:var(--primary-dark)"></i>
+        Pague via PIX
+      </div>
+      <div class="pix-row">
+        <span class="pix-label">Chave PIX</span>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span class="pix-value highlight" id="pix-key-val">{{ pix_key }}</span>
+          <button type="button" class="copy-btn" onclick="copiarPix()">Copiar</button>
+        </div>
+      </div>
+      <div class="pix-row">
+        <span class="pix-label">Beneficiário</span>
+        <span class="pix-value">{{ pix_beneficiario }}</span>
+      </div>
+      <div class="pix-row">
+        <span class="pix-label">Banco</span>
+        <span class="pix-value">{{ pix_banco }}</span>
+      </div>
+      <div class="pix-row">
+        <span class="pix-label">Valor</span>
+        <span class="pix-value highlight" id="pix-valor-row">R$ 79,90</span>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-solicitar">
+      <i data-lucide="send" style="width:18px;height:18px"></i>
+      Já paguei — solicitar ativação
+    </button>
+
+    <p style="margin-top:1rem;font-size:.78rem;color:#9ca3af;text-align:center">
+      Após confirmar, você receberá um e-mail assim que seu acesso for liberado (até 24h em dias úteis).
+    </p>
+  </form>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const valores = {start:'R$ 39,90', plus:'R$ 79,90', elite:'R$ 149,90'};
+
+  function atualizarPlano(plano, valor) {
+    document.getElementById('valor-plano').textContent  = valor + '/mês';
+    document.getElementById('pix-valor-row').textContent = valor;
+    document.querySelectorAll('.plano-card').forEach(c => c.classList.remove('ativo'));
+    const radio = document.querySelector(`input[value="${plano}"]`);
+    if (radio) radio.closest('.plano-card').classList.add('ativo');
+  }
+
+  const checked = document.querySelector('input[name="plano"]:checked');
+  if (checked) atualizarPlano(checked.value, valores[checked.value]);
+
+  document.querySelectorAll('input[name="plano"]').forEach(r => {
+    r.addEventListener('change', () => atualizarPlano(r.value, valores[r.value]));
+  });
+
+  function copiarPix() {
+    const key = document.getElementById('pix-key-val').textContent.trim();
+    navigator.clipboard.writeText(key).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      const orig = btn.textContent;
+      btn.textContent = 'Copiado!';
+      btn.style.background = 'var(--primary)';
+      btn.style.color = '#fff';
+      setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
+    });
+  }
+</script>
+{% endblock %}

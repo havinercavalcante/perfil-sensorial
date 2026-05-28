@@ -428,7 +428,82 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
   <div class="app-section">
     <div class="sec-title">Modelos do sistema</div>
     <div class="app-list">
-      {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+      {% for app in app_list %}
+        {% if app.app_label == "questionario" %}
+          <div class="app-questionario module">
+            <table>
+              <caption>
+                <a href="{{ app.app_url }}" class="section">{{ app.name }}</a>
+              </caption>
+              {% for model in app.models %}
+              <tr class="model-{{ model.object_name|lower }}">
+                {% if model.admin_url %}
+                  <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                {% else %}
+                  <th scope="row">{{ model.name }}</th>
+                {% endif %}
+                {% if model.add_url %}
+                  <td><a href="{{ model.add_url }}" class="addlink">Adicionar</a></td>
+                {% else %}
+                  <td></td>
+                {% endif %}
+                <td>
+                  {% if model.admin_url %}
+                    {% if model.view_only %}
+                      <a href="{{ model.admin_url }}" class="viewlink">Visualizar</a>
+                    {% else %}
+                      <a href="{{ model.admin_url }}" class="changelink">Modificar</a>
+                    {% endif %}
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {# ── Links fixos dos Painéis (sempre visíveis para staff) ── #}
+              <tr class="model-painelpagamentos">
+                <th scope="row"><a href="{% url 'admin:pagamentos_painel' %}">Painel de Pagamentos</a></th>
+                <td></td>
+                <td><a href="{% url 'admin:pagamentos_painel' %}" class="viewlink">Visualizar</a></td>
+              </tr>
+              <tr class="model-painelrecebimento">
+                <th scope="row"><a href="{% url 'admin:pagamentos_recebimento' %}">Painel de Recebimento</a></th>
+                <td></td>
+                <td><a href="{% url 'admin:pagamentos_recebimento' %}" class="viewlink">Visualizar</a></td>
+              </tr>
+            </table>
+          </div>
+        {% else %}
+          <div class="app-{{ app.app_label }} module">
+            <table>
+              <caption>
+                <a href="{{ app.app_url }}" class="section">{{ app.name }}</a>
+              </caption>
+              {% for model in app.models %}
+              <tr class="model-{{ model.object_name|lower }}">
+                {% if model.admin_url %}
+                  <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                {% else %}
+                  <th scope="row">{{ model.name }}</th>
+                {% endif %}
+                {% if model.add_url %}
+                  <td><a href="{{ model.add_url }}" class="addlink">Adicionar</a></td>
+                {% else %}
+                  <td></td>
+                {% endif %}
+                <td>
+                  {% if model.admin_url %}
+                    {% if model.view_only %}
+                      <a href="{{ model.admin_url }}" class="viewlink">Visualizar</a>
+                    {% else %}
+                      <a href="{{ model.admin_url }}" class="changelink">Modificar</a>
+                    {% endif %}
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        {% endif %}
+      {% endfor %}
     </div>
   </div>
 

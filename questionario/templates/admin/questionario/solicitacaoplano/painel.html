@@ -1,0 +1,538 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Painel de Pagamentos — Admin{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Início</a>
+  › <a href="{% url 'admin:questionario_solicitacaoplano_changelist' %}">Solicitações de Plano</a>
+  › Painel de Pagamentos
+</div>
+{% endblock %}
+
+{% block content_title %}
+<h1 style="display:flex;align-items:center;gap:.5rem;">Painel de Pagamentos</h1>
+{% endblock %}
+
+{% block content %}
+<style>
+  /* ── Stats ── */
+  .pay-stats{display:flex;gap:.85rem;flex-wrap:wrap;margin-bottom:1.75rem}
+  .pay-stat{flex:1;min-width:110px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;
+            padding:.85rem 1rem;box-shadow:0 1px 5px rgba(0,0,0,.06);text-align:center}
+  .pay-stat .num{font-size:1.8rem;font-weight:800;line-height:1.1}
+  .pay-stat .lbl{font-size:.72rem;color:#6b7280;margin-top:.2rem;font-weight:500}
+  .stat-blue .num{color:#0c3c7b}  .stat-ok .num{color:#059669}
+  .stat-warn .num{color:#d97706}  .stat-crit .num{color:#dc2626}
+  .stat-pend .num{color:#f59e0b}  .stat-gray .num{color:#6b7280}
+
+  /* ── Seções ── */
+  .pay-section{margin-bottom:2rem}
+  .pay-section h2{font-size:.92rem;font-weight:800;color:#0c3c7b;
+                  border-bottom:2px solid #e5e7eb;padding-bottom:.45rem;margin-bottom:.9rem;
+                  display:flex;align-items:center;gap:.5rem}
+  .pay-count{background:#0c3c7b;color:#fff;font-size:.66rem;padding:.15rem .5rem;border-radius:20px;font-weight:700}
+
+  /* ── Tabela ── */
+  .pay-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;
+             box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e5e7eb;font-size:.82rem}
+  .pay-table th{background:#f0f4f8;padding:.55rem .9rem;text-align:left;font-weight:700;
+                color:#374151;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+  .pay-table td{padding:.6rem .9rem;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:middle}
+  .pay-table tr:last-child td{border-bottom:none}
+  .row-crit{background:#fff8f8 !important}
+  .row-warn{background:#fffef0 !important}
+
+  /* ── Badges ── */
+  .badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.75rem;font-weight:700;color:#fff;white-space:nowrap}
+  .b-start{background:#3b82f6}.b-plus{background:#8b5cf6}.b-elite{background:#0c3c7b}
+  .b-trial{background:#6366f1}.b-pend{background:#f59e0b}.b-ok{background:#10b981}.b-rej{background:#ef4444}
+
+  /* ── Solicitações pendentes ── */
+  .sol-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:.8rem;
+            box-shadow:0 1px 5px rgba(0,0,0,.05);overflow:hidden}
+  .sol-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;
+            border-bottom:1px solid #f3f4f6;flex-wrap:wrap}
+  .sol-info{flex:1;min-width:160px}
+  .sol-name{font-weight:700;color:#0c3c7b;font-size:.88rem}
+  .sol-email{font-size:.74rem;color:#6b7280;margin-top:.1rem}
+  .sol-date{font-size:.72rem;color:#9ca3af;margin-top:.1rem}
+  .sol-actions{padding:.7rem 1rem;display:flex;gap:.65rem;align-items:flex-end;flex-wrap:wrap;background:#fafafa}
+  .nota-wrap{flex:1 1 99%;min-width:0;max-width:99%}
+  .nota-wrap label{font-size:.68rem;font-weight:600;color:#6b7280;display:block;margin-bottom:.2rem}
+  .nota-wrap textarea{width:100%;border:1.5px solid #d1d5db;border-radius:6px;padding:.3rem .5rem;
+                      font-size:.74rem;font-family:inherit;resize:none;color:#374151;line-height:1.3}
+  .nota-wrap textarea:focus{outline:none;border-color:#39abcb}
+  .btn-ap{background:transparent;color:#059669;border:1.5px solid #059669;padding:.28rem .75rem;border-radius:6px;
+          font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-ap:hover{background:#059669;color:#fff}
+  .btn-rj{background:transparent;color:#dc2626;border:1.5px solid #dc2626;padding:.28rem .7rem;border-radius:6px;
+          font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-rj:hover{background:#dc2626;color:#fff}
+
+  /* ── Botão renovar ── */
+  .btn-renew{background:transparent;color:#0c3c7b;border:1.5px solid #0c3c7b;padding:.28rem .65rem;border-radius:6px;
+             font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-renew:hover{background:#0c3c7b;color:#fff}
+
+  /* ── Botão desativar / reativar ── */
+  .btn-off{background:transparent;color:#dc2626;border:1.5px solid #dc2626;padding:.28rem .65rem;border-radius:6px;
+           font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-off:hover{background:#dc2626;color:#fff}
+  .btn-on{background:transparent;color:#059669;border:1.5px solid #059669;padding:.28rem .65rem;border-radius:6px;
+          font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-on:hover{background:#059669;color:#fff}
+
+  /* ── Select inline de plano ── */
+  .sel-plano{border:1px solid #d1d5db;border-radius:5px;padding:.3rem .5rem;
+             font-size:.75rem;color:#374151;background:#fff;cursor:pointer}
+
+  /* ── Tag inativo ── */
+  .tag-off{display:inline-block;background:#ef4444;color:#fff;
+           font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:5px}
+  .row-off{background:#fef2f2 !important}
+
+  .empty-msg{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.85rem;
+             background:#fff;border:1px solid #e5e7eb;border-radius:10px}
+  .empty-icon{font-size:1.8rem;display:block;margin-bottom:.35rem}
+
+  /* ── Scroll wrapper para tabelas em mobile ── */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;
+                border:1px solid #e5e7eb;box-shadow:0 1px 5px rgba(0,0,0,.06)}
+  .table-scroll .pay-table{border-radius:0;border:none;box-shadow:none}
+
+  /* ── Ações dos cards pendentes ── */
+  .painel-actions{display:flex;justify-content:flex-end;gap:.45rem;width:100%;flex-wrap:wrap}
+
+  /* ── Responsivo: tablet ── */
+  @media(max-width:768px){
+    .pay-stat{min-width:calc(33.33% - .7rem)}
+    .pay-table th,.pay-table td{padding:.5rem .65rem}
+  }
+
+  /* ── Responsivo: mobile ── */
+  @media(max-width:540px){
+    .pay-stats{gap:.6rem}
+    .pay-stat{min-width:calc(50% - .4rem);padding:.65rem .5rem}
+    .pay-stat .num{font-size:1.35rem}
+    .pay-stat .lbl{font-size:.65rem}
+
+    .pay-section h2{font-size:.85rem}
+
+    .sol-head{gap:.5rem;padding:.7rem .8rem}
+    .sol-actions{padding:.6rem .8rem;gap:.5rem}
+    .nota-wrap textarea{font-size:.72rem}
+    .painel-actions{justify-content:flex-start}
+
+    .pay-table th{font-size:.65rem;padding:.45rem .55rem}
+    .pay-table td{padding:.5rem .55rem;font-size:.78rem}
+  }
+
+  @media(max-width:400px){
+    .pay-stat{min-width:calc(50% - .35rem);padding:.55rem .4rem}
+    .pay-stat .num{font-size:1.2rem}
+  }
+
+  /* ── Botão editar ── */
+  .btn-edit{background:transparent;color:#6b7280;border:1.5px solid #d1d5db;padding:.28rem .65rem;
+            border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .btn-edit:hover{background:#f3f4f6;color:#374151;border-color:#9ca3af}
+
+  /* ── Modal ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:9999;
+                 align-items:center;justify-content:center;padding:1rem}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;border-radius:12px;padding:1.5rem;width:100%;max-width:440px;
+             box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+  .modal-title{font-size:.95rem;font-weight:800;color:#0c3c7b;margin-bottom:1.2rem;
+               display:flex;align-items:center;justify-content:space-between}
+  .modal-close{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.3rem;line-height:1;padding:0}
+  .modal-close:hover{color:#374151}
+  .modal-field{margin-bottom:.8rem}
+  .modal-field label{display:block;font-size:.7rem;font-weight:600;color:#6b7280;margin-bottom:.28rem;text-transform:uppercase;letter-spacing:.03em}
+  .modal-field input,.modal-field select{width:100%;border:1.5px solid #d1d5db;border-radius:7px;
+                                         padding:.42rem .6rem;font-size:.83rem;color:#374151;
+                                         font-family:inherit;box-sizing:border-box}
+  .modal-field input:focus,.modal-field select:focus{outline:none;border-color:#39abcb}
+  .modal-row{display:flex;gap:.6rem}
+  .modal-row .modal-field{flex:1;min-width:0}
+  .modal-footer{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.2rem;padding-top:.9rem;border-top:1px solid #f3f4f6}
+  .btn-save{background:#0c3c7b;color:#fff;border:none;padding:.4rem 1rem;border-radius:7px;
+            font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s}
+  .btn-save:hover{background:#0d4a9c}
+  .btn-modal-cancel{background:transparent;color:#6b7280;border:1.5px solid #d1d5db;padding:.38rem .8rem;
+                    border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer}
+  .btn-modal-cancel:hover{background:#f3f4f6}
+</style>
+
+<div style="margin-bottom:1.25rem">
+  <a href="{% url 'admin:pagamentos_recebimento' %}"
+     style="display:inline-flex;align-items:center;gap:.4rem;background:linear-gradient(135deg,#059669,#10b981);
+            color:#fff;padding:.45rem 1rem;border-radius:8px;font-size:.8rem;font-weight:700;
+            text-decoration:none;box-shadow:0 2px 6px rgba(5,150,105,.25)">
+    💰 Painel de Recebimento →
+  </a>
+</div>
+
+{% if messages %}
+<ul class="messagelist" style="margin-bottom:1rem">
+  {% for message in messages %}
+    <li class="{{ message.tags }}">{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<!-- ── STATS ── -->
+<div class="pay-stats">
+  <div class="pay-stat stat-gray">
+    <div class="num">{{ total_profissionais }}</div>
+    <div class="lbl">Total de<br/>profissionais</div>
+  </div>
+  <div class="pay-stat stat-blue">
+    <div class="num">{{ total_assinantes }}</div>
+    <div class="lbl">Planos<br/>pagos ativos</div>
+  </div>
+  <div class="pay-stat stat-pend">
+    <div class="num">{{ total_pendentes }}</div>
+    <div class="lbl">Pendentes<br/>de aprovação</div>
+  </div>
+  <div class="pay-stat stat-warn">
+    <div class="num">{{ vencendo_7 }}</div>
+    <div class="lbl">Vencendo<br/>em 7 dias</div>
+  </div>
+  <div class="pay-stat stat-crit">
+    <div class="num">{{ vencendo_3 }}</div>
+    <div class="lbl">Vencendo<br/>em 3 dias</div>
+  </div>
+  <div class="pay-stat stat-crit">
+    <div class="num">{{ vencidos }}</div>
+    <div class="lbl">Planos<br/>vencidos</div>
+  </div>
+</div>
+
+<!-- ── PENDENTES ── -->
+<div class="pay-section">
+  <h2>⏳ Solicitações Pendentes <span class="pay-count">{{ total_pendentes }}</span></h2>
+  {% if pendentes %}
+    {% for sol in pendentes %}
+    <div class="sol-card">
+      <div class="sol-head">
+        <div class="sol-info">
+          <div class="sol-name">{{ sol.user.get_full_name|default:sol.user.username }}</div>
+          <div class="sol-email">{{ sol.user.email }}</div>
+          <div class="sol-date">Solicitado em {{ sol.criado_em|date:"d/m/Y \à\s H:i" }}</div>
+        </div>
+        <span class="badge b-{{ sol.plano }}">{{ sol.get_plano_display }}</span>
+        <span class="badge b-pend">⏳ Pendente</span>
+      </div>
+      {% if sol.observacoes %}
+      <div style="padding:.5rem 1rem;background:#f0f9ff;font-size:.78rem;color:#374151;border-bottom:1px solid #e0f2fe">
+        <strong style="color:#0c3c7b">Obs:</strong> {{ sol.observacoes }}
+      </div>
+      {% endif %}
+      <div class="sol-actions">
+        <div class="nota-wrap">
+          <label>Nota para o usuário (opcional)</label>
+          <textarea id="nota-{{ sol.id }}" rows="2" placeholder="Ex: Pagamento confirmado!"></textarea>
+        </div>
+        <div class="painel-actions">
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="aprovar"/>
+            <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
+            <input type="hidden" name="nota_admin" id="nota-ap-{{ sol.id }}" value=""/>
+            <button type="submit" class="btn-ap"
+                    onclick="document.getElementById('nota-ap-{{ sol.id }}').value=document.getElementById('nota-{{ sol.id }}').value;return confirm('Confirma aprovação do plano {{ sol.get_plano_display }} para {{ sol.user.get_full_name|default:sol.user.username }}?')">
+              ✅ Aprovar e Ativar
+            </button>
+          </form>
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="rejeitar"/>
+            <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
+            <input type="hidden" name="nota_admin" id="nota-rj-{{ sol.id }}" value="Pagamento não identificado. Por favor, tente novamente."/>
+            <button type="submit" class="btn-rj"
+                    onclick="document.getElementById('nota-rj-{{ sol.id }}').value=document.getElementById('nota-{{ sol.id }}').value||'Pagamento não identificado. Por favor, tente novamente.';return confirm('Rejeitar solicitação de {{ sol.user.get_full_name|default:sol.user.username }}?')">
+              ❌ Rejeitar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-msg">
+      <span class="empty-icon">🎉</span>
+      Nenhuma solicitação pendente. Tudo em dia!
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── ASSINANTES PAGOS ── -->
+<div class="pay-section">
+  <h2>💰 Planos Pagos Ativos <span class="pay-count">{{ total_assinantes }}</span></h2>
+  {% if assinantes_info %}
+  <div class="table-scroll">
+  <table class="pay-table">
+    <thead><tr>
+      <th>Profissional</th><th>Plano</th><th>Validade</th><th>Vence em</th><th>Pacientes</th><th>Ações</th>
+    </tr></thead>
+    <tbody>
+      {% for item in assinantes_info %}
+      {% with p=item.perfil dias=item.dias %}
+      <tr {% if dias is not None and dias <= 3 %}class="row-crit"{% elif dias is not None and dias <= 7 %}class="row-warn"{% endif %}>
+        <td>
+          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong>
+          {% if not p.user.is_active %} <span class="tag-off">🚫 Desativado</span>{% endif %}<br/>
+          <small style="color:#6b7280">{{ p.user.email }}</small>
+        </td>
+        <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
+        <td>{{ item.badge }}</td>
+        <td style="font-size:.79rem;color:#6b7280">
+          {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}<span style="color:#f59e0b;font-weight:600">Sem data</span>{% endif %}
+        </td>
+        <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
+        <td style="white-space:nowrap">
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <button type="button" class="btn-edit"
+                    onclick="abrirModal({{ p.pk }},'{{ p.user.first_name|escapejs }}','{{ p.user.last_name|escapejs }}','{{ p.user.email|escapejs }}','{{ p.plano }}','{{ p.plano_expiracao|date:"Y-m-d"|default:"" }}')">✏️ Editar</button>
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="renovar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <input type="hidden" name="novo_plano" value="{{ p.plano }}"/>
+              <button type="submit" class="btn-renew"
+                      onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">🔄 +30d</button>
+            </form>
+            {% if p.user.is_active %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="desativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-off"
+                      onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">🚫 Desativar</button>
+            </form>
+            {% else %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="reativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-on"
+                      onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">✅ Reativar</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <div class="empty-msg">Nenhum assinante com plano pago ativo ainda.</div>
+  {% endif %}
+</div>
+
+<!-- ── TODOS OS PROFISSIONAIS ── -->
+<div class="pay-section">
+  <h2>👥 Todos os Profissionais <span class="pay-count">{{ total_profissionais }}</span></h2>
+  <p style="font-size:.76rem;color:#6b7280;margin-bottom:.75rem">
+    Lista completa — inclui trial e planos pagos. Use o botão <strong>🔄 +30 dias</strong> para definir/renovar o vencimento de qualquer profissional sem precisar passar pela solicitação de plano.
+  </p>
+  {% if todos_info %}
+  <div class="table-scroll">
+  <table class="pay-table">
+    <thead><tr>
+      <th>Profissional</th>
+      <th>Plano</th>
+      <th>Validade</th>
+      <th>Vence em</th>
+      <th>Pacientes</th>
+      <th>Ações</th>
+    </tr></thead>
+    <tbody>
+      {% for item in todos_info %}
+      {% with p=item.perfil %}
+      <tr {% if not p.user.is_active %}class="row-off"{% endif %}>
+        <td>
+          <strong style="color:#0c3c7b">{{ p.user.get_full_name|default:p.user.username }}</strong>
+          {% if not p.user.is_active %} <span class="tag-off">🚫 Desativado</span>{% endif %}<br/>
+          <small style="color:#6b7280">{{ p.user.email }}</small>
+        </td>
+        <td><span class="badge b-{{ p.plano }}">{{ p.get_plano_display }}</span></td>
+        <td>{{ item.badge }}</td>
+        <td style="font-size:.78rem;color:#6b7280">
+          {% if p.plano_expiracao %}{{ p.plano_expiracao|date:"d/m/Y" }}{% else %}<span style="color:#9ca3af">—</span>{% endif %}
+        </td>
+        <td style="font-weight:700;color:#0c3c7b">{{ p.user.pacientes.count }}</td>
+        <td style="white-space:nowrap">
+          <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+
+            {# ── Editar ── #}
+            <button type="button" class="btn-edit"
+                    onclick="abrirModal({{ p.pk }},'{{ p.user.first_name|escapejs }}','{{ p.user.last_name|escapejs }}','{{ p.user.email|escapejs }}','{{ p.plano }}','{{ p.plano_expiracao|date:"Y-m-d"|default:"" }}')">✏️ Editar</button>
+
+            {# ── Renovar / Ativar plano ── #}
+            <form method="POST" style="display:inline-flex;align-items:center;gap:.3rem">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="renovar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <select name="novo_plano" class="sel-plano">
+                <option value="start" {% if p.plano == "start" %}selected{% endif %}>START</option>
+                <option value="plus"  {% if p.plano == "plus"  %}selected{% endif %}>PLUS</option>
+                <option value="elite" {% if p.plano == "elite" %}selected{% endif %}>ELITE</option>
+              </select>
+              {% if p.plano != "trial" %}
+              <button type="submit" class="btn-renew"
+                      onclick="return confirm('Renovar +30 dias para {{ p.user.get_full_name|default:p.user.username }}?')">🔄 +30d</button>
+              {% else %}
+              <button type="submit" class="btn-ap"
+                      onclick="return confirm('Ativar plano para {{ p.user.get_full_name|default:p.user.username }}?')">▶ Ativar</button>
+              {% endif %}
+            </form>
+
+            {# ── Desativar / Reativar ── #}
+            {% if p.user.is_active %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="desativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-off"
+                      onclick="return confirm('Desativar {{ p.user.get_full_name|default:p.user.username }}?\n\nO acesso será bloqueado imediatamente.')">🚫 Desativar</button>
+            </form>
+            {% else %}
+            <form method="POST" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action_painel" value="reativar"/>
+              <input type="hidden" name="perfil_id" value="{{ p.pk }}"/>
+              <button type="submit" class="btn-on"
+                      onclick="return confirm('Reativar {{ p.user.get_full_name|default:p.user.username }}?')">✅ Reativar</button>
+            </form>
+            {% endif %}
+
+          </div>
+        </td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <div class="empty-msg">Nenhum profissional cadastrado ainda.</div>
+  {% endif %}
+</div>
+
+<!-- ── HISTÓRICO ── -->
+<div class="pay-section">
+  <h2>📋 Histórico de Aprovações/Rejeições</h2>
+  {% if historico %}
+  <div class="table-scroll">
+  <table class="pay-table">
+    <thead><tr>
+      <th>Data</th><th>Profissional</th><th>Plano</th><th>Status</th><th>Aprovado por</th><th>Nota</th>
+    </tr></thead>
+    <tbody>
+      {% for sol in historico %}
+      <tr>
+        <td style="white-space:nowrap;font-size:.78rem">{{ sol.aprovado_em|date:"d/m/Y H:i"|default:"—" }}</td>
+        <td>
+          <strong style="color:#0c3c7b">{{ sol.user.get_full_name|default:sol.user.username }}</strong><br/>
+          <small style="color:#6b7280">{{ sol.user.email }}</small>
+        </td>
+        <td><span class="badge b-{{ sol.plano }}">{{ sol.get_plano_display }}</span></td>
+        <td>
+          {% if sol.status == 'aprovado' %}
+            <span class="badge b-ok">✅ Aprovado</span>
+          {% else %}
+            <span class="badge b-rej">❌ Rejeitado</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem">{% if sol.aprovado_por %}{{ sol.aprovado_por.get_full_name|default:sol.aprovado_por.username }}{% else %}—{% endif %}</td>
+        <td style="font-size:.76rem;max-width:180px;color:#6b7280">{{ sol.nota_admin|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <div class="empty-msg">Nenhum registro no histórico ainda.</div>
+  {% endif %}
+</div>
+
+<div style="margin-bottom:2rem;text-align:right">
+  <a href="{% url 'solicitar_plano' %}" target="_blank"
+     style="font-size:.78rem;color:#39abcb;text-decoration:none;font-weight:600">
+    🔗 Ver página de solicitação de plano →
+  </a>
+</div>
+
+<!-- ── MODAL EDITAR PROFISSIONAL ── -->
+<div class="modal-overlay" id="modal-editar">
+  <div class="modal-box">
+    <div class="modal-title">
+      ✏️ Editar Profissional
+      <button type="button" class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <form method="POST" id="form-editar">
+      {% csrf_token %}
+      <input type="hidden" name="action_painel" value="editar_perfil"/>
+      <input type="hidden" name="perfil_id" id="edit-perfil-id"/>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Nome</label>
+          <input type="text" name="first_name" id="edit-first-name" required/>
+        </div>
+        <div class="modal-field">
+          <label>Sobrenome</label>
+          <input type="text" name="last_name" id="edit-last-name"/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>E-mail</label>
+        <input type="email" name="email" id="edit-email" required/>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Plano</label>
+          <select name="plano" id="edit-plano">
+            <option value="trial">Trial</option>
+            <option value="start">START</option>
+            <option value="plus">PLUS</option>
+            <option value="elite">ELITE</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Vencimento</label>
+          <input type="date" name="plano_expiracao" id="edit-expiracao"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" onclick="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn-save">💾 Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirModal(id, nome, sobrenome, email, plano, expiracao) {
+  document.getElementById('edit-perfil-id').value   = id;
+  document.getElementById('edit-first-name').value  = nome;
+  document.getElementById('edit-last-name').value   = sobrenome;
+  document.getElementById('edit-email').value       = email;
+  document.getElementById('edit-plano').value       = plano;
+  document.getElementById('edit-expiracao').value   = expiracao;
+  document.getElementById('modal-editar').classList.add('open');
+}
+function fecharModal() {
+  document.getElementById('modal-editar').classList.remove('open');
+}
+document.getElementById('modal-editar').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,97 @@
+{% load admin_extras %}<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano Ativado — IntegraMente</title>
+</head>
+<body style="margin:0;padding:0;background-color:#d5eef5;font-family:'Segoe UI',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#d5eef5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background-color:#ffffff;border-radius:12px 12px 0 0;padding:24px 32px;border-left:1px solid #85cde2;border-right:1px solid #85cde2;border-top:1px solid #85cde2;">
+              {% logo_url as src %}<img src="{{ src }}" alt="IntegraMente" style="height:44px;display:block;margin:0 auto;">
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color:#ffffff;padding:36px 32px 28px;border-left:1px solid #85cde2;border-right:1px solid #85cde2;">
+
+              <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0c3c7b;">Seu plano foi ativado! 🎉</p>
+              <p style="margin:0 0 24px;font-size:14px;color:#39abcb;">Tudo certo — seu acesso está liberado.</p>
+
+              <p style="margin:0 0 24px;font-size:15px;color:#0c3c7b;line-height:1.7;">
+                Olá, <strong>{{ nome }}</strong>!<br><br>
+                Ótima notícia: seu plano <strong>{{ sol.get_plano_display }}</strong> foi ativado com sucesso.
+                Você já pode acessar todos os módulos disponíveis no seu plano.
+              </p>
+
+              {% if expiracao %}
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                <tr>
+                  <td style="background-color:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:12px 16px;">
+                    <p style="margin:0;font-size:13px;color:#065f46;line-height:1.6;">
+                      📅 Próximo vencimento: <strong>{{ expiracao|date:"d/m/Y" }}</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              {% endif %}
+
+              {% if sol.nota_admin %}
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                <tr>
+                  <td style="background-color:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;">
+                    <p style="margin:0;font-size:13px;color:#0c3c7b;line-height:1.6;"><strong>Mensagem:</strong> {{ sol.nota_admin }}</p>
+                  </td>
+                </tr>
+              </table>
+              {% endif %}
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <a href="https://integramente.pro/"
+                       style="display:inline-block;background-color:#39abcb;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;letter-spacing:.2px;">
+                      Acessar o IntegraMente →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #85cde2;padding-top:20px;">
+                    <p style="margin:0;font-size:13px;color:#39abcb;line-height:1.6;">
+                      Em caso de dúvidas, responda este e-mail.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#0c3c7b;border-radius:0 0 12px 12px;padding:20px 32px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#ffffff;">
+                © IntegraMente &nbsp;·&nbsp; Este é um e-mail automático, não responda.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

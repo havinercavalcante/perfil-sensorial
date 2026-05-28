@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Resumo de Planos</title></head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.1);">
+    <div style="background:linear-gradient(135deg,#0c3c7b,#39abcb);padding:24px 32px;">
+      <h1 style="color:#fff;margin:0;font-size:1.2rem;">📊 Resumo diário de planos</h1>
+      <p style="color:rgba(255,255,255,.8);margin:4px 0 0;font-size:.82rem;">IntegraMente</p>
+    </div>
+    <div style="padding:24px 32px;">
+
+      {% if vencendo %}
+      <h2 style="font-size:.95rem;color:#d97706;margin:0 0 .75rem;display:flex;align-items:center;gap:.4rem;">
+        ⚠️ Vencendo em 3 dias ({{ vencendo|length }})
+      </h2>
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:1.5rem;">
+        <tr style="background:#fffbeb;">
+          <th style="padding:6px 10px;text-align:left;color:#92400e;">Profissional</th>
+          <th style="padding:6px 10px;text-align:left;color:#92400e;">Plano</th>
+          <th style="padding:6px 10px;text-align:left;color:#92400e;">Vence em</th>
+        </tr>
+        {% for p in vencendo %}
+        <tr style="border-bottom:1px solid #fef3c7;">
+          <td style="padding:7px 10px;font-weight:600;">{{ p.user.get_full_name|default:p.user.username }}<br/><small style="color:#888;font-weight:400">{{ p.user.email }}</small></td>
+          <td style="padding:7px 10px;">{{ p.get_plano_display }}</td>
+          <td style="padding:7px 10px;color:#d97706;font-weight:700;">{{ p.plano_expiracao|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+
+      {% if vencidos %}
+      <h2 style="font-size:.95rem;color:#dc2626;margin:0 0 .75rem;">
+        ⛔ Planos vencidos hoje ({{ vencidos|length }}) — acesso bloqueado
+      </h2>
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:1.5rem;">
+        <tr style="background:#fef2f2;">
+          <th style="padding:6px 10px;text-align:left;color:#991b1b;">Profissional</th>
+          <th style="padding:6px 10px;text-align:left;color:#991b1b;">Plano</th>
+        </tr>
+        {% for p in vencidos %}
+        <tr style="border-bottom:1px solid #fee2e2;">
+          <td style="padding:7px 10px;font-weight:600;">{{ p.user.get_full_name|default:p.user.username }}<br/><small style="color:#888;font-weight:400">{{ p.user.email }}</small></td>
+          <td style="padding:7px 10px;">{{ p.get_plano_display }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+
+      <div style="margin-top:16px;text-align:center;">
+        <a href="{{ painel_url }}" style="background:linear-gradient(135deg,#0c3c7b,#39abcb);color:#fff;padding:11px 26px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.88rem;display:inline-block;">
+          Abrir Painel de Pagamentos →
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

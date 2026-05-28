@@ -1,0 +1,98 @@
+{% load admin_extras %}<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Solicitação de Plano</title>
+</head>
+<body style="margin:0;padding:0;background-color:#d5eef5;font-family:'Segoe UI',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#d5eef5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background-color:#ffffff;border-radius:12px 12px 0 0;padding:24px 32px;border-left:1px solid #85cde2;border-right:1px solid #85cde2;border-top:1px solid #85cde2;">
+              {% logo_url as src %}<img src="{{ src }}" alt="IntegraMente" style="height:44px;display:block;margin:0 auto;">
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color:#ffffff;padding:36px 32px 28px;border-left:1px solid #85cde2;border-right:1px solid #85cde2;">
+
+              <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0c3c7b;">Nova Solicitação de Plano</p>
+              <p style="margin:0 0 24px;font-size:14px;color:#39abcb;">IntegraMente — Painel Admin</p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:10px 0;color:#888;width:140px;border-bottom:1px solid #f0f0f0;">Profissional</td>
+                  <td style="padding:10px 0;font-weight:700;color:#0c3c7b;border-bottom:1px solid #f0f0f0;">{{ nome_user }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;color:#888;border-bottom:1px solid #f0f0f0;">E-mail</td>
+                  <td style="padding:10px 0;color:#333;border-bottom:1px solid #f0f0f0;">
+                    <a href="mailto:{{ sol.user.email }}" style="color:#39abcb;text-decoration:none;">{{ sol.user.email }}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;color:#888;border-bottom:1px solid #f0f0f0;">Plano solicitado</td>
+                  <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+                    <span style="background:#0c3c7b;color:#fff;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;">{{ sol.get_plano_display }}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;color:#888;{% if sol.observacoes %}border-bottom:1px solid #f0f0f0;{% endif %}">Solicitado em</td>
+                  <td style="padding:10px 0;color:#333;{% if sol.observacoes %}border-bottom:1px solid #f0f0f0;{% endif %}">{{ sol.criado_em|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% if sol.observacoes %}
+                <tr>
+                  <td style="padding:10px 0;color:#888;vertical-align:top;">Observações</td>
+                  <td style="padding:10px 0;color:#333;">{{ sol.observacoes }}</td>
+                </tr>
+                {% endif %}
+              </table>
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ painel_url }}"
+                       style="display:inline-block;background-color:#39abcb;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;letter-spacing:.2px;">
+                      Acessar Painel de Pagamentos →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #85cde2;padding-top:20px;">
+                    <p style="margin:0;font-size:13px;color:#39abcb;line-height:1.6;text-align:center;">
+                      Após confirmar o pagamento, clique em Aprovar para liberar o acesso automaticamente.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#0c3c7b;border-radius:0 0 12px 12px;padding:20px 32px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#ffffff;">
+                © IntegraMente &nbsp;·&nbsp; Este é um e-mail automático, não responda.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

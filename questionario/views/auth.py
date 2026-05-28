@@ -248,6 +248,3 @@ def politica_privacidade(request):
     return render(request, "questionario/auth/politica_privacidade.html")
 
 
-@login_required
-def trial_expirado(request):
-    return render(request, "questionario/auth/trial_expirado.html")
