@@ -331,7 +331,7 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
             f'font-size:.75rem;font-weight:600;margin:2px;">{n}</span>'
             for n in sorted(nomes)
         )
-        return format_html(tags)
+        return mark_safe(tags)
 
     # ── formfield ─────────────────────────────────────────────────────────────
 
