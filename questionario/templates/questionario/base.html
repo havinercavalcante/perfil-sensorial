@@ -316,30 +316,46 @@
 <main>
   {% block back_button %}{% endblock %}
 
-  {# ── Banner de trial / plano sem vencimento ── #}
+  {# ── Banners de plano ── #}
   {% if user.is_authenticated %}
     {% with perfil=user.perfil %}
       {% if perfil.plano == 'trial' and perfil.trial_ativo %}
-        <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:10px;padding:.7rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem;">
-          <span style="display:inline-flex;align-items:center;gap:.4rem">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <strong>Trial ativo</strong> — {{ perfil.trial_dias_restantes }} dia{{ perfil.trial_dias_restantes|pluralize:"s" }} restante{{ perfil.trial_dias_restantes|pluralize:"s" }}. Assine um plano para continuar.
+        <div class="alert alert-warning" style="margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:.45rem;flex:1;min-width:0">
+            <i data-lucide="clock" style="width:15px;height:15px;flex-shrink:0"></i>
+            <span><strong>Trial ativo</strong> — {{ perfil.trial_dias_restantes }} dia{{ perfil.trial_dias_restantes|pluralize:"s" }} restante{{ perfil.trial_dias_restantes|pluralize:"s" }}. Assine um plano para continuar.</span>
           </span>
-          <a href="{% url 'solicitar_plano' %}" style="background:#6366f1;color:#fff;padding:.35rem .9rem;border-radius:7px;text-decoration:none;font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:.35rem">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            Ver planos
-          </a>
+          <a href="{% url 'solicitar_plano' %}" style="color:#fff;font-weight:600;white-space:nowrap;flex-shrink:0">Ver planos <i data-lucide="chevrons-right" style="width:14px;height:14px"></i></a>
+        </div>
+      {% elif perfil.plano_vencido %}
+        <div class="alert alert-error" style="margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:.45rem;flex:1;min-width:0">
+            <i data-lucide="circle-alert" style="width:15px;height:15px;flex-shrink:0"></i>
+            <span>Seu plano <strong>{{ perfil.get_plano_display }}</strong> <strong>expirou</strong>. Renove agora para continuar acessando o sistema.</span>
+          </span>
+          <a href="{% url 'solicitar_plano' %}" style="color:#991b1b;font-weight:600;white-space:nowrap;flex-shrink:0">Renovar agora <i data-lucide="chevrons-right" style="width:14px;height:14px"></i></a>
+        </div>
+      {% elif perfil.plano_vencendo_breve %}
+        <div class="alert" style="background:#fff3cd;color:#7c4a00;border-left:4px solid #f59e0b;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:.45rem;flex:1;min-width:0">
+            <i data-lucide="triangle-alert" style="width:15px;height:15px;flex-shrink:0"></i>
+            <span>
+              {% if perfil.plano_dias_restantes == 0 %}
+                Seu plano <strong>{{ perfil.get_plano_display }}</strong> <strong>expira hoje</strong>. Renove para não perder o acesso.
+              {% else %}
+                Seu plano <strong>{{ perfil.get_plano_display }}</strong> vence em <strong>{{ perfil.plano_dias_restantes }} dia{{ perfil.plano_dias_restantes|pluralize:"s" }}</strong>. Renove para não perder o acesso.
+              {% endif %}
+            </span>
+          </span>
+          <a href="{% url 'solicitar_plano' %}" style="color:#7c4a00;font-weight:600;white-space:nowrap;flex-shrink:0">Renovar <i data-lucide="chevrons-right" style="width:14px;height:14px"></i></a>
         </div>
       {% elif perfil.plano in 'start,plus,elite' and not perfil.plano_expiracao %}
-        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:.7rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem;">
-          <span style="display:inline-flex;align-items:center;gap:.4rem">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            Plano <strong>{{ perfil.get_plano_display }}</strong> ativo mas <strong>sem data de vencimento</strong> definida.
+        <div class="alert alert-warning" style="margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:.45rem;flex:1;min-width:0">
+            <i data-lucide="triangle-alert" style="width:15px;height:15px;flex-shrink:0"></i>
+            <span>Plano <strong>{{ perfil.get_plano_display }}</strong> ativo mas <strong>sem data de vencimento</strong> definida.</span>
           </span>
-          <a href="{% url 'solicitar_plano' %}" style="background:#f59e0b;color:#fff;padding:.35rem .9rem;border-radius:7px;text-decoration:none;font-weight:700;font-size:.82rem;white-space:nowrap;display:inline-flex;align-items:center;gap:.35rem">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            Renovar
-          </a>
+          <a href="{% url 'solicitar_plano' %}" style="color:#fff;font-weight:600;white-space:nowrap;flex-shrink:0">Regularizar <i data-lucide="chevrons-right" style="width:14px;height:14px"></i></a>
         </div>
       {% endif %}
     {% endwith %}

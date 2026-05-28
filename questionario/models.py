@@ -1,8 +1,11 @@
 import uuid
 import re
+from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+
+_GRACE_DAYS = 5
 
 
 def _parse_dispositivo(user_agent: str) -> str:
@@ -223,10 +226,30 @@ class PerfilMedico(models.Model):
         delta = self.plano_expiracao - timezone.now()
         return max(delta.days, 0)
 
-    def tem_acesso(self, codigo_modulo):
-        if self.plano == "trial" and not self.trial_ativo:
+    @property
+    def plano_vencido(self):
+        """True quando o plano pago expirou."""
+        if self.plano == "trial" or self.plano_expiracao is None:
             return False
-        if self.plano != "trial" and not self.plano_ativo:
+        return timezone.now() >= self.plano_expiracao
+
+    @property
+    def plano_vencendo_breve(self):
+        """True quando o plano pago ativo vence em até 7 dias (inclui o dia de hoje)."""
+        dias = self.plano_dias_restantes
+        return dias is not None and dias <= 7
+
+    def tem_acesso(self, codigo_modulo):
+        now = timezone.now()
+        if self.plano == "trial":
+            if self.trial_inicio is None:
+                return False
+            if (now - self.trial_inicio).days > 7 + _GRACE_DAYS:
+                return False
+        elif (
+            self.plano_expiracao is not None
+            and now > self.plano_expiracao + timedelta(days=_GRACE_DAYS)
+        ):
             return False
         return self.modulos_liberados.filter(codigo=codigo_modulo).exists()
 
@@ -1648,3 +1671,12 @@ class PainelPagamentos(SolicitacaoPlano):
         proxy        = True
         verbose_name        = "Painel de Pagamentos"
         verbose_name_plural = "Painel de Pagamentos"
+
+
+class PainelRecebimento(SolicitacaoPlano):
+    """Proxy de SolicitacaoPlano — usado apenas para expor o Painel de Recebimento no admin."""
+
+    class Meta:
+        proxy               = True
+        verbose_name        = "Painel de Recebimento"
+        verbose_name_plural = "Painel de Recebimento"

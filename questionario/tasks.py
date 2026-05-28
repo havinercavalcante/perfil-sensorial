@@ -101,11 +101,11 @@ def desativar_trials_expirados():
             try:
                 html = render_to_string("questionario/emails/email_trial_expirado.html", {
                     "nome": perfil.user.first_name or perfil.user.username,
-                    "url_planos": "https://integramente.pro/pagamentos/solicitar/",
+                    "url_planos": "https://integramente.pro/planos/",
                 })
                 send_mail(
                     subject="IntegraMente — Seu período de teste encerrou",
-                    message=f"Olá! Seu trial de 7 dias encerrou. Escolha um plano em: https://integramente.pro/pagamentos/solicitar/",
+                    message=f"Olá! Seu trial de 7 dias encerrou. Escolha um plano em: https://integramente.pro/planos/",
                     from_email=None,
                     recipient_list=[perfil.user.email],
                     html_message=html,
@@ -175,11 +175,11 @@ def verificar_planos_expirando():
                     "nome": perfil.user.first_name or perfil.user.username,
                     "plano": perfil.get_plano_display(),
                     "expiracao": perfil.plano_expiracao,
-                    "url_renovar": "https://integramente.pro/pagamentos/solicitar/",
+                    "url_renovar": "https://integramente.pro/planos/",
                 })
                 send_mail(
                     subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} vence em 3 dias",
-                    message=f"Seu plano vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}. Renove em: https://integramente.pro/pagamentos/solicitar/",
+                    message=f"Seu plano vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}. Renove em: https://integramente.pro/planos/",
                     from_email=None,
                     recipient_list=[perfil.user.email],
                     html_message=html,
@@ -208,11 +208,11 @@ def verificar_planos_expirando():
                 html = render_to_string("questionario/emails/email_plano_vencido.html", {
                     "nome": perfil.user.first_name or perfil.user.username,
                     "plano": perfil.get_plano_display(),
-                    "url_renovar": "https://integramente.pro/pagamentos/solicitar/",
+                    "url_renovar": "https://integramente.pro/planos/",
                 })
                 send_mail(
                     subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} venceu",
-                    message=f"Seu plano venceu. Renove em: https://integramente.pro/pagamentos/solicitar/",
+                    message=f"Seu plano venceu. Renove em: https://integramente.pro/planos/",
                     from_email=None,
                     recipient_list=[perfil.user.email],
                     html_message=html,
