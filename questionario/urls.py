@@ -15,7 +15,8 @@ urlpatterns = [
     path("confirmar-email/<uidb64>/<token>/", views.confirmar_email_view, name="confirmar_email"),
     path("meu-perfil/", views.meu_perfil, name="meu_perfil"),
     path("privacidade/", views.politica_privacidade, name="politica_privacidade"),
-    path("trial-expirado/", views.trial_expirado, name="trial_expirado"),
+    # Pagamentos (fluxo manual com PIX) — painel gerenciado pelo admin Django
+    path("planos/", views.solicitar_plano, name="solicitar_plano"),
     # App
     path("", views.index, name="index"),
     path("avaliacoes/pendentes/", views.avaliacoes_pendentes, name="avaliacoes_pendentes"),

@@ -73,9 +73,13 @@ def desativar_trials_expirados():
     Desativa contas cujo trial de 7 dias já encerrou:
       - Define user.is_active = False
       - Remove os módulos liberados (limpeza)
+      - Envia e-mail ao admin com resumo dos trials expirados
+      - Envia e-mail ao usuário avisando que o trial expirou
     """
+    from django.conf import settings
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
     from django.utils import timezone
-    from django.contrib.auth.models import User
     from .models import PerfilMedico
 
     limite = timezone.now() - timezone.timedelta(days=7)
@@ -85,11 +89,157 @@ def desativar_trials_expirados():
         user__is_active=True,
     ).select_related("user")
 
-    total = 0
+    expirados = []
     for perfil in perfis_expirados:
         perfil.user.is_active = False
         perfil.user.save(update_fields=["is_active"])
         perfil.modulos_liberados.clear()
-        total += 1
+        expirados.append(perfil)
+
+        # Avisa o usuário que o trial expirou
+        if perfil.user.email:
+            try:
+                html = render_to_string("questionario/emails/email_trial_expirado.html", {
+                    "nome": perfil.user.first_name or perfil.user.username,
+                    "url_planos": "https://integramente.pro/planos/",
+                })
+                send_mail(
+                    subject="IntegraMente — Seu período de teste encerrou",
+                    message=f"Olá! Seu trial de 7 dias encerrou. Escolha um plano em: https://integramente.pro/planos/",
+                    from_email=None,
+                    recipient_list=[perfil.user.email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+    total = len(expirados)
+
+    # Notifica o admin com resumo dos trials expirados
+    if total > 0:
+        try:
+            admin_email = getattr(settings, "ADMIN_NOTIFY_EMAIL", None) or settings.EMAIL_HOST_USER
+            if admin_email:
+                linhas = "\n".join(
+                    f"- {p.user.get_full_name() or p.user.username} <{p.user.email}>"
+                    for p in expirados
+                )
+                html = render_to_string("questionario/emails/email_trials_expirados_admin.html", {
+                    "expirados": expirados,
+                    "total": total,
+                    "painel_url": "https://integramente.pro/admin/questionario/solicitacaoplano/painel/",
+                })
+                send_mail(
+                    subject=f"[IntegraMente] {total} trial(s) expirado(s) hoje",
+                    message=f"{total} trial(s) expirado(s):\n{linhas}",
+                    from_email=None,
+                    recipient_list=[admin_email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+        except Exception:
+            pass
 
     return f"{total} conta(s) de trial desativada(s)."
+
+
+@shared_task
+def verificar_planos_expirando():
+    """
+    Executa diariamente via Celery Beat.
+    1) Avisa usuários e admin sobre planos vencendo em 3 dias
+    2) Desativa planos vencidos (bloqueia acesso e limpa módulos)
+    3) Envia e-mail ao admin com resumo do dia
+    """
+    from django.conf import settings
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
+    from django.utils import timezone
+    from .models import PerfilMedico
+
+    agora     = timezone.now()
+    em_3_dias = agora + timezone.timedelta(days=3)
+
+    # ── 1) Alertar planos que vencem em exatamente 3 dias ──────────────────────
+    prestes_a_vencer = PerfilMedico.objects.filter(
+        plano__in=("start", "plus", "elite"),
+        plano_expiracao__date=em_3_dias.date(),
+        user__is_active=True,
+    ).select_related("user")
+
+    for perfil in prestes_a_vencer:
+        if perfil.user.email:
+            try:
+                html = render_to_string("questionario/emails/email_plano_vencendo.html", {
+                    "nome": perfil.user.first_name or perfil.user.username,
+                    "plano": perfil.get_plano_display(),
+                    "expiracao": perfil.plano_expiracao,
+                    "url_renovar": "https://integramente.pro/planos/",
+                })
+                send_mail(
+                    subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} vence em 3 dias",
+                    message=f"Seu plano vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}. Renove em: https://integramente.pro/planos/",
+                    from_email=None,
+                    recipient_list=[perfil.user.email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+    # ── 2) Desativar planos vencidos ───────────────────────────────────────────
+    vencidos = PerfilMedico.objects.filter(
+        plano__in=("start", "plus", "elite"),
+        plano_expiracao__lt=agora,
+        user__is_active=True,
+    ).select_related("user")
+
+    desativados = []
+    for perfil in vencidos:
+        perfil.user.is_active = False
+        perfil.user.save(update_fields=["is_active"])
+        perfil.modulos_liberados.clear()
+        desativados.append(perfil)
+
+        # Avisa o usuário
+        if perfil.user.email:
+            try:
+                html = render_to_string("questionario/emails/email_plano_vencido.html", {
+                    "nome": perfil.user.first_name or perfil.user.username,
+                    "plano": perfil.get_plano_display(),
+                    "url_renovar": "https://integramente.pro/planos/",
+                })
+                send_mail(
+                    subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} venceu",
+                    message=f"Seu plano venceu. Renove em: https://integramente.pro/planos/",
+                    from_email=None,
+                    recipient_list=[perfil.user.email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+    # ── 3) Resumo para o admin ─────────────────────────────────────────────────
+    if prestes_a_vencer.count() > 0 or len(desativados) > 0:
+        try:
+            admin_email = getattr(settings, "ADMIN_NOTIFY_EMAIL", None) or settings.EMAIL_HOST_USER
+            if admin_email:
+                html = render_to_string("questionario/emails/email_planos_resumo_admin.html", {
+                    "vencendo": list(prestes_a_vencer),
+                    "vencidos": desativados,
+                    "painel_url": "https://integramente.pro/admin/questionario/solicitacaoplano/painel/",
+                })
+                send_mail(
+                    subject=f"[IntegraMente] Resumo de planos — {agora.strftime('%d/%m/%Y')}",
+                    message=f"Vencendo em 3 dias: {prestes_a_vencer.count()} | Vencidos hoje: {len(desativados)}",
+                    from_email=None,
+                    recipient_list=[admin_email],
+                    html_message=html,
+                    fail_silently=True,
+                )
+        except Exception:
+            pass
+
+    return f"Alertas: {prestes_a_vencer.count()} | Desativados: {len(desativados)}"

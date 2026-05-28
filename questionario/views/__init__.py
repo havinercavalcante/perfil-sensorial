@@ -29,3 +29,4 @@ from .comportamento_funcional import *
 from .cognitivo import *
 from .psicopedagogica import *
 from .laudos import laudo_generico
+from .pagamentos import solicitar_plano, painel_pagamentos, aprovar_solicitacao, rejeitar_solicitacao

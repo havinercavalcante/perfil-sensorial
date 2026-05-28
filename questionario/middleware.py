@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.shortcuts import render, redirect
+from django.utils import timezone
 
 
 class CustomErrorMiddleware:
@@ -14,9 +17,8 @@ class CustomErrorMiddleware:
         return response
 
 
-# URLs isentas da verificação de trial (prefixos)
+# URLs isentas da verificação de plano (prefixos)
 _TRIAL_EXEMPT = (
-    "/trial-expirado/",
     "/logout/",
     "/login/",
     "/registrar/",
@@ -25,13 +27,21 @@ _TRIAL_EXEMPT = (
     "/media/",
     "/privacidade/",
     "/confirmar-email/",
+    "/planos/",
 )
+
+_GRACE_DAYS = 5
 
 
 class TrialExpiradoMiddleware:
     """
-    Redireciona para /trial-expirado/ quando o usuário logado tem plano trial
-    e o período de 7 dias já terminou.
+    Controla acesso baseado no estado do plano do usuário.
+
+    Usuário desativado (is_active=False, não-staff):
+      → Redireciona para /planos/
+
+    Trial ou plano pago vencido há mais de 5 dias:
+      → Redireciona para /planos/
     """
 
     def __init__(self, get_response):
@@ -42,10 +52,30 @@ class TrialExpiradoMiddleware:
             request.user.is_authenticated
             and not any(request.path.startswith(p) for p in _TRIAL_EXEMPT)
         ):
+            # ── Usuário desativado pelo admin (não pagou) ─────────────────────
+            if not request.user.is_active and not request.user.is_staff:
+                return redirect("solicitar_plano")
+
             try:
                 perfil = request.user.perfil
-                if perfil.plano == "trial" and not perfil.trial_ativo:
-                    return redirect("trial_expirado")
+                now = timezone.now()
+
+                # ── Trial vencido há mais de 5 dias ───────────────────────────
+                if (
+                    perfil.plano == "trial"
+                    and perfil.trial_inicio is not None
+                    and (now - perfil.trial_inicio).days > 7 + _GRACE_DAYS
+                ):
+                    return redirect("solicitar_plano")
+
+                # ── Plano pago vencido há mais de 5 dias ──────────────────────
+                if (
+                    perfil.plano in ("start", "plus", "elite")
+                    and perfil.plano_expiracao is not None
+                    and now > perfil.plano_expiracao + timedelta(days=_GRACE_DAYS)
+                ):
+                    return redirect("solicitar_plano")
+
             except Exception:
                 pass
 

@@ -1,8 +1,11 @@
 import uuid
 import re
+from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+
+_GRACE_DAYS = 5
 
 
 def _parse_dispositivo(user_agent: str) -> str:
@@ -171,7 +174,8 @@ class PerfilMedico(models.Model):
     plano = models.CharField(
         "Plano", max_length=10, choices=PLANO_CHOICES, default="trial"
     )
-    trial_inicio = models.DateTimeField("Início do trial", null=True, blank=True)
+    trial_inicio    = models.DateTimeField("Início do trial", null=True, blank=True)
+    plano_expiracao = models.DateTimeField("Expiração do plano", null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     modulos_liberados = models.ManyToManyField(
         ModuloAvaliacao,
@@ -203,8 +207,49 @@ class PerfilMedico(models.Model):
         restantes = 7 - (timezone.now() - self.trial_inicio).days
         return max(restantes, 0)
 
+    @property
+    def plano_ativo(self):
+        """True quando o plano pago (start/plus/elite) ainda está dentro da vigência."""
+        if self.plano == "trial":
+            return self.trial_ativo
+        if self.plano_expiracao is None:
+            return True   # sem data = aprovado manualmente sem vencimento
+        return timezone.now() < self.plano_expiracao
+
+    @property
+    def plano_dias_restantes(self):
+        """Dias restantes do plano pago. Retorna None se não houver data de expiração."""
+        if self.plano == "trial":
+            return self.trial_dias_restantes
+        if self.plano_expiracao is None:
+            return None
+        delta = self.plano_expiracao - timezone.now()
+        return max(delta.days, 0)
+
+    @property
+    def plano_vencido(self):
+        """True quando o plano pago expirou."""
+        if self.plano == "trial" or self.plano_expiracao is None:
+            return False
+        return timezone.now() >= self.plano_expiracao
+
+    @property
+    def plano_vencendo_breve(self):
+        """True quando o plano pago ativo vence em até 7 dias (inclui o dia de hoje)."""
+        dias = self.plano_dias_restantes
+        return dias is not None and dias <= 7
+
     def tem_acesso(self, codigo_modulo):
-        if self.plano == "trial" and not self.trial_ativo:
+        now = timezone.now()
+        if self.plano == "trial":
+            if self.trial_inicio is None:
+                return False
+            if (now - self.trial_inicio).days > 7 + _GRACE_DAYS:
+                return False
+        elif (
+            self.plano_expiracao is not None
+            and now > self.plano_expiracao + timedelta(days=_GRACE_DAYS)
+        ):
             return False
         return self.modulos_liberados.filter(codigo=codigo_modulo).exists()
 
@@ -1560,3 +1605,78 @@ class HistoricoLogin(models.Model):
     def __str__(self):
         status = "✓" if self.sucesso else "✗"
         return f"{status} {self.user.username} — {self.ip} — {self.data_hora:%d/%m/%Y %H:%M}"
+
+
+# ── Solicitação de Upgrade de Plano ───────────────────────────────────────────
+
+# Módulos liberados automaticamente por plano
+MODULOS_POR_PLANO = {
+    "start": ["sensorial", "bebe", "escolar", "spm"],
+    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage"],
+    "elite": [c[0] for c in ModuloAvaliacao.MODULO_CHOICES],
+}
+
+PRECO_PLANO = {
+    "start": "R$ 39,90/mês",
+    "plus":  "R$ 79,90/mês",
+    "elite": "R$ 149,90/mês",
+}
+
+
+class SolicitacaoPlano(models.Model):
+    STATUS_CHOICES = [
+        ("pendente",  "Pendente"),
+        ("aprovado",  "Aprovado"),
+        ("rejeitado", "Rejeitado"),
+    ]
+    PLANO_CHOICES = [
+        ("start", "START — R$ 39,90/mês"),
+        ("plus",  "PLUS — R$ 79,90/mês"),
+        ("elite", "ELITE — R$ 149,90/mês"),
+    ]
+
+    user         = models.ForeignKey(User, on_delete=models.CASCADE, related_name="solicitacoes_plano")
+    plano        = models.CharField("Plano solicitado", max_length=10, choices=PLANO_CHOICES)
+    status       = models.CharField("Status", max_length=12, choices=STATUS_CHOICES, default="pendente")
+    observacoes  = models.TextField("Observações do usuário", blank=True)
+    nota_admin   = models.TextField("Nota do admin", blank=True)
+    aprovado_por = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="solicitacoes_aprovadas", verbose_name="Aprovado por"
+    )
+    aprovado_em  = models.DateTimeField("Aprovado/Rejeitado em", null=True, blank=True)
+    criado_em    = models.DateTimeField("Solicitado em", auto_now_add=True)
+
+    class Meta:
+        verbose_name        = "Solicitação de Plano"
+        verbose_name_plural = "Solicitações de Plano"
+        ordering            = ["-criado_em"]
+
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username} → {self.get_plano_display()} ({self.get_status_display()})"
+
+    @property
+    def preco(self):
+        return PRECO_PLANO.get(self.plano, "")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Proxy — aparece no sidebar do admin como "Painel de Pagamentos"
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PainelPagamentos(SolicitacaoPlano):
+    """Proxy de SolicitacaoPlano — usado apenas para expor o Painel no admin."""
+
+    class Meta:
+        proxy        = True
+        verbose_name        = "Painel de Pagamentos"
+        verbose_name_plural = "Painel de Pagamentos"
+
+
+class PainelRecebimento(SolicitacaoPlano):
+    """Proxy de SolicitacaoPlano — usado apenas para expor o Painel de Recebimento no admin."""
+
+    class Meta:
+        proxy               = True
+        verbose_name        = "Painel de Recebimento"
+        verbose_name_plural = "Painel de Recebimento"
