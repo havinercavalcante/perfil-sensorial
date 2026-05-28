@@ -458,17 +458,6 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
                 </td>
               </tr>
               {% endfor %}
-              {# ── Links fixos dos Painéis (sempre visíveis para staff) ── #}
-              <tr class="model-painelpagamentos">
-                <th scope="row"><a href="{% url 'admin:pagamentos_painel' %}">Painel de Pagamentos</a></th>
-                <td></td>
-                <td><a href="{% url 'admin:pagamentos_painel' %}" class="viewlink">Visualizar</a></td>
-              </tr>
-              <tr class="model-painelrecebimento">
-                <th scope="row"><a href="{% url 'admin:pagamentos_recebimento' %}">Painel de Recebimento</a></th>
-                <td></td>
-                <td><a href="{% url 'admin:pagamentos_recebimento' %}" class="viewlink">Visualizar</a></td>
-              </tr>
             </table>
           </div>
         {% else %}
