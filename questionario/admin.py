@@ -8,7 +8,7 @@ from django.utils.html import format_html
 from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
-    SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos,
+    SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos, PainelRecebimento,
 )
 
 
@@ -415,7 +415,12 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
     readonly_fields     = ["user", "plano", "observacoes", "criado_em", "aprovado_por", "aprovado_em"]
     ordering            = ["-criado_em"]
     actions             = [_aprovar_solicitacoes]
-    change_list_template = "admin/questionario/solicitacaoplano/change_list.html"
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect("admin:pagamentos_painel")
+
+    def has_module_perms(self, request):
+        return False  # oculta do índice — use Painel de Pagamentos
 
     # ── URLs customizadas ─────────────────────────────────────────────────────
 
@@ -426,6 +431,11 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                 "painel/",
                 self.admin_site.admin_view(self.painel_view),
                 name="pagamentos_painel",
+            ),
+            path(
+                "recebimento/",
+                self.admin_site.admin_view(self.recebimento_view),
+                name="pagamentos_recebimento",
             ),
         ]
         return custom + urls
@@ -506,6 +516,43 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                         f"✅ {nome} — {perfil.get_plano_display()} renovado até "
                         f"{perfil.plano_expiracao.strftime('%d/%m/%Y')}."
                     )
+
+            # ── Editar dados do profissional ──────────────────────────────────
+            elif action == "editar_perfil":
+                perfil_id = request.POST.get("perfil_id")
+                if perfil_id:
+                    perfil = get_object_or_404(PerfilMedico, pk=perfil_id)
+                    first_name = request.POST.get("first_name", "").strip()
+                    last_name  = request.POST.get("last_name",  "").strip()
+                    email      = request.POST.get("email",      "").strip()
+                    plano      = request.POST.get("plano",      "").strip()
+                    exp_str    = request.POST.get("plano_expiracao", "").strip()
+
+                    perfil.user.first_name = first_name
+                    perfil.user.last_name  = last_name
+                    if email:
+                        perfil.user.email = email
+                    perfil.user.save(update_fields=["first_name", "last_name", "email"])
+
+                    if plano in ("trial", "start", "plus", "elite"):
+                        perfil.plano = plano
+                        if plano != "trial":
+                            codigos = MODULOS_POR_PLANO.get(plano, [])
+                            perfil.modulos_liberados.set(
+                                ModuloAvaliacao.objects.filter(codigo__in=codigos)
+                            )
+
+                    if exp_str:
+                        from datetime import datetime as _dt
+                        try:
+                            naive = _dt.strptime(exp_str, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+                            perfil.plano_expiracao = timezone.make_aware(naive)
+                        except ValueError:
+                            pass
+
+                    perfil.save(update_fields=["plano", "plano_expiracao"])
+                    nome = perfil.user.get_full_name() or perfil.user.username
+                    dj_messages.success(request, f"✅ Dados de {nome} atualizados.")
 
             # ── Desativar usuário (não pagou) ─────────────────────────────────
             elif action == "desativar":
@@ -603,6 +650,155 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
         }
         return render(request, "admin/questionario/solicitacaoplano/painel.html", ctx)
 
+    def recebimento_view(self, request):
+        """Painel de recebimento — MRR, ARR, breakdown por plano e histórico mensal."""
+        from decimal import Decimal
+        from collections import defaultdict, OrderedDict
+        from django.db.models.functions import TruncMonth
+        from django.db.models import Count
+
+        VALOR_PLANO = {
+            "start": Decimal("39.90"),
+            "plus":  Decimal("79.90"),
+            "elite": Decimal("149.90"),
+        }
+
+        def _brl(value):
+            s = f"{float(value):,.2f}"
+            return "R$ " + s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+        agora  = timezone.now()
+        em_30  = agora + timezone.timedelta(days=30)
+        em_60  = agora + timezone.timedelta(days=60)
+
+        # ── Assinantes ativos ────────────────────────────────────────────────
+        ativos = list(
+            PerfilMedico.objects
+            .filter(plano__in=("start", "plus", "elite"),
+                    user__is_active=True,
+                    plano_expiracao__gt=agora)
+            .select_related("user")
+        )
+
+        por_plano = defaultdict(int)
+        for p in ativos:
+            por_plano[p.plano] += 1
+
+        mrr = Decimal("0.00")
+        breakdown = []
+        for plano_key, label, color in [
+            ("start", "START", "#3b82f6"),
+            ("plus",  "PLUS",  "#8b5cf6"),
+            ("elite", "ELITE", "#0c3c7b"),
+        ]:
+            count    = por_plano.get(plano_key, 0)
+            valor    = VALOR_PLANO[plano_key]
+            subtotal = valor * count
+            mrr     += subtotal
+            breakdown.append({
+                "plano":    plano_key,
+                "label":    label,
+                "color":    color,
+                "count":    count,
+                "valor":    _brl(valor),
+                "subtotal": _brl(subtotal),
+                "subtotal_raw": float(subtotal),
+            })
+
+        total_ativos = len(ativos)
+        ticket_medio = mrr / total_ativos if total_ativos else Decimal("0.00")
+
+        # ── Total histórico (todas as ativações aprovadas × valor do plano) ──
+        hist_planos = (
+            SolicitacaoPlano.objects
+            .filter(status="aprovado")
+            .values("plano")
+            .annotate(total=Count("id"))
+        )
+        total_historico = sum(
+            VALOR_PLANO.get(row["plano"], Decimal("0")) * row["total"]
+            for row in hist_planos
+        )
+
+        # ── Histórico mensal (últimos 12 meses) ──────────────────────────────
+        inicio_hist = agora - timezone.timedelta(days=365)
+        hist_raw = (
+            SolicitacaoPlano.objects
+            .filter(status="aprovado", aprovado_em__gte=inicio_hist)
+            .annotate(mes=TruncMonth("aprovado_em"))
+            .values("mes", "plano")
+            .annotate(total=Count("id"))
+            .order_by("mes", "plano")
+        )
+
+        meses_dict = OrderedDict()
+        for row in hist_raw:
+            mk = row["mes"]
+            if mk not in meses_dict:
+                meses_dict[mk] = {"mes": mk, "start": 0, "plus": 0, "elite": 0}
+            if row["plano"] in meses_dict[mk]:
+                meses_dict[mk][row["plano"]] = row["total"]
+
+        historico_mensal = []
+        for mk in sorted(meses_dict.keys(), reverse=True):
+            d = meses_dict[mk]
+            rec = (
+                d["start"] * VALOR_PLANO["start"] +
+                d["plus"]  * VALOR_PLANO["plus"]  +
+                d["elite"] * VALOR_PLANO["elite"]
+            )
+            historico_mensal.append({
+                "mes":     mk.strftime("%b/%Y"),
+                "start":   d["start"],
+                "plus":    d["plus"],
+                "elite":   d["elite"],
+                "total":   d["start"] + d["plus"] + d["elite"],
+                "receita": _brl(rec),
+            })
+
+        # ── Próximos vencimentos 30 dias ─────────────────────────────────────
+        proximos_30 = list(
+            PerfilMedico.objects
+            .filter(plano__in=("start", "plus", "elite"),
+                    user__is_active=True,
+                    plano_expiracao__gt=agora,
+                    plano_expiracao__lte=em_30)
+            .select_related("user")
+            .order_by("plano_expiracao")
+        )
+        receita_risco_30 = sum(VALOR_PLANO.get(p.plano, Decimal("0")) for p in proximos_30)
+
+        proximos_60 = (
+            PerfilMedico.objects
+            .filter(plano__in=("start", "plus", "elite"),
+                    user__is_active=True,
+                    plano_expiracao__gt=em_30,
+                    plano_expiracao__lte=em_60)
+            .count()
+        )
+
+        # MRR máx para porcentagem das barras
+        mrr_raw = float(mrr) if mrr else 1
+
+        for item in breakdown:
+            item["pct"] = round(item["subtotal_raw"] / mrr_raw * 100) if mrr_raw else 0
+
+        ctx = {
+            **self.admin_site.each_context(request),
+            "title":            "Painel de Recebimento",
+            "opts":             self.model._meta,
+            "mrr":              _brl(mrr),
+            "total_historico":  _brl(total_historico),
+            "ticket_medio":     _brl(ticket_medio),
+            "total_ativos":     total_ativos,
+            "breakdown":        breakdown,
+            "historico_mensal": historico_mensal,
+            "proximos_30":      proximos_30,
+            "proximos_60_count": proximos_60,
+            "receita_risco_30": _brl(receita_risco_30),
+        }
+        return render(request, "admin/questionario/solicitacaoplano/recebimento.html", ctx)
+
     # ── list_display ──────────────────────────────────────────────────────────
 
     @admin.display(description="Solicitado em", ordering="criado_em")
@@ -651,13 +847,36 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
 
 @admin.register(PainelPagamentos)
 class PainelPagamentosAdmin(admin.ModelAdmin):
-    """
-    Aparece no sidebar do admin como 'Painel de Pagamentos'.
-    Redireciona para a painel_view registrada em SolicitacaoPlanoAdmin.
-    """
+    """Aparece no índice e sidebar do admin. Redireciona para painel_view."""
 
     def changelist_view(self, request, extra_context=None):
         return redirect("admin:pagamentos_painel")
+
+    def has_module_perms(self, request):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(PainelRecebimento)
+class PainelRecebimentoAdmin(admin.ModelAdmin):
+    """Aparece no índice e sidebar do admin. Redireciona para recebimento_view."""
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect("admin:pagamentos_recebimento")
+
+    def has_module_perms(self, request):
+        return request.user.is_staff
 
     def has_add_permission(self, request):
         return False

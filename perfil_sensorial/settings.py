@@ -65,7 +65,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Permite que usuários com is_active=False façam login
-# (o middleware redireciona para /pagamentos/solicitar/ após o login)
+# (o middleware redireciona para /planos/ após o login)
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.AllowAllUsersModelBackend',
 ]

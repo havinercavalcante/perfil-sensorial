@@ -148,7 +148,7 @@ def aprovar_solicitacao(request, sol_id):
             f"{sol.user.get_full_name() or sol.user.username} — "
             f"vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}."
         )
-    return redirect("painel_pagamentos")
+    return redirect("admin:pagamentos_painel")
 
 
 @staff_member_required
@@ -166,7 +166,7 @@ def rejeitar_solicitacao(request, sol_id):
         _notificar_usuario_rejeitado(sol)
 
         messages.warning(request, f"Solicitação de {sol.user.get_full_name() or sol.user.username} rejeitada.")
-    return redirect("painel_pagamentos")
+    return redirect("admin:pagamentos_painel")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ def rejeitar_solicitacao(request, sol_id):
 
 def _notificar_admin_nova_solicitacao(sol: SolicitacaoPlano, request):
     """Envia e-mail ao admin quando uma nova solicitação chega."""
-    painel_url = request.build_absolute_uri("/pagamentos/painel/")
+    painel_url = request.build_absolute_uri("/admin/questionario/solicitacaoplano/painel/")
     nome_user  = sol.user.get_full_name() or sol.user.username
     try:
         html = render_to_string("questionario/emails/email_solicitacao_admin.html", {
