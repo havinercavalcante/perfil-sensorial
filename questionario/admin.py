@@ -120,7 +120,7 @@ class CustomUserAdmin(UserAdmin):
         try:
             p = obj.perfil
         except Exception:
-            return format_html('<span style="color:#aaa">—</span>')
+            return mark_safe('<span style="color:#aaa">—</span>')
         cores = {
             "trial": "#6366f1",
             "start": "#3b82f6",
@@ -155,9 +155,9 @@ class CustomUserAdmin(UserAdmin):
             return "—"
         delta = timezone.now() - obj.last_login
         if delta.days == 0:
-            return format_html('<span style="color:#10b981;font-size:.8rem;">Hoje</span>')
+            return mark_safe('<span style="color:#10b981;font-size:.8rem;">Hoje</span>')
         elif delta.days == 1:
-            return format_html('<span style="color:#3b82f6;font-size:.8rem;">Ontem</span>')
+            return mark_safe('<span style="color:#3b82f6;font-size:.8rem;">Ontem</span>')
         elif delta.days <= 7:
             return format_html('<span style="color:#6366f1;font-size:.8rem;">{}d atrás</span>', delta.days)
         else:
@@ -263,7 +263,7 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
     def especialidades_resumo(self, obj):
         nomes = list(obj.especialidades.values_list("nome", flat=True))
         if not nomes:
-            return format_html('<span style="color:#aaa">—</span>')
+            return mark_safe('<span style="color:#aaa">—</span>')
         return format_html(
             "{}",
             ", ".join(nomes)
@@ -302,7 +302,7 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
             )
         # Plano pago sem vencimento definido
         if obj.plano != "trial" and not obj.plano_expiracao:
-            return format_html('<strong style="color:#10b981;">✅ Plano ativo</strong> — sem data de vencimento (aprovado manualmente)')
+            return mark_safe('<strong style="color:#10b981;">✅ Plano ativo</strong> — sem data de vencimento (aprovado manualmente)')
         # Trial
         if obj.trial_inicio is None:
             return "—"
