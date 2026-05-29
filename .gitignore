@@ -7,3 +7,4 @@ staticfiles/
 .claude
 .venv/
 venv/
+docs_extraidos/

@@ -59,6 +59,37 @@ def gerar_link(request):
         "comportamento_funcional": "comportamento_funcional",
         "rastreio_cognitivo": "rastreio_cognitivo",
         "psicopedagogica": "psicopedagogica",
+        # Novos módulos — psicologia infantil (pais)
+        "conners_pais": "conners_pais",
+        "etdah_pais": "etdah_pais",
+        "auqei": "auqei",
+        "aq10_child": "aq10_child",
+        "scared": "scared",
+        "masc": "masc",
+        "scq": "scq",
+        "anamnese_tea_inf": "anamnese_tea_inf",
+        "anamnese_tdah_inf": "anamnese_tdah_inf",
+        # Novos módulos — professor
+        "conners_prof": "conners_prof",
+        "etdah_prof": "etdah_prof",
+        # Novos módulos — adulto
+        "bdi": "bdi",
+        "bai": "bai",
+        "dass21": "dass21",
+        "had": "had",
+        "bsl23": "bsl23",
+        "aq10_adulto": "aq10_adulto",
+        "dep_emocional": "dep_emocional",
+        "bpq": "bpq",
+        "anamnese_adulto": "anamnese_adulto",
+        "anamnese_tdah_adulto": "anamnese_tdah_adulto",
+        # Novos módulos — pediatria / neuropsicologia / psicopedagogia
+        "denver": "denver",
+        "qmpi": "qmpi",
+        "quest_dislexia": "quest_dislexia",
+        "checklist_dislexia": "checklist_dislexia",
+        "prot_dislexia_prof": "prot_dislexia_prof",
+        "inventario_dislexia": "inventario_dislexia",
     }
 
     modulos_liberados = set()
@@ -249,7 +280,9 @@ def iniciar_avaliacao(request, token):
             AvaliacaoPsicopedagogica.objects.create(paciente=paciente, token=t)
             return redirect("psicopedagogica_publico", token=t, pagina=1)
         else:
-            # CARS-2, EDM, MABC-2, Beery — presencial, só cadastra o paciente
+            # Módulos presenciais ou em desenvolvimento digital:
+            # CARS-2, EDM, MABC-2, Beery, Conners, ETDAH, BDI, BAI,
+            # DASS-21, HAD, BSL-23, AQ-10, SCQ, AUQEI, QMPI, anamneses, dislexia etc.
             return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,

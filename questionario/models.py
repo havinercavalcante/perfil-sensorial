@@ -57,11 +57,34 @@ class ModuloAvaliacao(models.Model):
         ("pedi",                   "PEDI"),
         ("vineland3",              "Vineland-3"),
         ("portage",                "Guia Portage"),
-        # ── Psicologia ───────────────────────────────────────────────────
+        # ── Psicologia — Triagem Infantil (Pais/Responsáveis) ────────────
         ("sdq",                    "SDQ — Capacidades e Dificuldades"),
         ("snap_iv",                "SNAP-IV — Avaliação de TDAH/TOD"),
         ("mchat",                  "M-CHAT-R — Rastreio de Autismo"),
         ("cars",                   "CARS-2 — Escala de Autismo em Crianças"),
+        ("conners_pais",           "Conners-3 — Avaliação TDAH (Pais)"),
+        ("etdah_pais",             "ETDAH — Avaliação TDAH (Pais)"),
+        ("auqei",                  "AUQEI — Qualidade de Vida Infantil"),
+        ("aq10_child",             "AQ-10 Criança — Rastreio de Autismo"),
+        ("scared",                 "SCARED — Ansiedade Infantil (Pais)"),
+        ("masc",                   "MASC — Ansiedade Multidimensional"),
+        ("scq",                    "SCQ — Comunicação Social"),
+        ("anamnese_tea_inf",       "Anamnese TEA Infantil"),
+        ("anamnese_tdah_inf",      "Anamnese TDAH Infantil"),
+        # ── Psicologia — Triagem por Professor ──────────────────────────
+        ("conners_prof",           "Conners-3 — Avaliação TDAH (Professor)"),
+        ("etdah_prof",             "ETDAH — Avaliação TDAH (Professor)"),
+        # ── Psicologia — Instrumentos para Adultos ───────────────────────
+        ("bdi",                    "BDI — Inventário de Depressão de Beck"),
+        ("bai",                    "BAI — Inventário de Ansiedade de Beck"),
+        ("dass21",                 "DASS-21 — Depressão, Ansiedade e Estresse"),
+        ("had",                    "HAD — Ansiedade e Depressão Hospitalar"),
+        ("bsl23",                  "BSL-23 — Sintomas Borderline"),
+        ("aq10_adulto",            "AQ-10 Adulto — Rastreio de Autismo"),
+        ("dep_emocional",          "Questionário de Dependência Emocional"),
+        ("bpq",                    "BPQ — Personalidade Borderline"),
+        ("anamnese_adulto",        "Anamnese Adulto"),
+        ("anamnese_tdah_adulto",   "Anamnese TDAH Adulto"),
         # ── Fonoaudiologia ───────────────────────────────────────────────
         ("linguagem",              "Avaliação de Linguagem"),
         ("alimentacao_seletiva",   "Triagem de Alimentação Seletiva"),
@@ -72,13 +95,19 @@ class ModuloAvaliacao(models.Model):
         # ── Pediatria / Neuropediatria ───────────────────────────────────
         ("desenvolvimento",        "Marcos de Desenvolvimento Infantil"),
         ("sono_infantil",          "Avaliação de Sono Infantil"),
+        ("denver",                 "Checklist Denver II — Desenvolvimento"),
         # ── ABA / Análise do Comportamento ───────────────────────────────
         ("habilidades_adaptativas", "Habilidades Adaptativas (ABA)"),
         ("comportamento_funcional", "Comportamento Funcional (ABA)"),
         # ── Neuropsicologia ──────────────────────────────────────────────
         ("rastreio_cognitivo",     "Rastreio Cognitivo"),
+        ("qmpi",                   "QMPI — Memória Prospectiva Infantil"),
         # ── Psicopedagogia ───────────────────────────────────────────────
         ("psicopedagogica",        "Avaliação Psicopedagógica"),
+        ("quest_dislexia",         "Questionário de Dislexia (Pais)"),
+        ("checklist_dislexia",     "Checklist de Dislexia"),
+        ("prot_dislexia_prof",     "Protocolo Dislexia — Avaliação Escolar"),
+        ("inventario_dislexia",    "Inventário de Sinais Disléxicos"),
     ]
     codigo = models.CharField("Código", max_length=30, unique=True, choices=MODULO_CHOICES)
     nome = models.CharField("Nome", max_length=100)
@@ -111,7 +140,16 @@ MODULOS_POR_ESPECIALIDADE = {
         "edm", "mabc2", "beery", "pedi", "vineland3", "portage",
     ],
     "psicologo": [
+        # triagem geral
         "sdq", "snap_iv", "mchat", "cars",
+        # infantil — pais
+        "conners_pais", "etdah_pais", "auqei", "aq10_child",
+        "scared", "masc", "scq", "anamnese_tea_inf", "anamnese_tdah_inf",
+        # por professor
+        "conners_prof", "etdah_prof",
+        # adultos
+        "bdi", "bai", "dass21", "had", "bsl23", "aq10_adulto",
+        "dep_emocional", "bpq", "anamnese_adulto", "anamnese_tdah_adulto",
     ],
     "fonoaudiologo": [
         "linguagem", "alimentacao_seletiva",
@@ -119,20 +157,33 @@ MODULOS_POR_ESPECIALIDADE = {
     ],
     "neuropsicoplogo": [
         "rastreio_cognitivo", "sdq", "snap_iv", "mchat", "cars",
+        "qmpi",
+        # infantil — pais
+        "conners_pais", "etdah_pais", "aq10_child", "scq",
+        "anamnese_tea_inf", "anamnese_tdah_inf",
+        # por professor
+        "conners_prof", "etdah_prof",
+        # adultos
+        "bdi", "bai", "dass21", "had", "bsl23", "aq10_adulto",
+        "bpq", "anamnese_adulto", "anamnese_tdah_adulto",
     ],
     "psicopedagogo": [
         "psicopedagogica", "sdq", "snap_iv",
+        "conners_pais", "conners_prof", "etdah_pais", "etdah_prof",
+        "quest_dislexia", "checklist_dislexia",
+        "prot_dislexia_prof", "inventario_dislexia",
     ],
     "pediatra": [
         "desenvolvimento", "sono_infantil", "mchat", "snap_iv",
+        "denver", "auqei",
     ],
     "neuropediatra": [
         "desenvolvimento", "sono_infantil", "mchat", "cars",
-        "snap_iv", "rastreio_cognitivo", "sensorial",
+        "snap_iv", "rastreio_cognitivo", "sensorial", "denver",
     ],
     "analista_aba": [
         "habilidades_adaptativas", "comportamento_funcional",
-        "mchat", "vineland3",
+        "mchat", "vineland3", "anamnese_tea_inf",
     ],
 }
 
@@ -727,11 +778,34 @@ class LinkConvite(models.Model):
         ("pedi",                    "PEDI"),
         ("vineland3",               "Vineland-3"),
         ("portage",                 "Guia Portage"),
-        # ── Psicologia ───────────────────────────────────────────────────
+        # ── Psicologia — Triagem Infantil (Pais/Responsáveis) ────────────
         ("sdq",                     "SDQ — Capacidades e Dificuldades"),
         ("snap_iv",                 "SNAP-IV — Avaliação de TDAH/TOD"),
         ("mchat",                   "M-CHAT-R — Rastreio de Autismo"),
         ("cars",                    "CARS-2 — Escala de Autismo em Crianças"),
+        ("conners_pais",            "Conners-3 — Avaliação TDAH (Pais)"),
+        ("etdah_pais",              "ETDAH — Avaliação TDAH (Pais)"),
+        ("auqei",                   "AUQEI — Qualidade de Vida Infantil"),
+        ("aq10_child",              "AQ-10 Criança — Rastreio de Autismo"),
+        ("scared",                  "SCARED — Ansiedade Infantil (Pais)"),
+        ("masc",                    "MASC — Ansiedade Multidimensional"),
+        ("scq",                     "SCQ — Comunicação Social"),
+        ("anamnese_tea_inf",        "Anamnese TEA Infantil"),
+        ("anamnese_tdah_inf",       "Anamnese TDAH Infantil"),
+        # ── Psicologia — Triagem por Professor ──────────────────────────
+        ("conners_prof",            "Conners-3 — Avaliação TDAH (Professor)"),
+        ("etdah_prof",              "ETDAH — Avaliação TDAH (Professor)"),
+        # ── Psicologia — Instrumentos para Adultos ───────────────────────
+        ("bdi",                     "BDI — Inventário de Depressão de Beck"),
+        ("bai",                     "BAI — Inventário de Ansiedade de Beck"),
+        ("dass21",                  "DASS-21 — Depressão, Ansiedade e Estresse"),
+        ("had",                     "HAD — Ansiedade e Depressão Hospitalar"),
+        ("bsl23",                   "BSL-23 — Sintomas Borderline"),
+        ("aq10_adulto",             "AQ-10 Adulto — Rastreio de Autismo"),
+        ("dep_emocional",           "Questionário de Dependência Emocional"),
+        ("bpq",                     "BPQ — Personalidade Borderline"),
+        ("anamnese_adulto",         "Anamnese Adulto"),
+        ("anamnese_tdah_adulto",    "Anamnese TDAH Adulto"),
         # ── Fonoaudiologia ───────────────────────────────────────────────
         ("linguagem",               "Avaliação de Linguagem"),
         ("alimentacao_seletiva",    "Triagem de Alimentação Seletiva"),
@@ -742,13 +816,19 @@ class LinkConvite(models.Model):
         # ── Pediatria / Neuropediatria ───────────────────────────────────
         ("desenvolvimento",         "Marcos de Desenvolvimento Infantil"),
         ("sono_infantil",           "Avaliação de Sono Infantil"),
+        ("denver",                  "Checklist Denver II — Desenvolvimento"),
         # ── ABA / Análise do Comportamento ───────────────────────────────
         ("habilidades_adaptativas", "Habilidades Adaptativas (ABA)"),
         ("comportamento_funcional", "Comportamento Funcional (ABA)"),
         # ── Neuropsicologia ──────────────────────────────────────────────
         ("rastreio_cognitivo",      "Rastreio Cognitivo"),
+        ("qmpi",                    "QMPI — Memória Prospectiva Infantil"),
         # ── Psicopedagogia ───────────────────────────────────────────────
         ("psicopedagogica",         "Avaliação Psicopedagógica"),
+        ("quest_dislexia",          "Questionário de Dislexia (Pais)"),
+        ("checklist_dislexia",      "Checklist de Dislexia"),
+        ("prot_dislexia_prof",      "Protocolo Dislexia — Avaliação Escolar"),
+        ("inventario_dislexia",     "Inventário de Sinais Disléxicos"),
     ]
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
@@ -1610,9 +1690,27 @@ class HistoricoLogin(models.Model):
 # ── Solicitação de Upgrade de Plano ───────────────────────────────────────────
 
 # Módulos liberados automaticamente por plano
+_MODULOS_PLUS_EXTRA = [
+    # psicologia infantil (pais)
+    "conners_pais", "etdah_pais", "auqei", "aq10_child",
+    "scared", "masc", "scq", "anamnese_tea_inf", "anamnese_tdah_inf",
+    # psicologia professor
+    "conners_prof", "etdah_prof",
+    # psicologia adulto
+    "bdi", "bai", "dass21", "had", "bsl23", "aq10_adulto",
+    "dep_emocional", "bpq", "anamnese_adulto", "anamnese_tdah_adulto",
+    # pediatria / neuropediatria
+    "denver",
+    # neuropsicologia
+    "qmpi",
+    # psicopedagogia
+    "quest_dislexia", "checklist_dislexia",
+    "prot_dislexia_prof", "inventario_dislexia",
+]
+
 MODULOS_POR_PLANO = {
     "start": ["sensorial", "bebe", "escolar", "spm"],
-    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage"],
+    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage"] + _MODULOS_PLUS_EXTRA,
     "elite": [c[0] for c in ModuloAvaliacao.MODULO_CHOICES],
 }
 

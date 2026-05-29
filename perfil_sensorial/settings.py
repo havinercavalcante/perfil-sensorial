@@ -20,6 +20,7 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 ).split(',')
 INSTALLED_APPS = [
     'questionario',
+    'documentos',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,6 +57,8 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL  = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

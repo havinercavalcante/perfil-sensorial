@@ -1,0 +1,16 @@
+titulo;categoria;plano_minimo;especialidades;arquivo
+Anamnese Adulto;Anamnese;start;psicologo;/caminho/para/anamnese_adulto.pdf
+Anamnese Autismo;Anamnese;start;psicologo,terapeuta_ocupacional,analista_aba;/caminho/para/anamnese_autismo.pdf
+Laudo de Depressão;Laudos;plus;psicologo;/caminho/para/laudo_depressao.docx
+Laudo Avaliação Psicológica Clínica;Laudos;plus;psicologo,neuropsicoplogo;/caminho/para/laudo_clinico.docx
+Laudo TDAH;Laudos;plus;psicologo,neuropsicoplogo,psicopedagogo;/caminho/para/laudo_tdah.docx
+Contrato Terapêutico;Contratos;start;;/caminho/para/contrato_terapeutico.docx
+Contrato Atendimento Online;Contratos;start;;/caminho/para/contrato_online.docx
+Atestado de Boa Conduta;Atestados;start;psicologo;/caminho/para/atestado_boa_conduta.docx
+Relatório Multiprofissional;Relatórios;plus;;/caminho/para/relatorio_multi.docx
+Escala Conners - Pais;Instrumentos;plus;psicologo,psicopedagogo,neuropsicoplogo;/caminho/para/conners_pais.pdf
+SDQ - Criança;Instrumentos;start;psicologo,pediatra,neuropediatra;/caminho/para/sdq_crianca.pdf
+Ficha de Triagem;Fichas;start;;/caminho/para/ficha_triagem.docx
+Prontuário do Paciente;Fichas;start;;/caminho/para/prontuario.docx
+Termo de Consentimento Livre e Esclarecido;Contratos;start;;/caminho/para/tcle.docx
+Laudo Autismo;Laudos;plus;psicologo,neuropsicoplogo,analista_aba;/caminho/para/laudo_autismo.docx

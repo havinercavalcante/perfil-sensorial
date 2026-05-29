@@ -86,4 +86,37 @@ TIPO_INFO = {
     "snap_iv":                   ("SNAP-IV",                            '<i data-lucide="zap" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "mchat":                     ("M-CHAT-R",                           '<i data-lucide="baby" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "cars":                      ("CARS-2",                             '<i data-lucide="alert-circle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Psicologia infantil — pais ────────────────────────────────────
+    "conners_pais":              ("Conners-3 (Pais)",                   '<i data-lucide="clipboard-check" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "etdah_pais":                ("ETDAH (Pais)",                       '<i data-lucide="zap" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "auqei":                     ("AUQEI — Qualidade de Vida",          '<i data-lucide="heart" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "aq10_child":                ("AQ-10 Criança",                      '<i data-lucide="search" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "scared":                    ("SCARED — Ansiedade (Pais)",          '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "masc":                      ("MASC — Ansiedade",                   '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "scq":                       ("SCQ — Comunicação Social",           '<i data-lucide="message-circle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "anamnese_tea_inf":          ("Anamnese TEA Infantil",              '<i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "anamnese_tdah_inf":         ("Anamnese TDAH Infantil",             '<i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Psicologia — professor ────────────────────────────────────────
+    "conners_prof":              ("Conners-3 (Professor)",              '<i data-lucide="clipboard-check" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "etdah_prof":                ("ETDAH (Professor)",                  '<i data-lucide="zap" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Psicologia adulto ─────────────────────────────────────────────
+    "bdi":                       ("BDI — Depressão de Beck",            '<i data-lucide="cloud-rain" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "bai":                       ("BAI — Ansiedade de Beck",            '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "dass21":                    ("DASS-21",                            '<i data-lucide="thermometer" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "had":                       ("HAD — Ansiedade e Depressão",        '<i data-lucide="thermometer" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "bsl23":                     ("BSL-23 — Borderline",                '<i data-lucide="shield-alert" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "aq10_adulto":               ("AQ-10 Adulto",                       '<i data-lucide="search" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "dep_emocional":             ("Dependência Emocional",              '<i data-lucide="heart-crack" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "bpq":                       ("BPQ — Borderline",                   '<i data-lucide="shield-alert" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "anamnese_adulto":           ("Anamnese Adulto",                    '<i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "anamnese_tdah_adulto":      ("Anamnese TDAH Adulto",               '<i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Pediatria / Neuropediatria ────────────────────────────────────
+    "denver":                    ("Checklist Denver II",                '<i data-lucide="trending-up" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Neuropsicologia ───────────────────────────────────────────────
+    "qmpi":                      ("QMPI — Memória Prospectiva",         '<i data-lucide="cpu" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Psicopedagogia ────────────────────────────────────────────────
+    "quest_dislexia":            ("Quest. Dislexia (Pais)",             '<i data-lucide="book-open" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "checklist_dislexia":        ("Checklist Dislexia",                 '<i data-lucide="check-square" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "prot_dislexia_prof":        ("Protocolo Dislexia (Professor)",     '<i data-lucide="book-open" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "inventario_dislexia":       ("Inventário Sinais Disléxicos",       '<i data-lucide="list" style="width:18px;height:18px;vertical-align:middle;"></i>'),
 }
