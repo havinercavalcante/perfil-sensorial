@@ -8,3 +8,4 @@ staticfiles/
 .venv/
 venv/
 docs_extraidos/
+docs/
