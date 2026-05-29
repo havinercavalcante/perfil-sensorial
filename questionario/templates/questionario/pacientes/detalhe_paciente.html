@@ -1459,6 +1459,837 @@
 </div>
 {% endif %}
 
+{% if avaliacoes_bdi %}
+<div class="card">
+  <div class="card-title" style="color:#6C3483;"><i data-lucide="cloud-rain" style="width:18px;height:18px;"></i> BDI — Inventário de Depressão de Beck</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_bdi %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'bdi_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'bdi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bdi' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'bdi_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Responder</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bdi_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_bai %}
+<div class="card">
+  <div class="card-title" style="color:#C0392B;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> BAI — Inventário de Ansiedade de Beck</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_bai %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'bai_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'bai_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bai' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'bai_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Responder</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bai_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_dass21 %}
+<div class="card">
+  <div class="card-title" style="color:#2C3E50;"><i data-lucide="thermometer" style="width:18px;height:18px;"></i> DASS-21 — Depressão, Ansiedade e Estresse</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Dep.</th><th>Ans.</th><th>Est.</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_dass21 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_depressao is not None %}{{ av.obj.pont_depressao }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_ansiedade is not None %}{{ av.obj.pont_ansiedade }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_estresse is not None %}{{ av.obj.pont_estresse }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'dass21_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_dass21' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'dass21_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_had %}
+<div class="card">
+  <div class="card-title" style="color:#2C3E50;"><i data-lucide="thermometer" style="width:18px;height:18px;"></i> HAD — Ansiedade e Depressão Hospitalar</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Ansiedade</th><th>Depressão</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_had %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_ansiedade is not None %}{{ av.obj.pont_ansiedade }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_depressao is not None %}{{ av.obj.pont_depressao }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'had_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_had' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'had_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_bsl23 %}
+<div class="card">
+  <div class="card-title" style="color:#8E44AD;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> BSL-23 — Sintomas Borderline</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Média</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_bsl23 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.media_total is not None %}{{ av.obj.media_total|floatformat:2 }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'bsl23_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bsl23' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bsl23_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_aq10_adulto %}
+<div class="card">
+  <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> AQ-10 Adulto — Rastreio de Autismo</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_aq10_adulto %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'aq10_adulto_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_aq10_adulto' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'aq10_adulto_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_aq10_child %}
+<div class="card">
+  <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> AQ-10 Criança — Rastreio de Autismo</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_aq10_child %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'aq10_child_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_aq10_child' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'aq10_child_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_dep_emocional %}
+<div class="card">
+  <div class="card-title" style="color:#E74C3C;"><i data-lucide="heart-crack" style="width:18px;height:18px;"></i> Dependência Emocional</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_dep_emocional %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'dep_emocional_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_dep_emocional' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'dep_emocional_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_scq %}
+<div class="card">
+  <div class="card-title" style="color:#1A5276;"><i data-lucide="message-circle" style="width:18px;height:18px;"></i> SCQ — Comunicação Social</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_scq %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'scq_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_scq' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'scq_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_conners_pais %}
+<div class="card">
+  <div class="card-title" style="color:#2471A3;"><i data-lucide="clipboard-check" style="width:18px;height:18px;"></i> Conners-3 — Avaliação TDAH (Pais)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_conners_pais %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'conners_pais_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'conners_pais_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_conners_pais' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'conners_pais_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_conners_prof %}
+<div class="card">
+  <div class="card-title" style="color:#1F618D;"><i data-lucide="clipboard-check" style="width:18px;height:18px;"></i> Conners-3 — Avaliação TDAH (Professor)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_conners_prof %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'conners_prof_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'conners_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_conners_prof' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'conners_prof_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_etdah_pais %}
+<div class="card">
+  <div class="card-title" style="color:#E67E22;"><i data-lucide="zap" style="width:18px;height:18px;"></i> ETDAH — Avaliação TDAH (Pais)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Média</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_etdah_pais %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'etdah_pais_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'etdah_pais_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_etdah_pais' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'etdah_pais_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_etdah_prof %}
+<div class="card">
+  <div class="card-title" style="color:#D35400;"><i data-lucide="zap" style="width:18px;height:18px;"></i> ETDAH — Avaliação TDAH (Professor)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Média</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_etdah_prof %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'etdah_prof_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'etdah_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_etdah_prof' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'etdah_prof_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_auqei %}
+<div class="card">
+  <div class="card-title" style="color:#1ABC9C;"><i data-lucide="heart" style="width:18px;height:18px;"></i> AUQEI — Qualidade de Vida Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_auqei %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'auqei_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'auqei_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_auqei' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'auqei_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_scared %}
+<div class="card">
+  <div class="card-title" style="color:#C0392B;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> SCARED — Ansiedade Infantil (Pais)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_scared %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'scared_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'scared_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_scared' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'scared_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_masc %}
+<div class="card">
+  <div class="card-title" style="color:#9B59B6;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> MASC — Ansiedade Multidimensional</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_masc %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'masc_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'masc_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_masc' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'masc_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_bpq %}
+<div class="card">
+  <div class="card-title" style="color:#922B21;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> BPQ — Personalidade Borderline</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_bpq %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'bpq_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'bpq_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bpq' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bpq_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_anamnese_tea_inf %}
+<div class="card">
+  <div class="card-title" style="color:#117A65;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese TEA Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_anamnese_tea_inf %}
+    <tr id="avaliacao-{{ av.uuid }}">
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.status == "concluida" %}
+        <a href="{% url 'anamnese_tea_inf_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        <a href="{% url 'anamnese_tea_inf_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_tea_inf_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_anamnese_tdah_inf %}
+<div class="card">
+  <div class="card-title" style="color:#1A5276;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese TDAH Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_anamnese_tdah_inf %}
+    <tr id="avaliacao-{{ av.uuid }}">
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.status == "concluida" %}
+        <a href="{% url 'anamnese_tdah_inf_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        <a href="{% url 'anamnese_tdah_inf_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_tdah_inf_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_anamnese_adulto %}
+<div class="card">
+  <div class="card-title" style="color:#4A235A;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese Adulto</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_anamnese_adulto %}
+    <tr id="avaliacao-{{ av.uuid }}">
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.status == "concluida" %}
+        <a href="{% url 'anamnese_adulto_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        <a href="{% url 'anamnese_adulto_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_adulto_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_anamnese_tdah_adulto %}
+<div class="card">
+  <div class="card-title" style="color:#6E2F1A;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese TDAH Adulto</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_anamnese_tdah_adulto %}
+    <tr id="avaliacao-{{ av.uuid }}">
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.status == "concluida" %}
+        <a href="{% url 'anamnese_tdah_adulto_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        <a href="{% url 'anamnese_tdah_adulto_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_tdah_adulto_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_denver %}
+<div class="card">
+  <div class="card-title" style="color:#E74C3C;"><i data-lucide="baby" style="width:18px;height:18px;"></i> Checklist Denver II — Desenvolvimento</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>P-Social</th><th>M.Fino</th><th>Ling.</th><th>M.Gross.</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_denver %}
+    <tr id="avaliacao-{{ av.uuid }}">
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td>{% if av.pont_pessoal_social is not None %}{{ av.pont_pessoal_social }}{% else %}—{% endif %}</td>
+      <td>{% if av.pont_motor_fino is not None %}{{ av.pont_motor_fino }}{% else %}—{% endif %}</td>
+      <td>{% if av.pont_linguagem is not None %}{{ av.pont_linguagem }}{% else %}—{% endif %}</td>
+      <td>{% if av.pont_motor_grosseiro is not None %}{{ av.pont_motor_grosseiro }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.status == "concluida" %}
+        <a href="{% url 'denver_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'denver_visualizar' av.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        <a href="{% url 'denver_form' av.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'denver_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_qmpi %}
+<div class="card">
+  <div class="card-title" style="color:#9B59B6;"><i data-lucide="brain" style="width:18px;height:18px;"></i> QMPI — Morbidade Psiquiátrica Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Ans.</th><th>Dep.</th><th>TDAH</th><th>Cond.</th><th>TEA</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_qmpi %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_ansiedade is not None %}{{ av.obj.pont_ansiedade }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_depressao is not None %}{{ av.obj.pont_depressao }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_tdah is not None %}{{ av.obj.pont_tdah }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_conduta is not None %}{{ av.obj.pont_conduta }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_autismo is not None %}{{ av.obj.pont_autismo }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'qmpi_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'qmpi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_qmpi' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'qmpi_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_quest_dislexia %}
+<div class="card">
+  <div class="card-title" style="color:#3498DB;"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Questionário de Dislexia (Pais)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_quest_dislexia %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'quest_dislexia_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'quest_dislexia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_quest_dislexia' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'quest_dislexia_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_checklist_dislexia %}
+<div class="card">
+  <div class="card-title" style="color:#E74C3C;"><i data-lucide="check-square" style="width:18px;height:18px;"></i> Checklist de Dislexia</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_checklist_dislexia %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'checklist_dislexia_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'checklist_dislexia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_checklist_dislexia' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'checklist_dislexia_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_prot_dislexia_prof %}
+<div class="card">
+  <div class="card-title" style="color:#2980B9;"><i data-lucide="graduation-cap" style="width:18px;height:18px;"></i> Protocolo Dislexia — Professor</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Leit.</th><th>Escr.</th><th>Mat.</th><th>Org.</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_prot_dislexia_prof %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_leitura is not None %}{{ av.obj.pont_leitura }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_escrita is not None %}{{ av.obj.pont_escrita }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_matematica is not None %}{{ av.obj.pont_matematica }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_organizacao is not None %}{{ av.obj.pont_organizacao }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'prot_dislexia_prof_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'prot_dislexia_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_prot_dislexia_prof' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'prot_dislexia_prof_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_inventario_dislexia %}
+<div class="card">
+  <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> Inventário de Sinais Disléxicos</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_inventario_dislexia %}
+    <tr id="avaliacao-{{ av.uuid }}">
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+      <td class="acoes-td">
+        {% if av.status == "concluida" %}
+        <a href="{% url 'inventario_dislexia_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% else %}
+        <a href="{% url 'inventario_dislexia_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'inventario_dislexia_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
 {% if avaliacoes_edm %}
 <div class="card">
   <div class="card-title" style="color:#27AE60;"><i data-lucide="activity" style="width:18px;height:18px;"></i> EDM — Escala de Desenvolvimento Motor</div>
@@ -1810,151 +2641,151 @@
       {% endif %}
       {# ── Psicologia — novos módulos (link remoto) ─────────────────── #}
       {% if "conners_pais" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Conners-3 Pais')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('conners_pais')">
         <span class="ec-icon"><i data-lucide="clipboard-check" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Conners-3 (Pais)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Avaliação TDAH, 6 subescalas</span>
       </button>
       {% endif %}
       {% if "etdah_pais" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('ETDAH Pais')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('etdah_pais')">
         <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">ETDAH (Pais)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Avaliação TDAH, 3 subescalas</span>
       </button>
       {% endif %}
       {% if "auqei" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('AUQEI')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('auqei')">
         <span class="ec-icon"><i data-lucide="heart" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">AUQEI</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Qualidade de vida infantil</span>
       </button>
       {% endif %}
       {% if "aq10_child" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('AQ-10 Criança')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('aq10_child')">
         <span class="ec-icon"><i data-lucide="search" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">AQ-10 Criança</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Rastreio autismo, 10 itens</span>
       </button>
       {% endif %}
       {% if "scared" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('SCARED')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('scared')">
         <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">SCARED (Pais)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Ansiedade infantil, 5 subescalas</span>
       </button>
       {% endif %}
       {% if "masc" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('MASC')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('masc')">
         <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">MASC</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Ansiedade multidimensional</span>
       </button>
       {% endif %}
       {% if "scq" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('SCQ')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('scq')">
         <span class="ec-icon"><i data-lucide="message-circle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">SCQ</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Comunicação Social, 40 itens</span>
       </button>
       {% endif %}
       {% if "anamnese_tea_inf" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Anamnese TEA Infantil')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_tea_inf')">
         <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Anamnese TEA Infantil</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Preenchimento presencial</span>
       </button>
       {% endif %}
       {% if "anamnese_tdah_inf" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Anamnese TDAH Infantil')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_tdah_inf')">
         <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Anamnese TDAH Infantil</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Preenchimento presencial</span>
       </button>
       {% endif %}
       {% if "conners_prof" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Conners-3 Professor')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('conners_prof')">
         <span class="ec-icon"><i data-lucide="clipboard-check" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Conners-3 (Professor)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Avaliação TDAH, 6 subescalas</span>
       </button>
       {% endif %}
       {% if "etdah_prof" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('ETDAH Professor')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('etdah_prof')">
         <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">ETDAH (Professor)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Avaliação TDAH, 3 subescalas</span>
       </button>
       {% endif %}
       {# ── Psicologia adulto ─────────────────────────────────────────── #}
       {% if "bdi" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('BDI')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('bdi')">
         <span class="ec-icon"><i data-lucide="cloud-rain" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">BDI — Depressão de Beck</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Inventário de depressão, 21 itens</span>
       </button>
       {% endif %}
       {% if "bai" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('BAI')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('bai')">
         <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">BAI — Ansiedade de Beck</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Inventário de ansiedade, 21 itens</span>
       </button>
       {% endif %}
       {% if "dass21" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('DASS-21')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('dass21')">
         <span class="ec-icon"><i data-lucide="thermometer" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">DASS-21</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Depressão, Ansiedade e Estresse</span>
       </button>
       {% endif %}
       {% if "had" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('HAD')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('had')">
         <span class="ec-icon"><i data-lucide="thermometer" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">HAD</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-titulo">HAD — Ansiedade e Depressão</span>
+        <span class="ec-desc">Escala Hospitalar, 14 itens</span>
       </button>
       {% endif %}
       {% if "bsl23" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('BSL-23')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('bsl23')">
         <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">BSL-23</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-titulo">BSL-23 — Sintomas Borderline</span>
+        <span class="ec-desc">Borderline Symptom List, 23 itens</span>
       </button>
       {% endif %}
       {% if "aq10_adulto" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('AQ-10 Adulto')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('aq10_adulto')">
         <span class="ec-icon"><i data-lucide="search" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">AQ-10 Adulto</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Rastreio autismo adulto, 10 itens</span>
       </button>
       {% endif %}
       {% if "dep_emocional" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Dependência Emocional')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('dep_emocional')">
         <span class="ec-icon"><i data-lucide="heart-crack" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Dependência Emocional</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Questionário QDE, 66 itens</span>
       </button>
       {% endif %}
       {% if "bpq" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('BPQ')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('bpq')">
         <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">BPQ — Borderline</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Personalidade borderline, 80 itens</span>
       </button>
       {% endif %}
       {% if "anamnese_adulto" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Anamnese Adulto')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_adulto')">
         <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Anamnese Adulto</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Preenchimento presencial</span>
       </button>
       {% endif %}
       {% if "anamnese_tdah_adulto" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="avisarEmBreve('Anamnese TDAH Adulto')">
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_tdah_adulto')">
         <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Anamnese TDAH Adulto</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Preenchimento presencial</span>
       </button>
       {% endif %}
       {# ── Pediatria / Neuropsicologia / Psicopedagogia ──────────────── #}
@@ -2122,6 +2953,27 @@
   const urlSono             = "{% url 'nova_avaliacao_sono' paciente.uuid %}";
   const urlCognitivo        = "{% url 'nova_avaliacao_cognitivo' paciente.uuid %}";
   const urlPsicopedagogica  = "{% url 'nova_avaliacao_psicopedagogica' paciente.uuid %}";
+  const urlBDI              = "{% url 'nova_avaliacao_bdi' paciente.uuid %}";
+  const urlBAI              = "{% url 'nova_avaliacao_bai' paciente.uuid %}";
+  const urlDASS21           = "{% url 'nova_avaliacao_dass21' paciente.uuid %}";
+  const urlHAD              = "{% url 'nova_avaliacao_had' paciente.uuid %}";
+  const urlBSL23            = "{% url 'nova_avaliacao_bsl23' paciente.uuid %}";
+  const urlAQ10Adulto       = "{% url 'nova_avaliacao_aq10_adulto' paciente.uuid %}";
+  const urlAQ10Child        = "{% url 'nova_avaliacao_aq10_child' paciente.uuid %}";
+  const urlDepEmocional     = "{% url 'nova_avaliacao_dep_emocional' paciente.uuid %}";
+  const urlSCQ              = "{% url 'nova_avaliacao_scq' paciente.uuid %}";
+  const urlConnersPais      = "{% url 'nova_avaliacao_conners_pais' paciente.uuid %}";
+  const urlConnersProf      = "{% url 'nova_avaliacao_conners_prof' paciente.uuid %}";
+  const urlEtdahPais        = "{% url 'nova_avaliacao_etdah_pais' paciente.uuid %}";
+  const urlEtdahProf        = "{% url 'nova_avaliacao_etdah_prof' paciente.uuid %}";
+  const urlAUQEI            = "{% url 'nova_avaliacao_auqei' paciente.uuid %}";
+  const urlSCARED           = "{% url 'nova_avaliacao_scared' paciente.uuid %}";
+  const urlMASC             = "{% url 'nova_avaliacao_masc' paciente.uuid %}";
+  const urlBPQ              = "{% url 'nova_avaliacao_bpq' paciente.uuid %}";
+  const urlAnamneseTEAInf   = "{% url 'nova_avaliacao_anamnese_tea_inf' paciente.uuid %}";
+  const urlAnamneseTDAHInf  = "{% url 'nova_avaliacao_anamnese_tdah_inf' paciente.uuid %}";
+  const urlAnamneseAdulto   = "{% url 'nova_avaliacao_anamnese_adulto' paciente.uuid %}";
+  const urlAnamneseTDAHAdulto = "{% url 'nova_avaliacao_anamnese_tdah_adulto' paciente.uuid %}";
 
   function avisarEmBreve(nome) {
     fecharModalEscolha();
@@ -2159,6 +3011,27 @@
     else if (tipo === 'sono')            { url = urlSono;            label = 'Sono Infantil'; }
     else if (tipo === 'cognitivo')       { url = urlCognitivo;       label = 'Rastreio Cognitivo'; }
     else if (tipo === 'psicopedagogica') { url = urlPsicopedagogica; label = 'Psicopedagógica'; }
+    else if (tipo === 'bdi')             { url = urlBDI;             label = 'BDI'; }
+    else if (tipo === 'bai')             { url = urlBAI;             label = 'BAI'; }
+    else if (tipo === 'dass21')          { url = urlDASS21;          label = 'DASS-21'; }
+    else if (tipo === 'had')             { url = urlHAD;             label = 'HAD'; }
+    else if (tipo === 'bsl23')           { url = urlBSL23;           label = 'BSL-23'; }
+    else if (tipo === 'aq10_adulto')     { url = urlAQ10Adulto;      label = 'AQ-10 Adulto'; }
+    else if (tipo === 'aq10_child')      { url = urlAQ10Child;       label = 'AQ-10 Criança'; }
+    else if (tipo === 'dep_emocional')   { url = urlDepEmocional;    label = 'Dependência Emocional'; }
+    else if (tipo === 'scq')             { url = urlSCQ;             label = 'SCQ'; }
+    else if (tipo === 'conners_pais')    { url = urlConnersPais;     label = 'Conners-3 Pais'; }
+    else if (tipo === 'conners_prof')    { url = urlConnersProf;     label = 'Conners-3 Professor'; }
+    else if (tipo === 'etdah_pais')      { url = urlEtdahPais;       label = 'ETDAH Pais'; }
+    else if (tipo === 'etdah_prof')      { url = urlEtdahProf;       label = 'ETDAH Professor'; }
+    else if (tipo === 'auqei')           { url = urlAUQEI;           label = 'AUQEI'; }
+    else if (tipo === 'scared')          { url = urlSCARED;          label = 'SCARED'; }
+    else if (tipo === 'masc')            { url = urlMASC;            label = 'MASC'; }
+    else if (tipo === 'bpq')             { url = urlBPQ;             label = 'BPQ'; }
+    else if (tipo === 'anamnese_tea_inf')    { url = urlAnamneseTEAInf;     label = 'Anamnese TEA Infantil'; }
+    else if (tipo === 'anamnese_tdah_inf')   { url = urlAnamneseTDAHInf;    label = 'Anamnese TDAH Infantil'; }
+    else if (tipo === 'anamnese_adulto')     { url = urlAnamneseAdulto;     label = 'Anamnese Adulto'; }
+    else if (tipo === 'anamnese_tdah_adulto') { url = urlAnamneseTDAHAdulto; label = 'Anamnese TDAH Adulto'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())

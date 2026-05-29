@@ -1,0 +1,90 @@
+{% extends "questionario/base.html" %}
+{% block title %}Anamnese Adulto — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .anamnese-header {
+    background: linear-gradient(135deg, #1A252F, #2C3E50);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .anamnese-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .form-label { font-weight: 600; margin-bottom: .3rem; display: block; font-size: .9rem; }
+  textarea.form-control { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem; font-size: .88rem; resize: vertical; background: var(--bg-secondary); color: var(--text); font-family: inherit; }
+  textarea.form-control:focus { outline: none; border-color: var(--primary); }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="anamnese-header">
+  <h1><i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Anamnese Adulto</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d/m/Y" }}</p>
+</div>
+
+<div class="card">
+  <form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Queixa Principal</label>
+      <textarea name="queixa_principal" class="form-control" rows="3">{{ avaliacao.queixa_principal }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">História Clínica</label>
+      <textarea name="historia_clinica" class="form-control" rows="4">{{ avaliacao.historia_clinica }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Medicamentos em Uso</label>
+      <textarea name="medicamentos" class="form-control" rows="3">{{ avaliacao.medicamentos }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Familiar</label>
+      <textarea name="historico_familiar" class="form-control" rows="3">{{ avaliacao.historico_familiar }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Escolar</label>
+      <textarea name="historico_escolar" class="form-control" rows="3">{{ avaliacao.historico_escolar }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Profissional</label>
+      <textarea name="historico_profissional" class="form-control" rows="3">{{ avaliacao.historico_profissional }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Relacionamentos</label>
+      <textarea name="relacionamentos" class="form-control" rows="3">{{ avaliacao.relacionamentos }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Sono</label>
+      <textarea name="sono" class="form-control" rows="3">{{ avaliacao.sono }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Alimentação</label>
+      <textarea name="alimentacao" class="form-control" rows="3">{{ avaliacao.alimentacao }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Exercício Físico</label>
+      <textarea name="exercicio" class="form-control" rows="3">{{ avaliacao.exercicio }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Uso de Substâncias</label>
+      <textarea name="uso_substancias" class="form-control" rows="3">{{ avaliacao.uso_substancias }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Psiquiátrico</label>
+      <textarea name="historico_psiquiatrico" class="form-control" rows="3">{{ avaliacao.historico_psiquiatrico }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Observações Clínicas</label>
+      <textarea name="observacoes" class="form-control" rows="4">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; gap:.75rem; margin-top:1.5rem; flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary">Salvar Anamnese</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

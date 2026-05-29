@@ -33,6 +33,9 @@ echo "==> Rodando migrate e collectstatic..."
 python manage.py migrate
 python manage.py collectstatic --noinput
 
+echo "==> Importando documentos da biblioteca..."
+python documentos/analisar_docs.py
+
 echo "==> Configurando Gunicorn como servico..."
 cp deploy/gunicorn.service /etc/systemd/system/gunicorn.service
 systemctl daemon-reload

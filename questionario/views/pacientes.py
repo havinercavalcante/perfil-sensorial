@@ -17,6 +17,14 @@ from ..models import (
     AvaliacaoDesenvolvimento, AvaliacaoSono,
     AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
     AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
+    # Módulos de psicologia
+    AvaliacaoBDI, AvaliacaoBAI, AvaliacaoDASS21, AvaliacaoHAD, AvaliacaoBSL23,
+    AvaliacaoAQ10Adulto, AvaliacaoAQ10Child, AvaliacaoDepEmocional, AvaliacaoSCQ,
+    # Lote 2
+    AvaliacaoConners, AvaliacaoETDAH, AvaliacaoAUQEI, AvaliacaoSCARED,
+    AvaliacaoMASC, AvaliacaoBPQ,
+    AvaliacaoAnamneseTEAInf, AvaliacaoAnamneseTDAHInf,
+    AvaliacaoAnamneseAdulto, AvaliacaoAnamneseTDAHAdulto,
 )
 from ..services import build_lista_com_link, build_lista_sem_pagina
 from django.urls import reverse
@@ -345,6 +353,36 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_comportamento": build_lista_com_link(paciente.avaliacoes_comportamento_funcional.all(), request, "comportamento_publico"),
         "avaliacoes_cognitivo": build_lista_com_link(paciente.avaliacoes_cognitivo.all(), request, "cognitivo_publico"),
         "avaliacoes_psicopedagogica": build_lista_com_link(paciente.avaliacoes_psicopedagogica.all(), request, "psicopedagogica_publico"),
+        # Módulos de psicologia
+        "avaliacoes_bdi": build_lista_com_link(paciente.avaliacoes_bdi.all(), request, "bdi_publico"),
+        "avaliacoes_bai": build_lista_com_link(paciente.avaliacoes_bai.all(), request, "bai_publico"),
+        "avaliacoes_dass21": build_lista_com_link(paciente.avaliacoes_dass21.all(), request, "dass21_publico"),
+        "avaliacoes_had": build_lista_com_link(paciente.avaliacoes_had.all(), request, "had_publico"),
+        "avaliacoes_bsl23": build_lista_com_link(paciente.avaliacoes_bsl23.all(), request, "bsl23_publico"),
+        "avaliacoes_aq10_adulto": build_lista_com_link(paciente.avaliacoes_aq10_adulto.all(), request, "aq10_adulto_publico"),
+        "avaliacoes_aq10_child": build_lista_com_link(paciente.avaliacoes_aq10_child.all(), request, "aq10_child_publico"),
+        "avaliacoes_dep_emocional": build_lista_com_link(paciente.avaliacoes_dep_emocional.all(), request, "dep_emocional_publico"),
+        "avaliacoes_scq": build_lista_com_link(paciente.avaliacoes_scq.all(), request, "scq_publico"),
+        # Lote 2
+        "avaliacoes_conners_pais": build_lista_com_link(paciente.avaliacoes_conners.filter(respondente="pais").all(), request, "conners_pais_publico"),
+        "avaliacoes_conners_prof": build_lista_com_link(paciente.avaliacoes_conners.filter(respondente="professor").all(), request, "conners_prof_publico"),
+        "avaliacoes_etdah_pais": build_lista_com_link(paciente.avaliacoes_etdah.filter(respondente="pais").all(), request, "etdah_pais_publico"),
+        "avaliacoes_etdah_prof": build_lista_com_link(paciente.avaliacoes_etdah.filter(respondente="professor").all(), request, "etdah_prof_publico"),
+        "avaliacoes_auqei": build_lista_com_link(paciente.avaliacoes_auqei.all(), request, "auqei_publico"),
+        "avaliacoes_scared": build_lista_com_link(paciente.avaliacoes_scared.all(), request, "scared_publico"),
+        "avaliacoes_masc": build_lista_com_link(paciente.avaliacoes_masc.all(), request, "masc_publico"),
+        "avaliacoes_bpq": build_lista_com_link(paciente.avaliacoes_bpq.all(), request, "bpq_publico"),
+        "avaliacoes_anamnese_tea_inf": paciente.avaliacoes_anamnese_tea_inf.all(),
+        "avaliacoes_anamnese_tdah_inf": paciente.avaliacoes_anamnese_tdah_inf.all(),
+        "avaliacoes_anamnese_adulto": paciente.avaliacoes_anamnese_adulto.all(),
+        "avaliacoes_anamnese_tdah_adulto": paciente.avaliacoes_anamnese_tdah_adulto.all(),
+        # Lote 3: Denver, QMPI, Dislexia
+        "avaliacoes_denver": paciente.avaliacoes_denver.all(),
+        "avaliacoes_qmpi": build_lista_com_link(paciente.avaliacoes_qmpi.all(), request, "qmpi_publico"),
+        "avaliacoes_quest_dislexia": build_lista_com_link(paciente.avaliacoes_quest_dislexia.all(), request, "quest_dislexia_publico"),
+        "avaliacoes_checklist_dislexia": build_lista_com_link(paciente.avaliacoes_checklist_dislexia.all(), request, "checklist_dislexia_publico"),
+        "avaliacoes_prot_dislexia_prof": build_lista_com_link(paciente.avaliacoes_prot_dislexia_prof.all(), request, "prot_dislexia_prof_publico"),
+        "avaliacoes_inventario_dislexia": paciente.avaliacoes_inventario_dislexia.all(),
     })
 
 

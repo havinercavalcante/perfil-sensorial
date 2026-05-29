@@ -3,6 +3,6 @@ from . import views
 
 urlpatterns = [
     path("biblioteca/",                        views.biblioteca,          name="biblioteca"),
-    path("biblioteca/<int:pk>/download/",      views.download_documento,  name="download_documento"),
-    path("biblioteca/<int:pk>/preview/",       views.preview_documento,   name="preview_documento"),
+    path("biblioteca/<uuid:token>/download/",   views.download_documento,  name="download_documento"),
+    path("biblioteca/<uuid:token>/preview/",   views.preview_documento,   name="preview_documento"),
 ]

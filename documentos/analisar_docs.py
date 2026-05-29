@@ -6,7 +6,7 @@ from pathlib import Path
 from collections import defaultdict
 
 BASE_DIR = Path(__file__).resolve().parent
-sys.path.insert(0, str(BASE_DIR))
+sys.path.insert(0, str(BASE_DIR.parent))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "perfil_sensorial.settings")
 django.setup()
 
@@ -14,7 +14,7 @@ from django.core.files import File
 from documentos.models import CategoriaDocumento, Documento
 from questionario.models import Especialidade
 
-DOCS_DIR = BASE_DIR / "docs_extraidos" / "docs"
+DOCS_DIR = BASE_DIR.parent / "media" / "documentos"
 EXTENSOES_OK = {".pdf", ".docx", ".doc"}
 
 
@@ -388,20 +388,19 @@ def md5_arquivo(path):
 
 def limpar_titulo(nome):
     stem = Path(nome).stem
+    # Remove timestamps e hashes ANTES de trocar separadores
+    stem = re.sub(r'[_\-][a-f0-9]{20,}(\s*\(\d+\))?$', '', stem)
+    stem = re.sub(r'[a-f0-9]{20,}[_\-]', '', stem)
+    stem = re.sub(r'_\d{8}_\d{6}_\d{4}', '', stem)
     stem = re.sub(r'\s*\(\d+\)\s*$', '', stem)
     stem = re.sub(r'^\d+[\)\-\+\s]+', '', stem)
-    stem = stem.replace("_", " ").replace("+", " ")
+    # Troca separadores por espaço
+    stem = stem.replace("_", " ").replace("-", " ").replace("+", " ")
     stem = re.sub(r'\.(pdf|docx|doc)$', '', stem, flags=re.IGNORECASE)
-    stem = re.sub(r'_\d{8}_\d{6}_\d{4}', '', stem)
-    # Remove hashes MD5-like no final ou no nome
-    stem = re.sub(r'_[a-f0-9]{20,}(\s*\(\d+\))?$', '', stem)
-    stem = re.sub(r'[a-f0-9]{20,}[-_]', '', stem)
     stem = re.sub(r'\s+', ' ', stem).strip()
-    # Capitaliza a primeira letra de cada palavra relevante
-    if stem == stem.upper():  # se estava tudo maiúsculo
+    if stem == stem.upper():
         stem = stem.title()
     stem = stem[0].upper() + stem[1:] if stem else stem
-    # Remove prefixo "Cópia De "
     stem = re.sub(r'^Cópia De ', '', stem, flags=re.IGNORECASE)
     stem = re.sub(r'^Copia De ', '', stem, flags=re.IGNORECASE)
     return stem.strip() or "Documento"
@@ -560,11 +559,10 @@ def analisar_e_importar(dry_run=False):
             continue
 
         try:
-            with open(f, "rb") as arq:
-                doc = Documento(titulo=titulo, categoria=categoria,
-                                plano_minimo=plano, ativo=True)
-                doc.arquivo.save(f.name, File(arq), save=False)
-                doc.save()
+            doc = Documento(titulo=titulo, categoria=categoria,
+                            plano_minimo=plano, ativo=True)
+            doc.arquivo.name = f"documentos/{f.name}"
+            doc.save()
 
             if espec_cod:
                 doc.especialidades.set(

@@ -1,0 +1,98 @@
+{% extends "questionario/base.html" %}
+{% block title %}Anamnese TDAH Infantil — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .anamnese-header {
+    background: linear-gradient(135deg, #1A252F, #2C3E50);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .anamnese-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .form-label { font-weight: 600; margin-bottom: .3rem; display: block; font-size: .9rem; }
+  textarea.form-control { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem; font-size: .88rem; resize: vertical; background: var(--bg-secondary); color: var(--text); font-family: inherit; }
+  textarea.form-control:focus { outline: none; border-color: var(--primary); }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="anamnese-header">
+  <h1><i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Anamnese TDAH Infantil</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d/m/Y" }}</p>
+</div>
+
+<div class="card">
+  <form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Queixa Principal</label>
+      <textarea name="queixa_principal" class="form-control" rows="3">{{ avaliacao.queixa_principal }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Gestacional</label>
+      <textarea name="historico_gestacional" class="form-control" rows="3">{{ avaliacao.historico_gestacional }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Marcos de Desenvolvimento</label>
+      <textarea name="marcos_desenvolvimento" class="form-control" rows="3">{{ avaliacao.marcos_desenvolvimento }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Desempenho Escolar</label>
+      <textarea name="desempenho_escolar" class="form-control" rows="3">{{ avaliacao.desempenho_escolar }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Comportamento em Casa</label>
+      <textarea name="comportamento_casa" class="form-control" rows="3">{{ avaliacao.comportamento_casa }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Comportamento na Escola</label>
+      <textarea name="comportamento_escola" class="form-control" rows="3">{{ avaliacao.comportamento_escola }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Atenção e Concentração</label>
+      <textarea name="atencao_concentracao" class="form-control" rows="3">{{ avaliacao.atencao_concentracao }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Hiperatividade e Impulsividade</label>
+      <textarea name="hiperatividade_impulsividade" class="form-control" rows="3">{{ avaliacao.hiperatividade_impulsividade }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Relacionamentos</label>
+      <textarea name="relacionamentos" class="form-control" rows="3">{{ avaliacao.relacionamentos }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Médico</label>
+      <textarea name="historico_medico" class="form-control" rows="3">{{ avaliacao.historico_medico }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Medicamentos em Uso</label>
+      <textarea name="medicamentos" class="form-control" rows="3">{{ avaliacao.medicamentos }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Histórico Familiar</label>
+      <textarea name="historico_familiar" class="form-control" rows="3">{{ avaliacao.historico_familiar }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Sono</label>
+      <textarea name="sono" class="form-control" rows="3">{{ avaliacao.sono }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Terapias Anteriores</label>
+      <textarea name="terapias_anteriores" class="form-control" rows="3">{{ avaliacao.terapias_anteriores }}</textarea>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label class="form-label">Observações Clínicas</label>
+      <textarea name="observacoes" class="form-control" rows="4">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; gap:.75rem; margin-top:1.5rem; flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary">Salvar Anamnese</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

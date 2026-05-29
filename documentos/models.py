@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from questionario.models import Especialidade
@@ -28,6 +29,7 @@ class Documento(models.Model):
         ("elite", "ELITE"),
     ]
 
+    token         = models.UUIDField("Token", default=uuid.uuid4, editable=False, unique=True)
     titulo        = models.CharField("Título", max_length=200)
     descricao     = models.TextField("Descrição", blank=True)
     categoria     = models.ForeignKey(

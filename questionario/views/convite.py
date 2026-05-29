@@ -20,6 +20,12 @@ from ..models import (
     AvaliacaoDesenvolvimento, AvaliacaoSono,
     AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
     AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
+    # Módulos de psicologia
+    AvaliacaoBDI, AvaliacaoBAI, AvaliacaoDASS21, AvaliacaoHAD, AvaliacaoBSL23,
+    AvaliacaoAQ10Adulto, AvaliacaoAQ10Child, AvaliacaoDepEmocional, AvaliacaoSCQ,
+    # Lote 2
+    AvaliacaoConners, AvaliacaoETDAH, AvaliacaoAUQEI, AvaliacaoSCARED,
+    AvaliacaoMASC, AvaliacaoBPQ,
 )
 from ..services import TIPO_INFO
 
@@ -279,10 +285,61 @@ def iniciar_avaliacao(request, token):
         elif tipo == "psicopedagogica":
             AvaliacaoPsicopedagogica.objects.create(paciente=paciente, token=t)
             return redirect("psicopedagogica_publico", token=t, pagina=1)
+        elif tipo == "bdi":
+            AvaliacaoBDI.objects.create(paciente=paciente, token=t)
+            return redirect("bdi_publico", token=t, pagina=1)
+        elif tipo == "bai":
+            AvaliacaoBAI.objects.create(paciente=paciente, token=t)
+            return redirect("bai_publico", token=t, pagina=1)
+        elif tipo == "dass21":
+            AvaliacaoDASS21.objects.create(paciente=paciente, token=t)
+            return redirect("dass21_publico", token=t, pagina=1)
+        elif tipo == "had":
+            AvaliacaoHAD.objects.create(paciente=paciente, token=t)
+            return redirect("had_publico", token=t, pagina=1)
+        elif tipo == "bsl23":
+            AvaliacaoBSL23.objects.create(paciente=paciente, token=t)
+            return redirect("bsl23_publico", token=t, pagina=1)
+        elif tipo == "aq10_adulto":
+            AvaliacaoAQ10Adulto.objects.create(paciente=paciente, token=t)
+            return redirect("aq10_adulto_publico", token=t, pagina=1)
+        elif tipo == "aq10_child":
+            AvaliacaoAQ10Child.objects.create(paciente=paciente, token=t)
+            return redirect("aq10_child_publico", token=t, pagina=1)
+        elif tipo == "dep_emocional":
+            AvaliacaoDepEmocional.objects.create(paciente=paciente, token=t)
+            return redirect("dep_emocional_publico", token=t, pagina=1)
+        elif tipo == "scq":
+            AvaliacaoSCQ.objects.create(paciente=paciente, token=t)
+            return redirect("scq_publico", token=t, pagina=1)
+        elif tipo == "conners_pais":
+            AvaliacaoConners.objects.create(paciente=paciente, token=t, respondente="pais")
+            return redirect("conners_pais_publico", token=t, pagina=1)
+        elif tipo == "conners_prof":
+            AvaliacaoConners.objects.create(paciente=paciente, token=t, respondente="professor")
+            return redirect("conners_prof_publico", token=t, pagina=1)
+        elif tipo == "etdah_pais":
+            AvaliacaoETDAH.objects.create(paciente=paciente, token=t, respondente="pais")
+            return redirect("etdah_pais_publico", token=t, pagina=1)
+        elif tipo == "etdah_prof":
+            AvaliacaoETDAH.objects.create(paciente=paciente, token=t, respondente="professor")
+            return redirect("etdah_prof_publico", token=t, pagina=1)
+        elif tipo == "auqei":
+            AvaliacaoAUQEI.objects.create(paciente=paciente, token=t)
+            return redirect("auqei_publico", token=t, pagina=1)
+        elif tipo == "scared":
+            AvaliacaoSCARED.objects.create(paciente=paciente, token=t)
+            return redirect("scared_publico", token=t, pagina=1)
+        elif tipo == "masc":
+            AvaliacaoMASC.objects.create(paciente=paciente, token=t)
+            return redirect("masc_publico", token=t, pagina=1)
+        elif tipo == "bpq":
+            AvaliacaoBPQ.objects.create(paciente=paciente, token=t)
+            return redirect("bpq_publico", token=t, pagina=1)
         else:
             # Módulos presenciais ou em desenvolvimento digital:
-            # CARS-2, EDM, MABC-2, Beery, Conners, ETDAH, BDI, BAI,
-            # DASS-21, HAD, BSL-23, AQ-10, SCQ, AUQEI, QMPI, anamneses, dislexia etc.
+            # CARS-2, EDM, MABC-2, Beery, Conners, ETDAH, AUQEI, MASC, SCARED,
+            # BPQ, QMPI, anamneses, dislexia etc.
             return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,

@@ -1,0 +1,132 @@
+{% extends "questionario/base.html" %}
+{% block title %}Dependência Emocional — Resultado — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .resultado-header {
+    background: linear-gradient(135deg, #922B21, #E74C3C);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .sub-row { display:flex; align-items:center; gap:.75rem; padding:.7rem 0; border-bottom:1px solid var(--border); }
+  .sub-row:last-child { border-bottom:none; }
+  .sub-nome { flex:0 0 180px; font-size:.88rem; font-weight:600; }
+  .bar-wrap { flex:1; background:#F3F4F6; border-radius:6px; height:16px; overflow:hidden; }
+  .bar-fill { height:16px; border-radius:6px; transition:width .5s; }
+  .score-num { min-width:60px; text-align:right; font-size:.88rem; font-weight:700; }
+  .class-badge { padding:.2rem .65rem; border-radius:6px; font-size:.75rem; font-weight:700; }
+  .class-Baixo   { background: #D1FAE5; color: #065F46; }
+  .class-Médio   { background: #FEF3C7; color: #92400E; }
+  .class-Alto    { background: #FEE2E2; color: #991B1B; }
+  .class-Severo  { background: #7F1D1D; color: #fff; }
+  .obs-form textarea { width: 100%; min-height: 100px; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem; font-size: .88rem; resize: vertical; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="heart-crack" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Questionário de Dependência Emocional</h1>
+      <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Subescalas -->
+<div class="card">
+  <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Resultados por Subescala</div>
+  {% for sub in resultado %}
+  <div class="sub-row">
+    <span class="sub-nome" style="color:{{ sub.cor }};">{{ sub.nome }}</span>
+    <div class="bar-wrap">
+      <div class="bar-fill" style="width:{{ sub.pct }}%; background:{{ sub.cor }};"></div>
+    </div>
+    <span class="score-num">{{ sub.score }}/{{ sub.max }}</span>
+    <span class="class-badge class-{{ sub.classificacao }}">{{ sub.classificacao }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Legenda -->
+<div class="card" style="font-size:.82rem;">
+  <div class="card-title"><i data-lucide="info" style="width:16px;height:16px;"></i> Sobre o Instrumento</div>
+  <p style="color:var(--text-muted); font-size:.78rem;">Referência: Lemos & Londoño (2006). Questionário de Dependência Emocional (QDE). Cada subescala avalia uma dimensão específica da dependência emocional em relacionamentos afetivos. Escala de resposta: 1 (completamente falso) a 6 (me descreve perfeitamente).</p>
+</div>
+
+{% if tem_comparativo %}
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal</div>
+  <canvas id="chartComparativo" height="120"></canvas>
+</div>
+{% endif %}
+
+<!-- Observações -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form class="obs-form" method="post" action="{% url 'salvar_observacoes_dep_emocional' avaliacao.uuid %}">
+    {% csrf_token %}
+    <textarea name="observacoes" placeholder="Adicione observações clínicas…">{{ avaliacao.observacoes }}</textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:.5rem;">Salvar</button>
+  </form>
+</div>
+
+{% if outras_avaliacoes %}
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="list" style="width:18px;height:18px;"></i> Outras Aplicações</div>
+  <table style="width:100%; font-size:.85rem; border-collapse:collapse;">
+    <thead><tr style="background:var(--bg-secondary);">
+      <th style="padding:.4rem .6rem; text-align:left;">Data</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:.4rem .6rem;">{{ av.data|date:"d/m/Y" }}</td>
+      <td style="padding:.4rem .6rem;"><a href="{% url 'dep_emocional_resultado' av.uuid %}" class="btn btn-sm btn-outline">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="card no-print" style="border-color:#FEE2E2;">
+  <div class="card-title" style="color:#991B1B;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i> Excluir Avaliação</div>
+  <form method="post" action="{% url 'dep_emocional_deletar' avaliacao.uuid %}" onsubmit="return confirm('Excluir esta avaliação de Dependência Emocional?');">
+    {% csrf_token %}
+    <button type="submit" class="btn" style="background:#FEE2E2;color:#991B1B;border-color:#FECACA;">Excluir</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if tem_comparativo %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('chartComparativo').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: { labels: {{ comparativo_labels|safe }}, datasets: {{ comparativo_datasets|safe }} },
+  options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
+});
+</script>
+{% endif %}
+{% endblock %}

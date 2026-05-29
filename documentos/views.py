@@ -2,6 +2,7 @@ import os
 import mimetypes
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.db.models import Q
 from .models import CategoriaDocumento, Documento, DownloadDocumento, PLANO_ORDEM
@@ -45,28 +46,32 @@ def biblioteca(request):
 
     plano_usuario = PLANO_ORDEM.get(perfil.plano, 0)
 
-    documentos = []
+    documentos_lista = []
     for doc in docs_qs:
         plano_doc = PLANO_ORDEM.get(doc.plano_minimo, 1)
-        documentos.append({
-            "doc":      doc,
-            "acesso":   plano_usuario >= plano_doc,
+        documentos_lista.append({
+            "doc":           doc,
+            "acesso":        plano_usuario >= plano_doc,
             "bloqueado_por": doc.plano_minimo if plano_usuario < plano_doc else None,
         })
 
+    paginator = Paginator(documentos_lista, 24)
+    page_obj  = paginator.get_page(request.GET.get("page"))
+
     return render(request, "documentos/biblioteca.html", {
-        "categorias":    categorias,
-        "documentos":    documentos,
+        "categorias":      categorias,
+        "documentos":      page_obj,
+        "page_obj":        page_obj,
         "categoria_ativa": categoria_slug,
-        "busca":         busca,
-        "total":         len(documentos),
-        "sem_plano":     False,
+        "busca":           busca,
+        "total":           len(documentos_lista),
+        "sem_plano":       False,
     })
 
 
 @login_required
-def download_documento(request, pk):
-    doc    = get_object_or_404(Documento, pk=pk, ativo=True)
+def download_documento(request, token):
+    doc    = get_object_or_404(Documento, token=token, ativo=True)
     perfil = request.user.perfil
 
     if not doc.usuario_tem_acesso(perfil):
@@ -93,9 +98,9 @@ def download_documento(request, pk):
 
 
 @login_required
-def preview_documento(request, pk):
+def preview_documento(request, token):
     """Serve PDF inline para visualização no browser."""
-    doc    = get_object_or_404(Documento, pk=pk, ativo=True)
+    doc    = get_object_or_404(Documento, token=token, ativo=True)
     perfil = request.user.perfil
 
     if not doc.usuario_tem_acesso(perfil):
