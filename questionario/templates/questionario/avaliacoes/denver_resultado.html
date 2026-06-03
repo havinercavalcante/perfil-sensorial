@@ -5,22 +5,80 @@
 <style>
   .resultado-header {
     background: linear-gradient(135deg, #1A252F, #2C3E50);
-    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+    color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
   }
-  .resultado-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
-  .sub-row { display:flex; align-items:center; gap:.75rem; padding:.7rem 0; border-bottom:1px solid var(--border); }
-  .sub-row:last-child { border-bottom:none; }
-  .sub-nome { flex:0 0 190px; font-size:.88rem; font-weight:600; }
-  .bar-wrap { flex:1; background:#F3F4F6; border-radius:6px; height:16px; overflow:hidden; }
-  .bar-fill { height:16px; border-radius:6px; transition:width .5s; }
-  .score-num { min-width:80px; text-align:right; font-size:.88rem; font-weight:700; }
-  .info-pill { padding:.2rem .6rem; border-radius:6px; font-size:.75rem; background:var(--bg-secondary); color:var(--text-muted); }
-  .obs-form textarea { width: 100%; min-height: 100px; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem; font-size: .88rem; resize: vertical; }
+  .resultado-header h1 { font-size:1.2rem; margin-bottom:.3rem; }
+
+  /* Domain cards */
+  .dominios-grid {
+    display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1rem;
+  }
+  @media(max-width:600px){ .dominios-grid { grid-template-columns:1fr; } }
+
+  .dominio-card {
+    border-radius:12px; padding:1.1rem 1.2rem;
+    border:2px solid var(--border); background:#fff;
+    position:relative; overflow:hidden;
+  }
+  .dominio-card::before {
+    content:''; position:absolute; top:0; left:0; bottom:0; width:4px;
+    background:var(--dc, #ccc); border-radius:12px 0 0 12px;
+  }
+  .dominio-card-nome { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--dc); margin-bottom:.5rem; }
+  .dominio-card-score { font-size:2rem; font-weight:800; color:var(--text); line-height:1; }
+  .dominio-card-score span { font-size:1rem; font-weight:500; color:var(--text-muted); }
+  .dominio-card-label { font-size:.75rem; color:var(--text-muted); margin-bottom:.6rem; }
+  .dominio-bar-wrap { background:#F3F4F6; border-radius:6px; height:8px; overflow:hidden; margin-bottom:.6rem; }
+  .dominio-bar-fill { height:8px; border-radius:6px; transition:width .6s; }
+  .dominio-pills { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .dominio-pill {
+    padding:.15rem .5rem; border-radius:5px; font-size:.72rem; font-weight:600;
+  }
+  .pill-falha { background:#FEE2E2; color:#991B1B; }
+  .pill-nt    { background:#F3F4F6; color:#6B7280; }
+  .pill-nr    { background:#FEF3C7; color:#92400E; }
+
+  /* Breakdown */
+  .breakdown-section { margin-top:.5rem; }
+  .breakdown-toggle {
+    background:none; border:none; cursor:pointer; font-size:.8rem; font-weight:600;
+    color:var(--text-muted); display:flex; align-items:center; gap:.3rem; padding:.3rem 0;
+    transition:color .15s;
+  }
+  .breakdown-toggle:hover { color:var(--primary); }
+  .breakdown-toggle svg { width:14px; height:14px; transition:transform .2s; }
+  .breakdown-toggle.open svg { transform:rotate(90deg); }
+  .breakdown-list { display:none; margin-top:.5rem; }
+  .breakdown-list.open { display:block; }
+  .item-row {
+    display:flex; align-items:flex-start; gap:.5rem;
+    padding:.35rem 0; border-bottom:1px solid #f0f0f0; font-size:.8rem;
+  }
+  .item-row:last-child { border-bottom:none; }
+  .item-badge {
+    flex-shrink:0; width:24px; height:24px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.7rem; font-weight:800;
+  }
+  .badge-s  { background:#D1FAE5; color:#065F46; }
+  .badge-n  { background:#FEE2E2; color:#991B1B; }
+  .badge-nt { background:#F3F4F6; color:#6B7280; }
+  .badge-nr { background:#FEF3C7; color:#92400E; }
+  .item-faixa { font-size:.68rem; color:var(--text-muted); white-space:nowrap; margin-left:auto; padding-left:.4rem; }
+
+  /* Charts */
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media(max-width:600px){ .charts-row { grid-template-columns:1fr; } }
+
+  /* obs */
+  .obs-form textarea { width:100%; min-height:100px; border:1.5px solid var(--border); border-radius:8px; padding:.6rem; font-size:.88rem; resize:vertical; }
+
   @media print {
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    nav, .btn-back, .no-print { display: none !important; }
-    body { background: #fff; }
-    .card { box-shadow: none; border: 1px solid #ccc; }
+    * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    nav,.btn-back,.no-print { display:none !important; }
+    body { background:#fff; }
+    .card { box-shadow:none; border:1px solid #ccc; }
+    .breakdown-list { display:block !important; }
   }
 </style>
 {% endblock %}
@@ -32,36 +90,94 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- Header -->
 <div class="resultado-header">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1><i data-lucide="baby" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Checklist Denver II — Desenvolvimento</h1>
+      <h1><i data-lucide="trending-up" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Checklist Denver II — Desenvolvimento Infantil</h1>
       <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
       <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
-      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
-      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar</a>
+      <a href="{% url 'denver_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar
+      </a>
     </div>
   </div>
 </div>
 
-<!-- Domínios -->
+<!-- Domain cards -->
 <div class="card">
   <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Marcos por Domínio</div>
-  <p style="font-size:.8rem; color:var(--text-muted); margin-bottom:.75rem;">P = Passa · F = Falha · NT = Não testado. Interpretação clínica — sem ponto de corte numérico.</p>
+  <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:1rem;">
+    <strong>S</strong> = Sim (Passou) &nbsp;·&nbsp; <strong>N</strong> = Não (Falhou) &nbsp;·&nbsp; <strong>NT</strong> = Não testado &nbsp;·&nbsp;
+    Interpretação clínica — sem ponto de corte numérico.
+  </p>
+
+  <div class="dominios-grid">
   {% for dom in resultado %}
-  <div class="sub-row">
-    <span class="sub-nome" style="color:{{ dom.cor }};">{{ dom.nome }}</span>
-    <div class="bar-wrap">
-      <div class="bar-fill" style="width:{{ dom.pct }}%; background:{{ dom.cor }};"></div>
+  <div class="dominio-card" style="--dc:{{ dom.cor }};">
+    <div class="dominio-card-nome">{{ dom.nome }}</div>
+    <div class="dominio-card-score">{{ dom.passa }}<span>/{{ dom.total }}</span></div>
+    <div class="dominio-card-label">marcos atingidos &nbsp;·&nbsp; <strong>{{ dom.pct }}%</strong></div>
+    <div class="dominio-bar-wrap">
+      <div class="dominio-bar-fill" style="width:{{ dom.pct }}%; background:{{ dom.cor }};"></div>
     </div>
-    <span class="score-num">{{ dom.passa }}/{{ dom.total }} P</span>
-    {% if dom.nao_testados %}
-    <span class="info-pill">{{ dom.nao_testados }} NT</span>
-    {% endif %}
+    <div class="dominio-pills">
+      {% if dom.falha %}<span class="dominio-pill pill-falha">{{ dom.falha }} Falhou</span>{% endif %}
+      {% if dom.nt %}<span class="dominio-pill pill-nt">{{ dom.nt }} NT</span>{% endif %}
+      {% if dom.nao_respondidos %}<span class="dominio-pill pill-nr">{{ dom.nao_respondidos }} sem resposta</span>{% endif %}
+    </div>
+
+    <!-- Item breakdown -->
+    <div class="breakdown-section no-print">
+      <button type="button" class="breakdown-toggle" onclick="toggleBreakdown(this)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        Ver itens
+      </button>
+      <div class="breakdown-list">
+        {% for item in dom.itens %}
+        <div class="item-row">
+          {% if item.respondido %}
+            {% if item.valor == 1 %}
+            <span class="item-badge badge-s" title="Passou">S</span>
+            {% elif item.valor == 0 %}
+            <span class="item-badge badge-n" title="Falhou">N</span>
+            {% else %}
+            <span class="item-badge badge-nt" title="Não testado">NT</span>
+            {% endif %}
+          {% else %}
+          <span class="item-badge badge-nr" title="Sem resposta">—</span>
+          {% endif %}
+          <span>{{ item.texto }}</span>
+          {% if item.faixa %}<span class="item-faixa">{{ item.faixa }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
   {% endfor %}
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Visão Gráfica</div>
+  <div class="charts-row">
+    <div>
+      <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-bottom:.5rem;">% de marcos atingidos por domínio</p>
+      <canvas id="chartRadar" height="220"></canvas>
+    </div>
+    <div>
+      <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-bottom:.5rem;">Distribuição das respostas</p>
+      <canvas id="chartBarra" height="220"></canvas>
+    </div>
+  </div>
 </div>
 
 {% if tem_comparativo %}
@@ -72,7 +188,7 @@
 {% endif %}
 
 <!-- Observações -->
-<div class="card no-print">
+<div class="card">
   <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
   <form class="obs-form" method="post" action="{% url 'salvar_observacoes_denver' avaliacao.uuid %}">
     {% csrf_token %}
@@ -87,20 +203,20 @@
   <table style="width:100%; font-size:.85rem; border-collapse:collapse;">
     <thead><tr style="background:var(--bg-secondary);">
       <th style="padding:.4rem .6rem; text-align:left;">Data</th>
-      <th style="padding:.4rem .6rem; text-align:left;">P-S</th>
-      <th style="padding:.4rem .6rem; text-align:left;">M.F.</th>
-      <th style="padding:.4rem .6rem; text-align:left;">Ling.</th>
-      <th style="padding:.4rem .6rem; text-align:left;">M.G.</th>
+      <th style="padding:.4rem .6rem; text-align:left;">P-Social</th>
+      <th style="padding:.4rem .6rem; text-align:left;">M. Fino</th>
+      <th style="padding:.4rem .6rem; text-align:left;">Linguagem</th>
+      <th style="padding:.4rem .6rem; text-align:left;">M. Grosseiro</th>
       <th></th>
     </tr></thead>
     <tbody>
     {% for av in outras_avaliacoes %}
     <tr style="border-bottom:1px solid var(--border);">
       <td style="padding:.4rem .6rem;">{{ av.data|date:"d/m/Y" }}</td>
-      <td style="padding:.4rem .6rem;">{{ av.pont_pessoal_social }}</td>
-      <td style="padding:.4rem .6rem;">{{ av.pont_motor_fino }}</td>
-      <td style="padding:.4rem .6rem;">{{ av.pont_linguagem }}</td>
-      <td style="padding:.4rem .6rem;">{{ av.pont_motor_grosseiro }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_pessoal_social|default:"—" }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_motor_fino|default:"—" }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_linguagem|default:"—" }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_motor_grosseiro|default:"—" }}</td>
       <td style="padding:.4rem .6rem;"><a href="{% url 'denver_resultado' av.uuid %}" class="btn btn-sm btn-outline">Ver</a></td>
     </tr>
     {% endfor %}
@@ -109,25 +225,62 @@
 </div>
 {% endif %}
 
-<div class="card no-print" style="border-color:#FEE2E2;">
-  <div class="card-title" style="color:#991B1B;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i> Excluir Avaliação</div>
-  <form method="post" action="{% url 'denver_deletar' avaliacao.uuid %}" onsubmit="return confirm('Excluir esta avaliação Denver II?');">
-    {% csrf_token %}
-    <button type="submit" class="btn" style="background:#FEE2E2;color:#991B1B;border-color:#FECACA;">Excluir</button>
-  </form>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
-{% if tem_comparativo %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-const ctx = document.getElementById('chartComparativo').getContext('2d');
-new Chart(ctx, {
+// Toggle item breakdown
+function toggleBreakdown(btn) {
+  btn.classList.toggle('open');
+  const list = btn.nextElementSibling;
+  list.classList.toggle('open');
+  btn.querySelector('span') && (btn.querySelector('.breakdown-toggle > span') || btn);
+  const txt = btn.childNodes[btn.childNodes.length - 1];
+  if (txt && txt.nodeType === 3) {
+    txt.textContent = list.classList.contains('open') ? ' Ocultar itens' : ' Ver itens';
+  }
+}
+
+// Radar chart
+const radarData = {{ radar_data|safe }};
+new Chart(document.getElementById('chartRadar'), {
+  type: 'radar',
+  data: radarData,
+  options: {
+    responsive: true,
+    scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font: { size: 10 } }, pointLabels: { font: { size: 11 } } } },
+    plugins: { legend: { display: false } },
+  }
+});
+
+// Stacked bar chart
+const labels = [{% for d in resultado %}'{{ d.nome|truncatechars:12 }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+new Chart(document.getElementById('chartBarra'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [
+      { label: 'Passou',   data: [{% for d in resultado %}{{ d.passa }}{% if not forloop.last %},{% endif %}{% endfor %}], backgroundColor: '#10B981' },
+      { label: 'Falhou',   data: [{% for d in resultado %}{{ d.falha }}{% if not forloop.last %},{% endif %}{% endfor %}], backgroundColor: '#EF4444' },
+      { label: 'NT',       data: [{% for d in resultado %}{{ d.nt }}{% if not forloop.last %},{% endif %}{% endfor %}],    backgroundColor: '#D1D5DB' },
+      { label: 'Sem resp.',data: [{% for d in resultado %}{{ d.nao_respondidos }}{% if not forloop.last %},{% endif %}{% endfor %}], backgroundColor: '#FCD34D' },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 5 } } },
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } } },
+  }
+});
+
+{% if tem_comparativo %}
+new Chart(document.getElementById('chartComparativo'), {
   type: 'line',
   data: { labels: {{ comparativo_labels|safe }}, datasets: {{ comparativo_datasets|safe }} },
   options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
 });
-</script>
 {% endif %}
+</script>
 {% endblock %}

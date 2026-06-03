@@ -15,6 +15,8 @@
   .class-Moderado     { background: #FED7AA; color: #9A3412; }
   .class-Grave        { background: #FEE2E2; color: #991B1B; }
   .class-Muito-Grave  { background: #7F1D1D; color: #fff; }
+  .class-Assintomático { background: #D1FAE5; color: #065F46; }
+  .class-Sintomático   { background: #FEE2E2; color: #991B1B; }
   .obs-form textarea { width: 100%; min-height: 100px; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem; font-size: .88rem; resize: vertical; }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -40,6 +42,7 @@
       <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <a href="{% url 'bsl23_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar</a>
     </div>
@@ -48,8 +51,8 @@
 
 <!-- Média Total -->
 <div class="card score-box" style="
-  background: {% if class_total == 'Normal' %}#D1FAE5{% elif class_total == 'Leve' %}#FEF3C7{% elif class_total == 'Moderado' %}#FED7AA{% elif class_total == 'Grave' %}#FEE2E2{% else %}#7F1D1D{% endif %};
-  border: 1.5px solid {% if class_total == 'Normal' %}#6EE7B7{% elif class_total == 'Leve' %}#FCD34D{% elif class_total == 'Moderado' %}#FDBA74{% elif class_total == 'Grave' %}#FECACA{% else %}#991B1B{% endif %};">
+  background: {% if class_total == 'Assintomático' %}#D1FAE5{% else %}#FEE2E2{% endif %};
+  border: 1.5px solid {% if class_total == 'Assintomático' %}#6EE7B7{% else %}#FECACA{% endif %};">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
     <div>
       <div style="font-size:.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; opacity:.7; margin-bottom:.2rem;">Média Total (0–4)</div>
@@ -58,6 +61,53 @@
     <span class="class-badge class-{{ class_total }}" style="font-size:.85rem; padding:.35rem 1rem;">{{ class_total }}</span>
   </div>
 </div>
+
+
+
+</div>
+
+<!-- Escala de classificação -->
+<div class="card">
+  <div class="card-title"><i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i> Posição na Escala</div>
+  <div id="bandChart-{{ avaliacao.uuid }}" style="padding:.5rem 0 1.5rem;"></div>
+  <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
+    {% for label, min_v, max_v in corte %}
+    <span class="class-badge class-{{ label }}">{{ label }}: {{ min_v }}–{{ max_v }}</span>
+    {% endfor %}
+  </div>
+</div>
+<script>
+(function(){
+  var bands=[{% for label, min_v, max_v in corte %}{"label":"{{ label }}","min":{{ min_v }},"max":{{ max_v }}}{% if not forloop.last %},{% endif %}{% endfor %}];
+  var total={{ total|floatformat:"0" }}, maxTotal={{ max_total }};
+  var colors={"Mínimo":"#10B981","Normal":"#10B981","Negativo":"#10B981","Satisfatório":"#10B981",
+    "Leve":"#F59E0B","Provável":"#F59E0B","Em Desenvolvimento":"#F59E0B",
+    "Moderado":"#F97316","Definido":"#F97316","Borderline":"#F97316","Comprometido":"#F97316",
+    "Grave":"#EF4444","Muito Grave":"#7F1D1D","Positivo":"#EF4444"};
+  var wrap=document.getElementById('bandChart-{{ avaliacao.uuid }}');
+  if(!wrap)return;
+  var bar=document.createElement('div');
+  bar.style='position:relative;height:28px;border-radius:8px;overflow:hidden;background:#F3F4F6;';
+  var left=0;
+  bands.forEach(function(b){
+    var w=(b.max-b.min+1)/maxTotal*100;
+    var s=document.createElement('div');
+    s.style='position:absolute;left:'+left.toFixed(2)+'%;width:'+w.toFixed(2)+'%;height:100%;background:'+(colors[b.label]||'#94A3B8')+';opacity:.35;';
+    bar.appendChild(s); left+=w;
+  });
+  var pct=Math.max(0,Math.min(100,total/maxTotal*100));
+  var mk=document.createElement('div');
+  mk.style='position:absolute;top:0;height:100%;left:'+pct.toFixed(2)+'%;transform:translateX(-50%);width:3px;background:#1a1a1a;border-radius:2px;z-index:2;';
+  bar.appendChild(mk);
+  wrap.appendChild(bar);
+  var lbl=document.createElement('div');
+  lbl.style='position:relative;margin-top:4px;height:18px;';
+  var sp=document.createElement('span');
+  sp.style='position:absolute;left:'+pct.toFixed(2)+'%;transform:translateX(-50%);font-size:.75rem;font-weight:800;white-space:nowrap;';
+  sp.textContent=total;
+  lbl.appendChild(sp); wrap.appendChild(lbl);
+})();
+</script>
 
 <!-- Legenda -->
 <div class="card" style="font-size:.82rem;">
@@ -109,16 +159,29 @@
 </div>
 {% endif %}
 
-<div class="card no-print" style="border-color:#FEE2E2;">
-  <div class="card-title" style="color:#991B1B;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i> Excluir Avaliação</div>
-  <form method="post" action="{% url 'bsl23_deletar' avaliacao.uuid %}" onsubmit="return confirm('Excluir esta avaliação BSL-23?');">
-    {% csrf_token %}
-    <button type="submit" class="btn" style="background:#FEE2E2;color:#991B1B;border-color:#FECACA;">Excluir</button>
-  </form>
-</div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+
+// Gauge
+(function(){
+  const el = document.getElementById('chartGauge');
+  if (!el) return;
+  const score = {{ total|floatformat:2 }};
+  const maxV = 4.0;
+  const classColors = {'Mínimo':'#10B981','Normal':'#10B981','Negativo':'#10B981','Satisfatório':'#10B981','Comprometido':'#EF4444',
+    'Leve':'#F59E0B','Moderado':'#F97316','Grave':'#EF4444','Muito Grave':'#7F1D1D','Positivo':'#EF4444','Borderline':'#EF4444'};
+  const cl = '{{ class_total }}';
+  const color = classColors[cl] || '#3498DB';
+  new Chart(el, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [score, maxV - score], backgroundColor: [color, '#F3F4F6'], borderWidth: 0 }] },
+    options: { cutout:'72%', rotation:-90, circumference:180, plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+  });
+})();
+
+</script>
 {% if tem_comparativo %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>

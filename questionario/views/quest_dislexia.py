@@ -181,6 +181,7 @@ def quest_dislexia_resultado(request, avaliacao_id):
         "avaliacao": avaliacao, "paciente": paciente,
         "resultado": resultado, "total": total, "max_total": max_total,
         "corte": QUEST_DISLEXIA_CORTE,
+        "num_positivos": sum(1 for r in resultado if r["positivo"]),
         "outras_avaliacoes": outras,
         "comparativo_labels": json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av]),
         "comparativo_datasets": json.dumps([

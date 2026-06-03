@@ -37,5 +37,10 @@ QMPI_SUBESCALAS = {
     "autismo":   {"nome": "Sinais de TEA",    "cor": "#27AE60", "campo": "pont_autismo",   "itens": [22, 23, 24, 25]},
 }
 
-QMPI_OPCOES = [(0, "Nunca"), (1, "Às vezes"), (2, "Frequentemente"), (3, "Sempre")]
+QMPI_OPCOES = [
+    {"valor": 0, "label": "Nunca"},
+    {"valor": 1, "label": "Às vezes"},
+    {"valor": 2, "label": "Frequentemente"},
+    {"valor": 3, "label": "Sempre"},
+]
 QMPI_CORTE = 3  # pontuação >= 3 por subescala indica rastreio positivo

@@ -26,6 +26,19 @@
     body { background: #fff; }
     .card { box-shadow: none; border: 1px solid #ccc; }
   }
+
+  /* ── Domain cards (injected) ── */
+  .dominios-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1rem; }
+  @media(max-width:600px){ .dominios-grid { grid-template-columns:1fr; } }
+  .dominio-card { border-radius:12px; padding:1.1rem 1.2rem; border:2px solid var(--border); background:#fff; position:relative; overflow:hidden; }
+  .dominio-card::before { content:''; position:absolute; top:0; left:0; bottom:0; width:4px; background:var(--dc,#ccc); border-radius:12px 0 0 12px; }
+  .dominio-card-nome { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--dc); margin-bottom:.4rem; }
+  .dominio-card-score { font-size:1.9rem; font-weight:800; color:var(--text); line-height:1; }
+  .dominio-card-score span { font-size:.95rem; font-weight:500; color:var(--text-muted); }
+  .dominio-card-label { font-size:.73rem; color:var(--text-muted); margin:.3rem 0 .5rem; }
+  .dominio-card-label strong { color:var(--dc); }
+  .dominio-bar-wrap { background:#F3F4F6; border-radius:6px; height:7px; overflow:hidden; }
+  .dominio-bar-fill { height:7px; border-radius:6px; transition:width .6s; }
 </style>
 {% endblock %}
 
@@ -44,6 +57,7 @@
       <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
     </div>
     <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <a href="{% url 'scared_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
       <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar</a>
     </div>
@@ -52,18 +66,19 @@
 
 <div class="card">
   <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Resultados por Subescala</div>
-  {% for sub in resultado %}
-  <div class="sub-row">
-    <span class="sub-nome" style="color:{{ sub.cor }};">{{ sub.nome }}</span>
-    <div class="bar-wrap">
-      <div class="bar-fill" style="width:{{ sub.pct }}%; background:{{ sub.cor }};"></div>
-    </div>
-    <span class="score-num">{{ sub.score }}/{{ sub.max }}</span>
-    {% if sub.classificacao %}
-    <span class="class-badge class-{{ sub.classificacao|slugify }}">{{ sub.classificacao }}</span>
-    {% endif %}
-  </div>
-  {% endfor %}
+  <div class="dominios-grid">
+{% for sub in resultado %}
+<div class="dominio-card" style="--dc:{{ sub.cor }};">
+  <div class="dominio-card-nome">{{ sub.nome }}</div>
+  <div class="dominio-card-score">{{ sub.score }}{% if sub.max %}<span>/{{ sub.max }}</span>{% endif %}</div>
+  <div class="dominio-card-label">{{ sub.pct }}% do máximo{% if sub.classificacao %} &nbsp;·&nbsp; <strong>{{ sub.classificacao }}</strong>{% endif %}</div>
+  <div class="dominio-bar-wrap"><div class="dominio-bar-fill" style="width:{{ sub.pct }}%; background:{{ sub.cor }};"></div></div>
+</div>
+{% endfor %}
+</div>
+<div class="no-print" style="max-width:380px;margin:.5rem auto 0;">
+  <canvas id="chartRadar" height="300"></canvas>
+</div>
   <div style="margin-top:1rem; padding-top:1rem; border-top:2px solid var(--border); display:flex; align-items:center; gap:.75rem;">
     <span style="flex:0 0 220px; font-size:.9rem; font-weight:700;">Total</span>
     <div class="bar-wrap">
@@ -112,16 +127,31 @@
 </div>
 {% endif %}
 
-<div class="card no-print" style="border-color:#FEE2E2;">
-  <div class="card-title" style="color:#991B1B;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i> Excluir Avaliação</div>
-  <form method="post" action="{% url 'scared_deletar' avaliacao.uuid %}" onsubmit="return confirm('Excluir esta avaliação SCARED?');">
-    {% csrf_token %}
-    <button type="submit" class="btn" style="background:#FEE2E2;color:#991B1B;border-color:#FECACA;">Excluir</button>
-  </form>
-</div>
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_js %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+<script>
+new Chart(document.getElementById('chartRadar'), {
+  type: 'radar',
+  data: {
+    labels: [{% for sub in resultado %}'{{ sub.nome }}'{%if not forloop.last%},{% endif %}{% endfor %}],
+    datasets: [{
+      label: 'Score (%)',
+      data: [{% for sub in resultado %}{{ sub.pct }}{%if not forloop.last%},{% endif %}{% endfor %}],
+      backgroundColor: 'rgba(52,152,219,.22)',
+      borderColor: '#3498DB',
+      borderWidth: 2,
+      pointBackgroundColor: [{% for sub in resultado %}'{{ sub.cor }}'{%if not forloop.last%},{% endif %}{% endfor %}],
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: { r: { min:0, max:100, ticks:{ stepSize:25, font:{size:10} }, pointLabels:{ font:{size:11} } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
 {% if tem_comparativo %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>

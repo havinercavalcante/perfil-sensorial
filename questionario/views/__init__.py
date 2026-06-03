@@ -29,6 +29,26 @@ from .comportamento_funcional import *
 from .cognitivo import *
 from .psicopedagogica import *
 # ── Módulos de Psicologia ──────────────────────────────────────────────────
+from .k10 import *
+from .ucla import *
+from .msi_bpd import *
+from .gds15 import *
+from .rosenberg import *
+from .audit import *
+from .bis11 import *
+from .iar import *
+from .pas import *
+from .cdi import *
+from .hama import *
+from .lsas import *
+from .risco_suicidio import *
+from .agorafobia import *
+from .panico import *
+from .phq9 import *
+from .gad7 import *
+from .epds import *
+from .pcl5 import *
+from .ghq12 import *
 from .bdi import *
 from .bai import *
 from .dass21 import *
@@ -71,26 +91,11 @@ from .bpq import (
     nova_avaliacao_bpq, bpq_form, bpq_resultado, bpq_visualizar,
     bpq_deletar, salvar_observacoes_bpq, enviar_email_bpq, bpq_publico,
 )
-from .anamnese_tea_inf import (
-    nova_avaliacao_anamnese_tea_inf, anamnese_tea_inf_form,
-    anamnese_tea_inf_resultado, anamnese_tea_inf_deletar,
-)
-from .anamnese_tdah_inf import (
-    nova_avaliacao_anamnese_tdah_inf, anamnese_tdah_inf_form,
-    anamnese_tdah_inf_resultado, anamnese_tdah_inf_deletar,
-)
-from .anamnese_adulto import (
-    nova_avaliacao_anamnese_adulto, anamnese_adulto_form,
-    anamnese_adulto_resultado, anamnese_adulto_deletar,
-)
-from .anamnese_tdah_adulto import (
-    nova_avaliacao_anamnese_tdah_adulto, anamnese_tdah_adulto_form,
-    anamnese_tdah_adulto_resultado, anamnese_tdah_adulto_deletar,
-)
 # ── Lote 3: Denver, QMPI, Dislexia ────────────────────────────────────────────
 from .denver import (
     nova_avaliacao_denver, denver_form, denver_resultado,
     denver_visualizar, denver_deletar, salvar_observacoes_denver,
+    denver_publico, enviar_email_denver,
 )
 from .qmpi import (
     nova_avaliacao_qmpi, qmpi_form, qmpi_resultado, qmpi_visualizar,

@@ -26,8 +26,26 @@ from ..models import (
     # Lote 2
     AvaliacaoConners, AvaliacaoETDAH, AvaliacaoAUQEI, AvaliacaoSCARED,
     AvaliacaoMASC, AvaliacaoBPQ,
+    # Triagem internacional
+    AvaliacaoPHQ9, AvaliacaoGAD7, AvaliacaoEPDS, AvaliacaoPCL5, AvaliacaoGHQ12,
+    # Novas escalas — adulto
+    AvaliacaoK10, AvaliacaoUCLA, AvaliacaoMSI_BPD, AvaliacaoGDS15, AvaliacaoRosenberg,
+    AvaliacaoAUDIT, AvaliacaoBIS11, AvaliacaoHAMA, AvaliacaoLSAS,
+    AvaliacaoRiscoSuicidio, AvaliacaoAgorafobia, AvaliacaoPanico,
+    # Novas escalas — infantil
+    AvaliacaoIAR, AvaliacaoPAS, AvaliacaoCDI,
 )
 from ..services import TIPO_INFO
+
+TIPOS_ADULTO = {
+    "bdi", "bai", "dass21", "had", "bsl23", "aq10_adulto",
+    "dep_emocional", "bpq",
+    # triagem internacional
+    "phq9", "gad7", "epds", "pcl5", "ghq12",
+    # novas escalas adulto
+    "k10", "ucla", "msi_bpd", "gds15", "rosenberg", "audit", "bis11",
+    "hama", "lsas", "risco_suicidio", "agorafobia", "panico",
+}
 
 
 @login_required
@@ -73,8 +91,6 @@ def gerar_link(request):
         "scared": "scared",
         "masc": "masc",
         "scq": "scq",
-        "anamnese_tea_inf": "anamnese_tea_inf",
-        "anamnese_tdah_inf": "anamnese_tdah_inf",
         # Novos módulos — professor
         "conners_prof": "conners_prof",
         "etdah_prof": "etdah_prof",
@@ -87,8 +103,6 @@ def gerar_link(request):
         "aq10_adulto": "aq10_adulto",
         "dep_emocional": "dep_emocional",
         "bpq": "bpq",
-        "anamnese_adulto": "anamnese_adulto",
-        "anamnese_tdah_adulto": "anamnese_tdah_adulto",
         # Novos módulos — pediatria / neuropsicologia / psicopedagogia
         "denver": "denver",
         "qmpi": "qmpi",
@@ -96,6 +110,29 @@ def gerar_link(request):
         "checklist_dislexia": "checklist_dislexia",
         "prot_dislexia_prof": "prot_dislexia_prof",
         "inventario_dislexia": "inventario_dislexia",
+        # Triagem internacional
+        "phq9": "phq9",
+        "gad7": "gad7",
+        "epds": "epds",
+        "pcl5": "pcl5",
+        "ghq12": "ghq12",
+        # Novas escalas — adulto
+        "k10": "k10",
+        "ucla": "ucla",
+        "msi_bpd": "msi_bpd",
+        "gds15": "gds15",
+        "rosenberg": "rosenberg",
+        "audit": "audit",
+        "bis11": "bis11",
+        "hama": "hama",
+        "lsas": "lsas",
+        "risco_suicidio": "risco_suicidio",
+        "agorafobia": "agorafobia",
+        "panico": "panico",
+        # Novas escalas — infantil
+        "iar": "iar",
+        "pas": "pas",
+        "cdi": "cdi",
     }
 
     modulos_liberados = set()
@@ -171,19 +208,24 @@ def iniciar_avaliacao(request, token):
             "ja_utilizado": True,
         })
 
+    is_adulto = convite.tipo in TIPOS_ADULTO
+
     if request.method == "POST":
         nome = request.POST.get("nome", "").strip()
         data_nascimento = request.POST.get("data_nascimento", "")
-        responsavel = request.POST.get("responsavel", "").strip()
+        responsavel = request.POST.get("responsavel", "").strip() if not is_adulto else nome
         email = request.POST.get("email_responsavel", "").strip()
         telefone = request.POST.get("telefone", "").strip()
         consentimento = request.POST.get("consentimento", "")
 
-        if not nome or not data_nascimento or not responsavel:
+        campos_obrigatorios_faltando = not nome or not data_nascimento or (not is_adulto and not responsavel)
+        if campos_obrigatorios_faltando:
+            msg = "Preencha os campos obrigatórios (nome e data de nascimento)." if is_adulto else "Preencha os campos obrigatórios (nome, data de nascimento e responsável)."
             return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "post": request.POST,
-                "erro": "Preencha os campos obrigatórios (nome, data de nascimento e responsável).",
+                "erro": msg,
+                "is_adulto": is_adulto,
             })
 
         if not consentimento:
@@ -191,6 +233,7 @@ def iniciar_avaliacao(request, token):
                 "convite": convite,
                 "post": request.POST,
                 "erro": "Você deve aceitar a Política de Privacidade para continuar.",
+                "is_adulto": is_adulto,
             })
 
         paciente = Paciente.objects.create(
@@ -336,10 +379,68 @@ def iniciar_avaliacao(request, token):
         elif tipo == "bpq":
             AvaliacaoBPQ.objects.create(paciente=paciente, token=t)
             return redirect("bpq_publico", token=t, pagina=1)
+        elif tipo == "phq9":
+            AvaliacaoPHQ9.objects.create(paciente=paciente, token=t)
+            return redirect("phq9_publico", token=t, pagina=1)
+        elif tipo == "gad7":
+            AvaliacaoGAD7.objects.create(paciente=paciente, token=t)
+            return redirect("gad7_publico", token=t, pagina=1)
+        elif tipo == "epds":
+            AvaliacaoEPDS.objects.create(paciente=paciente, token=t)
+            return redirect("epds_publico", token=t, pagina=1)
+        elif tipo == "pcl5":
+            AvaliacaoPCL5.objects.create(paciente=paciente, token=t)
+            return redirect("pcl5_publico", token=t, pagina=1)
+        elif tipo == "ghq12":
+            AvaliacaoGHQ12.objects.create(paciente=paciente, token=t)
+            return redirect("ghq12_publico", token=t, pagina=1)
+        elif tipo == "k10":
+            AvaliacaoK10.objects.create(paciente=paciente, token=t)
+            return redirect("k10_publico", token=t, pagina=1)
+        elif tipo == "ucla":
+            AvaliacaoUCLA.objects.create(paciente=paciente, token=t)
+            return redirect("ucla_publico", token=t, pagina=1)
+        elif tipo == "msi_bpd":
+            AvaliacaoMSI_BPD.objects.create(paciente=paciente, token=t)
+            return redirect("msi_bpd_publico", token=t, pagina=1)
+        elif tipo == "gds15":
+            AvaliacaoGDS15.objects.create(paciente=paciente, token=t)
+            return redirect("gds15_publico", token=t, pagina=1)
+        elif tipo == "rosenberg":
+            AvaliacaoRosenberg.objects.create(paciente=paciente, token=t)
+            return redirect("rosenberg_publico", token=t, pagina=1)
+        elif tipo == "audit":
+            AvaliacaoAUDIT.objects.create(paciente=paciente, token=t)
+            return redirect("audit_publico", token=t, pagina=1)
+        elif tipo == "bis11":
+            AvaliacaoBIS11.objects.create(paciente=paciente, token=t)
+            return redirect("bis11_publico", token=t, pagina=1)
+        elif tipo == "hama":
+            AvaliacaoHAMA.objects.create(paciente=paciente, token=t)
+            return redirect("hama_publico", token=t, pagina=1)
+        elif tipo == "lsas":
+            AvaliacaoLSAS.objects.create(paciente=paciente, token=t)
+            return redirect("lsas_publico", token=t, pagina=1)
+        elif tipo == "risco_suicidio":
+            AvaliacaoRiscoSuicidio.objects.create(paciente=paciente, token=t)
+            return redirect("risco_suicidio_publico", token=t, pagina=1)
+        elif tipo == "agorafobia":
+            AvaliacaoAgorafobia.objects.create(paciente=paciente, token=t)
+            return redirect("agorafobia_publico", token=t, pagina=1)
+        elif tipo == "panico":
+            AvaliacaoPanico.objects.create(paciente=paciente, token=t)
+            return redirect("panico_publico", token=t, pagina=1)
+        elif tipo == "iar":
+            AvaliacaoIAR.objects.create(paciente=paciente, token=t)
+            return redirect("iar_publico", token=t, pagina=1)
+        elif tipo == "pas":
+            AvaliacaoPAS.objects.create(paciente=paciente, token=t)
+            return redirect("pas_publico", token=t, pagina=1)
+        elif tipo == "cdi":
+            AvaliacaoCDI.objects.create(paciente=paciente, token=t)
+            return redirect("cdi_publico", token=t, pagina=1)
         else:
-            # Módulos presenciais ou em desenvolvimento digital:
-            # CARS-2, EDM, MABC-2, Beery, Conners, ETDAH, AUQEI, MASC, SCARED,
-            # BPQ, QMPI, anamneses, dislexia etc.
+            # Módulos presenciais: CARS-2, EDM, MABC-2, Beery, Denver, QMPI, dislexia etc.
             return render(request, "questionario/dashboard/iniciar_avaliacao.html", {
                 "convite": convite,
                 "cadastrado": True,
@@ -350,4 +451,5 @@ def iniciar_avaliacao(request, token):
         "convite": convite,
         "tipo_label": label,
         "tipo_icon": icon,
+        "is_adulto": is_adulto,
     })

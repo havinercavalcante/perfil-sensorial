@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('questionario.urls')),
     path('', include('documentos.urls')),
+    path('', include('procedimentos.urls')),
     path('password_reset/', auth_views.PasswordResetView.as_view(
         email_template_name='questionario/emails/password_reset_email.txt',
         html_email_template_name='questionario/emails/password_reset_email_html.html',

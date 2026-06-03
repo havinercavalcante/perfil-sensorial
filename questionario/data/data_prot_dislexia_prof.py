@@ -29,5 +29,10 @@ PROT_DISLEXIA_PROF_SUBESCALAS = {
     "organizacao": {"nome": "Organização", "cor": "#E67E22", "campo": "pont_organizacao", "itens": [15, 16, 17, 18]},
 }
 
-PROT_DISLEXIA_PROF_OPCOES = [(0, "Nunca"), (1, "Às vezes"), (2, "Frequentemente"), (3, "Sempre")]
+PROT_DISLEXIA_PROF_OPCOES = [
+    {"valor": 0, "label": "Nunca"},
+    {"valor": 1, "label": "Às vezes"},
+    {"valor": 2, "label": "Frequentemente"},
+    {"valor": 3, "label": "Sempre"},
+]
 PROT_DISLEXIA_PROF_CORTE = 2  # media >= 2 por subescala

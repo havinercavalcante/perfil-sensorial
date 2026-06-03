@@ -1,0 +1,183 @@
+{% extends "questionario/base.html" %}
+{% block title %}Anamnese Clínica — TDAH — {{ paciente.nome }}{% endblock %}
+{% block extra_css %}
+<style>
+  .laudo-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; background:linear-gradient(135deg,var(--primary-dark),var(--primary)); color:#fff; border-radius:12px; padding:1rem 1.4rem; margin-bottom:1.5rem; }
+  .laudo-toolbar h1 { font-size:1.1rem; margin:0; display:flex; align-items:center; gap:.5rem; }
+  .laudo-toolbar-hint { font-size:.8rem; opacity:.8; }
+  .laudo-toolbar-actions { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
+  .laudo-doc { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:2.8rem 3rem; max-width:820px; margin:0 auto 2rem; font-family:'Georgia','Times New Roman',serif; font-size:.95rem; line-height:1.7; color:#1a1a1a; }
+  .laudo-header { text-align:center; margin-bottom:2rem; padding-bottom:1.2rem; border-bottom:2px solid #1a3a6b; }
+  .laudo-header .laudo-sistema { font-size:.85rem; letter-spacing:.08em; text-transform:uppercase; color:#1a3a6b; font-weight:700; font-family:sans-serif; margin-bottom:.3rem; }
+  .laudo-header h2 { font-size:1.25rem; font-weight:700; color:#1a1a1a; margin:0 0 .25rem; }
+  .laudo-header .laudo-ref { font-size:.82rem; color:#555; font-style:italic; }
+  .laudo-secao { margin-bottom:1.8rem; }
+  .laudo-secao-titulo { font-family:sans-serif; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#1a3a6b; margin-bottom:.7rem; padding-bottom:.3rem; border-bottom:1px solid #c8d8f0; }
+  .id-grid { display:grid; grid-template-columns:1fr 1fr; gap:.3rem .5rem; font-size:.9rem; }
+  .id-linha { display:flex; gap:.4rem; }
+  .id-label { font-weight:600; white-space:nowrap; color:#333; font-family:sans-serif; font-size:.85rem; min-width:140px; }
+  .edit-block { min-height:70px; border:1.5px dashed #b0c4de; border-radius:8px; padding:.75rem 1rem; outline:none; line-height:1.7; font-family:'Georgia','Times New Roman',serif; font-size:.93rem; color:#1a1a1a; background:#fafdff; transition:border-color .2s; }
+  .edit-block:focus { border-color:var(--primary); background:#fff; }
+  .edit-hint { font-size:.72rem; color:#94a3b8; font-family:sans-serif; margin-top:.25rem; }
+  .campo-label { font-family:sans-serif; font-size:.82rem; font-weight:600; color:#374151; margin-bottom:.25rem; margin-top:.9rem; }
+  .campo-label:first-child { margin-top:0; }
+  .laudo-assinatura { margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid #c8d8f0; }
+  .assinatura-linha { display:grid; grid-template-columns:1fr 1fr; gap:2rem; font-family:sans-serif; font-size:.88rem; }
+  .assinatura-campo { text-align:center; }
+  .assinatura-campo .linha-assinatura { border-top:1px solid #333; margin:2.5rem 1rem .4rem; }
+  .assinatura-campo .ass-nome { font-weight:700; }
+  .assinatura-campo .ass-registro { color:#555; font-size:.8rem; }
+  @media(max-width:600px){ .id-grid { grid-template-columns:1fr; } }
+  @media print {
+    .laudo-toolbar, nav, .btn-back { display:none !important; }
+    body, html { background:#fff !important; }
+    main { max-width:100% !important; padding:0 !important; }
+    .laudo-doc { border:none !important; border-radius:0 !important; padding:1.5cm 2cm !important; max-width:100% !important; box-shadow:none !important; margin:0 !important; }
+    .edit-block { border:none !important; background:transparent !important; padding:0 !important; min-height:unset !important; }
+    .edit-hint { display:none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'lista_procedimentos' paciente.uuid tipo %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="laudo-toolbar">
+  <div>
+    <h1><i data-lucide="clipboard" style="width:18px;height:18px;"></i> Anamnese Clínica — TDAH — {{ paciente.nome }}</h1>
+    <div class="laudo-toolbar-hint">Edite os campos com borda tracejada antes de imprimir</div>
+  </div>
+  <div class="laudo-toolbar-actions">
+    <span id="savedLabel" style="font-size:.75rem;opacity:.75;"></span>
+    <button id="btnSalvar" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="salvarProcedimento()">
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar
+    </button>
+    <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+      <i data-lucide="printer" style="width:15px;height:15px;"></i> Imprimir
+    </button>
+    <a href="{% url 'novo_procedimento' paciente.uuid tipo %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+      <i data-lucide="plus" style="width:14px;height:14px;"></i> Novo
+    </a>
+    <a href="{% url 'lista_procedimentos' paciente.uuid tipo %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+      <i data-lucide="list" style="width:14px;height:14px;"></i> Ver todos
+    </a>
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+      <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Paciente
+    </a>
+  </div>
+</div>
+
+<div class="laudo-doc">
+  <div class="laudo-header">
+    {% load static %}
+    <img src="{% static 'logo.png' %}" alt="IntegraMente" style="height:72px;margin-bottom:.6rem;display:block;margin-left:auto;margin-right:auto;">
+    <div class="laudo-sistema">IntegraMente — Sistema de Avaliações Clínicas</div>
+    <h2>Anamnese Clínica — TDAH</h2>
+    <div class="laudo-ref">Entrevista com pais / responsáveis — preenchimento profissional</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">1. Identificação</div>
+    <div class="id-grid">
+      <div class="id-linha"><span class="id-label">Nome:</span><span class="id-valor">{{ paciente.nome }}</span></div>
+      <div class="id-linha"><span class="id-label">Data de nasc.:</span><span class="id-valor">{{ paciente.data_nascimento|date:"d/m/Y"|default:"—" }}</span></div>
+      <div class="id-linha"><span class="id-label">Idade:</span><span class="id-valor">{{ idade_str }}</span></div>
+      <div class="id-linha"><span class="id-label">Responsável:</span><span class="id-valor">{{ paciente.responsavel|default:"—" }}</span></div>
+      <div class="id-linha"><span class="id-label">Telefone:</span><span class="id-valor">{{ paciente.telefone|default:"—" }}</span></div>
+      <div class="id-linha"><span class="id-label">Data da anamnese:</span><span class="id-valor">{{ data_hoje }}</span></div>
+      <div class="id-linha" style="grid-column:1/-1"><span class="id-label">Profissional:</span><span class="id-valor">{{ request.user.get_full_name|default:request.user.username }}{%if request.user.perfil.registro_profissional%} — {{request.user.perfil.registro_profissional}}{%endif%}</span></div>
+    </div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">2. Queixa Principal e Encaminhamento</div>
+    <div class="campo-label">Queixa principal</div>
+    <div class="edit-block" contenteditable="true">{{ paciente.responsavel|default:'O responsável' }} / o(a) próprio(a) paciente relata [desatenção / hiperatividade / impulsividade / dificuldades escolares / outros] de {{ paciente.nome }}. Os sintomas são observados há [tempo] e se manifestam em [casa / escola / ambos]. Encaminhado(a) por [nome/especialidade].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">3. Histórico do Desenvolvimento</div>
+    <div class="campo-label">Gestação, parto e desenvolvimento inicial</div>
+    <div class="edit-block" contenteditable="true">Gestação [sem intercorrências / com intercorrências — descrever]. Parto [normal / cesárea]. Desenvolvimento neuropsicomotor: [sem atrasos / com atrasos — descrever]. Linguagem: [desenvolveu normalmente / com atraso].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+    <div class="campo-label">Surgimento dos sintomas</div>
+    <div class="edit-block" contenteditable="true">Primeiros sinais notados: [idade]. Contexto em que os sintomas se tornaram mais evidentes: [entrada na escola / aumento da demanda acadêmica / mudanças familiares / outros]. Já investigado anteriormente: [sim — resultado / não].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">4. Perfil de Atenção e Comportamento</div>
+    <div class="campo-label">Desatenção</div>
+    <div class="edit-block" contenteditable="true">Dificuldades em: [manter foco em tarefas prolongadas / seguir instruções / organizar atividades / evitar distrações / concluir tarefas]. Frequência: [frequente / às vezes / raramente]. Impacto: [alto / moderado / baixo].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+    <div class="campo-label">Hiperatividade e impulsividade</div>
+    <div class="edit-block" contenteditable="true">Apresenta: [agitação motora / dificuldade em permanecer sentado / fala excessiva / interrompe conversas / age antes de pensar / impaciência]. Frequência e impacto: [descrever]. Em repouso: [consegue se acalmar / dificuldade mesmo em repouso].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+    <div class="campo-label">Funções executivas</div>
+    <div class="edit-block" contenteditable="true">Dificuldades em: [planejamento / organização / gestão do tempo / início de tarefas / memória de trabalho / controle inibitório — descrever impacto no dia a dia].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">5. Histórico Escolar e Acadêmico</div>
+    <div class="campo-label">Desempenho e adaptação escolar</div>
+    <div class="edit-block" contenteditable="true">Escola atual: [série / tipo]. Desempenho: [satisfatório / abaixo do esperado — matérias com mais dificuldade]. Reprovações: [nenhuma / descrever]. Apoio pedagógico: [tem / não tem]. Relatórios escolares: [encaminhados / não].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+    <div class="campo-label">Comportamento em sala de aula</div>
+    <div class="edit-block" contenteditable="true">Professor(es) relatam: [desatenção / agitação / impulsividade / conflitos com colegas / outros]. Punições escolares: [nenhuma / advertências / suspensões — descrever].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">6. Histórico de Saúde e Tratamentos Anteriores</div>
+    <div class="campo-label">Diagnósticos, comorbidades e medicamentos</div>
+    <div class="edit-block" contenteditable="true">Diagnósticos formais: [nenhum / TDAH — subtipo / comorbidades: ansiedade / transtorno de conduta / dislexia / outros]. Medicamentos: [nenhum / metilfenidato / anfetaminas / outros — dose e resposta]. Efeitos colaterais: [nenhum / descrever].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+    <div class="campo-label">Tratamentos anteriores</div>
+    <div class="edit-block" contenteditable="true">Psicoterapia: [sim — abordagem e período / não]. Psicopedagogia: [sim / não]. Avaliações aplicadas: [SNAP-IV / Conners / WISC / outros — resultados].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">7. Dinâmica Familiar e Impacto</div>
+    <div class="campo-label">Família e cotidiano</div>
+    <div class="edit-block" contenteditable="true">{{ paciente.nome }} reside com [descrever]. Impacto dos sintomas nas relações familiares: [conflitos frequentes / moderados / bem manejados — descrever]. Estratégias já tentadas pela família: [descrever]. Histórico familiar de TDAH: [nenhum / descrever parentesco].</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-secao">
+    <div class="laudo-secao-titulo">8. Impressão Clínica e Hipóteses</div>
+    <div class="campo-label">Impressão clínica</div>
+    <div class="edit-block" contenteditable="true">Com base na anamnese, {{ paciente.nome }}, {{ idade_str }}, apresenta indicadores compatíveis com [TDAH — predominantemente desatento / hiperativo-impulsivo / combinado / hipóteses diferenciais].
+
+Recomendações:
+• [Avaliação neuropsicológica formal]
+• [Avaliação médica / neurológica — se indicado]
+• [Psicoterapia — TCC / coaching TDAH]
+• [Orientação familiar e escolar]
+• [Avaliação de necessidade de medicação]</div>
+    <div class="edit-hint">✏️ Clique para editar</div>
+  </div>
+
+  <div class="laudo-assinatura">
+    <div class="assinatura-linha">
+      <div class="assinatura-campo">
+        <div class="linha-assinatura"></div>
+        <div class="ass-nome">{{ request.user.get_full_name|default:request.user.username }}</div>
+        {%if request.user.perfil.registro_profissional%}<div class="ass-registro">{{request.user.perfil.registro_profissional}}</div>{%endif%}
+      </div>
+      <div class="assinatura-campo">
+        <div class="linha-assinatura"></div>
+        <div class="ass-nome">Data: {{ data_hoje }}</div>
+        <div class="ass-registro" style="font-style:italic;color:#888;">Documento gerado pelo IntegraMente</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% include "procedimentos/_save.html" %}
+{% endblock %}

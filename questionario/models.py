@@ -69,11 +69,30 @@ class ModuloAvaliacao(models.Model):
         ("scared",                 "SCARED — Ansiedade Infantil (Pais)"),
         ("masc",                   "MASC — Ansiedade Multidimensional"),
         ("scq",                    "SCQ — Comunicação Social"),
-        ("anamnese_tea_inf",       "Anamnese TEA Infantil"),
-        ("anamnese_tdah_inf",      "Anamnese TDAH Infantil"),
         # ── Psicologia — Triagem por Professor ──────────────────────────
         ("conners_prof",           "Conners-3 — Avaliação TDAH (Professor)"),
         ("etdah_prof",             "ETDAH — Avaliação TDAH (Professor)"),
+        ("k10", "K-10 — Escala de Kessler"),
+        ("ucla", "UCLA — Escala de Solidão"),
+        ("msi_bpd", "MSI-BPD — Triagem de Borderline"),
+        ("gds15", "GDS-15 — Depressão Geriátrica"),
+        ("rosenberg", "Rosenberg — Autoestima"),
+        ("audit", "AUDIT — Uso de Álcool"),
+        ("bis11", "BIS-11 — Impulsividade de Barratt"),
+        ("iar", "IAR — Ansiedade Infantil"),
+        ("pas", "PAS — Ansiedade Pré-Escolar"),
+        ("cdi", "CDI — Depressão Infantil"),
+        ("hama", "HAM-A — Ansiedade de Hamilton"),
+        ("lsas", "LSAS — Ansiedade Social de Liebowitz"),
+        ("risco_suicidio", "Triagem de Risco de Suicídio"),
+        ("agorafobia", "Rastreio de Agorafobia"),
+        ("panico", "Rastreio de Pânico"),
+        # ── Psicologia — Triagem Geral ───────────────────────────────────
+        ("phq9",                   "PHQ-9 — Questionário de Saúde do Paciente"),
+        ("gad7",                   "GAD-7 — Transtorno de Ansiedade Generalizada"),
+        ("epds",                   "EPDS — Depressão Pós-Parto de Edinburgh"),
+        ("pcl5",                   "PCL-5 — Lista de Verificação de PTSD"),
+        ("ghq12",                  "GHQ-12 — Questionário de Saúde Geral"),
         # ── Psicologia — Instrumentos para Adultos ───────────────────────
         ("bdi",                    "BDI — Inventário de Depressão de Beck"),
         ("bai",                    "BAI — Inventário de Ansiedade de Beck"),
@@ -83,8 +102,6 @@ class ModuloAvaliacao(models.Model):
         ("aq10_adulto",            "AQ-10 Adulto — Rastreio de Autismo"),
         ("dep_emocional",          "Questionário de Dependência Emocional"),
         ("bpq",                    "BPQ — Personalidade Borderline"),
-        ("anamnese_adulto",        "Anamnese Adulto"),
-        ("anamnese_tdah_adulto",   "Anamnese TDAH Adulto"),
         # ── Fonoaudiologia ───────────────────────────────────────────────
         ("linguagem",              "Avaliação de Linguagem"),
         ("alimentacao_seletiva",   "Triagem de Alimentação Seletiva"),
@@ -144,12 +161,18 @@ MODULOS_POR_ESPECIALIDADE = {
         "sdq", "snap_iv", "mchat", "cars",
         # infantil — pais
         "conners_pais", "etdah_pais", "auqei", "aq10_child",
-        "scared", "masc", "scq", "anamnese_tea_inf", "anamnese_tdah_inf",
+        "scared", "masc", "scq",
         # por professor
         "conners_prof", "etdah_prof",
         # adultos
         "bdi", "bai", "dass21", "had", "bsl23", "aq10_adulto",
-        "dep_emocional", "bpq", "anamnese_adulto", "anamnese_tdah_adulto",
+        "dep_emocional", "bpq",
+        # triagem internacional
+        "phq9", "gad7", "epds", "pcl5", "ghq12",
+        # novas escalas
+        "k10", "ucla", "msi_bpd", "rosenberg", "audit",
+        "bis11", "lsas", "hama", "risco_suicidio", "agorafobia", "panico",
+        "iar", "pas", "cdi", "gds15",
     ],
     "fonoaudiologo": [
         "linguagem", "alimentacao_seletiva",
@@ -160,12 +183,17 @@ MODULOS_POR_ESPECIALIDADE = {
         "qmpi",
         # infantil — pais
         "conners_pais", "etdah_pais", "aq10_child", "scq",
-        "anamnese_tea_inf", "anamnese_tdah_inf",
         # por professor
         "conners_prof", "etdah_prof",
         # adultos
         "bdi", "bai", "dass21", "had", "bsl23", "aq10_adulto",
-        "bpq", "anamnese_adulto", "anamnese_tdah_adulto",
+        "bpq",
+        # triagem internacional
+        "phq9", "gad7", "pcl5", "ghq12",
+        # novas escalas
+        "k10", "ucla", "msi_bpd", "bis11", "lsas", "hama",
+        "risco_suicidio", "agorafobia", "panico",
+        "iar", "pas", "cdi",
     ],
     "psicopedagogo": [
         "psicopedagogica", "sdq", "snap_iv",
@@ -175,7 +203,8 @@ MODULOS_POR_ESPECIALIDADE = {
     ],
     "pediatra": [
         "desenvolvimento", "sono_infantil", "mchat", "snap_iv",
-        "denver", "auqei",
+        "denver", "auqei", "epds",
+        "iar", "pas", "cdi", "gds15",
     ],
     "neuropediatra": [
         "desenvolvimento", "sono_infantil", "mchat", "cars",
@@ -183,7 +212,7 @@ MODULOS_POR_ESPECIALIDADE = {
     ],
     "analista_aba": [
         "habilidades_adaptativas", "comportamento_funcional",
-        "mchat", "vineland3", "anamnese_tea_inf",
+        "mchat", "vineland3",
     ],
 }
 
@@ -790,8 +819,6 @@ class LinkConvite(models.Model):
         ("scared",                  "SCARED — Ansiedade Infantil (Pais)"),
         ("masc",                    "MASC — Ansiedade Multidimensional"),
         ("scq",                     "SCQ — Comunicação Social"),
-        ("anamnese_tea_inf",        "Anamnese TEA Infantil"),
-        ("anamnese_tdah_inf",       "Anamnese TDAH Infantil"),
         # ── Psicologia — Triagem por Professor ──────────────────────────
         ("conners_prof",            "Conners-3 — Avaliação TDAH (Professor)"),
         ("etdah_prof",              "ETDAH — Avaliação TDAH (Professor)"),
@@ -804,8 +831,6 @@ class LinkConvite(models.Model):
         ("aq10_adulto",             "AQ-10 Adulto — Rastreio de Autismo"),
         ("dep_emocional",           "Questionário de Dependência Emocional"),
         ("bpq",                     "BPQ — Personalidade Borderline"),
-        ("anamnese_adulto",         "Anamnese Adulto"),
-        ("anamnese_tdah_adulto",    "Anamnese TDAH Adulto"),
         # ── Fonoaudiologia ───────────────────────────────────────────────
         ("linguagem",               "Avaliação de Linguagem"),
         ("alimentacao_seletiva",    "Triagem de Alimentação Seletiva"),
@@ -829,6 +854,29 @@ class LinkConvite(models.Model):
         ("checklist_dislexia",      "Checklist de Dislexia"),
         ("prot_dislexia_prof",      "Protocolo Dislexia — Avaliação Escolar"),
         ("inventario_dislexia",     "Inventário de Sinais Disléxicos"),
+        # ── Triagem Internacional ────────────────────────────────────────
+        ("phq9",                    "PHQ-9 — Questionário de Saúde do Paciente"),
+        ("gad7",                    "GAD-7 — Transtorno de Ansiedade Generalizada"),
+        ("epds",                    "EPDS — Depressão Pós-Parto de Edinburgh"),
+        ("pcl5",                    "PCL-5 — Lista de Verificação de PTSD"),
+        ("ghq12",                   "GHQ-12 — Questionário de Saúde Geral"),
+        # ── Novas Escalas — Adulto ───────────────────────────────────────
+        ("k10",                     "K-10 — Escala de Kessler"),
+        ("ucla",                    "UCLA — Escala de Solidão"),
+        ("msi_bpd",                 "MSI-BPD — Triagem de Borderline"),
+        ("gds15",                   "GDS-15 — Depressão Geriátrica"),
+        ("rosenberg",               "Rosenberg — Autoestima"),
+        ("audit",                   "AUDIT — Uso de Álcool"),
+        ("bis11",                   "BIS-11 — Impulsividade de Barratt"),
+        ("hama",                    "HAM-A — Ansiedade de Hamilton"),
+        ("lsas",                    "LSAS — Ansiedade Social de Liebowitz"),
+        ("risco_suicidio",          "Triagem de Risco de Suicídio"),
+        ("agorafobia",              "Rastreio de Agorafobia"),
+        ("panico",                  "Rastreio de Pânico"),
+        # ── Novas Escalas — Infantil ─────────────────────────────────────
+        ("iar",                     "IAR — Ansiedade Infantil"),
+        ("pas",                     "PAS — Ansiedade Pré-Escolar"),
+        ("cdi",                     "CDI — Depressão Infantil"),
     ]
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
@@ -2326,148 +2374,6 @@ class RespostaBPQ(models.Model):
         ordering = ["numero_item"]
 
 
-# ── Anamnese TEA Infantil ─────────────────────────────────────────────────────
-
-class AvaliacaoAnamneseTEAInf(models.Model):
-    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
-
-    uuid                       = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    paciente                   = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_anamnese_tea_inf")
-    data                       = models.DateField(default=timezone.now)
-    status                     = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
-
-    queixa_principal           = models.TextField("Queixa Principal", blank=True, default="")
-    historico_gestacional      = models.TextField("Histórico Gestacional", blank=True, default="")
-    marcos_desenvolvimento     = models.TextField("Marcos de Desenvolvimento", blank=True, default="")
-    linguagem                  = models.TextField("Desenvolvimento da Linguagem", blank=True, default="")
-    interacao_social           = models.TextField("Interação Social", blank=True, default="")
-    comportamentos_repetitivos = models.TextField("Comportamentos Repetitivos / Interesses Restritos", blank=True, default="")
-    historico_medico           = models.TextField("Histórico Médico", blank=True, default="")
-    medicamentos               = models.TextField("Medicamentos em Uso", blank=True, default="")
-    historico_familiar         = models.TextField("Histórico Familiar", blank=True, default="")
-    alimentacao                = models.TextField("Alimentação", blank=True, default="")
-    sono                       = models.TextField("Sono", blank=True, default="")
-    escola                     = models.TextField("Escola / Aprendizagem", blank=True, default="")
-    terapias_anteriores        = models.TextField("Terapias Anteriores", blank=True, default="")
-    observacoes                = models.TextField("Observações Clínicas", blank=True, default="")
-
-    criado_em    = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Anamnese TEA Infantil"
-        ordering = ["-data"]
-
-    def __str__(self):
-        return f"Anamnese TEA Inf — {self.paciente.nome} — {self.data}"
-
-
-# ── Anamnese TDAH Infantil ────────────────────────────────────────────────────
-
-class AvaliacaoAnamneseTDAHInf(models.Model):
-    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
-
-    uuid                         = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    paciente                     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_anamnese_tdah_inf")
-    data                         = models.DateField(default=timezone.now)
-    status                       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
-
-    queixa_principal             = models.TextField("Queixa Principal", blank=True, default="")
-    historico_gestacional        = models.TextField("Histórico Gestacional", blank=True, default="")
-    marcos_desenvolvimento       = models.TextField("Marcos de Desenvolvimento", blank=True, default="")
-    desempenho_escolar           = models.TextField("Desempenho Escolar", blank=True, default="")
-    comportamento_casa           = models.TextField("Comportamento em Casa", blank=True, default="")
-    comportamento_escola         = models.TextField("Comportamento na Escola", blank=True, default="")
-    atencao_concentracao         = models.TextField("Atenção e Concentração", blank=True, default="")
-    hiperatividade_impulsividade = models.TextField("Hiperatividade e Impulsividade", blank=True, default="")
-    relacionamentos              = models.TextField("Relacionamentos", blank=True, default="")
-    historico_medico             = models.TextField("Histórico Médico", blank=True, default="")
-    medicamentos                 = models.TextField("Medicamentos em Uso", blank=True, default="")
-    historico_familiar           = models.TextField("Histórico Familiar", blank=True, default="")
-    sono                         = models.TextField("Sono", blank=True, default="")
-    terapias_anteriores          = models.TextField("Terapias Anteriores", blank=True, default="")
-    observacoes                  = models.TextField("Observações Clínicas", blank=True, default="")
-
-    criado_em    = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Anamnese TDAH Infantil"
-        ordering = ["-data"]
-
-    def __str__(self):
-        return f"Anamnese TDAH Inf — {self.paciente.nome} — {self.data}"
-
-
-# ── Anamnese Adulto ───────────────────────────────────────────────────────────
-
-class AvaliacaoAnamneseAdulto(models.Model):
-    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
-
-    uuid                   = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    paciente               = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_anamnese_adulto")
-    data                   = models.DateField(default=timezone.now)
-    status                 = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
-
-    queixa_principal       = models.TextField("Queixa Principal", blank=True, default="")
-    historia_clinica       = models.TextField("História Clínica", blank=True, default="")
-    medicamentos           = models.TextField("Medicamentos em Uso", blank=True, default="")
-    historico_familiar     = models.TextField("Histórico Familiar", blank=True, default="")
-    historico_escolar      = models.TextField("Histórico Escolar", blank=True, default="")
-    historico_profissional = models.TextField("Histórico Profissional", blank=True, default="")
-    relacionamentos        = models.TextField("Relacionamentos", blank=True, default="")
-    sono                   = models.TextField("Sono", blank=True, default="")
-    alimentacao            = models.TextField("Alimentação", blank=True, default="")
-    exercicio              = models.TextField("Exercício Físico", blank=True, default="")
-    uso_substancias        = models.TextField("Uso de Substâncias", blank=True, default="")
-    historico_psiquiatrico = models.TextField("Histórico Psiquiátrico", blank=True, default="")
-    observacoes            = models.TextField("Observações Clínicas", blank=True, default="")
-
-    criado_em    = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Anamnese Adulto"
-        ordering = ["-data"]
-
-    def __str__(self):
-        return f"Anamnese Adulto — {self.paciente.nome} — {self.data}"
-
-
-# ── Anamnese TDAH Adulto ──────────────────────────────────────────────────────
-
-class AvaliacaoAnamneseTDAHAdulto(models.Model):
-    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
-
-    uuid                    = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    paciente                = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_anamnese_tdah_adulto")
-    data                    = models.DateField(default=timezone.now)
-    status                  = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
-
-    queixa_principal        = models.TextField("Queixa Principal", blank=True, default="")
-    sintomas_desatencao     = models.TextField("Sintomas de Desatenção", blank=True, default="")
-    sintomas_hiperativos    = models.TextField("Sintomas Hiperativos/Impulsivos", blank=True, default="")
-    historico_infancia      = models.TextField("Histórico na Infância", blank=True, default="")
-    desempenho_escolar      = models.TextField("Desempenho Escolar", blank=True, default="")
-    desempenho_profissional = models.TextField("Desempenho Profissional", blank=True, default="")
-    relacionamentos         = models.TextField("Relacionamentos", blank=True, default="")
-    comorbidades            = models.TextField("Comorbidades", blank=True, default="")
-    medicamentos            = models.TextField("Medicamentos em Uso", blank=True, default="")
-    sono                    = models.TextField("Sono", blank=True, default="")
-    impacto_funcional       = models.TextField("Impacto Funcional", blank=True, default="")
-    observacoes             = models.TextField("Observações Clínicas", blank=True, default="")
-
-    criado_em    = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Anamnese TDAH Adulto"
-        ordering = ["-data"]
-
-    def __str__(self):
-        return f"Anamnese TDAH Adulto — {self.paciente.nome} — {self.data}"
-
-
 class RespostaSCQ(models.Model):
     avaliacao   = models.ForeignKey(AvaliacaoSCQ, on_delete=models.CASCADE, related_name="respostas")
     numero_item = models.IntegerField()
@@ -2494,9 +2400,11 @@ class AvaliacaoDenver(models.Model):
     pont_linguagem       = models.IntegerField(null=True, blank=True)
     pont_motor_grosseiro = models.IntegerField(null=True, blank=True)
 
-    observacoes  = models.TextField(blank=True, default="")
-    criado_em    = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    email_enviado_em = models.DateTimeField(blank=True, null=True)
+    observacoes      = models.TextField(blank=True, default="")
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Avaliação Denver II"
@@ -2729,14 +2637,14 @@ _MODULOS_PLUS_EXTRA = [
     "quest_dislexia", "checklist_dislexia", "prot_dislexia_prof",
 ]
 # ELITE-only (não incluídos no PLUS):
-# anamnese_tea_inf, anamnese_tdah_inf — anamneses clínicas completas infantis
+# pcl5 — rastreio de PTSD (especializado)
 # bsl23, bpq, dep_emocional — transtornos de personalidade (especializado)
-# aq10_adulto, anamnese_adulto, anamnese_tdah_adulto — psicologia adulto avançado
 # inventario_dislexia — inventário avançado de sinais disléxicos
 
 MODULOS_POR_PLANO = {
     "start": ["sensorial", "bebe", "escolar", "spm"],
-    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage"] + _MODULOS_PLUS_EXTRA,
+    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage",
+              "phq9", "gad7", "epds", "ghq12"] + _MODULOS_PLUS_EXTRA,
     "elite": [c[0] for c in ModuloAvaliacao.MODULO_CHOICES],
 }
 
@@ -2786,6 +2694,617 @@ class SolicitacaoPlano(models.Model):
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Proxy — aparece no sidebar do admin como "Painel de Pagamentos"
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── PHQ-9 — Patient Health Questionnaire ─────────────────────────────────────
+
+class AvaliacaoPHQ9(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_phq9")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField("Pontuação Total (0–27)", null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "PHQ-9 — Questionário de Saúde do Paciente"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"PHQ-9 — {self.paciente.nome} — {self.data}"
+
+class RespostaPHQ9(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPHQ9, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── GAD-7 — Generalized Anxiety Disorder ─────────────────────────────────────
+
+class AvaliacaoGAD7(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_gad7")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField("Pontuação Total (0–21)", null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "GAD-7 — Transtorno de Ansiedade Generalizada"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"GAD-7 — {self.paciente.nome} — {self.data}"
+
+class RespostaGAD7(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoGAD7, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── EPDS — Edinburgh Postnatal Depression Scale ───────────────────────────────
+
+class AvaliacaoEPDS(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_epds")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField("Pontuação Total (0–30)", null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "EPDS — Escala de Depressão Pós-Parto de Edinburgh"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"EPDS — {self.paciente.nome} — {self.data}"
+
+class RespostaEPDS(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoEPDS, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── PCL-5 — PTSD Checklist for DSM-5 ─────────────────────────────────────────
+
+class AvaliacaoPCL5(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid               = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_pcl5")
+    token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data               = models.DateField(default=timezone.now)
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual       = models.IntegerField(default=1)
+    pont_reexperiencia = models.IntegerField("Reexperiência (0–20)",       null=True, blank=True)
+    pont_evitacao      = models.IntegerField("Evitação (0–8)",             null=True, blank=True)
+    pont_cognicoes     = models.IntegerField("Cognições/Humor (0–28)",     null=True, blank=True)
+    pont_hiperativacao = models.IntegerField("Hiperativação/React. (0–24)",null=True, blank=True)
+    pont_total         = models.IntegerField("Pontuação Total (0–80)",     null=True, blank=True)
+    observacoes        = models.TextField(blank=True, default="")
+    email_enviado_em   = models.DateTimeField(null=True, blank=True)
+    criado_em          = models.DateTimeField(auto_now_add=True)
+    atualizado_em      = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "PCL-5 — Lista de Verificação de PTSD (DSM-5)"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"PCL-5 — {self.paciente.nome} — {self.data}"
+
+class RespostaPCL5(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPCL5, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── GHQ-12 — General Health Questionnaire ────────────────────────────────────
+
+class AvaliacaoGHQ12(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_ghq12")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField("Pontuação Total (0–12)", null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "GHQ-12 — Questionário de Saúde Geral"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"GHQ-12 — {self.paciente.nome} — {self.data}"
+
+class RespostaGHQ12(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoGHQ12, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── K-10 — Escala de Kessler ────────────────────────────────────
+
+class AvaliacaoK10(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_k10")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (10–50)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "K-10 — Escala de Kessler"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"K-10 — Escala de Kessler — {self.paciente.nome} — {self.data}"
+
+class RespostaK10(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoK10, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── UCLA — Escala de Solidão ────────────────────────────────────
+
+class AvaliacaoUCLA(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_ucla")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (20–80)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "UCLA — Escala de Solidão"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"UCLA — Escala de Solidão — {self.paciente.nome} — {self.data}"
+
+class RespostaUCLA(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoUCLA, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── MSI-BPD — Triagem Borderline ────────────────────────────────
+
+class AvaliacaoMSI_BPD(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_msi_bpd")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–10)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "MSI-BPD — Triagem Borderline"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"MSI-BPD — Triagem Borderline — {self.paciente.nome} — {self.data}"
+
+class RespostaMSI_BPD(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoMSI_BPD, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── GDS-15 — Depressão Geriátrica ───────────────────────────────
+
+class AvaliacaoGDS15(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_gds15")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–15)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "GDS-15 — Depressão Geriátrica"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"GDS-15 — Depressão Geriátrica — {self.paciente.nome} — {self.data}"
+
+class RespostaGDS15(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoGDS15, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── Rosenberg — Escala de Autoestima ────────────────────────────
+
+class AvaliacaoRosenberg(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_rosenberg")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–30)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "Rosenberg — Escala de Autoestima"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"Rosenberg — Escala de Autoestima — {self.paciente.nome} — {self.data}"
+
+class RespostaRosenberg(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoRosenberg, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── AUDIT — Uso de Álcool ───────────────────────────────────────
+
+class AvaliacaoAUDIT(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_audit")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–40)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "AUDIT — Uso de Álcool"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"AUDIT — Uso de Álcool — {self.paciente.nome} — {self.data}"
+
+class RespostaAUDIT(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoAUDIT, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── BIS-11 — Impulsividade de Barratt ───────────────────────────
+
+class AvaliacaoBIS11(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_bis11")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (30–120)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "BIS-11 — Impulsividade de Barratt"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"BIS-11 — Impulsividade de Barratt — {self.paciente.nome} — {self.data}"
+
+class RespostaBIS11(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoBIS11, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── IAR — Ansiedade Infantil ────────────────────────────────────
+
+class AvaliacaoIAR(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_iar")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–60)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "IAR — Ansiedade Infantil"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"IAR — Ansiedade Infantil — {self.paciente.nome} — {self.data}"
+
+class RespostaIAR(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoIAR, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── PAS — Ansiedade Pré-Escolar ─────────────────────────────────
+
+class AvaliacaoPAS(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_pas")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–112)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "PAS — Ansiedade Pré-Escolar"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"PAS — Ansiedade Pré-Escolar — {self.paciente.nome} — {self.data}"
+
+class RespostaPAS(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPAS, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── CDI — Depressão Infantil ────────────────────────────────────
+
+class AvaliacaoCDI(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_cdi")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–54)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "CDI — Depressão Infantil"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"CDI — Depressão Infantil — {self.paciente.nome} — {self.data}"
+
+class RespostaCDI(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoCDI, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── HAM-A — Escala de Ansiedade de Hamilton ─────────────────────
+
+class AvaliacaoHAMA(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_hama")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–56)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "HAM-A — Escala de Ansiedade de Hamilton"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"HAM-A — Escala de Ansiedade de Hamilton — {self.paciente.nome} — {self.data}"
+
+class RespostaHAMA(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoHAMA, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── LSAS — Ansiedade Social de Liebowitz ────────────────────────
+
+class AvaliacaoLSAS(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_lsas")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–72)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "LSAS — Ansiedade Social de Liebowitz"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"LSAS — Ansiedade Social de Liebowitz — {self.paciente.nome} — {self.data}"
+
+class RespostaLSAS(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoLSAS, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── Triagem de Risco de Suicídio ────────────────────────────────
+
+class AvaliacaoRiscoSuicidio(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_risco_suicidio")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–10)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "Triagem de Risco de Suicídio"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"Triagem de Risco de Suicídio — {self.paciente.nome} — {self.data}"
+
+class RespostaRiscoSuicidio(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoRiscoSuicidio, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── Rastreio de Agorafobia ──────────────────────────────────────
+
+class AvaliacaoAgorafobia(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_agorafobia")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–56)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "Rastreio de Agorafobia"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"Rastreio de Agorafobia — {self.paciente.nome} — {self.data}"
+
+class RespostaAgorafobia(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoAgorafobia, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+# ── Rastreio de Transtorno de Pânico ────────────────────────────
+
+class AvaliacaoPanico(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_panico")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_total       = models.IntegerField('Pontuação Total (0–39)', null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "Rastreio de Transtorno de Pânico"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"Rastreio de Transtorno de Pânico — {self.paciente.nome} — {self.data}"
+
+class RespostaPanico(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPanico, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 class PainelPagamentos(SolicitacaoPlano):

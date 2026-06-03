@@ -64,6 +64,21 @@
   .opcao-label.selected { border-color:var(--mod); background:var(--mod); color:#fff; font-weight:700; }
   .opcao-num { font-size:1.05rem; font-weight:800; }
 
+  /* ── Opções em lista (BDI/HAD — texto longo por opção) ── */
+  .opcoes-lista { display:flex; flex-direction:column; gap:.4rem; }
+  .opcao-lista-item {
+    display:flex; align-items:flex-start; gap:.75rem; cursor:pointer;
+    padding:.65rem .9rem; border-radius:9px;
+    border:1.5px solid var(--border); background:#fff;
+    transition:all .15s; line-height:1.4; user-select:none;
+  }
+  .opcao-lista-item:hover { border-color:var(--mod); background:color-mix(in srgb, var(--mod) 6%, #fff); }
+  .opcao-lista-item input { display:none; }
+  .opcao-lista-item.selected { border-color:var(--mod); background:color-mix(in srgb, var(--mod) 10%, #fff); font-weight:600; }
+  .opcao-lista-num { flex:0 0 22px; height:22px; border-radius:50%; background:var(--border); color:var(--text-muted); font-size:.72rem; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:.1rem; }
+  .opcao-lista-item.selected .opcao-lista-num { background:var(--mod); color:#fff; }
+  .opcao-lista-texto { font-size:.88rem; color:var(--text); }
+
   .readonly-badge {
     display:inline-flex; align-items:center; gap:.35rem;
     background:#f0f0f0; border:1px solid #ccc; border-radius:6px;
@@ -141,14 +156,21 @@
 </div>
 
 <!-- Legenda das opções -->
+{% if opcoes %}
 <div class="instrucoes">
   <span class="instrucoes-titulo">Como responder:</span>
   <div class="instrucoes-chips">
     {% for op in opcoes %}
-    <span class="instrucao-chip"><b>{{ op.valor }}</b>&nbsp;— {{ op.label }}</span>
+    <span class="instrucao-chip"><b>{% if op.codigo %}{{ op.codigo }}{% else %}{{ op.valor }}{% endif %}</b>&nbsp;— {{ op.label }}</span>
     {% endfor %}
   </div>
 </div>
+{% else %}
+<div class="instrucoes">
+  <span class="instrucoes-titulo">Como responder:</span>
+  <p style="font-size:.82rem;color:var(--text-muted);margin:0;">Selecione a alternativa que melhor descreve como você se sentiu na <strong>última semana</strong>.</p>
+</div>
+{% endif %}
 
 {% if readonly %}
 <div class="readonly-badge"><i data-lucide="eye" style="width:14px;height:14px;"></i> Visualização — respostas salvas</div>
@@ -168,23 +190,41 @@
   <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
 
   {% for item in itens %}
-  <div class="pergunta-card {% if item.resposta_salva is not None %}respondida{% endif %} {% if item.numero in itens_faltando %}faltando{% endif %}"
+  <div class="pergunta-card {% if item.resposta_salva != '__unset__' %}respondida{% endif %} {% if item.numero in itens_faltando %}faltando{% endif %}"
        id="card-{{ item.numero }}">
     <div class="pergunta-num">Item {{ item.numero }}</div>
     <div class="pergunta-texto">{{ item.texto }}</div>
-    <div class="opcoes-grid">
-      {% for op in opcoes %}
-      <label class="opcao-label {% if item.resposta_salva == op.valor %}selected{% endif %}"
+    {% if item.opcoes %}
+    {# BDI / HAD — opções longas específicas por item #}
+    <div class="opcoes-lista">
+      {% for op in item.opcoes %}
+      <label class="opcao-lista-item {% if item.resposta_salva is not None and item.resposta_salva == op.valor %}selected{% endif %}"
              id="label-{{ item.numero }}-{{ op.valor }}">
         <input type="radio" name="item_{{ item.numero }}" value="{{ op.valor }}"
-               {% if item.resposta_salva == op.valor %}checked{% endif %}
+               {% if item.resposta_salva is not None and item.resposta_salva == op.valor %}checked{% endif %}
+               {% if readonly %}disabled{% endif %}
+               onchange="marcarRespondidaLista({{ item.numero }}, this)">
+        <span class="opcao-lista-num">{{ op.valor }}</span>
+        <span class="opcao-lista-texto">{{ op.label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+    {% else %}
+    {# Escala padrão — opções globais em grid #}
+    <div class="opcoes-grid">
+      {% for op in opcoes %}
+      <label class="opcao-label {% if item.resposta_salva != '__unset__' and item.resposta_salva == op.valor %}selected{% endif %}"
+             id="label-{{ item.numero }}-{{ op.valor }}">
+        <input type="radio" name="item_{{ item.numero }}" value="{{ op.valor }}"
+               {% if item.resposta_salva != '__unset__' and item.resposta_salva == op.valor %}checked{% endif %}
                {% if readonly %}disabled{% endif %}
                onchange="marcarRespondida({{ item.numero }}, this)">
-        <span class="opcao-num">{{ op.valor }}</span>
+        <span class="opcao-num">{% if op.codigo %}{{ op.codigo }}{% else %}{{ op.valor }}{% endif %}</span>
         <span>{{ op.label }}</span>
       </label>
       {% endfor %}
     </div>
+    {% endif %}
     <button type="button" class="obs-toggle" onclick="toggleObs({{ item.numero }})">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       Observação{% if item.observacao_salva %} <span style="color:var(--mod);">●</span>{% endif %}
@@ -237,7 +277,7 @@
         </a>
         {% else %}
         <a href="{% url url_resultado_name avaliacao.uuid %}" class="btn btn-primary" style="background:var(--mod); border-color:var(--mod);">
-          <i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Ver Resultado
+          <i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Concluir
         </a>
         {% endif %}
       {% endif %}
@@ -255,6 +295,14 @@ function marcarRespondida(numero, input) {
   card.classList.remove('faltando');
   card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
   input.closest('.opcao-label').classList.add('selected');
+}
+
+function marcarRespondidaLista(numero, input) {
+  const card = document.getElementById('card-' + numero);
+  card.classList.add('respondida');
+  card.classList.remove('faltando');
+  card.querySelectorAll('.opcao-lista-item').forEach(l => l.classList.remove('selected'));
+  input.closest('.opcao-lista-item').classList.add('selected');
 }
 
 function confirmarIncompleto() {

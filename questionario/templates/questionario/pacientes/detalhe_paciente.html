@@ -111,7 +111,13 @@
   .avaliacoes-table td { vertical-align: middle; }
   .acoes-td { display: flex; align-items: center; gap: .3rem; white-space: nowrap; }
   .acoes-td .btn-del { margin-left: auto; }
-  .cabecalho-acoes { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .cabecalho-acoes { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+  .dropdown-proc { position: relative; }
+  .dropdown-proc-menu { display:none; position:absolute; top:calc(100% + .3rem); right:0; background:#fff; border:1.5px solid var(--border); border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.12); z-index:200; min-width:200px; padding:.3rem 0; }
+  .dropdown-proc-menu.open { display:block; }
+  .dropdown-proc-menu a { display:flex; align-items:center; gap:.5rem; padding:.5rem 1rem; font-size:.85rem; color:var(--text); text-decoration:none; transition:background .15s; }
+  .dropdown-proc-menu a:hover { background:var(--bg); color:var(--primary); }
+  .dropdown-proc-menu .divider { height:1px; background:var(--border); margin:.25rem 0; }
   @media (max-width: 600px) {
     .cabecalho-acoes { width: 100%; }
     .cabecalho-acoes .btn { flex: 1 1 0; justify-content: center; }
@@ -176,7 +182,22 @@
       <a href="{% url 'editar_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
         <i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar
       </a>
-      <button id="tour-dp-nova-aval" type="button" class="btn btn-primary btn-nova-avaliacao" onclick="abrirModalEscolha()">
+      <div class="dropdown-proc">
+        <button class="btn btn-secondary btn-sm" onclick="toggleProcMenu(event)">
+          <i data-lucide="file-text" style="width:14px;height:14px;"></i> Documentos
+          <i data-lucide="chevron-down" style="width:12px;height:12px;margin-left:.15rem;"></i>
+        </button>
+        <div class="dropdown-proc-menu" id="procMenu">
+          <a href="#" onclick="event.preventDefault();toggleProcMenu(event);document.getElementById('modalNovoAnamnese').classList.add('active');">
+            <i data-lucide="clipboard" style="width:13px;height:13px;"></i> Anamnese
+          </a>
+          <a href="{% url 'ficha_triagem' paciente.uuid %}"><i data-lucide="clipboard-list" style="width:13px;height:13px;"></i> Ficha de Triagem</a>
+          <a href="{% url 'relatorio' paciente.uuid %}"><i data-lucide="bar-chart-2" style="width:13px;height:13px;"></i> Relatório</a>
+          <a href="{% url 'carta_encaminhamento' paciente.uuid %}"><i data-lucide="mail" style="width:13px;height:13px;"></i> Carta de Encaminhamento</a>
+          <a href="{% url 'atestado' paciente.uuid %}"><i data-lucide="shield-check" style="width:13px;height:13px;"></i> Atestado</a>
+        </div>
+      </div>
+      <button id="tour-dp-nova-aval" type="button" class="btn btn-primary btn-sm btn-nova-avaliacao" onclick="abrirModalEscolha()">
         + Nova Avaliação
       </button>
     </div>
@@ -1459,6 +1480,646 @@
 </div>
 {% endif %}
 
+
+{% if avaliacoes_k10 %}
+<div class="card">
+  <div class="card-title" style="color:#1D6A96;"><i data-lucide="activity" style="width:18px;height:18px;"></i> K-10 — Escala de Kessler</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_k10 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'k10_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'k10_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_k10' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'K10')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'k10_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_ucla %}
+<div class="card">
+  <div class="card-title" style="color:#7B241C;"><i data-lucide="heart-crack" style="width:18px;height:18px;"></i> UCLA — Escala de Solidão</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_ucla %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'ucla_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'ucla_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_ucla' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'UCLA')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'ucla_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_msi_bpd %}
+<div class="card">
+  <div class="card-title" style="color:#6C3483;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> MSI-BPD — Triagem de Borderline</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_msi_bpd %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'msi_bpd_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'msi_bpd_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_msi_bpd' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'MSI_BPD')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'msi_bpd_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_gds15 %}
+<div class="card">
+  <div class="card-title" style="color:#C0392B;"><i data-lucide="user" style="width:18px;height:18px;"></i> GDS-15 — Depressão Geriátrica</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_gds15 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'gds15_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'gds15_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_gds15' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'GDS15')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'gds15_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_rosenberg %}
+<div class="card">
+  <div class="card-title" style="color:#1A5276;"><i data-lucide="star" style="width:18px;height:18px;"></i> Rosenberg — Escala de Autoestima</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_rosenberg %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'rosenberg_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'rosenberg_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_rosenberg' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'ROSENBERG')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'rosenberg_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_audit %}
+<div class="card">
+  <div class="card-title" style="color:#E67E22;"><i data-lucide="wine" style="width:18px;height:18px;"></i> AUDIT — Uso de Álcool</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_audit %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'audit_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'audit_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_audit' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'AUDIT')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'audit_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_bis11 %}
+<div class="card">
+  <div class="card-title" style="color:#8E44AD;"><i data-lucide="zap" style="width:18px;height:18px;"></i> BIS-11 — Impulsividade de Barratt</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_bis11 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'bis11_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'bis11_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bis11' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'BIS11')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bis11_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_iar %}
+<div class="card">
+  <div class="card-title" style="color:#16A085;"><i data-lucide="baby" style="width:18px;height:18px;"></i> IAR — Ansiedade Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_iar %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'iar_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'iar_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_iar' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'IAR')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'iar_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_pas %}
+<div class="card">
+  <div class="card-title" style="color:#D35400;"><i data-lucide="smile" style="width:18px;height:18px;"></i> PAS — Ansiedade Pré-Escolar</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_pas %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'pas_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'pas_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_pas' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'PAS')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'pas_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_cdi %}
+<div class="card">
+  <div class="card-title" style="color:#2980B9;"><i data-lucide="cloud-rain" style="width:18px;height:18px;"></i> CDI — Depressão Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_cdi %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'cdi_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'cdi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_cdi' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'CDI')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'cdi_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_hama %}
+<div class="card">
+  <div class="card-title" style="color:#884EA0;"><i data-lucide="thermometer" style="width:18px;height:18px;"></i> HAM-A — Ansiedade de Hamilton</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_hama %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'hama_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'hama_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_hama' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'HAMA')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'hama_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_lsas %}
+<div class="card">
+  <div class="card-title" style="color:#2471A3;"><i data-lucide="users" style="width:18px;height:18px;"></i> LSAS — Ansiedade Social</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_lsas %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'lsas_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'lsas_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_lsas' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'LSAS')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'lsas_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_risco_suicidio %}
+<div class="card">
+  <div class="card-title" style="color:#922B21;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> Triagem de Risco de Suicídio</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_risco_suicidio %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'risco_suicidio_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'risco_suicidio_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_risco_suicidio' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'RISCO_SUICIDIO')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'risco_suicidio_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_agorafobia %}
+<div class="card">
+  <div class="card-title" style="color:#784212;"><i data-lucide="map-pin-off" style="width:18px;height:18px;"></i> Rastreio de Agorafobia</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_agorafobia %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'agorafobia_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'agorafobia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_agorafobia' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'AGORAFOBIA')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'agorafobia_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_panico %}
+<div class="card">
+  <div class="card-title" style="color:#1B2631;"><i data-lucide="wind" style="width:18px;height:18px;"></i> Rastreio de Transtorno de Pânico</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_panico %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{%if av.obj.pont_total is not None%}{{av.obj.pont_total}}{%else%}—{%endif%}</td>
+      <td><span class="badge badge-{{av.obj.status|cut:'_'|lower}}">{%if av.obj.status == "concluida"%}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{%else%}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{%endif%}</span></td>
+      <td class="acoes-td">
+        {%if av.obj.status == "concluida"%}
+        <a href="{% url 'panico_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'panico_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {%else%}
+        {%if av.link_publico%}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{av.link_publico}}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {%if paciente.email_responsavel%}<button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_panico' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>{%endif%}
+        {%if paciente.telefone%}<button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{paciente.telefone}}', '{{av.link_publico}}', 'PANICO')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>{%endif%}
+        {%endif%}
+        {%endif%}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'panico_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% if avaliacoes_phq9 %}
+<div class="card">
+  <div class="card-title" style="color:#1D6A96;"><i data-lucide="frown" style="width:18px;height:18px;"></i> PHQ-9 — Questionário de Saúde do Paciente</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_phq9 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'phq9_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'phq9_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_phq9' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'PHQ-9')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'phq9_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_gad7 %}
+<div class="card">
+  <div class="card-title" style="color:#1A7F4B;"><i data-lucide="zap" style="width:18px;height:18px;"></i> GAD-7 — Transtorno de Ansiedade Generalizada</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_gad7 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'gad7_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'gad7_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_gad7' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'GAD-7')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'gad7_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_epds %}
+<div class="card">
+  <div class="card-title" style="color:#C0392B;"><i data-lucide="heart" style="width:18px;height:18px;"></i> EPDS — Depressão Pós-Parto de Edinburgh</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_epds %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'epds_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'epds_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_epds' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'EPDS')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'epds_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_pcl5 %}
+<div class="card">
+  <div class="card-title" style="color:#7F1D1D;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> PCL-5 — Lista de Verificação de PTSD (DSM-5)</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_pcl5 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'pcl5_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'pcl5_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_pcl5' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'PCL-5')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'pcl5_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_ghq12 %}
+<div class="card">
+  <div class="card-title" style="color:#16A085;"><i data-lucide="activity" style="width:18px;height:18px;"></i> GHQ-12 — Questionário de Saúde Geral</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_ghq12 %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'ghq12_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'ghq12_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_ghq12' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'GHQ-12')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'ghq12_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
 {% if avaliacoes_bdi %}
 <div class="card">
   <div class="card-title" style="color:#6C3483;"><i data-lucide="cloud-rain" style="width:18px;height:18px;"></i> BDI — Inventário de Depressão de Beck</div>
@@ -1473,15 +2134,17 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'bdi_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'bdi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'bdi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bdi' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
         {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'BDI')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
-        <a href="{% url 'bdi_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Responder</span></a>
+        {% endif %}
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bdi_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
       </td>
@@ -1506,15 +2169,17 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'bai_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'bai_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'bai_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bai' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
         {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'BAI')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
-        <a href="{% url 'bai_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Responder</span></a>
+        {% endif %}
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bai_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
       </td>
@@ -1541,11 +2206,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'dass21_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'dass21_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_dass21' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'DASS-21')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1573,11 +2243,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'had_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'had_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_had' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'HAD')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1604,11 +2279,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'bsl23_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'bsl23_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bsl23' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'BSL-23')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1635,11 +2315,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'aq10_adulto_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'aq10_adulto_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_aq10_adulto' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'AQ-10 Adulto')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1666,11 +2351,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'aq10_child_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'aq10_child_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_aq10_child' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'AQ-10 Criança')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1696,11 +2386,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'dep_emocional_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'dep_emocional_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_dep_emocional' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Dependência Emocional')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1727,11 +2422,16 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'scq_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'scq_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_scq' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'SCQ')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1758,12 +2458,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'conners_pais_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'conners_pais_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'conners_pais_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_conners_pais' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Conners-3 (Pais)')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1790,12 +2493,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'conners_prof_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'conners_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'conners_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_conners_prof' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Conners-3 (Professor)')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1822,12 +2528,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'etdah_pais_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'etdah_pais_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'etdah_pais_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_etdah_pais' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'ETDAH (Pais)')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1854,12 +2563,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'etdah_prof_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'etdah_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'etdah_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_etdah_prof' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'ETDAH (Professor)')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1886,12 +2598,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'auqei_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'auqei_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'auqei_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_auqei' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'AUQEI')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1918,12 +2633,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'scared_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'scared_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'scared_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_scared' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'SCARED')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1950,12 +2668,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'masc_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'masc_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'masc_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_masc' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'MASC')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -1982,116 +2703,19 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'bpq_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'bpq_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'bpq_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_bpq' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'BPQ')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
         <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'bpq_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-</div>
-{% endif %}
-
-{% if avaliacoes_anamnese_tea_inf %}
-<div class="card">
-  <div class="card-title" style="color:#117A65;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese TEA Infantil</div>
-  <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for av in avaliacoes_anamnese_tea_inf %}
-    <tr id="avaliacao-{{ av.uuid }}">
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
-      <td class="acoes-td">
-        {% if av.status == "concluida" %}
-        <a href="{% url 'anamnese_tea_inf_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
-        {% else %}
-        <a href="{% url 'anamnese_tea_inf_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
-        {% endif %}
-        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_tea_inf_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-</div>
-{% endif %}
-
-{% if avaliacoes_anamnese_tdah_inf %}
-<div class="card">
-  <div class="card-title" style="color:#1A5276;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese TDAH Infantil</div>
-  <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for av in avaliacoes_anamnese_tdah_inf %}
-    <tr id="avaliacao-{{ av.uuid }}">
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
-      <td class="acoes-td">
-        {% if av.status == "concluida" %}
-        <a href="{% url 'anamnese_tdah_inf_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
-        {% else %}
-        <a href="{% url 'anamnese_tdah_inf_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
-        {% endif %}
-        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_tdah_inf_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-</div>
-{% endif %}
-
-{% if avaliacoes_anamnese_adulto %}
-<div class="card">
-  <div class="card-title" style="color:#4A235A;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese Adulto</div>
-  <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for av in avaliacoes_anamnese_adulto %}
-    <tr id="avaliacao-{{ av.uuid }}">
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
-      <td class="acoes-td">
-        {% if av.status == "concluida" %}
-        <a href="{% url 'anamnese_adulto_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
-        {% else %}
-        <a href="{% url 'anamnese_adulto_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
-        {% endif %}
-        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_adulto_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-</div>
-{% endif %}
-
-{% if avaliacoes_anamnese_tdah_adulto %}
-<div class="card">
-  <div class="card-title" style="color:#6E2F1A;"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Anamnese TDAH Adulto</div>
-  <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for av in avaliacoes_anamnese_tdah_adulto %}
-    <tr id="avaliacao-{{ av.uuid }}">
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
-      <td class="acoes-td">
-        {% if av.status == "concluida" %}
-        <a href="{% url 'anamnese_tdah_adulto_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
-        {% else %}
-        <a href="{% url 'anamnese_tdah_adulto_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
-        {% endif %}
-        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'anamnese_tdah_adulto_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
       </td>
     </tr>
     {% endfor %}
@@ -2107,21 +2731,29 @@
     <thead><tr><th>Data</th><th>P-Social</th><th>M.Fino</th><th>Ling.</th><th>M.Gross.</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for av in avaliacoes_denver %}
-    <tr id="avaliacao-{{ av.uuid }}">
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td>{% if av.pont_pessoal_social is not None %}{{ av.pont_pessoal_social }}{% else %}—{% endif %}</td>
-      <td>{% if av.pont_motor_fino is not None %}{{ av.pont_motor_fino }}{% else %}—{% endif %}</td>
-      <td>{% if av.pont_linguagem is not None %}{{ av.pont_linguagem }}{% else %}—{% endif %}</td>
-      <td>{% if av.pont_motor_grosseiro is not None %}{{ av.pont_motor_grosseiro }}{% else %}—{% endif %}</td>
-      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_pessoal_social is not None %}{{ av.obj.pont_pessoal_social }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_motor_fino is not None %}{{ av.obj.pont_motor_fino }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_linguagem is not None %}{{ av.obj.pont_linguagem }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.pont_motor_grosseiro is not None %}{{ av.obj.pont_motor_grosseiro }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">{% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
       <td class="acoes-td">
-        {% if av.status == "concluida" %}
-        <a href="{% url 'denver_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'denver_visualizar' av.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'denver_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'denver_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
-        <a href="{% url 'denver_form' av.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_denver' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
         {% endif %}
-        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'denver_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Denver II')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'denver_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
       </td>
     </tr>
     {% endfor %}
@@ -2148,12 +2780,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'qmpi_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'qmpi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'qmpi_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_qmpi' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'QMPI')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -2180,12 +2815,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'quest_dislexia_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'quest_dislexia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'quest_dislexia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_quest_dislexia' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Quest. Dislexia')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -2212,12 +2850,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'checklist_dislexia_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'checklist_dislexia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'checklist_dislexia_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_checklist_dislexia' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Checklist Dislexia')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -2247,12 +2888,15 @@
       <td class="acoes-td">
         {% if av.obj.status == "concluida" %}
         <a href="{% url 'prot_dislexia_prof_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
-        <a href="{% url 'prot_dislexia_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
+        <a href="{% url 'prot_dislexia_prof_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
         {% else %}
         {% if av.link_publico %}
-        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Link</span></button>
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
         {% if paciente.email_responsavel %}
         <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_prot_dislexia_prof' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'Protocolo Dislexia')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
         {% endif %}
         {% endif %}
         {% endif %}
@@ -2265,30 +2909,6 @@
 </div>
 {% endif %}
 
-{% if avaliacoes_inventario_dislexia %}
-<div class="card">
-  <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> Inventário de Sinais Disléxicos</div>
-  <div class="table-responsive"><table class="avaliacoes-table">
-    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-    {% for av in avaliacoes_inventario_dislexia %}
-    <tr id="avaliacao-{{ av.uuid }}">
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td><span class="badge badge-{{ av.status|cut:'_'|lower }}">{% if av.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}</span></td>
-      <td class="acoes-td">
-        {% if av.status == "concluida" %}
-        <a href="{% url 'inventario_dislexia_resultado' av.uuid %}" class="btn-resultado"><i data-lucide="file-text" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver</span></a>
-        {% else %}
-        <a href="{% url 'inventario_dislexia_form' av.uuid %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i><span class="btn-txt"> Preencher</span></a>
-        {% endif %}
-        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'inventario_dislexia_deletar' av.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
-      </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table></div>
-</div>
-{% endif %}
 
 {% if avaliacoes_edm %}
 <div class="card">
@@ -2689,20 +3309,6 @@
         <span class="ec-desc">Comunicação Social, 40 itens</span>
       </button>
       {% endif %}
-      {% if "anamnese_tea_inf" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_tea_inf')">
-        <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">Anamnese TEA Infantil</span>
-        <span class="ec-desc">Preenchimento presencial</span>
-      </button>
-      {% endif %}
-      {% if "anamnese_tdah_inf" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_tdah_inf')">
-        <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">Anamnese TDAH Infantil</span>
-        <span class="ec-desc">Preenchimento presencial</span>
-      </button>
-      {% endif %}
       {% if "conners_prof" in modulos_liberados %}
       <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('conners_prof')">
         <span class="ec-icon"><i data-lucide="clipboard-check" style="width:2rem;height:2rem;"></i></span>
@@ -2715,6 +3321,148 @@
         <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">ETDAH (Professor)</span>
         <span class="ec-desc">Avaliação TDAH, 3 subescalas</span>
+      </button>
+      {% endif %}
+      {# ── Novas Escalas ──────────────────────────────────────────────── #}
+      {% if "k10" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('k10')">
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">K-10 — Kessler</span>
+        <span class="ec-desc">Distress psicológico, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "ucla" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('ucla')">
+        <span class="ec-icon"><i data-lucide="heart-crack" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">UCLA — Solidão</span>
+        <span class="ec-desc">Escala de solidão, 20 itens</span>
+      </button>
+      {% endif %}
+      {% if "msi_bpd" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('msi_bpd')">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">MSI-BPD — Borderline</span>
+        <span class="ec-desc">Triagem de TPB, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "gds15" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('gds15')">
+        <span class="ec-icon"><i data-lucide="user" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">GDS-15 — Dep. Geriátrica</span>
+        <span class="ec-desc">Depressão em idosos, 15 itens</span>
+      </button>
+      {% endif %}
+      {% if "rosenberg" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('rosenberg')">
+        <span class="ec-icon"><i data-lucide="star" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rosenberg — Autoestima</span>
+        <span class="ec-desc">Escala de autoestima, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "audit" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('audit')">
+        <span class="ec-icon"><i data-lucide="wine" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">AUDIT — Uso de Álcool</span>
+        <span class="ec-desc">Triagem de álcool, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "bis11" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('bis11')">
+        <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">BIS-11 — Impulsividade</span>
+        <span class="ec-desc">Impulsividade de Barratt, 30 itens</span>
+      </button>
+      {% endif %}
+      {% if "iar" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('iar')">
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">IAR — Ansiedade Infantil</span>
+        <span class="ec-desc">Inventário de ansiedade, 30 itens</span>
+      </button>
+      {% endif %}
+      {% if "pas" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('pas')">
+        <span class="ec-icon"><i data-lucide="smile" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PAS — Ansiedade Pré-Escolar</span>
+        <span class="ec-desc">Respondido pelos pais, 28 itens</span>
+      </button>
+      {% endif %}
+      {% if "cdi" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('cdi')">
+        <span class="ec-icon"><i data-lucide="cloud-rain" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">CDI — Dep. Infantil</span>
+        <span class="ec-desc">Depressão infantil, 27 itens</span>
+      </button>
+      {% endif %}
+      {% if "hama" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('hama')">
+        <span class="ec-icon"><i data-lucide="thermometer" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">HAM-A — Hamilton Ansiedade</span>
+        <span class="ec-desc">Escala clínica, 14 itens</span>
+      </button>
+      {% endif %}
+      {% if "lsas" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('lsas')">
+        <span class="ec-icon"><i data-lucide="users" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">LSAS — Ansiedade Social</span>
+        <span class="ec-desc">Liebowitz, 24 situações</span>
+      </button>
+      {% endif %}
+      {% if "risco_suicidio" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('risco_suicidio')">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Risco de Suicídio</span>
+        <span class="ec-desc">Triagem Columbia, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "agorafobia" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('agorafobia')">
+        <span class="ec-icon"><i data-lucide="map-pin-off" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rastreio de Agorafobia</span>
+        <span class="ec-desc">14 situações evitadas</span>
+      </button>
+      {% endif %}
+      {% if "panico" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('panico')">
+        <span class="ec-icon"><i data-lucide="wind" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rastreio de Pânico</span>
+        <span class="ec-desc">Baseado no DSM-5, 13 itens</span>
+      </button>
+      {% endif %}
+      {# ── Triagem Geral ─────────────────────────────────────────────── #}
+      {% if "phq9" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('phq9')">
+        <span class="ec-icon"><i data-lucide="frown" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PHQ-9 — Depressão</span>
+        <span class="ec-desc">Questionário de saúde, 9 itens</span>
+      </button>
+      {% endif %}
+      {% if "gad7" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('gad7')">
+        <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">GAD-7 — Ansiedade</span>
+        <span class="ec-desc">Transtorno ansiedade geral., 7 itens</span>
+      </button>
+      {% endif %}
+      {% if "epds" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('epds')">
+        <span class="ec-icon"><i data-lucide="heart" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">EPDS — Depressão Pós-Parto</span>
+        <span class="ec-desc">Edinburgh, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "pcl5" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('pcl5')">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PCL-5 — PTSD</span>
+        <span class="ec-desc">Lista verificação TEPT, 20 itens</span>
+      </button>
+      {% endif %}
+      {% if "ghq12" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('ghq12')">
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">GHQ-12 — Saúde Geral</span>
+        <span class="ec-desc">Questionário saúde geral, 12 itens</span>
       </button>
       {% endif %}
       {# ── Psicologia adulto ─────────────────────────────────────────── #}
@@ -2774,61 +3522,40 @@
         <span class="ec-desc">Personalidade borderline, 80 itens</span>
       </button>
       {% endif %}
-      {% if "anamnese_adulto" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_adulto')">
-        <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">Anamnese Adulto</span>
-        <span class="ec-desc">Preenchimento presencial</span>
-      </button>
-      {% endif %}
-      {% if "anamnese_tdah_adulto" in modulos_liberados %}
-      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('anamnese_tdah_adulto')">
-        <span class="ec-icon"><i data-lucide="file-text" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">Anamnese TDAH Adulto</span>
-        <span class="ec-desc">Preenchimento presencial</span>
-      </button>
-      {% endif %}
       {# ── Pediatria / Neuropsicologia / Psicopedagogia ──────────────── #}
       {% if "denver" in modulos_liberados %}
-      <button type="button" class="escolha-card desenvolvimento" onclick="avisarEmBreve('Denver II')">
+      <button type="button" class="escolha-card desenvolvimento" onclick="criarAvaliacao('denver')">
         <span class="ec-icon"><i data-lucide="trending-up" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Checklist Denver II</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Preenchido pelo profissional</span>
       </button>
       {% endif %}
       {% if "qmpi" in modulos_liberados %}
-      <button type="button" class="escolha-card cognitivo" onclick="avisarEmBreve('QMPI')">
+      <button type="button" class="escolha-card cognitivo" onclick="criarAvaliacao('qmpi')">
         <span class="ec-icon"><i data-lucide="cpu" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">QMPI</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Memória Prospectiva Infantil</span>
       </button>
       {% endif %}
       {% if "quest_dislexia" in modulos_liberados %}
-      <button type="button" class="escolha-card psicopedagogica" onclick="avisarEmBreve('Quest. Dislexia')">
+      <button type="button" class="escolha-card psicopedagogica" onclick="criarAvaliacao('quest_dislexia')">
         <span class="ec-icon"><i data-lucide="book-open" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Quest. Dislexia (Pais)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Questionário de dislexia para pais</span>
       </button>
       {% endif %}
       {% if "checklist_dislexia" in modulos_liberados %}
-      <button type="button" class="escolha-card psicopedagogica" onclick="avisarEmBreve('Checklist Dislexia')">
+      <button type="button" class="escolha-card psicopedagogica" onclick="criarAvaliacao('checklist_dislexia')">
         <span class="ec-icon"><i data-lucide="check-square" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Checklist Dislexia</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Sinais de dislexia</span>
       </button>
       {% endif %}
       {% if "prot_dislexia_prof" in modulos_liberados %}
-      <button type="button" class="escolha-card psicopedagogica" onclick="avisarEmBreve('Protocolo Dislexia Professor')">
+      <button type="button" class="escolha-card psicopedagogica" onclick="criarAvaliacao('prot_dislexia_prof')">
         <span class="ec-icon"><i data-lucide="book-open" style="width:2rem;height:2rem;"></i></span>
         <span class="ec-titulo">Protocolo Dislexia (Prof.)</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
-      </button>
-      {% endif %}
-      {% if "inventario_dislexia" in modulos_liberados %}
-      <button type="button" class="escolha-card psicopedagogica" onclick="avisarEmBreve('Inventário Disléxicos')">
-        <span class="ec-icon"><i data-lucide="list" style="width:2rem;height:2rem;"></i></span>
-        <span class="ec-titulo">Inventário Sinais Disléxicos</span>
-        <span class="ec-desc">Gere o link em "Gerar Link"</span>
+        <span class="ec-desc">Avaliação escolar pelo professor</span>
       </button>
       {% endif %}
       {% if not modulos_liberados %}
@@ -2913,6 +3640,58 @@
   </div>
 </div>
 
+<!-- ── Modal: Escolher tipo de anamnese ── -->
+<div class="modal-overlay" id="modalNovoAnamnese">
+  <div class="modal-box" style="max-width:520px;">
+    <h3 style="margin:0 0 .3rem;">Nova Anamnese</h3>
+    <p class="modal-sub">Escolha o modelo mais adequado para este paciente:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.5rem;">
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_adulto' %}" style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+        <span style="width:32px;height:32px;border-radius:8px;background:#e0edff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="user" style="width:16px;height:16px;color:#3E73D1;"></i></span>
+        <span><span style="display:block;line-height:1.2;">Adulto</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Geral · saúde mental</span></span>
+      </a>
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_infantil' %}" style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+        <span style="width:32px;height:32px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="baby" style="width:16px;height:16px;color:#d97706;"></i></span>
+        <span><span style="display:block;line-height:1.2;">Infantil / Adolescente</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Desenvolvimento · escola</span></span>
+      </a>
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_tea' %}" style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+        <span style="width:32px;height:32px;border-radius:8px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="puzzle" style="width:16px;height:16px;color:#7c3aed;"></i></span>
+        <span><span style="display:block;line-height:1.2;">TEA / Autismo</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Comunicação · sensorial</span></span>
+      </a>
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_tdah' %}" style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+        <span style="width:32px;height:32px;border-radius:8px;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="zap" style="width:16px;height:16px;color:#dc2626;"></i></span>
+        <span><span style="display:block;line-height:1.2;">TDAH</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Atenção · hiperatividade</span></span>
+      </a>
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_casal' %}" style="grid-column:1/-1;display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+        <span style="width:32px;height:32px;border-radius:8px;background:#fce7f3;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="heart" style="width:16px;height:16px;color:#db2777;"></i></span>
+        <span><span style="display:block;line-height:1.2;">Casal</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Relacionamento · comunicação · conflito</span></span>
+      </a>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalNovoAnamnese').classList.remove('active')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalLinkAnamnese">
+  <div class="modal-box" style="max-width:500px;">
+    <h3 id="modalLinkAnamneseTitulo">Link da Anamnese</h3>
+    <p class="modal-sub">Copie o link abaixo e envie para o respondente preencher antes da consulta.</p>
+    <div style="display:flex;gap:.5rem;align-items:center;margin:1rem 0;">
+      <input id="modalLinkAnamneseInput" type="text" readonly style="flex:1;padding:.5rem .75rem;border:1px solid #ccc;border-radius:6px;font-size:.85rem;background:#f8f9fa;">
+      <button type="button" class="btn btn-secondary" onclick="copiarLinkAnamnese(this)" style="white-space:nowrap;">
+        <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar
+      </button>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <a id="modalLinkAnamneseWhatsapp" href="#" target="_blank" class="btn btn-secondary" style="background:#25d366;color:#fff;border-color:#25d366;">
+        <i data-lucide="message-circle" style="width:14px;height:14px;"></i> WhatsApp
+      </a>
+      <button type="button" class="btn btn-primary" onclick="fecharModalLinkAnamnese()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
   const csrfToken = '{{ csrf_token }}';
@@ -2953,6 +3732,26 @@
   const urlSono             = "{% url 'nova_avaliacao_sono' paciente.uuid %}";
   const urlCognitivo        = "{% url 'nova_avaliacao_cognitivo' paciente.uuid %}";
   const urlPsicopedagogica  = "{% url 'nova_avaliacao_psicopedagogica' paciente.uuid %}";
+  const urlK10             = "{% url 'nova_avaliacao_k10' paciente.uuid %}";
+  const urlUcla             = "{% url 'nova_avaliacao_ucla' paciente.uuid %}";
+  const urlMsibpd             = "{% url 'nova_avaliacao_msi_bpd' paciente.uuid %}";
+  const urlGds15             = "{% url 'nova_avaliacao_gds15' paciente.uuid %}";
+  const urlRosenberg             = "{% url 'nova_avaliacao_rosenberg' paciente.uuid %}";
+  const urlAudit             = "{% url 'nova_avaliacao_audit' paciente.uuid %}";
+  const urlBis11             = "{% url 'nova_avaliacao_bis11' paciente.uuid %}";
+  const urlIar             = "{% url 'nova_avaliacao_iar' paciente.uuid %}";
+  const urlPas             = "{% url 'nova_avaliacao_pas' paciente.uuid %}";
+  const urlCdi             = "{% url 'nova_avaliacao_cdi' paciente.uuid %}";
+  const urlHama             = "{% url 'nova_avaliacao_hama' paciente.uuid %}";
+  const urlLsas             = "{% url 'nova_avaliacao_lsas' paciente.uuid %}";
+  const urlRiscosuicidio             = "{% url 'nova_avaliacao_risco_suicidio' paciente.uuid %}";
+  const urlAgorafobia             = "{% url 'nova_avaliacao_agorafobia' paciente.uuid %}";
+  const urlPanico             = "{% url 'nova_avaliacao_panico' paciente.uuid %}";
+  const urlPHQ9             = "{% url 'nova_avaliacao_phq9' paciente.uuid %}";
+  const urlGAD7             = "{% url 'nova_avaliacao_gad7' paciente.uuid %}";
+  const urlEPDS             = "{% url 'nova_avaliacao_epds' paciente.uuid %}";
+  const urlPCL5             = "{% url 'nova_avaliacao_pcl5' paciente.uuid %}";
+  const urlGHQ12            = "{% url 'nova_avaliacao_ghq12' paciente.uuid %}";
   const urlBDI              = "{% url 'nova_avaliacao_bdi' paciente.uuid %}";
   const urlBAI              = "{% url 'nova_avaliacao_bai' paciente.uuid %}";
   const urlDASS21           = "{% url 'nova_avaliacao_dass21' paciente.uuid %}";
@@ -2970,10 +3769,12 @@
   const urlSCARED           = "{% url 'nova_avaliacao_scared' paciente.uuid %}";
   const urlMASC             = "{% url 'nova_avaliacao_masc' paciente.uuid %}";
   const urlBPQ              = "{% url 'nova_avaliacao_bpq' paciente.uuid %}";
-  const urlAnamneseTEAInf   = "{% url 'nova_avaliacao_anamnese_tea_inf' paciente.uuid %}";
-  const urlAnamneseTDAHInf  = "{% url 'nova_avaliacao_anamnese_tdah_inf' paciente.uuid %}";
-  const urlAnamneseAdulto   = "{% url 'nova_avaliacao_anamnese_adulto' paciente.uuid %}";
-  const urlAnamneseTDAHAdulto = "{% url 'nova_avaliacao_anamnese_tdah_adulto' paciente.uuid %}";
+  const urlDenver               = "{% url 'nova_avaliacao_denver' paciente.uuid %}";
+  const urlQMPI                 = "{% url 'nova_avaliacao_qmpi' paciente.uuid %}";
+  const urlQuestDislexia        = "{% url 'nova_avaliacao_quest_dislexia' paciente.uuid %}";
+  const urlChecklistDislexia    = "{% url 'nova_avaliacao_checklist_dislexia' paciente.uuid %}";
+  const urlProtDislexiaProf     = "{% url 'nova_avaliacao_prot_dislexia_prof' paciente.uuid %}";
+  const urlInventarioDislexia   = "{% url 'nova_avaliacao_inventario_dislexia' paciente.uuid %}";
 
   function avisarEmBreve(nome) {
     fecharModalEscolha();
@@ -3011,6 +3812,26 @@
     else if (tipo === 'sono')            { url = urlSono;            label = 'Sono Infantil'; }
     else if (tipo === 'cognitivo')       { url = urlCognitivo;       label = 'Rastreio Cognitivo'; }
     else if (tipo === 'psicopedagogica') { url = urlPsicopedagogica; label = 'Psicopedagógica'; }
+    else if (tipo === 'k10') { url = urlK10; label = 'K-10 — Kessler'; }
+    else if (tipo === 'ucla') { url = urlUcla; label = 'UCLA — Solidão'; }
+    else if (tipo === 'msi_bpd') { url = urlMsibpd; label = 'MSI-BPD'; }
+    else if (tipo === 'gds15') { url = urlGds15; label = 'GDS-15'; }
+    else if (tipo === 'rosenberg') { url = urlRosenberg; label = 'Rosenberg'; }
+    else if (tipo === 'audit') { url = urlAudit; label = 'AUDIT'; }
+    else if (tipo === 'bis11') { url = urlBis11; label = 'BIS-11'; }
+    else if (tipo === 'iar') { url = urlIar; label = 'IAR'; }
+    else if (tipo === 'pas') { url = urlPas; label = 'PAS'; }
+    else if (tipo === 'cdi') { url = urlCdi; label = 'CDI'; }
+    else if (tipo === 'hama') { url = urlHama; label = 'HAM-A'; }
+    else if (tipo === 'lsas') { url = urlLsas; label = 'LSAS'; }
+    else if (tipo === 'risco_suicidio') { url = urlRiscosuicidio; label = 'Risco de Suicídio'; }
+    else if (tipo === 'agorafobia') { url = urlAgorafobia; label = 'Agorafobia'; }
+    else if (tipo === 'panico') { url = urlPanico; label = 'Pânico'; }
+    else if (tipo === 'phq9')            { url = urlPHQ9;            label = 'PHQ-9'; }
+    else if (tipo === 'gad7')            { url = urlGAD7;            label = 'GAD-7'; }
+    else if (tipo === 'epds')            { url = urlEPDS;            label = 'EPDS'; }
+    else if (tipo === 'pcl5')            { url = urlPCL5;            label = 'PCL-5'; }
+    else if (tipo === 'ghq12')           { url = urlGHQ12;           label = 'GHQ-12'; }
     else if (tipo === 'bdi')             { url = urlBDI;             label = 'BDI'; }
     else if (tipo === 'bai')             { url = urlBAI;             label = 'BAI'; }
     else if (tipo === 'dass21')          { url = urlDASS21;          label = 'DASS-21'; }
@@ -3027,11 +3848,13 @@
     else if (tipo === 'auqei')           { url = urlAUQEI;           label = 'AUQEI'; }
     else if (tipo === 'scared')          { url = urlSCARED;          label = 'SCARED'; }
     else if (tipo === 'masc')            { url = urlMASC;            label = 'MASC'; }
-    else if (tipo === 'bpq')             { url = urlBPQ;             label = 'BPQ'; }
-    else if (tipo === 'anamnese_tea_inf')    { url = urlAnamneseTEAInf;     label = 'Anamnese TEA Infantil'; }
-    else if (tipo === 'anamnese_tdah_inf')   { url = urlAnamneseTDAHInf;    label = 'Anamnese TDAH Infantil'; }
-    else if (tipo === 'anamnese_adulto')     { url = urlAnamneseAdulto;     label = 'Anamnese Adulto'; }
-    else if (tipo === 'anamnese_tdah_adulto') { url = urlAnamneseTDAHAdulto; label = 'Anamnese TDAH Adulto'; }
+    else if (tipo === 'bpq')                  { url = urlBPQ;                label = 'BPQ'; }
+    else if (tipo === 'denver')               { url = urlDenver;             label = 'Denver II'; }
+    else if (tipo === 'qmpi')                 { url = urlQMPI;               label = 'QMPI'; }
+    else if (tipo === 'quest_dislexia')       { url = urlQuestDislexia;      label = 'Quest. Dislexia'; }
+    else if (tipo === 'checklist_dislexia')   { url = urlChecklistDislexia;  label = 'Checklist Dislexia'; }
+    else if (tipo === 'prot_dislexia_prof')   { url = urlProtDislexiaProf;   label = 'Protocolo Dislexia'; }
+    else if (tipo === 'inventario_dislexia')  { url = urlInventarioDislexia; label = 'Inventário Disléxicos'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())
@@ -3039,11 +3862,37 @@
         if (data.ok) {
           fecharModalEscolha();
           if (data.redirect) { window.location.href = data.redirect; return; }
+          if (data.link) { abrirModalLinkAnamnese(data.link, data.tipo_display || label); return; }
           mostrarAlerta('Avaliação ' + label + ' criada com sucesso.', 'success');
           setTimeout(() => location.reload(), 1800);
         }
       });
   }
+
+  /* ── Modal link anamnese ── */
+  function abrirModalLinkAnamnese(link, titulo) {
+    document.getElementById('modalLinkAnamneseTitulo').textContent = titulo;
+    document.getElementById('modalLinkAnamneseInput').value = link;
+    const msg = encodeURIComponent('Olá! Por favor, preencha a ' + titulo + ' pelo link: ' + link);
+    document.getElementById('modalLinkAnamneseWhatsapp').href = 'https://wa.me/?text=' + msg;
+    document.getElementById('modalLinkAnamnese').classList.add('active');
+    lucide.createIcons();
+  }
+  function fecharModalLinkAnamnese() {
+    document.getElementById('modalLinkAnamnese').classList.remove('active');
+    location.reload();
+  }
+  function copiarLinkAnamnese(btn) {
+    const input = document.getElementById('modalLinkAnamneseInput');
+    navigator.clipboard.writeText(input.value);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Copiado!';
+    lucide.createIcons();
+    setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 1500);
+  }
+  document.getElementById('modalLinkAnamnese').addEventListener('click', function(e) {
+    if (e.target === this) fecharModalLinkAnamnese();
+  });
 
   /* ── Modal de escolha ── */
   function abrirModalEscolha() {
@@ -3271,5 +4120,16 @@
     }
   });
 })();
+
+  function toggleProcMenu(e) {
+    e.stopPropagation();
+    document.getElementById('procMenu').classList.toggle('open');
+  }
+  document.addEventListener('click', function() {
+    document.getElementById('procMenu').classList.remove('open');
+  });
+  document.getElementById('modalNovoAnamnese').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
 </script>
 {% endblock %}

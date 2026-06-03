@@ -477,6 +477,149 @@
         <span class="tc-desc">Memória prospectiva infantil · remoto</span>
       </button>
       {% endif %}
+      {# ── Triagem Internacional ─────────────────────────────────────── #}
+      {% if 'phq9' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('phq9', this)">
+        <span class="tc-icon"><i data-lucide="clipboard-list" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">PHQ-9</span>
+        <span class="tc-desc">Saúde do paciente · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'gad7' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('gad7', this)">
+        <span class="tc-icon"><i data-lucide="alert-triangle" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">GAD-7</span>
+        <span class="tc-desc">Ansiedade generalizada · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'epds' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('epds', this)">
+        <span class="tc-icon"><i data-lucide="heart" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">EPDS</span>
+        <span class="tc-desc">Depressão pós-parto · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'pcl5' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('pcl5', this)">
+        <span class="tc-icon"><i data-lucide="shield-alert" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">PCL-5</span>
+        <span class="tc-desc">Lista de verificação PTSD · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'ghq12' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('ghq12', this)">
+        <span class="tc-icon"><i data-lucide="activity" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">GHQ-12</span>
+        <span class="tc-desc">Saúde geral · remoto</span>
+      </button>
+      {% endif %}
+      {# ── Novas Escalas — Adulto ───────────────────────────────────── #}
+      {% if 'k10' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('k10', this)">
+        <span class="tc-icon"><i data-lucide="thermometer" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">K-10 — Kessler</span>
+        <span class="tc-desc">Sofrimento psicológico · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'ucla' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('ucla', this)">
+        <span class="tc-icon"><i data-lucide="users" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">UCLA — Solidão</span>
+        <span class="tc-desc">Escala de solidão · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'msi_bpd' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('msi_bpd', this)">
+        <span class="tc-icon"><i data-lucide="shield-alert" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">MSI-BPD</span>
+        <span class="tc-desc">Triagem borderline · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'gds15' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('gds15', this)">
+        <span class="tc-icon"><i data-lucide="cloud-rain" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">GDS-15</span>
+        <span class="tc-desc">Depressão geriátrica · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'rosenberg' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('rosenberg', this)">
+        <span class="tc-icon"><i data-lucide="star" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Rosenberg</span>
+        <span class="tc-desc">Autoestima · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'audit' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('audit', this)">
+        <span class="tc-icon"><i data-lucide="wine" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">AUDIT</span>
+        <span class="tc-desc">Uso de álcool · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'bis11' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('bis11', this)">
+        <span class="tc-icon"><i data-lucide="zap" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">BIS-11</span>
+        <span class="tc-desc">Impulsividade · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'hama' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('hama', this)">
+        <span class="tc-icon"><i data-lucide="alert-triangle" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">HAM-A</span>
+        <span class="tc-desc">Ansiedade de Hamilton · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'lsas' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('lsas', this)">
+        <span class="tc-icon"><i data-lucide="users" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">LSAS</span>
+        <span class="tc-desc">Ansiedade social · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'risco_suicidio' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('risco_suicidio', this)">
+        <span class="tc-icon"><i data-lucide="alert-octagon" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Risco de Suicídio</span>
+        <span class="tc-desc">Triagem de risco · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'agorafobia' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('agorafobia', this)">
+        <span class="tc-icon"><i data-lucide="compass" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Agorafobia</span>
+        <span class="tc-desc">Rastreio agorafobia · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'panico' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('panico', this)">
+        <span class="tc-icon"><i data-lucide="wind" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Pânico</span>
+        <span class="tc-desc">Rastreio de pânico · remoto</span>
+      </button>
+      {% endif %}
+      {# ── Novas Escalas — Infantil ─────────────────────────────────── #}
+      {% if 'iar' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('iar', this)">
+        <span class="tc-icon"><i data-lucide="alert-triangle" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">IAR</span>
+        <span class="tc-desc">Ansiedade infantil · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'pas' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('pas', this)">
+        <span class="tc-icon"><i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">PAS</span>
+        <span class="tc-desc">Ansiedade pré-escolar · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'cdi' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('cdi', this)">
+        <span class="tc-icon"><i data-lucide="cloud-rain" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">CDI</span>
+        <span class="tc-desc">Depressão infantil · remoto</span>
+      </button>
+      {% endif %}
       {% if not modulos_liberados %}
       <div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">
         <i data-lucide="lock" style="width:2rem;height:2rem; margin-bottom:.5rem;"></i>

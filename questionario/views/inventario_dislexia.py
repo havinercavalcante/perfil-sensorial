@@ -40,7 +40,8 @@ def nova_avaliacao_inventario_dislexia(request, paciente_id):
         return redirect('detalhe_paciente', paciente_id=paciente_id)
     av = AvaliacaoInventarioDislexia.objects.create(paciente=paciente)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"ok": True, "redirect": f"/questionario/inventario-dislexia/{av.uuid}/form/"})
+        from django.urls import reverse
+        return JsonResponse({"ok": True, "redirect": reverse("inventario_dislexia_form", args=[av.uuid])})
     return redirect("inventario_dislexia_form", avaliacao_id=av.uuid)
 
 

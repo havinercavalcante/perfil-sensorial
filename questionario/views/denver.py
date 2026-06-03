@@ -109,10 +109,10 @@ def nova_avaliacao_denver(request, paciente_id):
             return JsonResponse({"ok": False, "error": "Módulo não disponível no seu plano."}, status=403)
         messages.error(request, "Você não tem acesso ao módulo Denver II.")
         return redirect('detalhe_paciente', paciente_id=paciente_id)
-    av = AvaliacaoDenver.objects.create(paciente=paciente)
+    av = AvaliacaoDenver.objects.create(paciente=paciente, token=str(uuid.uuid4()))
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "uuid": str(av.uuid)})
-    return redirect("denver_form", avaliacao_id=av.uuid, pagina=1)
+    return redirect("detalhe_paciente", paciente_id=paciente_id)
 
 
 @login_required
@@ -151,7 +151,7 @@ def denver_form(request, avaliacao_id, pagina):
     itens_render = [
         {
             "numero": i["numero"], "texto": i["texto"], "faixa": i.get("faixa", ""),
-            "resposta_salva": rs.get(i["numero"]),
+            "resposta_salva": rs.get(i["numero"], "__unset__"),
             "observacao_salva": obs_render.get(i["numero"], os_.get(i["numero"], "")),
         }
         for i in itens_pagina
@@ -172,28 +172,57 @@ def denver_resultado(request, avaliacao_id):
         itens = _ITENS_POR_DOM[key]
         total_itens = len(itens)
         passa = getattr(avaliacao, dom["campo"]) or 0
-        testados = sum(1 for i in itens if respostas.get(i["numero"]) is not None)
-        nao_testados = total_itens - testados
+        respondidos = {i["numero"] for i in itens if i["numero"] in respostas}
+        nt = sum(1 for n in respondidos if respostas[n] is None)
+        falha = sum(1 for n in respondidos if respostas[n] == 0)
+        nao_respondidos = total_itens - len(respondidos)
+        pct_passa = int(passa / total_itens * 100) if total_itens else 0
+        # Item breakdown for this domain
+        itens_detail = [
+            {
+                "numero": i["numero"],
+                "texto": i["texto"],
+                "faixa": i.get("faixa", ""),
+                "respondido": i["numero"] in respostas,
+                "valor": respostas.get(i["numero"]),  # 1=Passou, 0=Falhou, None=NT
+            }
+            for i in itens
+        ]
         resultado.append({
             "key": key,
             "nome": dom["nome"],
             "cor": dom["cor"],
             "passa": passa,
+            "falha": falha,
+            "nt": nt,
+            "nao_respondidos": nao_respondidos,
             "total": total_itens,
-            "testados": testados,
-            "nao_testados": nao_testados,
-            "pct": int(passa / total_itens * 100) if total_itens else 0,
+            "pct": pct_passa,
+            "itens": itens_detail,
         })
 
     paciente = avaliacao.paciente
     todas_av = list(paciente.avaliacoes_denver.filter(status="concluida").order_by("data"))
     outras = [av for av in todas_av if av.id != avaliacao.id]
 
+    radar_data = json.dumps({
+        "labels": [r["nome"] for r in resultado],
+        "datasets": [{
+            "label": "Marcos atingidos (%)",
+            "data": [r["pct"] for r in resultado],
+            "backgroundColor": "rgba(52,152,219,.25)",
+            "borderColor": "#3498DB",
+            "borderWidth": 2,
+            "pointBackgroundColor": [r["cor"] for r in resultado],
+        }]
+    })
+
     return render(request, "questionario/avaliacoes/denver_resultado.html", {
         "avaliacao": avaliacao,
         "paciente": paciente,
         "resultado": resultado,
         "outras_avaliacoes": outras,
+        "radar_data": radar_data,
         "comparativo_labels": json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av]),
         "comparativo_datasets": json.dumps([
             {
@@ -223,7 +252,7 @@ def denver_visualizar(request, avaliacao_id, pagina):
     itens_render = [
         {
             "numero": i["numero"], "texto": i["texto"], "faixa": i.get("faixa", ""),
-            "resposta_salva": rs.get(i["numero"]),
+            "resposta_salva": rs.get(i["numero"], "__unset__"),
             "observacao_salva": os_.get(i["numero"], ""),
         }
         for i in itens_pagina
@@ -256,3 +285,96 @@ def salvar_observacoes_denver(request, avaliacao_id):
             return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas.")
     return redirect("denver_resultado", avaliacao_id=avaliacao_id)
+
+
+def denver_publico(request, token, pagina):
+    from ..services import notificar_terapeuta
+    avaliacao = get_object_or_404(AvaliacaoDenver, token=token)
+    if avaliacao.status == "concluida":
+        return render(request, "questionario/dashboard/concluido.html")
+    if pagina < 1 or pagina > TOTAL_PAGINAS:
+        return redirect("denver_publico", token=token, pagina=1)
+    pagina_dict = DENVER_PAGINAS[pagina - 1]
+    itens_pagina = _itens_da_pagina(pagina_dict)
+    numeros = [i["numero"] for i in itens_pagina]
+    qs = list(avaliacao.respostas.filter(numero_item__in=numeros))
+    rs = {r.numero_item: r.valor for r in qs}
+    os_ = {r.numero_item: r.observacao for r in qs}
+    itens_faltando = []
+    obs_render = {}
+
+    if request.method == "POST":
+        confirmar = request.POST.get("confirmar_incompleto") == "1"
+        erros, novas, obs = _processar_post_denver(request, pagina_dict)
+        obs_render = obs
+        if erros and not confirmar:
+            rs.update({n: v for n, v in novas.items() if v is not None})
+            itens_faltando = erros
+        else:
+            _salvar_denver(avaliacao, novas, obs)
+            proxima = pagina + 1
+            if proxima > TOTAL_PAGINAS:
+                avaliacao = _calcular_denver(avaliacao)
+                avaliacao.status = "concluida"
+                avaliacao.save()
+                try:
+                    notificar_terapeuta(avaliacao.paciente, "denver", request)
+                except Exception:
+                    pass
+                return render(request, "questionario/dashboard/concluido.html")
+            return redirect("denver_publico", token=token, pagina=proxima)
+
+    itens_render = [
+        {
+            "numero": i["numero"], "texto": i["texto"], "faixa": i.get("faixa", ""),
+            "resposta_salva": rs.get(i["numero"], "__unset__"),
+            "observacao_salva": obs_render.get(i["numero"], os_.get(i["numero"], "")),
+        }
+        for i in itens_pagina
+    ]
+    return render(request, "questionario/avaliacoes/avaliacao_dominio_form.html",
+                  _ctx(avaliacao, pagina_dict, pagina, itens_render, rs, itens_faltando))
+
+
+@login_required
+def enviar_email_denver(request, avaliacao_id):
+    from django.core.mail import send_mail
+    from django.utils import timezone as tz
+    from django.urls import reverse
+    from django.template.loader import render_to_string
+    avaliacao = get_object_or_404(AvaliacaoDenver, uuid=avaliacao_id, paciente__medico=request.user)
+    paciente = avaliacao.paciente
+    email_dest = paciente.email_responsavel
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    if not email_dest:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": "Nenhum e-mail cadastrado."})
+        messages.error(request, "Nenhum e-mail cadastrado.")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    if not avaliacao.token:
+        avaliacao.token = str(uuid.uuid4())
+        avaliacao.save(update_fields=["token"])
+    link = request.build_absolute_uri(
+        reverse("denver_publico", kwargs={"token": avaliacao.token, "pagina": 1})
+    )
+    html = render_to_string(
+        "questionario/emails/email_link_avaliacao.html",
+        {"paciente": paciente, "link": link}
+    )
+    try:
+        send_mail(
+            subject="Checklist Denver II — IntegraMente",
+            message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
+            from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False,
+        )
+    except Exception as exc:
+        if is_ajax:
+            return JsonResponse({"ok": False, "message": f"Falha ao enviar e-mail: {exc}"})
+        messages.error(request, f"Falha: {exc}")
+        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+    avaliacao.email_enviado_em = tz.now()
+    avaliacao.save(update_fields=["email_enviado_em"])
+    if is_ajax:
+        return JsonResponse({"ok": True, "message": f"E-mail enviado para {email_dest}."})
+    messages.success(request, f"E-mail enviado para {email_dest}.")
+    return redirect("detalhe_paciente", paciente_id=paciente.uuid)

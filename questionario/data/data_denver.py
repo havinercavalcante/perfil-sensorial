@@ -77,7 +77,7 @@ DENVER_DOMINIOS = {
 }
 
 DENVER_OPCOES = [
-    (1,    "Passa (P)"),
-    (0,    "Falha (F)"),
-    (None, "Não testado (NT)"),
+    {"valor": 1,    "label": "Sim",          "codigo": "S"},
+    {"valor": 0,    "label": "Não",          "codigo": "N"},
+    {"valor": None, "label": "Não testado",  "codigo": "NT"},
 ]

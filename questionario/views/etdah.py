@@ -183,6 +183,7 @@ def etdah_pais_resultado(request, avaliacao_id):
         ]),
         "tem_comparativo": len(todas_av) > 1, "outras_avaliacoes": outras,
         "url_resultado_name": "etdah_pais_resultado",
+        "url_laudo_name": "etdah_pais_laudo",
         "url_deletar_name": "etdah_pais_deletar",
         "url_observacoes_name": "salvar_observacoes_etdah_pais",
     })
@@ -387,6 +388,7 @@ def etdah_prof_resultado(request, avaliacao_id):
         ]),
         "tem_comparativo": len(todas_av) > 1, "outras_avaliacoes": outras,
         "url_resultado_name": "etdah_prof_resultado",
+        "url_laudo_name": "etdah_prof_laudo",
         "url_deletar_name": "etdah_prof_deletar",
         "url_observacoes_name": "salvar_observacoes_etdah_prof",
     })

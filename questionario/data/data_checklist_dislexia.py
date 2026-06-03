@@ -31,5 +31,8 @@ CHECKLIST_DISLEXIA_SUBESCALAS = {
     "processamento": {"nome": "Processamento Fonológico", "cor": "#27AE60", "campo": "pont_processamento", "itens": list(range(16, 21))},
 }
 
-CHECKLIST_DISLEXIA_OPCOES = [(1, "Sim"), (0, "Não")]
+CHECKLIST_DISLEXIA_OPCOES = [
+    {"valor": 1, "label": "Sim"},
+    {"valor": 0, "label": "Não"},
+]
 CHECKLIST_DISLEXIA_CORTE = 7  # total >= 7 = rastreio positivo

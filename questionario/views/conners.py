@@ -185,6 +185,7 @@ def conners_pais_resultado(request, avaliacao_id):
         ]),
         "tem_comparativo": len(todas_av) > 1, "outras_avaliacoes": outras,
         "url_resultado_name": "conners_pais_resultado",
+        "url_laudo_name": "conners_pais_laudo",
         "url_deletar_name": "conners_pais_deletar",
         "url_observacoes_name": "salvar_observacoes_conners_pais",
     })
@@ -391,6 +392,7 @@ def conners_prof_resultado(request, avaliacao_id):
         ]),
         "tem_comparativo": len(todas_av) > 1, "outras_avaliacoes": outras,
         "url_resultado_name": "conners_prof_resultado",
+        "url_laudo_name": "conners_prof_laudo",
         "url_deletar_name": "conners_prof_deletar",
         "url_observacoes_name": "salvar_observacoes_conners_prof",
     })

@@ -177,6 +177,7 @@ def prot_dislexia_prof_resultado(request, avaliacao_id):
     return render(request, "questionario/avaliacoes/prot_dislexia_prof_resultado.html", {
         "avaliacao": avaliacao, "paciente": paciente,
         "resultado": resultado, "corte": PROT_DISLEXIA_PROF_CORTE,
+        "num_positivos": sum(1 for r in resultado if r["positivo"]),
         "outras_avaliacoes": outras,
         "comparativo_labels": json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av]),
         "comparativo_datasets": json.dumps([

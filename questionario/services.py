@@ -119,4 +119,27 @@ TIPO_INFO = {
     "checklist_dislexia":        ("Checklist Dislexia",                 '<i data-lucide="check-square" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "prot_dislexia_prof":        ("Protocolo Dislexia (Professor)",     '<i data-lucide="book-open" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "inventario_dislexia":       ("Inventário Sinais Disléxicos",       '<i data-lucide="list" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Triagem Internacional ─────────────────────────────────────────
+    "phq9":              ("PHQ-9",                            '<i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "gad7":              ("GAD-7",                            '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "epds":              ("EPDS — Depressão Pós-Parto",       '<i data-lucide="heart" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "pcl5":              ("PCL-5 — PTSD",                     '<i data-lucide="shield-alert" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "ghq12":             ("GHQ-12",                           '<i data-lucide="activity" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Novas Escalas — Adulto ────────────────────────────────────────
+    "k10":               ("K-10 — Kessler",                   '<i data-lucide="thermometer" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "ucla":              ("UCLA — Solidão",                    '<i data-lucide="users" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "msi_bpd":           ("MSI-BPD",                          '<i data-lucide="shield-alert" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "gds15":             ("GDS-15",                           '<i data-lucide="cloud-rain" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "rosenberg":         ("Rosenberg — Autoestima",           '<i data-lucide="star" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "audit":             ("AUDIT",                            '<i data-lucide="wine" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "bis11":             ("BIS-11",                           '<i data-lucide="zap" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "hama":              ("HAM-A",                            '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "lsas":              ("LSAS",                             '<i data-lucide="users" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "risco_suicidio":    ("Triagem de Risco de Suicídio",     '<i data-lucide="alert-octagon" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "agorafobia":        ("Agorafobia",                       '<i data-lucide="compass" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "panico":            ("Pânico",                           '<i data-lucide="wind" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    # ── Novas Escalas — Infantil ──────────────────────────────────────
+    "iar":               ("IAR — Ansiedade Infantil",          '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "pas":               ("PAS — Ansiedade Pré-Escolar",       '<i data-lucide="baby" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "cdi":               ("CDI — Depressão Infantil",          '<i data-lucide="cloud-rain" style="width:18px;height:18px;vertical-align:middle;"></i>'),
 }

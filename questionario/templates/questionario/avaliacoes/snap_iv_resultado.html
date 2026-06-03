@@ -72,19 +72,11 @@
   {% endfor %}
 </div>
 
-<!-- Barras -->
-<div class="card">
-  <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Comparativo por Subescala</div>
-  {% for sub in resultado %}
-  <div class="sub-row">
-    <span class="sub-nome" style="color:{{ sub.cor }};">{{ sub.nome }}</span>
-    <div class="bar-wrap">
-      {% widthratio sub.media 3 100 as pct %}
-      <div class="bar-fill" style="width:{{ pct }}%; background:{{ sub.cor }};"></div>
-    </div>
-    <span class="score-num">{{ sub.media|floatformat:2 }}</span>
+<!-- Radar -->
+<div class="card no-print">
+  <div class="no-print" style="max-width:380px;margin:0 auto;">
+    <canvas id="chartRadar" height="300"></canvas>
   </div>
-  {% endfor %}
 </div>
 
 <!-- Legenda -->
@@ -137,6 +129,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
+new Chart(document.getElementById('chartRadar'), {
+  type: 'radar',
+  data: {
+    labels: [{% for sub in resultado %}'{{ sub.nome }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{ label: 'Média',
+      data: [{% for sub in resultado %}{{ sub.media|floatformat:2 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+      backgroundColor: 'rgba(41,128,185,.18)', borderColor: '#2980B9', borderWidth: 2,
+      pointBackgroundColor: [{% for sub in resultado %}'{{ sub.cor }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    }]
+  },
+  options: { responsive:true, scales:{ r:{ min:0, max:3, ticks:{ stepSize:1, font:{size:10} }, pointLabels:{ font:{size:11} } } }, plugins:{ legend:{display:false} } }
+});
 {% if tem_comparativo %}
 const compLabels = {{ comparativo_labels|safe }};
 const compDatasets = {{ comparativo_datasets|safe }};

@@ -31,5 +31,10 @@ QUEST_DISLEXIA_SUBESCALAS = {
     "atencao":         {"nome": "Atenção/Motivação", "cor": "#E67E22", "campo": "pont_atencao",        "itens": [17, 18, 19, 20]},
 }
 
-QUEST_DISLEXIA_OPCOES = [(0, "Nunca"), (1, "Às vezes"), (2, "Frequentemente"), (3, "Sempre")]
+QUEST_DISLEXIA_OPCOES = [
+    {"valor": 0, "label": "Nunca"},
+    {"valor": 1, "label": "Às vezes"},
+    {"valor": 2, "label": "Frequentemente"},
+    {"valor": 3, "label": "Sempre"},
+]
 QUEST_DISLEXIA_CORTE = 2  # >= 2 por subescala = indicativo
