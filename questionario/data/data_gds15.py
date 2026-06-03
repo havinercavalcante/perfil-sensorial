@@ -1,0 +1,41 @@
+# GDS-15 — Escala de Depressão Geriátrica (Sheikh & Yesavage, 1986)
+# Itens onde Não=1 (depressivo): 1,5,7,11,13
+# Demais: Sim=1 (depressivo)
+GDS15_ITENS = [
+    {"numero": 1,  "texto": "Está basicamente satisfeito(a) com sua vida?",
+     "opcoes": [{"valor": 0, "label": "Sim"}, {"valor": 1, "label": "Não"}]},
+    {"numero": 2,  "texto": "Abandonou muitos de seus interesses e atividades?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 3,  "texto": "Sente que sua vida está vazia?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 4,  "texto": "Fica frequentemente aborrecido(a)?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 5,  "texto": "Tem esperança no futuro?",
+     "opcoes": [{"valor": 0, "label": "Sim"}, {"valor": 1, "label": "Não"}]},
+    {"numero": 6,  "texto": "Está incomodado(a) com pensamentos que não consegue afastar?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 7,  "texto": "Está de bom humor na maior parte do tempo?",
+     "opcoes": [{"valor": 0, "label": "Sim"}, {"valor": 1, "label": "Não"}]},
+    {"numero": 8,  "texto": "Tem medo que algo ruim vá acontecer com você?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 9,  "texto": "Sente-se feliz na maior parte do tempo?",
+     "opcoes": [{"valor": 0, "label": "Sim"}, {"valor": 1, "label": "Não"}]},
+    {"numero": 10, "texto": "Sente-se frequentemente desamparado(a)?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 11, "texto": "Fica frequentemente inquieto(a) e agitado(a)?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 12, "texto": "Prefere ficar em casa do que sair e fazer coisas novas?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 13, "texto": "Preocupa-se frequentemente com o futuro?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 14, "texto": "Acha que tem mais problemas de memória do que as outras pessoas?",
+     "opcoes": [{"valor": 1, "label": "Sim"}, {"valor": 0, "label": "Não"}]},
+    {"numero": 15, "texto": "Acha que é muito bom estar vivo(a) agora?",
+     "opcoes": [{"valor": 0, "label": "Sim"}, {"valor": 1, "label": "Não"}]},
+]
+GDS15_CORTE = [
+    ("Normal",               0,  4),
+    ("Depressão leve",       5,  8),
+    ("Depressão moderada",   9, 11),
+    ("Depressão grave",     12, 15),
+]

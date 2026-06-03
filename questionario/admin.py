@@ -272,10 +272,11 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
     @admin.display(description="Módulos")
     def modulos_count(self, obj):
         total = obj.modulos_liberados.count()
+        total_disponivel = ModuloAvaliacao.objects.count()
         return format_html(
             '<span style="font-weight:700;color:#0c3c7b">{}</span>'
-            '<span style="color:#aaa;font-size:.78rem"> / 27</span>',
-            total
+            '<span style="color:#aaa;font-size:.78rem"> / {}</span>',
+            total, total_disponivel
         )
 
     @admin.display(description="Pacientes")

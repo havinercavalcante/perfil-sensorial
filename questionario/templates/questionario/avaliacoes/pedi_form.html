@@ -226,7 +226,7 @@
 
     {% if forloop.last %}
     <button type="submit" class="btn btn-primary" style="background:var(--pedi);border-color:var(--pedi);">
-      <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar e Ver Resultado
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Concluir
     </button>
     {% else %}
     <button type="button" class="btn btn-primary" style="background:var(--pedi);border-color:var(--pedi);" onclick="saveAndGo({{ forloop.counter }})">

@@ -4,6 +4,8 @@ from django.contrib.auth import views as auth_views
 from django.shortcuts import render
 from django.views.generic.base import RedirectView
 from django.templatetags.static import static
+from django.conf import settings
+from django.conf.urls.static import static as static_files
 
 def handler404(request, exception):
     return render(request, 'erros/404.html', status=404)
@@ -20,6 +22,8 @@ urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url=static('logotop.png'), permanent=True)),
     path('admin/', admin.site.urls),
     path('', include('questionario.urls')),
+    path('', include('documentos.urls')),
+    path('', include('procedimentos.urls')),
     path('password_reset/', auth_views.PasswordResetView.as_view(
         email_template_name='questionario/emails/password_reset_email.txt',
         html_email_template_name='questionario/emails/password_reset_email_html.html',
@@ -28,4 +32,4 @@ urlpatterns = [
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
-]
+] + static_files(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

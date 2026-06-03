@@ -119,9 +119,9 @@
     <form method="post">
       {% csrf_token %}
       <div class="form-group">
-        <label>Nome completo da criança <span class="required">*</span></label>
+        <label>{% if is_adulto %}Seu nome completo{% else %}Nome completo da criança{% endif %} <span class="required">*</span></label>
         <input type="text" name="nome" value="{{ post.nome|default:'' }}"
-               required placeholder="Nome da criança" autocomplete="name">
+               required placeholder="{% if is_adulto %}Seu nome completo{% else %}Nome da criança{% endif %}" autocomplete="name">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -134,13 +134,15 @@
                  placeholder="(00) 00000-0000" autocomplete="tel">
         </div>
       </div>
+      {% if not is_adulto %}
       <div class="form-group">
         <label>Nome do responsável <span class="required">*</span></label>
         <input type="text" name="responsavel" value="{{ post.responsavel|default:'' }}"
                required placeholder="Nome do pai/mãe/responsável" autocomplete="name">
       </div>
+      {% endif %}
       <div class="form-group">
-        <label>E-mail do responsável</label>
+        <label>{% if is_adulto %}Seu e-mail{% else %}E-mail do responsável{% endif %}</label>
         <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:'' }}"
                placeholder="email@exemplo.com" autocomplete="email">
       </div>

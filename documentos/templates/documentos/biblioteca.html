@@ -1,0 +1,262 @@
+{% extends "questionario/base.html" %}
+{% block title %}Biblioteca de Documentos{% endblock %}
+
+{% block content %}
+<style>
+  .bib-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+  .bib-title { font-size: 1.3rem; font-weight: 800; color: var(--primary-dark); display: flex; align-items: center; gap: .5rem; }
+  .bib-subtitle { font-size: .85rem; color: var(--text-muted); margin-top: .2rem; }
+
+  .bib-search { display: flex; gap: .5rem; }
+  .bib-search input { padding: .5rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .88rem; width: 240px; outline: none; transition: border .2s; }
+  .bib-search input:focus { border-color: var(--primary); }
+  .bib-search button { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: .5rem .9rem; cursor: pointer; display: flex; align-items: center; gap: .3rem; font-size: .85rem; font-weight: 600; }
+
+  .filter-bar { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .btn-filtro { display: inline-flex; align-items: center; gap: .4rem; padding: .45rem 1rem; border-radius: 20px; font-size: .83rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); color: var(--text); background: var(--card); transition: all .2s; white-space: nowrap; }
+  .btn-filtro:hover, .btn-filtro.open { border-color: var(--primary); color: var(--primary); }
+  .cat-active-label { font-size: .8rem; color: var(--primary); font-weight: 600; background: #e0edff; padding: 2px 10px; border-radius: 20px; }
+
+  .cat-tabs { display: none; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1rem; background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; }
+  .cat-tabs.open { display: flex; }
+  .cat-tab { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem 1rem; border-radius: 20px; font-size: .83rem; font-weight: 600; text-decoration: none; border: 1.5px solid var(--border); color: var(--text); background: var(--bg); transition: all .2s; white-space: nowrap; }
+  .cat-tab:hover { border-color: var(--primary); color: var(--primary); }
+  .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+  .doc-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; padding: 1.2rem; display: flex; flex-direction: column; gap: .75rem; transition: box-shadow .2s, border-color .2s; position: relative; }
+  .doc-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); border-color: var(--primary); }
+  .doc-card.bloqueado { opacity: .75; }
+  .doc-card.bloqueado:hover { border-color: var(--border); box-shadow: none; }
+
+  .doc-card-top { display: flex; align-items: flex-start; gap: .75rem; }
+  .doc-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .doc-icon.pdf  { background: #fee2e2; color: #dc2626; }
+  .doc-icon.docx { background: #dbeafe; color: #2563eb; }
+  .doc-icon.doc  { background: #dbeafe; color: #2563eb; }
+  .doc-icon.outro { background: #f3f4f6; color: #6b7280; }
+
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-titulo { font-size: .9rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .doc-cat { font-size: .75rem; color: var(--text-muted); margin-top: .2rem; }
+  .doc-desc { font-size: .8rem; color: var(--text-muted); line-height: 1.4; }
+
+  .doc-badges { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .badge-plano { padding: 2px 8px; border-radius: 10px; font-size: .7rem; font-weight: 700; }
+  .badge-start  { background: #e0f2fe; color: #0369a1; }
+  .badge-plus   { background: #fef3c7; color: #92400e; }
+  .badge-elite  { background: #f3e8ff; color: #6d28d9; }
+  .badge-lock   { background: #fee2e2; color: #dc2626; }
+
+  .doc-actions { display: flex; gap: .5rem; margin-top: auto; }
+  .doc-actions a, .doc-actions button { flex: 1; text-align: center; padding: .45rem; border-radius: 8px; font-size: .8rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: .3rem; cursor: pointer; border: none; transition: all .2s; }
+  .btn-download  { background: var(--primary); color: #fff; }
+  .btn-download:hover { background: var(--primary-dark); }
+  .btn-preview   { background: var(--bg); color: var(--primary); border: 1.5px solid var(--primary) !important; }
+  .btn-preview:hover { background: var(--primary); color: #fff; }
+  .btn-bloqueado { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+
+  .lock-overlay { position: absolute; top: .7rem; right: .7rem; }
+  .lock-badge { background: #fee2e2; color: #dc2626; border-radius: 8px; font-size: .7rem; font-weight: 700; padding: 2px 8px; display: flex; align-items: center; gap: .25rem; }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  .empty-state i { display: block; margin: 0 auto 1rem; opacity: .4; }
+
+  .sem-plano-card { background: #fef3c7; border: 1.5px solid #fbbf24; border-radius: 12px; padding: 2rem; text-align: center; }
+  .sem-plano-card h3 { color: #92400e; font-size: 1.1rem; margin-bottom: .5rem; }
+  .sem-plano-card p  { color: #78350f; font-size: .88rem; }
+
+  .bib-total { font-size: .82rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .pagination { display: flex; align-items: center; justify-content: center; gap: .4rem; margin-top: 2rem; flex-wrap: wrap; }
+  .page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 .6rem; border-radius: 8px; font-size: .85rem; font-weight: 600; text-decoration: none; border: 1.5px solid var(--border); color: var(--text); background: var(--card); transition: all .2s; }
+  .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .page-btn.disabled { opacity: .4; pointer-events: none; }
+
+  @media (max-width: 600px) {
+    .doc-grid { grid-template-columns: 1fr; }
+    .bib-search input { width: 160px; }
+  }
+</style>
+
+<div class="bib-header">
+  <div>
+    <div class="bib-title">
+      <i data-lucide="library" style="width:22px;height:22px;color:var(--primary)"></i>
+      Biblioteca de Documentos
+    </div>
+    <div class="bib-subtitle">Laudos, contratos, recursos terapêuticos e materiais clínicos para download</div>
+  </div>
+  <form method="get" class="bib-search">
+    {% if categoria_ativa %}
+      <input type="hidden" name="categoria" value="{{ categoria_ativa }}">
+    {% endif %}
+    <input type="text" name="q" placeholder="Buscar documento..." value="{{ busca }}" autocomplete="off">
+    <button type="submit"><i data-lucide="search" style="width:14px;height:14px"></i></button>
+  </form>
+</div>
+
+{% if sem_plano %}
+<div class="sem-plano-card">
+  <i data-lucide="lock" style="width:32px;height:32px;color:#d97706;margin-bottom:.75rem"></i>
+  <h3>Acesso não disponível</h3>
+  <p>Você precisa de um plano ativo (START, PLUS ou ELITE) para acessar a biblioteca de documentos.</p>
+  <a href="{% url 'solicitar_plano' %}" class="btn btn-primary" style="margin-top:1rem;display:inline-flex">Ver planos</a>
+</div>
+
+{% else %}
+
+<!-- Botão de filtro -->
+<div class="filter-bar">
+  <button class="btn-filtro" id="btn-filtro" onclick="toggleFiltro()">
+    <i data-lucide="sliders-horizontal" style="width:14px;height:14px"></i>
+    Categorias
+    <i data-lucide="chevron-down" id="filtro-chevron" style="width:13px;height:13px;transition:transform .2s"></i>
+  </button>
+  {% if categoria_ativa %}
+    {% for cat in categorias %}{% if cat.codigo == categoria_ativa %}
+      <span class="cat-active-label">
+        <i data-lucide="{{ cat.icone }}" style="width:11px;height:11px"></i>
+        {{ cat.nome }}
+      </span>
+    {% endif %}{% endfor %}
+  {% endif %}
+</div>
+
+<!-- Tabs de categoria (colapsável) -->
+<div class="cat-tabs {% if categoria_ativa %}open{% endif %}" id="cat-tabs">
+  <a href="{% url 'biblioteca' %}{% if busca %}?q={{ busca }}{% endif %}" class="cat-tab {% if not categoria_ativa %}active{% endif %}">
+    <i data-lucide="layout-grid" style="width:13px;height:13px"></i> Todos
+  </a>
+  {% for cat in categorias %}
+  <a href="{% url 'biblioteca' %}?categoria={{ cat.codigo }}{% if busca %}&q={{ busca }}{% endif %}"
+     class="cat-tab {% if categoria_ativa == cat.codigo %}active{% endif %}">
+    <i data-lucide="{{ cat.icone }}" style="width:13px;height:13px"></i>
+    {{ cat.nome }}
+  </a>
+  {% endfor %}
+</div>
+
+<script>
+function toggleFiltro() {
+  const tabs    = document.getElementById('cat-tabs');
+  const btn     = document.getElementById('btn-filtro');
+  const chevron = document.getElementById('filtro-chevron');
+  const open    = tabs.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  chevron.style.transform = open ? 'rotate(180deg)' : '';
+}
+</script>
+
+<div class="bib-total">
+  {% if busca %}
+    {{ total }} resultado{% if total != 1 %}s{% endif %} para "<strong>{{ busca }}</strong>"
+  {% else %}
+    {{ total }} documento{% if total != 1 %}s{% endif %} disponíve{% if total != 1 %}is{% endif %}
+  {% endif %}
+</div>
+
+{% if documentos %}
+<div class="doc-grid">
+  {% for item in documentos %}
+  {% with doc=item.doc %}
+  <div class="doc-card {% if not item.acesso %}bloqueado{% endif %}">
+
+    {% if not item.acesso %}
+    <div class="lock-overlay">
+      <span class="lock-badge">
+        <i data-lucide="lock" style="width:10px;height:10px"></i>
+        {{ item.bloqueado_por|upper }}
+      </span>
+    </div>
+    {% endif %}
+
+    <div class="doc-card-top">
+      <div class="doc-icon {{ doc.extensao }}">
+        {% if doc.extensao == "pdf" %}
+          <i data-lucide="file-text" style="width:20px;height:20px"></i>
+        {% else %}
+          <i data-lucide="file" style="width:20px;height:20px"></i>
+        {% endif %}
+      </div>
+      <div class="doc-info">
+        <div class="doc-titulo">{{ doc.titulo }}</div>
+        <div class="doc-cat">{{ doc.categoria.nome }}</div>
+      </div>
+    </div>
+
+    {% if doc.descricao %}
+    <div class="doc-desc">{{ doc.descricao|truncatechars:90 }}</div>
+    {% endif %}
+
+    <div class="doc-badges">
+      <span class="badge-plano badge-{{ doc.plano_minimo }}">{{ doc.get_plano_minimo_display }}</span>
+      <span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;">
+        {{ doc.extensao|upper }}
+      </span>
+    </div>
+
+    <div class="doc-actions">
+      {% if item.acesso %}
+        <a href="{% url 'download_documento' doc.token %}" class="btn-download">
+          <i data-lucide="download" style="width:13px;height:13px"></i> Baixar
+        </a>
+        {% if doc.eh_pdf %}
+        <a href="{% url 'preview_documento' doc.token %}" target="_blank" class="btn-preview">
+          <i data-lucide="eye" style="width:13px;height:13px"></i> Ver
+        </a>
+        {% endif %}
+      {% else %}
+        <span class="btn-bloqueado">
+          <i data-lucide="lock" style="width:13px;height:13px"></i>
+          Requer plano {{ item.bloqueado_por|upper }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+  <i data-lucide="search-x" style="width:40px;height:40px"></i>
+  <p style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:.3rem">Nenhum documento encontrado</p>
+  <p style="font-size:.85rem">Tente outra categoria ou termo de busca.</p>
+</div>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination">
+  {% if page_obj.has_previous %}
+    <a class="page-btn" href="?{% if categoria_ativa %}categoria={{ categoria_ativa }}&{% endif %}{% if busca %}q={{ busca }}&{% endif %}page={{ page_obj.previous_page_number }}">
+      <i data-lucide="chevron-left" style="width:14px;height:14px"></i>
+    </a>
+  {% else %}
+    <span class="page-btn disabled"><i data-lucide="chevron-left" style="width:14px;height:14px"></i></span>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if num == page_obj.number %}
+      <span class="page-btn active">{{ num }}</span>
+    {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+      <a class="page-btn" href="?{% if categoria_ativa %}categoria={{ categoria_ativa }}&{% endif %}{% if busca %}q={{ busca }}&{% endif %}page={{ num }}">{{ num }}</a>
+    {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+      <span class="page-btn disabled">…</span>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a class="page-btn" href="?{% if categoria_ativa %}categoria={{ categoria_ativa }}&{% endif %}{% if busca %}q={{ busca }}&{% endif %}page={{ page_obj.next_page_number }}">
+      <i data-lucide="chevron-right" style="width:14px;height:14px"></i>
+    </a>
+  {% else %}
+    <span class="page-btn disabled"><i data-lucide="chevron-right" style="width:14px;height:14px"></i></span>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% endif %}
+{% endblock %}

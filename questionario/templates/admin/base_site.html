@@ -10,3 +10,26 @@
 {% block userlinks %}
 {{ block.super }}
 {% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.selector-chooseall, .selector-clearall {
+  color: var(--header-link-color) !important;
+  background-color: var(--header-bg) !important;
+}
+.selector-chooseall:hover, .selector-clearall:hover,
+.selector-chooseall:focus, .selector-clearall:focus {
+  filter: brightness(0.88);
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('a.selector-chooseall, a.selector-clearall').forEach(function (el) {
+    el.textContent = el.classList.contains('selector-chooseall')
+      ? 'Escolher todos'
+      : 'Remover todos';
+  });
+});
+</script>
+{% endblock %}

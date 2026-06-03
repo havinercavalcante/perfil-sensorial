@@ -75,6 +75,19 @@
     body { background: #fff; }
     .card { box-shadow: none; border: 1px solid #ccc; }
   }
+
+  /* ── Domain cards ── */
+  .dominios-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1rem; }
+  @media(max-width:600px){ .dominios-grid { grid-template-columns:1fr; } }
+  .dominio-card { border-radius:12px; padding:1.1rem 1.2rem; border:2px solid var(--border); background:#fff; position:relative; overflow:hidden; }
+  .dominio-card::before { content:''; position:absolute; top:0; left:0; bottom:0; width:4px; background:var(--dc,#ccc); border-radius:12px 0 0 12px; }
+  .dominio-card-nome { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--dc); margin-bottom:.4rem; }
+  .dominio-card-score { font-size:1.9rem; font-weight:800; color:var(--text); line-height:1; }
+  .dominio-card-score span { font-size:.95rem; font-weight:500; color:var(--text-muted); }
+  .dominio-card-label { font-size:.73rem; color:var(--text-muted); margin:.3rem 0 .5rem; }
+  .dominio-card-label strong { color:var(--dc); }
+  .dominio-bar-wrap { background:#F3F4F6; border-radius:6px; height:7px; overflow:hidden; }
+  .dominio-bar-fill { height:7px; border-radius:6px; transition:width .6s; }
 </style>
 {% endblock %}
 
@@ -125,17 +138,19 @@
 <!-- Resultados por domínio -->
 <div class="card">
   <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Resultados por Domínio</div>
-  {% for dom in resultado %}
-  <div class="sub-row">
-    <span class="sub-nome" style="color:{{ dom.cor }};">{{ dom.nome }}</span>
-    <div class="bar-wrap">
-      <div class="bar-fill" style="width:{{ dom.pct }}%; background:{{ dom.cor }};"></div>
-    </div>
-    <span class="score-num" style="color:{{ dom.cor }};">{{ dom.score }}/{{ dom.max }}</span>
-    <span class="pct-num">{{ dom.pct }}%</span>
-    <span class="class-chip {{ dom.classificacao|slugify }}">{{ dom.classificacao }}</span>
-  </div>
-  {% endfor %}
+  <div class="dominios-grid">
+{% for dom in resultado %}
+<div class="dominio-card" style="--dc:{{ dom.cor }};">
+  <div class="dominio-card-nome">{{ dom.nome }}</div>
+  <div class="dominio-card-score">{{ dom.score }}{% if dom.max %}<span>/{{ dom.max }}</span>{% endif %}</div>
+  <div class="dominio-card-label">{{ dom.pct }}% do máximo{% if dom.classificacao %} &nbsp;·&nbsp; <strong>{{ dom.classificacao }}</strong>{% endif %}</div>
+  <div class="dominio-bar-wrap"><div class="dominio-bar-fill" style="width:{{ dom.pct }}%; background:{{ dom.cor }};"></div></div>
+</div>
+{% endfor %}
+</div>
+<div class="no-print" style="max-width:380px;margin:.5rem auto 0;">
+  <canvas id="chartRadar" height="300"></canvas>
+</div>
 </div>
 
 <!-- Legenda -->

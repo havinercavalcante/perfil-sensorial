@@ -76,7 +76,7 @@
 
   <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
     {% if not readonly %}<button type="submit" class="btn btn-primary" style="background:var(--cars); border-color:var(--cars);">
-      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir e Ver Resultado
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir
     </button>{% endif %}
     {% if not publico %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>{% endif %}
   </div>

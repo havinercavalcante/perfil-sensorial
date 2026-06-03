@@ -1,0 +1,45 @@
+# PAS — Preschool Anxiety Scale (Spence et al., 2001) — respondido pelos pais
+# 5 subescalas: Ansiedade Social, Separação, TOC, Medos Físicos, GAG
+PAS_OPCOES = [
+    {"valor": 0, "label": "Nunca"},
+    {"valor": 1, "label": "Raramente"},
+    {"valor": 2, "label": "Às vezes"},
+    {"valor": 3, "label": "Muitas vezes"},
+    {"valor": 4, "label": "Sempre"},
+]
+PAS_ITENS = [
+    (1,  "Meu filho(a) fica chateado(a) ou tem medo de ser separado(a) de mim."),
+    (2,  "Meu filho(a) fica com medo de ir a festas de aniversário de outras crianças."),
+    (3,  "Meu filho(a) tem medo de cachorros, gatos ou outros animais pequenos."),
+    (4,  "Meu filho(a) tem pesadelos sobre ficar separado(a) de mim."),
+    (5,  "Meu filho(a) fica chateado(a) ou angustiado(a) quando deixo que ele(a) fique com outras pessoas."),
+    (6,  "Meu filho(a) tem medo de lugares escuros."),
+    (7,  "Meu filho(a) fica nervoso(a) ao brincar com outras crianças."),
+    (8,  "Meu filho(a) se preocupa com o fato de poder ser ferido(a) ou ficar doente."),
+    (9,  "Meu filho(a) fica chateado(a) quando eu saio de perto dele(a), mesmo por um curto período."),
+    (10, "Meu filho(a) insiste em verificar se as coisas foram feitas corretamente."),
+    (11, "Meu filho(a) tem medo de monstros ou fantasmas."),
+    (12, "Meu filho(a) fica ansioso(a) quando encontra crianças novas."),
+    (13, "Meu filho(a) tem medo de raios ou tempestades."),
+    (14, "Meu filho(a) se preocupa com algum membro da família poder ficar doente ou morrer."),
+    (15, "Meu filho(a) tem medo de que algo ruim possa acontecer com seus pais."),
+    (16, "Meu filho(a) fica perturbado(a) se as coisas não estão em ordem."),
+    (17, "Meu filho(a) tem medo de ir dormir sozinho(a)."),
+    (18, "Meu filho(a) tem medo de sangue ou ferimentos."),
+    (19, "Meu filho(a) tem medo de ir ao médico ou dentista."),
+    (20, "Meu filho(a) insiste em repetir certas atividades ou rituais."),
+    (21, "Meu filho(a) tem medo de ser deixado(a) de fora de atividades em grupo."),
+    (22, "Meu filho(a) fica nervoso(a) para ir à escola."),
+    (23, "Meu filho(a) tem medo de entrar em lugares fechados ou pequenos."),
+    (24, "Meu filho(a) se preocupa com questões de saúde ou morte."),
+    (25, "Meu filho(a) tem medo de voar de avião ou andar de ônibus."),
+    (26, "Meu filho(a) evita conhecer novas crianças."),
+    (27, "Meu filho(a) tem medo de cachorros ou outros animais maiores."),
+    (28, "Meu filho(a) insiste em me acompanhar por toda a casa."),
+]
+PAS_CORTE = [
+    ("Ansiedade mínima",    0,  20),
+    ("Ansiedade leve",     21,  40),
+    ("Ansiedade moderada", 41,  70),
+    ("Ansiedade elevada",  71, 112),
+]

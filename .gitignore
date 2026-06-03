@@ -3,7 +3,10 @@
 __pycache__/
 db.sqlite3
 staticfiles/
+media/
 .qodo
 .claude
 .venv/
 venv/
+docs_extraidos/
+docs/

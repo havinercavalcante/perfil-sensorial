@@ -17,6 +17,22 @@ from ..models import (
     AvaliacaoDesenvolvimento, AvaliacaoSono,
     AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
     AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
+    # Módulos de psicologia
+    AvaliacaoBDI, AvaliacaoBAI, AvaliacaoDASS21, AvaliacaoHAD, AvaliacaoBSL23,
+    AvaliacaoAQ10Adulto, AvaliacaoAQ10Child, AvaliacaoDepEmocional, AvaliacaoSCQ,
+    # Lote 2
+    AvaliacaoConners, AvaliacaoETDAH, AvaliacaoAUQEI, AvaliacaoSCARED,
+    AvaliacaoMASC, AvaliacaoBPQ,
+    # Lote 3
+    AvaliacaoDenver, AvaliacaoQMPI,
+    AvaliacaoQuestDislexia, AvaliacaoChecklistDislexia,
+    AvaliacaoProtDislexiaProf, AvaliacaoInventarioDislexia,
+    # Triagem geral
+    AvaliacaoPHQ9, AvaliacaoGAD7, AvaliacaoEPDS, AvaliacaoPCL5, AvaliacaoGHQ12,
+    # Escalas adicionais
+    AvaliacaoK10, AvaliacaoUCLA, AvaliacaoMSI_BPD, AvaliacaoGDS15, AvaliacaoRosenberg,
+    AvaliacaoAUDIT, AvaliacaoBIS11, AvaliacaoIAR, AvaliacaoPAS, AvaliacaoCDI,
+    AvaliacaoHAMA, AvaliacaoLSAS, AvaliacaoRiscoSuicidio, AvaliacaoAgorafobia, AvaliacaoPanico,
 )
 from ..services import build_lista_com_link, build_lista_sem_pagina
 from django.urls import reverse
@@ -40,63 +56,58 @@ def index(request):
     if not request.user.is_authenticated:
         return render(request, "questionario/landing.html")
 
-    from django.db.models import Count, Q, Avg
+    from django.db.models import Count, Q
     from django.utils import timezone as tz
-    pacientes = (
-        Paciente.objects.filter(medico=request.user)
-        .annotate(
-            total_avals=(
-                Count("avaliacoes", distinct=True)
-                + Count("avaliacoes_vineland", distinct=True)
-                + Count("avaliacoes_escolar", distinct=True)
-                + Count("avaliacoes_bebe", distinct=True)
-                + Count("avaliacoes_spm", distinct=True)
-                + Count("avaliacoes_edm", distinct=True)
-                + Count("avaliacoes_mabc2", distinct=True)
-                + Count("avaliacoes_beery", distinct=True)
-                + Count("avaliacoes_pedi", distinct=True)
-                + Count("avaliacoes_vineland3", distinct=True)
-            )
-        )
-        .order_by("nome")
-    )
-    total_pacientes = pacientes.count()
-    total_sens = Avaliacao.objects.filter(paciente__medico=request.user).count()
-    total_vinel = AvaliacaoVineland.objects.filter(paciente__medico=request.user).count()
-    total_escolar = AvaliacaoEscolar.objects.filter(paciente__medico=request.user).count()
-    total_bebe = AvaliacaoBebe.objects.filter(paciente__medico=request.user).count()
-    total_spm = AvaliacaoSPM.objects.filter(paciente__medico=request.user).count()
-    total_edm = AvaliacaoEDM.objects.filter(paciente__medico=request.user).count()
-    total_mabc2 = AvaliacaoMABC2.objects.filter(paciente__medico=request.user).count()
-    total_beery = AvaliacaoBeery.objects.filter(paciente__medico=request.user).count()
-    total_pedi = AvaliacaoPEDI.objects.filter(paciente__medico=request.user).count()
-    total_vinel3 = AvaliacaoVineland3.objects.filter(paciente__medico=request.user).count()
-    total_avaliacoes = total_sens + total_vinel + total_escolar + total_bebe + total_spm + total_edm + total_mabc2 + total_beery + total_pedi + total_vinel3
 
-    concluidas_sens = Avaliacao.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas_vinel = AvaliacaoVineland.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas_escolar = AvaliacaoEscolar.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas_bebe = AvaliacaoBebe.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas_spm = AvaliacaoSPM.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas_vinel3 = AvaliacaoVineland3.objects.filter(paciente__medico=request.user, status="concluida").count()
-    concluidas = (concluidas_sens + concluidas_vinel + concluidas_escolar + concluidas_bebe + concluidas_spm
-                  + total_edm + total_mabc2 + total_beery + total_pedi + concluidas_vinel3)
+    pacientes = list(Paciente.objects.filter(medico=request.user).order_by("nome"))
+    total_pacientes = len(pacientes)
+
+    total_avaliacoes = 0
+    concluidas = 0
+    novas_mes = 0
+    totals = {}
+
+    if pacientes:
+        patient_ids = [p.pk for p in pacientes]
+        totals = {pid: 0 for pid in patient_ids}
+        hoje = tz.now().date()
+        inicio_mes = hoje.replace(day=1)
+
+        for Model in _MODELS_WITH_STATUS:
+            for row in (
+                Model.objects.filter(paciente_id__in=patient_ids)
+                .values("paciente_id")
+                .annotate(
+                    cnt=Count("pk"),
+                    conc=Count("pk", filter=Q(status="concluida")),
+                    novas=Count("pk", filter=Q(criado_em__date__gte=inicio_mes)),
+                )
+            ):
+                pid = row["paciente_id"]
+                totals[pid] += row["cnt"]
+                total_avaliacoes += row["cnt"]
+                concluidas += row["conc"]
+                novas_mes += row["novas"]
+
+        for Model in _MODELS_NO_STATUS:
+            for row in (
+                Model.objects.filter(paciente_id__in=patient_ids)
+                .values("paciente_id")
+                .annotate(
+                    cnt=Count("pk"),
+                    novas=Count("pk", filter=Q(criado_em__date__gte=inicio_mes)),
+                )
+            ):
+                pid = row["paciente_id"]
+                totals[pid] += row["cnt"]
+                total_avaliacoes += row["cnt"]
+                concluidas += row["cnt"]
+                novas_mes += row["novas"]
+
+        for p in pacientes:
+            p.total_avals = totals.get(p.pk, 0)
+
     em_andamento = total_avaliacoes - concluidas
-
-    hoje = tz.now().date()
-    inicio_mes = hoje.replace(day=1)
-    novas_mes = (
-        Avaliacao.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoVineland.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoEscolar.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoBebe.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoSPM.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoEDM.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoMABC2.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoBeery.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoPEDI.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-        + AvaliacaoVineland3.objects.filter(paciente__medico=request.user, criado_em__date__gte=inicio_mes).count()
-    )
 
     ultimas_avaliacoes = list(
         Avaliacao.objects.filter(paciente__medico=request.user, status="concluida")
@@ -110,44 +121,67 @@ def index(request):
         "concluidas": concluidas,
         "em_andamento": em_andamento,
         "novas_mes": novas_mes,
-        "total_sens": total_sens,
-        "total_vinel": total_vinel,
         "ultimas_avaliacoes": ultimas_avaliacoes,
     })
+
+
+_MODELS_WITH_STATUS = [
+    Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe, AvaliacaoSPM,
+    AvaliacaoVineland3, AvaliacaoPortage, AvaliacaoSDQ, AvaliacaoSNAPIV,
+    AvaliacaoMCHAT, AvaliacaoCARS, AvaliacaoLinguagem, AvaliacaoAlimentacao,
+    AvaliacaoHabitosOrais, AvaliacaoVozInfantil, AvaliacaoProcessamentoAuditivo,
+    AvaliacaoIDV10, AvaliacaoDesenvolvimento, AvaliacaoSono,
+    AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
+    AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
+    AvaliacaoBDI, AvaliacaoBAI, AvaliacaoDASS21, AvaliacaoHAD, AvaliacaoBSL23,
+    AvaliacaoAQ10Adulto, AvaliacaoAQ10Child, AvaliacaoDepEmocional, AvaliacaoSCQ,
+    AvaliacaoConners, AvaliacaoETDAH, AvaliacaoAUQEI, AvaliacaoSCARED,
+    AvaliacaoMASC, AvaliacaoBPQ,
+    AvaliacaoDenver, AvaliacaoQMPI, AvaliacaoQuestDislexia, AvaliacaoChecklistDislexia,
+    AvaliacaoProtDislexiaProf, AvaliacaoInventarioDislexia,
+    AvaliacaoPHQ9, AvaliacaoGAD7, AvaliacaoEPDS, AvaliacaoPCL5, AvaliacaoGHQ12,
+    AvaliacaoK10, AvaliacaoUCLA, AvaliacaoMSI_BPD, AvaliacaoGDS15, AvaliacaoRosenberg,
+    AvaliacaoAUDIT, AvaliacaoBIS11, AvaliacaoIAR, AvaliacaoPAS, AvaliacaoCDI,
+    AvaliacaoHAMA, AvaliacaoLSAS, AvaliacaoRiscoSuicidio, AvaliacaoAgorafobia, AvaliacaoPanico,
+]
+_MODELS_NO_STATUS = [AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI]
+
+
+def _compute_patient_totals(patient_ids):
+    from django.db.models import Count, Q
+    totals = {pid: 0 for pid in patient_ids}
+    concluded = {pid: 0 for pid in patient_ids}
+    for Model in _MODELS_WITH_STATUS:
+        for row in (
+            Model.objects.filter(paciente_id__in=patient_ids)
+            .values("paciente_id")
+            .annotate(cnt=Count("pk"), conc=Count("pk", filter=Q(status="concluida")))
+        ):
+            pid = row["paciente_id"]
+            totals[pid] += row["cnt"]
+            concluded[pid] += row["conc"]
+    for Model in _MODELS_NO_STATUS:
+        for row in (
+            Model.objects.filter(paciente_id__in=patient_ids)
+            .values("paciente_id")
+            .annotate(cnt=Count("pk"))
+        ):
+            pid = row["paciente_id"]
+            totals[pid] += row["cnt"]
+            concluded[pid] += row["cnt"]
+    return totals, concluded
 
 
 @login_required
 def lista_pacientes(request):
     from django.core.paginator import Paginator
-    from django.db.models import Count, Q, Exists, OuterRef
+    from django.db.models import Exists, OuterRef
     q = request.GET.get("q", "").strip()
     filtro = request.GET.get("filtro", "").strip()
-    qs = (
-        Paciente.objects.filter(medico=request.user)
-        .annotate(
-            sens_total=Count("avaliacoes", distinct=True),
-            vinel_total=Count("avaliacoes_vineland", distinct=True),
-            escolar_total=Count("avaliacoes_escolar", distinct=True),
-            bebe_total=Count("avaliacoes_bebe", distinct=True),
-            spm_total=Count("avaliacoes_spm", distinct=True),
-            edm_total=Count("avaliacoes_edm", distinct=True),
-            mabc2_total=Count("avaliacoes_mabc2", distinct=True),
-            beery_total=Count("avaliacoes_beery", distinct=True),
-            pedi_total=Count("avaliacoes_pedi", distinct=True),
-            vinel3_total=Count("avaliacoes_vineland3", distinct=True),
-            sens_conc=Count("avaliacoes", filter=Q(avaliacoes__status="concluida"), distinct=True),
-            vinel_conc=Count("avaliacoes_vineland", filter=Q(avaliacoes_vineland__status="concluida"), distinct=True),
-            escolar_conc=Count("avaliacoes_escolar", filter=Q(avaliacoes_escolar__status="concluida"), distinct=True),
-            bebe_conc=Count("avaliacoes_bebe", filter=Q(avaliacoes_bebe__status="concluida"), distinct=True),
-            spm_conc=Count("avaliacoes_spm", filter=Q(avaliacoes_spm__status="concluida"), distinct=True),
-        )
-        .order_by("nome")
-    )
+    qs = Paciente.objects.filter(medico=request.user).order_by("nome")
     if q:
         qs = qs.filter(nome__icontains=q)
     if filtro == "andamento":
-        # Apenas modelos que possuem campo `status`
-        # (AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery e AvaliacaoPEDI não têm status)
         qs = qs.filter(
             Exists(Avaliacao.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
             | Exists(AvaliacaoVineland.objects.filter(paciente=OuterRef("pk"), status="em_andamento"))
@@ -158,11 +192,12 @@ def lista_pacientes(request):
         )
     paginator = Paginator(qs, 10)
     page = paginator.get_page(request.GET.get("page"))
-    for p in page.object_list:
-        p.total_avals = (p.sens_total + p.vinel_total + p.escolar_total + p.bebe_total
-                         + p.spm_total + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total + p.vinel3_total)
-        p.total_concs = (p.sens_conc + p.vinel_conc + p.escolar_conc + p.bebe_conc + p.spm_conc
-                         + p.edm_total + p.mabc2_total + p.beery_total + p.pedi_total + p.vinel3_total)
+    patient_ids = [p.pk for p in page.object_list]
+    if patient_ids:
+        totals, concluded = _compute_patient_totals(patient_ids)
+        for p in page.object_list:
+            p.total_avals = totals.get(p.pk, 0)
+            p.total_concs = concluded.get(p.pk, 0)
     return render(request, "questionario/pacientes/lista_pacientes.html", {"pacientes": page, "q": q, "filtro": filtro, "paginator": paginator})
 
 
@@ -195,6 +230,30 @@ def avaliacoes_pendentes(request):
         (AvaliacaoComportamentoFuncional,"Comportamento Funcional",     "comportamento"),
         (AvaliacaoRastreioCognitivo,    "Rastreio Cognitivo",           "cognitivo"),
         (AvaliacaoPsicopedagogica,      "Psicopedagógica",              "psicopedagogica"),
+        # Psicologia — Lote 1
+        (AvaliacaoBDI,                  "BDI",                          "bdi"),
+        (AvaliacaoBAI,                  "BAI",                          "bai"),
+        (AvaliacaoDASS21,               "DASS-21",                      "dass21"),
+        (AvaliacaoHAD,                  "HAD",                          "had"),
+        (AvaliacaoBSL23,                "BSL-23",                       "bsl23"),
+        (AvaliacaoAQ10Adulto,           "AQ-10 Adulto",                 "aq10_adulto"),
+        (AvaliacaoAQ10Child,            "AQ-10 Criança",                "aq10_child"),
+        (AvaliacaoDepEmocional,         "Dep. Emocional",               "dep_emocional"),
+        (AvaliacaoSCQ,                  "SCQ",                          "scq"),
+        # Psicologia — Lote 2
+        (AvaliacaoConners,              "Conners-3",                    "conners"),
+        (AvaliacaoETDAH,                "ETDAH",                        "etdah"),
+        (AvaliacaoAUQEI,                "AUQEI",                        "auqei"),
+        (AvaliacaoSCARED,               "SCARED",                       "scared"),
+        (AvaliacaoMASC,                 "MASC",                         "masc"),
+        (AvaliacaoBPQ,                  "BPQ",                          "bpq"),
+        # Lote 3
+        (AvaliacaoDenver,               "Denver II",                    "denver"),
+        (AvaliacaoQMPI,                 "QMPI",                         "qmpi"),
+        (AvaliacaoQuestDislexia,        "Quest. Dislexia",              "quest_dislexia"),
+        (AvaliacaoChecklistDislexia,    "Checklist Dislexia",           "checklist_dislexia"),
+        (AvaliacaoProtDislexiaProf,     "Prot. Dislexia Prof.",         "prot_dislexia_prof"),
+        (AvaliacaoInventarioDislexia,   "Inventário Dislexia",          "inventario_dislexia"),
     ]
 
     q = request.GET.get("q", "").strip()
@@ -345,6 +404,54 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_comportamento": build_lista_com_link(paciente.avaliacoes_comportamento_funcional.all(), request, "comportamento_publico"),
         "avaliacoes_cognitivo": build_lista_com_link(paciente.avaliacoes_cognitivo.all(), request, "cognitivo_publico"),
         "avaliacoes_psicopedagogica": build_lista_com_link(paciente.avaliacoes_psicopedagogica.all(), request, "psicopedagogica_publico"),
+        # Novas escalas
+        "avaliacoes_k10": build_lista_com_link(paciente.avaliacoes_k10.all(), request, "k10_publico"),
+        "avaliacoes_ucla": build_lista_com_link(paciente.avaliacoes_ucla.all(), request, "ucla_publico"),
+        "avaliacoes_msi_bpd": build_lista_com_link(paciente.avaliacoes_msi_bpd.all(), request, "msi_bpd_publico"),
+        "avaliacoes_gds15": build_lista_com_link(paciente.avaliacoes_gds15.all(), request, "gds15_publico"),
+        "avaliacoes_rosenberg": build_lista_com_link(paciente.avaliacoes_rosenberg.all(), request, "rosenberg_publico"),
+        "avaliacoes_audit": build_lista_com_link(paciente.avaliacoes_audit.all(), request, "audit_publico"),
+        "avaliacoes_bis11": build_lista_com_link(paciente.avaliacoes_bis11.all(), request, "bis11_publico"),
+        "avaliacoes_iar": build_lista_com_link(paciente.avaliacoes_iar.all(), request, "iar_publico"),
+        "avaliacoes_pas": build_lista_com_link(paciente.avaliacoes_pas.all(), request, "pas_publico"),
+        "avaliacoes_cdi": build_lista_com_link(paciente.avaliacoes_cdi.all(), request, "cdi_publico"),
+        "avaliacoes_hama": build_lista_com_link(paciente.avaliacoes_hama.all(), request, "hama_publico"),
+        "avaliacoes_lsas": build_lista_com_link(paciente.avaliacoes_lsas.all(), request, "lsas_publico"),
+        "avaliacoes_risco_suicidio": build_lista_com_link(paciente.avaliacoes_risco_suicidio.all(), request, "risco_suicidio_publico"),
+        "avaliacoes_agorafobia": build_lista_com_link(paciente.avaliacoes_agorafobia.all(), request, "agorafobia_publico"),
+        "avaliacoes_panico": build_lista_com_link(paciente.avaliacoes_panico.all(), request, "panico_publico"),
+        # Triagem geral
+        "avaliacoes_phq9":  build_lista_com_link(paciente.avaliacoes_phq9.all(),  request, "phq9_publico"),
+        "avaliacoes_gad7":  build_lista_com_link(paciente.avaliacoes_gad7.all(),  request, "gad7_publico"),
+        "avaliacoes_epds":  build_lista_com_link(paciente.avaliacoes_epds.all(),  request, "epds_publico"),
+        "avaliacoes_pcl5":  build_lista_com_link(paciente.avaliacoes_pcl5.all(),  request, "pcl5_publico"),
+        "avaliacoes_ghq12": build_lista_com_link(paciente.avaliacoes_ghq12.all(), request, "ghq12_publico"),
+        # Módulos de psicologia
+        "avaliacoes_bdi": build_lista_com_link(paciente.avaliacoes_bdi.all(), request, "bdi_publico"),
+        "avaliacoes_bai": build_lista_com_link(paciente.avaliacoes_bai.all(), request, "bai_publico"),
+        "avaliacoes_dass21": build_lista_com_link(paciente.avaliacoes_dass21.all(), request, "dass21_publico"),
+        "avaliacoes_had": build_lista_com_link(paciente.avaliacoes_had.all(), request, "had_publico"),
+        "avaliacoes_bsl23": build_lista_com_link(paciente.avaliacoes_bsl23.all(), request, "bsl23_publico"),
+        "avaliacoes_aq10_adulto": build_lista_com_link(paciente.avaliacoes_aq10_adulto.all(), request, "aq10_adulto_publico"),
+        "avaliacoes_aq10_child": build_lista_com_link(paciente.avaliacoes_aq10_child.all(), request, "aq10_child_publico"),
+        "avaliacoes_dep_emocional": build_lista_com_link(paciente.avaliacoes_dep_emocional.all(), request, "dep_emocional_publico"),
+        "avaliacoes_scq": build_lista_com_link(paciente.avaliacoes_scq.all(), request, "scq_publico"),
+        # Lote 2
+        "avaliacoes_conners_pais": build_lista_com_link(paciente.avaliacoes_conners.filter(respondente="pais").all(), request, "conners_pais_publico"),
+        "avaliacoes_conners_prof": build_lista_com_link(paciente.avaliacoes_conners.filter(respondente="professor").all(), request, "conners_prof_publico"),
+        "avaliacoes_etdah_pais": build_lista_com_link(paciente.avaliacoes_etdah.filter(respondente="pais").all(), request, "etdah_pais_publico"),
+        "avaliacoes_etdah_prof": build_lista_com_link(paciente.avaliacoes_etdah.filter(respondente="professor").all(), request, "etdah_prof_publico"),
+        "avaliacoes_auqei": build_lista_com_link(paciente.avaliacoes_auqei.all(), request, "auqei_publico"),
+        "avaliacoes_scared": build_lista_com_link(paciente.avaliacoes_scared.all(), request, "scared_publico"),
+        "avaliacoes_masc": build_lista_com_link(paciente.avaliacoes_masc.all(), request, "masc_publico"),
+        "avaliacoes_bpq": build_lista_com_link(paciente.avaliacoes_bpq.all(), request, "bpq_publico"),
+        # Lote 3: Denver, QMPI, Dislexia
+        "avaliacoes_denver": build_lista_com_link(paciente.avaliacoes_denver.all(), request, "denver_publico"),
+        "avaliacoes_qmpi": build_lista_com_link(paciente.avaliacoes_qmpi.all(), request, "qmpi_publico"),
+        "avaliacoes_quest_dislexia": build_lista_com_link(paciente.avaliacoes_quest_dislexia.all(), request, "quest_dislexia_publico"),
+        "avaliacoes_checklist_dislexia": build_lista_com_link(paciente.avaliacoes_checklist_dislexia.all(), request, "checklist_dislexia_publico"),
+        "avaliacoes_prot_dislexia_prof": build_lista_com_link(paciente.avaliacoes_prot_dislexia_prof.all(), request, "prot_dislexia_prof_publico"),
+        "avaliacoes_inventario_dislexia": paciente.avaliacoes_inventario_dislexia.all(),
     })
 
 

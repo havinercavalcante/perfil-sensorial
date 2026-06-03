@@ -1,0 +1,163 @@
+{% extends "questionario/base.html" %}
+{% block title %}HAD — Resultado — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .resultado-header {
+    background: linear-gradient(135deg, #1A252F, #2C3E50);
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .sub-row { display:flex; align-items:center; gap:.75rem; padding:.7rem 0; border-bottom:1px solid var(--border); }
+  .sub-row:last-child { border-bottom:none; }
+  .sub-nome { flex:0 0 200px; font-size:.88rem; font-weight:600; }
+  .bar-wrap { flex:1; background:#F3F4F6; border-radius:6px; height:16px; overflow:hidden; }
+  .bar-fill { height:16px; border-radius:6px; transition:width .5s; }
+  .score-num { min-width:60px; text-align:right; font-size:.88rem; font-weight:700; }
+  .class-badge      { padding:.2rem .65rem; border-radius:6px; font-size:.75rem; font-weight:700; }
+  .class-Normal     { background:#D1FAE5; color:#065F46; }
+  .class-Duvidoso   { background:#FEF3C7; color:#92400E; }
+  .class-Confirmado { background:#FEE2E2; color:#991B1B; }
+  .class-Provável   { background:#FEF3C7; color:#92400E; }
+  .class-Definido   { background:#FEE2E2; color:#991B1B; }
+  .obs-form textarea { width: 100%; min-height: 100px; border: 1.5px solid var(--border); border-radius: 8px; padding: .6rem; font-size: .88rem; resize: vertical; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+  }
+
+  /* ── Domain cards ── */
+  .dominios-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1rem; }
+  @media(max-width:600px){ .dominios-grid { grid-template-columns:1fr; } }
+  .dominio-card { border-radius:12px; padding:1.1rem 1.2rem; border:2px solid var(--border); background:#fff; position:relative; overflow:hidden; }
+  .dominio-card::before { content:''; position:absolute; top:0; left:0; bottom:0; width:4px; background:var(--dc,#ccc); border-radius:12px 0 0 12px; }
+  .dominio-card-nome { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--dc); margin-bottom:.4rem; }
+  .dominio-card-score { font-size:1.9rem; font-weight:800; color:var(--text); line-height:1; }
+  .dominio-card-score span { font-size:.95rem; font-weight:500; color:var(--text-muted); }
+  .dominio-card-label { font-size:.73rem; color:var(--text-muted); margin:.3rem 0 .5rem; }
+  .dominio-card-label strong { color:var(--dc); }
+  .dominio-bar-wrap { background:#F3F4F6; border-radius:6px; height:7px; overflow:hidden; }
+  .dominio-bar-fill { height:7px; border-radius:6px; transition:width .6s; }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="thermometer" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>HAD — Ansiedade e Depressão Hospitalar</h1>
+      <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <a href="{% url 'had_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()"><i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF</button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar</a>
+    </div>
+  </div>
+</div>
+
+<!-- Subescalas -->
+<div class="card">
+  <div class="card-title"><i data-lucide="layers" style="width:18px;height:18px;"></i> Resultados por Subescala</div>
+  <div class="dominios-grid">
+{% for sub in resultado %}
+<div class="dominio-card" style="--dc:{{ sub.cor }};">
+  <div class="dominio-card-nome">{{ sub.nome }}</div>
+  <div class="dominio-card-score">{{ sub.score }}{% if sub.max %}<span>/{{ sub.max }}</span>{% endif %}</div>
+  <div class="dominio-card-label">{{ sub.pct }}% do máximo {% if sub.classificacao %}&nbsp;·&nbsp; <strong>{{ sub.classificacao }}</strong>{% endif %}</div>
+  <div class="dominio-bar-wrap"><div class="dominio-bar-fill" style="width:{{ sub.pct }}%; background:{{ sub.cor }};"></div></div>
+</div>
+{% endfor %}
+</div>
+<div class="no-print" style="max-width:380px;margin:.5rem auto 0;">
+  <canvas id="chartRadar" height="300"></canvas>
+</div>
+</div>
+
+<!-- Legenda -->
+<div class="card" style="font-size:.82rem;">
+  <div class="card-title"><i data-lucide="info" style="width:16px;height:16px;"></i> Pontos de Corte (por subescala)</div>
+  <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+    <span class="class-badge class-Normal">Normal: 0–7</span>
+    <span class="class-badge class-Provável">Provável: 8–10</span>
+    <span class="class-badge class-Definido">Definido: ≥ 11</span>
+  </div>
+  <p style="color:var(--text-muted); margin-top:.75rem; font-size:.78rem;">Referência: Zigmond & Snaith (1983). Score ≥ 8 em qualquer subescala indica caso provável.</p>
+</div>
+
+{% if tem_comparativo %}
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal</div>
+  <canvas id="chartComparativo" height="120"></canvas>
+</div>
+{% endif %}
+
+<!-- Observações -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form class="obs-form" method="post" action="{% url 'salvar_observacoes_had' avaliacao.uuid %}">
+    {% csrf_token %}
+    <textarea name="observacoes" placeholder="Adicione observações clínicas…">{{ avaliacao.observacoes }}</textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:.5rem;">Salvar</button>
+  </form>
+</div>
+
+{% if outras_avaliacoes %}
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="list" style="width:18px;height:18px;"></i> Outras Aplicações</div>
+  <table style="width:100%; font-size:.85rem; border-collapse:collapse;">
+    <thead><tr style="background:var(--bg-secondary);">
+      <th style="padding:.4rem .6rem; text-align:left;">Data</th>
+      <th style="padding:.4rem .6rem; text-align:left;">Ansiedade</th>
+      <th style="padding:.4rem .6rem; text-align:left;">Depressão</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:.4rem .6rem;">{{ av.data|date:"d/m/Y" }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_ansiedade }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_depressao }}</td>
+      <td style="padding:.4rem .6rem;"><a href="{% url 'had_resultado' av.uuid %}" class="btn btn-sm btn-outline">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('chartRadar'), {
+  type: 'radar',
+  data: {
+    labels: [{% for sub in resultado %}'{{ sub.nome }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{ label: 'Score (%)',
+      data: [{% for sub in resultado %}{{ sub.pct }}{% if not forloop.last %},{% endif %}{% endfor %}],
+      backgroundColor: 'rgba(44,62,80,.18)', borderColor: '#2C3E50', borderWidth: 2,
+      pointBackgroundColor: [{% for sub in resultado %}'{{ sub.cor }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    }]
+  },
+  options: { responsive:true, scales:{ r:{ min:0, max:100, ticks:{ stepSize:25, font:{size:10} }, pointLabels:{ font:{size:11} } } }, plugins:{ legend:{display:false} } }
+});
+{% if tem_comparativo %}
+new Chart(document.getElementById('chartComparativo').getContext('2d'), {
+  type: 'line',
+  data: { labels: {{ comparativo_labels|safe }}, datasets: {{ comparativo_datasets|safe }} },
+  options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true, max: 21 } } }
+});
+{% endif %}
+</script>
+{% endblock %}

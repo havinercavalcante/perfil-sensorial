@@ -150,8 +150,24 @@
 </div>
 
 
+<div class="no-print" style="max-width:280px;margin:1rem auto;">
+  <canvas id="chartGauge" height="140"></canvas>
+  <p style="text-align:center;font-size:.72rem;color:var(--text-muted);margin-top:.3rem;">Score: <strong>{{ avaliacao.score_total }}</strong>/20</p>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
+(function(){
+  const el = document.getElementById('chartGauge');
+  if (!el) return;
+  const score = {{ avaliacao.score_total|default:0 }};
+  const cl = '{{ avaliacao.classificacao }}';
+  const color = cl === 'baixo' ? '#10B981' : cl === 'medio' ? '#F59E0B' : '#EF4444';
+  new Chart(el, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [score, 20 - score], backgroundColor: [color, '#F3F4F6'], borderWidth: 0 }] },
+    options: { cutout:'72%', rotation:-90, circumference:180, plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+  });
+})();
 {% if tem_comparativo %}
 const compLabels = {{ comparativo_labels|safe }};
 const compDatasets = {{ comparativo_datasets|safe }};
@@ -160,7 +176,7 @@ new Chart(document.getElementById('comparativoChart'), {
   data: { labels: compLabels, datasets: compDatasets },
   options: {
     responsive: true, maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+    scales: { y: { beginAtZero: true, max: 20 } },
     plugins: { legend: { position: 'bottom' } }
   }
 });
