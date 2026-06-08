@@ -46,6 +46,8 @@ Acesse: http://127.0.0.1:8000
   - Classificação: Muito menos / Menos / Típico / Mais / Muito mais
   - Barras de progresso por seção
 - **Histórico** de avaliações por paciente
+- **Geração de procedimentos** por paciente: anamnese, ficha de triagem, carta de encaminhamento, atestado e relatório
+- **Biblioteca de documentos** com categorias, controle de acesso por plano (START/PLUS/ELITE) e por especialidade, download e preview
 - **Painel admin** em /admin/
 
 ## Estrutura dos Quadrantes

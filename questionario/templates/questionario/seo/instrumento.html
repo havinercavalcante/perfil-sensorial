@@ -1,0 +1,61 @@
+{% extends "questionario/seo/_base_seo.html" %}
+
+{% block seo_title %}{{ i.nome }} — Aplicação Online com Pontuação Automática | IntegraMente{% endblock %}
+{% block seo_description %}{{ i.meta_description }}{% endblock %}
+
+{% block seo_content %}
+<div class="breadcrumb">
+  <a href="{% url 'index' %}">Início</a> ·
+  <a href="{% url 'instrumentos_lista' %}">Instrumentos</a> ·
+  {{ i.nome_curto }}
+</div>
+
+<h1>{{ i.nome }}</h1>
+<p class="subtitle">Aplique online, com pontuação automática e histórico organizado por paciente — direto no IntegraMente.</p>
+
+<div class="meta-tags">
+  <span class="meta-tag"><i data-lucide="stethoscope" style="width:13px;height:13px;vertical-align:-2px;"></i> {{ i.especialidade }}</span>
+  <span class="meta-tag"><i data-lucide="calendar" style="width:13px;height:13px;vertical-align:-2px;"></i> {{ i.faixa_etaria }}</span>
+  <span class="meta-tag"><i data-lucide="user-check" style="width:13px;height:13px;vertical-align:-2px;"></i> Respondido por {{ i.respondido_por }}</span>
+</div>
+
+<section class="block">
+  <h2>O que é o {{ i.nome_curto }}?</h2>
+  <p>{{ i.o_que_e }}</p>
+</section>
+
+<section class="block">
+  <h2>O que o {{ i.nome_curto }} avalia</h2>
+  <ul>
+    {% for item in i.o_que_avalia %}<li>{{ item }}</li>{% endfor %}
+  </ul>
+</section>
+
+<section class="block">
+  <h2>Para que serve na prática clínica</h2>
+  <p>{{ i.para_que_serve }}</p>
+</section>
+
+<div class="cta-box">
+  <h3>Aplique o {{ i.nome_curto }} sem planilhas nem cálculos manuais</h3>
+  <p>{{ i.como_no_sistema }}</p>
+  <a href="{% url 'registrar' %}" class="btn"><i data-lucide="arrow-right" style="width:16px;height:16px;"></i> Testar grátis por 7 dias</a>
+</div>
+
+<section class="block">
+  <h2>Como funciona no IntegraMente</h2>
+  <p>{{ i.como_no_sistema }}</p>
+</section>
+
+{% if outros %}
+<div class="related">
+  <h2>Outros instrumentos disponíveis na plataforma</h2>
+  <div class="related-grid">
+    {% for o in outros %}
+    <a href="{% url 'instrumento_detalhe' o.slug %}">{{ o.nome_curto }}</a>
+    {% endfor %}
+    <a href="{% url 'instrumentos_lista' %}">Ver todos →</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

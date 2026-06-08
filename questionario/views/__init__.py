@@ -1,4 +1,5 @@
 from .auth import *
+from .seo import *
 from .pacientes import *
 from .sensorial import *
 from .vineland import *

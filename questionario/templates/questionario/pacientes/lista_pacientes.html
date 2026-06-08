@@ -6,7 +6,7 @@
   .search-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; }
   .search-bar input { flex:1; }
   .search-bar button { flex-shrink:0; }
-  .pagination { display:flex; align-items:center; justify-content:center; gap:.4rem; margin-top:1.25rem; flex-wrap:wrap; }
+  .pagination { display:flex; align-items:center; justify-content:center; gap:.4rem; margin-top:1.25rem; margin-bottom:1rem; flex-wrap:wrap; }
   .pagination a, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:2rem; height:2rem; padding:0 .6rem; border-radius:6px; font-size:.82rem; font-weight:600; text-decoration:none; border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; }
   .pagination a:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
   .pagination span.current { background:var(--primary); color:#fff; border-color:var(--primary); }
@@ -64,8 +64,9 @@
 </form>
 
 {% if pacientes %}
-<div id="tour-lp-tabela" class="card">
-  <div class="table-responsive"><table>
+<div id="tour-lp-tabela" class="card" style="padding:0; overflow:hidden;">
+  <div class="table-responsive">
+    <table>
     <thead><tr><th>Nome</th><th>Responsável</th><th>Avaliações</th><th>Concluídas</th><th></th></tr></thead>
     <tbody>
     {% for p in pacientes %}
@@ -80,7 +81,8 @@
     </tr>
     {% endfor %}
     </tbody>
-  </table></div>
+    </table>
+  </div>
 
   {% if pacientes.paginator.num_pages > 1 %}
   <div class="pagination">
@@ -219,8 +221,6 @@
   window.startTour = function(force) {
     var driverFn = window.driver.js.driver;
     var driverObj = driverFn({
-      showProgress: true,
-      progressText: 'Etapa {{current}} de {{total}}',
       nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
       prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
       doneBtnText: '✓ Concluir',

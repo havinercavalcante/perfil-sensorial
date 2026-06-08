@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block seo_title %}IntegraMente{% endblock %}</title>
+  <meta name="description" content="{% block seo_description %}Plataforma completa para avaliações clínicas multidisciplinares.{% endblock %}" />
+  <link rel="icon" type="image/png" href="{% static 'logotop.png' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #39abcb;
+      --primary-dark: #0c3c7b;
+      --bg: #d5eef5;
+      --border: #85cde2;
+      --text: #0c3c7b;
+      --text-muted: #4f7aa8;
+      --grad: linear-gradient(135deg, #0c3c7b 0%, #39abcb 65%, #6accdc 100%);
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); line-height: 1.65; }
+    a { color: var(--primary-dark); }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 6vw; border-bottom: 1px solid var(--border);
+    }
+    nav img { height: 30px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .6rem 1.4rem; border-radius: 8px; font-weight: 700; font-size: .9rem;
+      text-decoration: none; border: none; cursor: pointer;
+    }
+    .btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 16px rgba(57,171,203,.35); }
+    .btn-outline { color: var(--primary-dark); border: 1.5px solid var(--border); background: transparent; }
+    main { max-width: 760px; margin: 0 auto; padding: 2.5rem 6vw 4rem; }
+    .breadcrumb { font-size: .8rem; color: var(--text-muted); margin-bottom: 1.2rem; }
+    .breadcrumb a { color: var(--text-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--primary-dark); }
+    h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 900; color: var(--primary-dark); letter-spacing: -.02em; margin-bottom: .5rem; }
+    .subtitle { color: var(--text-muted); font-size: 1.02rem; margin-bottom: 1.8rem; }
+    .meta-tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.8rem; }
+    .meta-tag {
+      font-size: .76rem; font-weight: 700; color: var(--primary-dark);
+      background: var(--bg); border: 1px solid var(--border); border-radius: 100px; padding: .3rem .8rem;
+    }
+    section.block { margin-bottom: 1.8rem; }
+    section.block h2 { font-size: 1.15rem; color: var(--primary-dark); margin-bottom: .6rem; }
+    section.block p { color: var(--text); }
+    section.block ul { padding-left: 1.2rem; }
+    section.block li { margin-bottom: .35rem; }
+    .cta-box {
+      background: var(--grad); color: #fff; border-radius: 14px;
+      padding: 1.8rem; text-align: center; margin: 2.2rem 0;
+    }
+    .cta-box h3 { font-size: 1.25rem; margin-bottom: .4rem; }
+    .cta-box p { color: rgba(255,255,255,.85); margin-bottom: 1.1rem; font-size: .92rem; }
+    .cta-box .btn { background: #fff; color: var(--primary-dark); }
+    .related { margin-top: 2.5rem; }
+    .related h2 { font-size: 1.05rem; color: var(--primary-dark); margin-bottom: .8rem; }
+    .related-grid { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .related-grid a {
+      font-size: .82rem; font-weight: 600; color: var(--primary-dark);
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: .5rem .9rem; text-decoration: none;
+    }
+    .related-grid a:hover { background: var(--border); }
+    footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: .8rem; border-top: 1px solid var(--bg); }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <a href="{% url 'index' %}"><img src="{% static 'logonav.png' %}" alt="IntegraMente" /></a>
+    <div style="display:flex; gap:.6rem;">
+      <a href="{% url 'login' %}" class="btn btn-outline">Entrar</a>
+      <a href="{% url 'registrar' %}" class="btn btn-primary">Testar grátis</a>
+    </div>
+  </nav>
+  <main>
+    {% block seo_content %}{% endblock %}
+  </main>
+  <footer>
+    IntegraMente — Plataforma de avaliações clínicas multidisciplinares ·
+    <a href="{% url 'index' %}">Página inicial</a> ·
+    <a href="{% url 'instrumentos_lista' %}">Todos os instrumentos</a>
+  </footer>
+  <script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

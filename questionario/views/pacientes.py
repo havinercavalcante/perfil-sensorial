@@ -201,66 +201,69 @@ def lista_pacientes(request):
     return render(request, "questionario/pacientes/lista_pacientes.html", {"pacientes": page, "q": q, "filtro": filtro, "paginator": paginator})
 
 
+# Modelos de avaliação com campo `status` (EDM, MABC2, Beery e PEDI não têm status).
+# Compartilhado entre avaliacoes_pendentes e evolucao_paciente para listar/agrupar
+# avaliações de qualquer instrumento sem duplicar a lista.
+MODELOS_AVALIACAO = [
+    (Avaliacao,                     "Perfil Sensorial",             "sensorial"),
+    (AvaliacaoVineland,             "Escala Vineland",              "vineland"),
+    (AvaliacaoEscolar,              "Sensorial Escolar",            "escolar"),
+    (AvaliacaoBebe,                 "Bebê / Criança Pequena",       "bebe"),
+    (AvaliacaoSPM,                  "SPM",                          "spm"),
+    (AvaliacaoVineland3,            "Vineland-3",                   "vineland3"),
+    (AvaliacaoPortage,              "Guia Portage",                 "portage"),
+    (AvaliacaoSDQ,                  "SDQ",                          "sdq"),
+    (AvaliacaoSNAPIV,               "SNAP-IV",                      "snap_iv"),
+    (AvaliacaoMCHAT,                "M-CHAT-R",                     "mchat"),
+    (AvaliacaoCARS,                 "CARS-2",                       "cars"),
+    (AvaliacaoLinguagem,            "Linguagem",                    "linguagem"),
+    (AvaliacaoAlimentacao,          "Alimentação Seletiva",         "alimentacao"),
+    (AvaliacaoHabitosOrais,         "Hábitos Orais",                "habitos_orais"),
+    (AvaliacaoVozInfantil,          "Voz Infantil",                 "voz_infantil"),
+    (AvaliacaoProcessamentoAuditivo,"Proc. Auditivo",               "proc_auditivo"),
+    (AvaliacaoIDV10,                "IDV-10",                       "idv10"),
+    (AvaliacaoDesenvolvimento,      "Desenvolvimento",              "desenvolvimento"),
+    (AvaliacaoSono,                 "Sono Infantil",                "sono"),
+    (AvaliacaoHabilidadesAdaptativas,"Habilidades Adaptativas",     "habilidades"),
+    (AvaliacaoComportamentoFuncional,"Comportamento Funcional",     "comportamento"),
+    (AvaliacaoRastreioCognitivo,    "Rastreio Cognitivo",           "cognitivo"),
+    (AvaliacaoPsicopedagogica,      "Psicopedagógica",              "psicopedagogica"),
+    # Psicologia — Lote 1
+    (AvaliacaoBDI,                  "BDI",                          "bdi"),
+    (AvaliacaoBAI,                  "BAI",                          "bai"),
+    (AvaliacaoDASS21,               "DASS-21",                      "dass21"),
+    (AvaliacaoHAD,                  "HAD",                          "had"),
+    (AvaliacaoBSL23,                "BSL-23",                       "bsl23"),
+    (AvaliacaoAQ10Adulto,           "AQ-10 Adulto",                 "aq10_adulto"),
+    (AvaliacaoAQ10Child,            "AQ-10 Criança",                "aq10_child"),
+    (AvaliacaoDepEmocional,         "Dep. Emocional",               "dep_emocional"),
+    (AvaliacaoSCQ,                  "SCQ",                          "scq"),
+    # Psicologia — Lote 2
+    (AvaliacaoConners,              "Conners-3",                    "conners"),
+    (AvaliacaoETDAH,                "ETDAH",                        "etdah"),
+    (AvaliacaoAUQEI,                "AUQEI",                        "auqei"),
+    (AvaliacaoSCARED,               "SCARED",                       "scared"),
+    (AvaliacaoMASC,                 "MASC",                         "masc"),
+    (AvaliacaoBPQ,                  "BPQ",                          "bpq"),
+    # Lote 3
+    (AvaliacaoDenver,               "Denver II",                    "denver"),
+    (AvaliacaoQMPI,                 "QMPI",                         "qmpi"),
+    (AvaliacaoQuestDislexia,        "Quest. Dislexia",              "quest_dislexia"),
+    (AvaliacaoChecklistDislexia,    "Checklist Dislexia",           "checklist_dislexia"),
+    (AvaliacaoProtDislexiaProf,     "Prot. Dislexia Prof.",         "prot_dislexia_prof"),
+    (AvaliacaoInventarioDislexia,   "Inventário Dislexia",          "inventario_dislexia"),
+]
+
+
 @login_required
 def avaliacoes_pendentes(request):
     from django.core.paginator import Paginator
-
-    # Modelos com campo `status` (EDM, MABC2, Beery e PEDI não têm status)
-    MODELOS = [
-        (Avaliacao,                     "Perfil Sensorial",             "sensorial"),
-        (AvaliacaoVineland,             "Escala Vineland",              "vineland"),
-        (AvaliacaoEscolar,              "Sensorial Escolar",            "escolar"),
-        (AvaliacaoBebe,                 "Bebê / Criança Pequena",       "bebe"),
-        (AvaliacaoSPM,                  "SPM",                          "spm"),
-        (AvaliacaoVineland3,            "Vineland-3",                   "vineland3"),
-        (AvaliacaoPortage,              "Guia Portage",                 "portage"),
-        (AvaliacaoSDQ,                  "SDQ",                          "sdq"),
-        (AvaliacaoSNAPIV,               "SNAP-IV",                      "snap_iv"),
-        (AvaliacaoMCHAT,                "M-CHAT-R",                     "mchat"),
-        (AvaliacaoCARS,                 "CARS-2",                       "cars"),
-        (AvaliacaoLinguagem,            "Linguagem",                    "linguagem"),
-        (AvaliacaoAlimentacao,          "Alimentação Seletiva",         "alimentacao"),
-        (AvaliacaoHabitosOrais,         "Hábitos Orais",                "habitos_orais"),
-        (AvaliacaoVozInfantil,          "Voz Infantil",                 "voz_infantil"),
-        (AvaliacaoProcessamentoAuditivo,"Proc. Auditivo",               "proc_auditivo"),
-        (AvaliacaoIDV10,                "IDV-10",                       "idv10"),
-        (AvaliacaoDesenvolvimento,      "Desenvolvimento",              "desenvolvimento"),
-        (AvaliacaoSono,                 "Sono Infantil",                "sono"),
-        (AvaliacaoHabilidadesAdaptativas,"Habilidades Adaptativas",     "habilidades"),
-        (AvaliacaoComportamentoFuncional,"Comportamento Funcional",     "comportamento"),
-        (AvaliacaoRastreioCognitivo,    "Rastreio Cognitivo",           "cognitivo"),
-        (AvaliacaoPsicopedagogica,      "Psicopedagógica",              "psicopedagogica"),
-        # Psicologia — Lote 1
-        (AvaliacaoBDI,                  "BDI",                          "bdi"),
-        (AvaliacaoBAI,                  "BAI",                          "bai"),
-        (AvaliacaoDASS21,               "DASS-21",                      "dass21"),
-        (AvaliacaoHAD,                  "HAD",                          "had"),
-        (AvaliacaoBSL23,                "BSL-23",                       "bsl23"),
-        (AvaliacaoAQ10Adulto,           "AQ-10 Adulto",                 "aq10_adulto"),
-        (AvaliacaoAQ10Child,            "AQ-10 Criança",                "aq10_child"),
-        (AvaliacaoDepEmocional,         "Dep. Emocional",               "dep_emocional"),
-        (AvaliacaoSCQ,                  "SCQ",                          "scq"),
-        # Psicologia — Lote 2
-        (AvaliacaoConners,              "Conners-3",                    "conners"),
-        (AvaliacaoETDAH,                "ETDAH",                        "etdah"),
-        (AvaliacaoAUQEI,                "AUQEI",                        "auqei"),
-        (AvaliacaoSCARED,               "SCARED",                       "scared"),
-        (AvaliacaoMASC,                 "MASC",                         "masc"),
-        (AvaliacaoBPQ,                  "BPQ",                          "bpq"),
-        # Lote 3
-        (AvaliacaoDenver,               "Denver II",                    "denver"),
-        (AvaliacaoQMPI,                 "QMPI",                         "qmpi"),
-        (AvaliacaoQuestDislexia,        "Quest. Dislexia",              "quest_dislexia"),
-        (AvaliacaoChecklistDislexia,    "Checklist Dislexia",           "checklist_dislexia"),
-        (AvaliacaoProtDislexiaProf,     "Prot. Dislexia Prof.",         "prot_dislexia_prof"),
-        (AvaliacaoInventarioDislexia,   "Inventário Dislexia",          "inventario_dislexia"),
-    ]
 
     q = request.GET.get("q", "").strip()
     tipo_filtro = request.GET.get("tipo", "").strip()
 
     pendentes = []
-    for Model, label, slug in MODELOS:
+    for Model, label, slug in MODELOS_AVALIACAO:
         if tipo_filtro and tipo_filtro != slug:
             continue
         qs = (
@@ -285,10 +288,10 @@ def avaliacoes_pendentes(request):
     pendentes.sort(key=lambda x: x["criado_em"], reverse=True)
     total = len(pendentes)
 
-    paginator = Paginator(pendentes, 25)
+    paginator = Paginator(pendentes, 10)
     page = paginator.get_page(request.GET.get("page"))
 
-    tipos_disponiveis = [(slug, label) for _, label, slug in MODELOS]
+    tipos_disponiveis = [(slug, label) for _, label, slug in MODELOS_AVALIACAO]
 
     return render(request, "questionario/avaliacoes/pendentes.html", {
         "pendentes": page,
@@ -452,6 +455,78 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_checklist_dislexia": build_lista_com_link(paciente.avaliacoes_checklist_dislexia.all(), request, "checklist_dislexia_publico"),
         "avaliacoes_prot_dislexia_prof": build_lista_com_link(paciente.avaliacoes_prot_dislexia_prof.all(), request, "prot_dislexia_prof_publico"),
         "avaliacoes_inventario_dislexia": paciente.avaliacoes_inventario_dislexia.all(),
+    })
+
+
+# Exceções ao padrão "<slug>_resultado" usado pela maioria dos instrumentos
+# (nome da URL de resultado não corresponde diretamente ao slug do instrumento).
+RESULTADO_URL_OVERRIDES = {
+    "sensorial": "dashboard",
+    "habitos_orais": "habitos_resultado",
+    "voz_infantil": "voz_resultado",
+    "proc_auditivo": "auditivo_resultado",
+    "idv10": "idv_resultado",
+}
+
+
+def _resultado_url(slug, av):
+    """Resolve a URL do resultado de uma avaliação concluída a partir do slug do instrumento."""
+    if slug in ("conners", "etdah"):
+        sufixo = "prof" if getattr(av, "respondente", "") == "professor" else "pais"
+        nome_url = f"{slug}_{sufixo}_resultado"
+    else:
+        nome_url = RESULTADO_URL_OVERRIDES.get(slug, f"{slug}_resultado")
+    try:
+        return reverse(nome_url, kwargs={"avaliacao_id": av.uuid})
+    except Exception:
+        return None
+
+
+@login_required
+def evolucao_paciente(request, paciente_id):
+    import json
+    from ..data.data import QUADRANTES_CONFIG, SECOES_CONFIG
+
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+
+    # Linha do tempo: todas as avaliações concluídas do paciente, de qualquer instrumento,
+    # em ordem cronológica decrescente — link direto para o resultado de cada uma.
+    eventos = []
+    for Model, label, slug in MODELOS_AVALIACAO:
+        for av in Model.objects.filter(paciente=paciente, status="concluida").order_by("-data"):
+            eventos.append({
+                "tipo": label, "tipo_slug": slug, "data": av.data,
+                "link": _resultado_url(slug, av),
+            })
+    eventos.sort(key=lambda x: x["data"], reverse=True)
+
+    # Evolução do Perfil Sensorial: único instrumento com pontuação estruturada por
+    # quadrante (EX/EV/SN/OB) e seção, reaproveitando a lógica do gráfico comparativo
+    # já existente no dashboard de uma avaliação isolada — aqui consolidado por paciente.
+    sensoriais = list(paciente.avaliacoes.filter(status="concluida").order_by("data"))
+    cores = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B", "#C0392B", "#16A085", "#1ABC9C", "#7DB87D"]
+    evolucao_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in sensoriais])
+
+    def _datasets(config_map, paleta):
+        datasets = []
+        for i, (chave, config) in enumerate(config_map.items()):
+            campo = f"pont_{chave.lower()}"
+            cor = config.get("cor", paleta[i % len(paleta)])
+            valores = [
+                round(getattr(av, campo) / config["max"] * 100) if getattr(av, campo) is not None else 0
+                for av in sensoriais
+            ]
+            datasets.append({"label": config["nome"], "data": valores, "borderColor": cor,
+                             "backgroundColor": cor + "33", "tension": 0.3})
+        return datasets
+
+    return render(request, "questionario/pacientes/evolucao.html", {
+        "paciente": paciente,
+        "eventos": eventos,
+        "tem_evolucao_sensorial": len(sensoriais) > 1,
+        "evolucao_labels": evolucao_labels,
+        "quad_datasets": json.dumps(_datasets(QUADRANTES_CONFIG, cores)),
+        "secao_datasets": json.dumps(_datasets(SECOES_CONFIG, cores)),
     })
 
 

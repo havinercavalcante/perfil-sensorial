@@ -14,7 +14,7 @@
   <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="users" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Dados do Paciente</h2>
   <div class="card">
     {% if link %}
-      <div style="margin-bottom:1.5rem; padding:1.1rem 1.2rem; border-radius:10px; background:#D1FAE5; border-left:4px solid #10B981;">
+      <div id="tour-np-link" style="margin-bottom:1.5rem; padding:1.1rem 1.2rem; border-radius:10px; background:#D1FAE5; border-left:4px solid #10B981;">
         <strong style="color:#065F46;">Link gerado para envio ao responsável:</strong><br>
         <input id="linkInput" type="text" value="{{ link }}" readonly style="width:100%;margin-top:0.5rem;">
         <div style="margin:0.7rem 0 0.3rem 0; display:flex; gap:0.7rem; flex-wrap:wrap;">
@@ -42,7 +42,7 @@
         }
       </script>
     {% endif %}
-    <form method="post">
+    <form method="post" id="tour-np-form">
       {% csrf_token %}
       <div class="form-group">
         <label>Nome completo da criança *</label>
@@ -73,4 +73,69 @@
     </form>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_novo_paciente_v1';
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="users" ' + ICO + '></i> Novo Paciente',
+        description: 'Cadastre um novo paciente preenchendo os dados da criança e do responsável.'
+      }
+    }
+  ];
+
+  if (document.getElementById('tour-np-link')) {
+    etapas.push({
+      element: '#tour-np-link',
+      popover: {
+        title: '<i data-lucide="link" ' + ICO + '></i> Link da avaliação',
+        description: 'Pronto! Copie este link ou envie por e-mail diretamente para o responsável preencher o questionário.',
+        side: 'bottom', align: 'start'
+      }
+    });
+  } else if (document.getElementById('tour-np-form')) {
+    etapas.push({
+      element: '#tour-np-form',
+      popover: {
+        title: '<i data-lucide="clipboard-list" ' + ICO + '></i> Dados do paciente',
+        description: 'Preencha o nome da criança, data de nascimento e os dados do responsável. Ao salvar, um link de questionário é gerado automaticamente.',
+        side: 'top', align: 'start'
+      }
+    });
+  }
+
+  etapas.push({
+    popover: {
+      title: '<i data-lucide="check-circle" ' + ICO + '></i> Tudo certo!',
+      description: 'Depois de cadastrar, é só clicar em <strong>"Iniciar Questionário"</strong> para gerar o link de avaliação.'
+    }
+  });
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function(popover) { if (window.lucide && popover && popover.wrapper) lucide.createIcons({ rootElement: popover.wrapper }); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
+</script>
 {% endblock %}

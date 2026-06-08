@@ -266,6 +266,9 @@ class PerfilMedico(models.Model):
     session_key = models.CharField(
         "Chave de sessão ativa", max_length=40, blank=True, default=""
     )
+    codigo_indicacao = models.UUIDField(
+        "Código de indicação", default=uuid.uuid4, editable=False, unique=True
+    )
 
     class Meta:
         verbose_name = "Perfil do Profissional"
@@ -790,6 +793,31 @@ class RespostaVineland3(models.Model):
 
 
 # ── Link de Convite para Questionário ─────────────────────────────────────────
+
+class Indicacao(models.Model):
+    """Registra que `indicado` se cadastrou através do link de indicação de `indicador`."""
+    RECOMPENSA_DIAS = 30
+
+    indicador = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="indicacoes_feitas",
+        verbose_name="Indicado por"
+    )
+    indicado = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="indicacao_origem",
+        verbose_name="Profissional indicado"
+    )
+    criado_em = models.DateTimeField("Cadastrado em", auto_now_add=True)
+    recompensa_aplicada = models.BooleanField("Recompensa aplicada", default=False)
+    recompensa_aplicada_em = models.DateTimeField("Recompensa aplicada em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Indicação"
+        verbose_name_plural = "Indicações"
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"{self.indicador.username} indicou {self.indicado.username}"
+
 
 class LinkConvite(models.Model):
     TIPO_CHOICES = [

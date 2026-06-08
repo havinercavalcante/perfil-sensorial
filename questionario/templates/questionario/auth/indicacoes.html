@@ -1,0 +1,250 @@
+{% extends "questionario/base.html" %}
+{% block title %}Programa de Indicação{% endblock %}
+{% block back_button %}<a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ind-link-box { display: flex; gap: .6rem; align-items: center; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: .75rem 1rem; }
+  .ind-link-box input { flex: 1; min-width: 0; border: none; background: transparent; color: var(--primary-dark); font-size: .85rem; font-weight: 600; outline: none; }
+  .ind-step { display: flex; gap: .7rem; align-items: flex-start; padding: .6rem 0; }
+  .ind-step-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+  .ind-step-text strong { color: var(--primary-dark); }
+  .ind-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid var(--bg); }
+  .ind-row:last-child { border-bottom: none; }
+  .ind-status { font-size: .74rem; font-weight: 700; padding: .2rem .6rem; border-radius: 20px; white-space: nowrap; }
+  .ind-status.ok { background: #f0fdf4; color: #16a34a; }
+  .ind-status.pendente { background: #fffbeb; color: #d97706; }
+  .ind-share-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .9rem; }
+  .ind-btn-whatsapp { background: #25D366; color: #fff; border: none; }
+  .ind-btn-whatsapp:hover { background: #1ebe5a; }
+  .ind-btn-email { background: #3E73D1; color: #fff; border: none; }
+  .ind-btn-email:hover { background: #2f5bb0; }
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.ativo { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 14px; padding: 1.8rem;
+    width: min(420px, 92vw); box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  }
+  .modal-title { font-size: 1.05rem; font-weight: 700; color: var(--primary-dark); margin-bottom: .35rem; }
+  .modal-desc { font-size: .85rem; color: var(--text-muted); margin-bottom: 1rem; }
+  .modal-input {
+    width: 100%; padding: .6rem .85rem; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: .95rem; margin-bottom: 1rem; box-sizing: border-box;
+  }
+  .modal-input:focus { outline: none; border-color: var(--primary); }
+  .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:680px; margin:0 auto;">
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;">
+    <i data-lucide="gift" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Programa de Indicação
+  </h2>
+  <p style="color:var(--text-muted); font-size:.92rem; margin-bottom:1.5rem;">
+    Indique colegas para o IntegraMente e ganhe <strong style="color:var(--primary-dark);">{{ recompensa_dias }} dias extras</strong>
+    de plano sempre que um indicado seu se tornar cliente pagante. Sem limite de indicações.
+  </p>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <h3 style="font-size:1rem; color:var(--primary-dark); margin-bottom:.6rem;">Seu link de indicação</h3>
+    <div class="ind-link-box">
+      <input type="text" id="linkIndicacao" value="{{ link_indicacao }}" readonly>
+      <button type="button" class="btn btn-primary" style="flex-shrink:0;" onclick="copiarLinkIndicacao()">
+        <i data-lucide="copy" style="width:15px;height:15px;"></i> Copiar
+      </button>
+    </div>
+    <p id="copiadoMsg" style="display:none; color:#16a34a; font-size:.8rem; font-weight:600; margin-top:.5rem;">
+      <i data-lucide="check" style="width:13px;height:13px;vertical-align:-2px;"></i> Link copiado! Compartilhe com seus colegas.
+    </p>
+
+    <div class="ind-share-row">
+      <button type="button" class="btn ind-btn-whatsapp" onclick="abrirModalNumero()">
+        <i data-lucide="message-circle" style="width:15px;height:15px;"></i> Compartilhar no WhatsApp
+      </button>
+      <button type="button" class="btn ind-btn-email" onclick="abrirModalEmail()">
+        <i data-lucide="mail" style="width:15px;height:15px;"></i> Enviar convite por e-mail
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: número do WhatsApp -->
+  <div class="modal-overlay" id="modalNumero">
+    <div class="modal-box">
+      <div class="modal-title">
+        <i data-lucide="smartphone" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>
+        Número do WhatsApp
+      </div>
+      <div class="modal-desc">Informe o WhatsApp do colega para enviar o convite.</div>
+      <input type="tel" class="modal-input" id="modalTelInput" placeholder="(11) 9 9999-9999" inputmode="numeric">
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="fecharModalNumero()">Cancelar</button>
+        <a id="modalBtnEnviarNumero" href="#" target="_blank" rel="noopener" class="btn ind-btn-whatsapp" onclick="fecharModalNumero()">
+          <i data-lucide="send" style="width:14px;height:14px;"></i> Enviar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: e-mail do colega -->
+  <div class="modal-overlay" id="modalEmail">
+    <div class="modal-box">
+      <div class="modal-title">
+        <i data-lucide="mail" style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"></i>
+        Convidar por e-mail
+      </div>
+      <div class="modal-desc">Informe o e-mail do colega para enviar o convite com seu link de indicação.</div>
+      <input type="email" class="modal-input" id="modalEmailInput" placeholder="colega@email.com" inputmode="email">
+      <div id="modalEmailMsg" style="font-size:.83rem;margin-bottom:.75rem;display:none;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="fecharModalEmail()">Cancelar</button>
+        <button type="button" class="btn ind-btn-email" id="modalEmailBtn" onclick="enviarIndicacaoEmail()">
+          <i data-lucide="send" style="width:14px;height:14px;"></i> Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <h3 style="font-size:1rem; color:var(--primary-dark); margin-bottom:.4rem;">Como funciona</h3>
+    <div class="ind-step">
+      <div class="ind-step-num">1</div>
+      <div class="ind-step-text"><strong>Compartilhe</strong> seu link pessoal com colegas de profissão — por WhatsApp, e-mail ou redes sociais.</div>
+    </div>
+    <div class="ind-step">
+      <div class="ind-step-num">2</div>
+      <div class="ind-step-text"><strong>Seu colega se cadastra</strong> através do link e testa o IntegraMente gratuitamente por 7 dias.</div>
+    </div>
+    <div class="ind-step">
+      <div class="ind-step-num">3</div>
+      <div class="ind-step-text">Quando ele <strong>assina um plano pago</strong>, você recebe automaticamente {{ recompensa_dias }} dias extras no seu plano.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:1rem; color:var(--primary-dark); margin-bottom:.4rem;">Suas indicações</h3>
+    {% if indicacoes_feitas %}
+      {% for ind in indicacoes_feitas %}
+      <div class="ind-row">
+        <div>
+          <div style="font-weight:600; color:var(--text);">{{ ind.indicado.get_full_name|default:ind.indicado.username }}</div>
+          <div style="font-size:.78rem; color:var(--text-muted);">Cadastrado em {{ ind.criado_em|date:"d/m/Y" }}</div>
+        </div>
+        {% if ind.recompensa_aplicada %}
+          <span class="ind-status ok"><i data-lucide="check" style="width:11px;height:11px;vertical-align:-1px;"></i> +{{ recompensa_dias }} dias aplicados</span>
+        {% else %}
+          <span class="ind-status pendente">Aguardando assinatura de um plano</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <p style="color:var(--text-muted); font-size:.88rem; text-align:center; padding:1rem 0;">
+        Você ainda não indicou nenhum colega. Compartilhe seu link acima para começar a ganhar dias extras de plano.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function copiarLinkIndicacao() {
+  const input = document.getElementById('linkIndicacao');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(function() {
+    const msg = document.getElementById('copiadoMsg');
+    msg.style.display = 'block';
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  });
+}
+
+const MENSAGEM_INDICACAO = "{{ mensagem_padrao|escapejs }}";
+
+function formatarNumeroWA(numero) {
+  let nums = numero.replace(/\D/g, "");
+  if (nums.startsWith("0")) nums = nums.substring(1);
+  if (nums.length === 10 || nums.length === 11) nums = "55" + nums;
+  return nums;
+}
+
+function montarLinkWA(numero) {
+  const num = formatarNumeroWA(numero);
+  const msg = encodeURIComponent(MENSAGEM_INDICACAO);
+  return num ? ("https://wa.me/" + num + "?text=" + msg) : ("https://wa.me/?text=" + msg);
+}
+
+function abrirModalNumero() {
+  document.getElementById("modalTelInput").value = "";
+  document.getElementById("modalBtnEnviarNumero").href = montarLinkWA("");
+  document.getElementById("modalNumero").classList.add("ativo");
+  document.getElementById("modalTelInput").focus();
+  document.getElementById("modalTelInput").addEventListener("input", atualizarLinkModalNumero);
+}
+
+function atualizarLinkModalNumero() {
+  const num = document.getElementById("modalTelInput").value;
+  document.getElementById("modalBtnEnviarNumero").href = montarLinkWA(num);
+}
+
+function fecharModalNumero() {
+  document.getElementById("modalNumero").classList.remove("ativo");
+}
+
+document.getElementById("modalNumero").addEventListener("click", function(e) {
+  if (e.target === this) fecharModalNumero();
+});
+
+function abrirModalEmail() {
+  document.getElementById("modalEmailInput").value = "";
+  document.getElementById("modalEmailMsg").style.display = "none";
+  document.getElementById("modalEmailBtn").disabled = false;
+  document.getElementById("modalEmail").classList.add("ativo");
+  document.getElementById("modalEmailInput").focus();
+}
+
+function fecharModalEmail() {
+  document.getElementById("modalEmail").classList.remove("ativo");
+}
+
+document.getElementById("modalEmail").addEventListener("click", function(e) {
+  if (e.target === this) fecharModalEmail();
+});
+
+function mostrarMsgEmailIndicacao(texto, cor) {
+  const el = document.getElementById("modalEmailMsg");
+  el.textContent = texto;
+  el.style.color = cor;
+  el.style.display = "block";
+}
+
+async function enviarIndicacaoEmail() {
+  const email = document.getElementById("modalEmailInput").value.trim();
+  if (!email) { mostrarMsgEmailIndicacao("Informe um e-mail.", "red"); return; }
+
+  const btn = document.getElementById("modalEmailBtn");
+  btn.disabled = true;
+  mostrarMsgEmailIndicacao("Enviando…", "#555");
+
+  const resp = await fetch("{% url 'enviar_indicacao_email' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": "{{ csrf_token }}",
+    },
+    body: "email_destino=" + encodeURIComponent(email),
+  });
+  const data = await resp.json();
+  if (data.ok) {
+    mostrarMsgEmailIndicacao(data.message, "#0c3c7b");
+    setTimeout(fecharModalEmail, 1800);
+  } else {
+    mostrarMsgEmailIndicacao(data.message, "red");
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

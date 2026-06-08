@@ -182,6 +182,9 @@
       <a href="{% url 'editar_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
         <i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar
       </a>
+      <a href="{% url 'evolucao_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Evolução
+      </a>
       <div class="dropdown-proc">
         <button class="btn btn-secondary btn-sm" onclick="toggleProcMenu(event)">
           <i data-lucide="file-text" style="width:14px;height:14px;"></i> Documentos
@@ -4100,8 +4103,6 @@
   window.startTour = function(force) {
     var driverFn = window.driver.js.driver;
     var driverObj = driverFn({
-      showProgress: true,
-      progressText: 'Etapa {{current}} de {{total}}',
       nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
       prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
       doneBtnText: '✓ Concluir',

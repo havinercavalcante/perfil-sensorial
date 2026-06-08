@@ -229,7 +229,7 @@
 
   {% if solicitacao_pendente %}
   <!-- Solicitação já enviada -->
-  <div class="pendente-box">
+  <div class="pendente-box" id="tour-planos-pendente">
     <div class="pendente-badge"><i data-lucide="clock" style="width:14px;height:14px"></i> Aguardando confirmação</div>
     <h3>Sua solicitação está em análise</h3>
     <p>
@@ -301,7 +301,7 @@
     </div>
 
     <!-- Dados do PIX -->
-    <div class="pix-box">
+    <div class="pix-box" id="tour-planos-pix">
       <div class="pix-title">
         <i data-lucide="qr-code" style="width:18px;height:18px;color:var(--primary-dark)"></i>
         Pague via PIX
@@ -371,5 +371,87 @@
       setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
     });
   }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_planos_v1';
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="credit-card" ' + ICO + '></i> Escolha seu plano',
+        description: 'Aqui você escolhe o plano ideal, paga via PIX e solicita a ativação do seu acesso.'
+      }
+    }
+  ];
+
+  if (document.getElementById('tour-planos-pendente')) {
+    etapas.push({
+      element: '#tour-planos-pendente',
+      popover: {
+        title: '<i data-lucide="clock" ' + ICO + '></i> Solicitação em análise',
+        description: 'Você já enviou uma solicitação de plano. Assim que confirmarmos o pagamento, seu acesso é liberado automaticamente — em até 24h em dias úteis.',
+        side: 'bottom', align: 'start'
+      }
+    });
+  }
+
+  if (document.getElementById('planos-grid')) {
+    etapas.push({
+      element: '#planos-grid',
+      popover: {
+        title: '<i data-lucide="layers" ' + ICO + '></i> Planos disponíveis',
+        description: 'Compare os módulos incluídos em cada plano — START, PLUS ou ELITE — e selecione o que melhor atende sua prática.',
+        side: 'bottom', align: 'start'
+      }
+    });
+  }
+
+  if (document.getElementById('tour-planos-pix')) {
+    etapas.push({
+      element: '#tour-planos-pix',
+      popover: {
+        title: '<i data-lucide="qr-code" ' + ICO + '></i> Pagamento via PIX',
+        description: 'Use a chave PIX exibida aqui para realizar o pagamento. Você pode copiá-la com um clique no botão <strong>"Copiar"</strong>.',
+        side: 'top', align: 'start'
+      }
+    });
+  }
+
+  if (document.getElementById('form-solicitacao')) {
+    etapas.push({
+      element: '#form-solicitacao',
+      popover: {
+        title: '<i data-lucide="send" ' + ICO + '></i> Solicitar ativação',
+        description: 'Depois de pagar, clique em <strong>"Já paguei — solicitar ativação"</strong>. Nossa equipe confirma o pagamento e libera seu acesso em até 24h em dias úteis.',
+        side: 'top', align: 'start'
+      }
+    });
+  }
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function(popover) { if (window.lucide && popover && popover.wrapper) lucide.createIcons({ rootElement: popover.wrapper }); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}

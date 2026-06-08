@@ -9,6 +9,7 @@ from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
     SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos, PainelRecebimento,
+    Indicacao,
 )
 
 
@@ -374,6 +375,30 @@ class HistoricoLoginAdmin(admin.ModelAdmin):
     def status_icon(self, obj):
         return "✓ Sucesso" if obj.sucesso else "✗ Falha"
     status_icon.short_description = "Status"
+
+
+@admin.register(Indicacao)
+class IndicacaoAdmin(admin.ModelAdmin):
+    list_display    = ["indicador", "indicado", "criado_em", "recompensa_status"]
+    list_filter     = ["recompensa_aplicada"]
+    search_fields   = ["indicador__username", "indicador__first_name", "indicado__username", "indicado__first_name"]
+    readonly_fields = ["indicador", "indicado", "criado_em", "recompensa_aplicada", "recompensa_aplicada_em"]
+    ordering        = ["-criado_em"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def recompensa_status(self, obj):
+        if obj.recompensa_aplicada:
+            return mark_safe(
+                '<span style="background:#f0fdf4;color:#16a34a;padding:2px 7px;'
+                'border-radius:4px;font-size:.78rem;font-weight:700;">✓ Aplicada</span>'
+            )
+        return mark_safe(
+            '<span style="background:#fffbeb;color:#d97706;padding:2px 7px;'
+            'border-radius:4px;font-size:.78rem;font-weight:700;">⏳ Aguardando conversão</span>'
+        )
+    recompensa_status.short_description = "Recompensa"
 
 
 # ── Solicitações de Plano ─────────────────────────────────────────────────────

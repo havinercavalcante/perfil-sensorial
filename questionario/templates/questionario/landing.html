@@ -799,6 +799,7 @@
     <li><a href="#funcionalidades">Funcionalidades</a></li>
     <li><a href="#como-funciona">Como funciona</a></li>
     <li><a href="#preco">Planos</a></li>
+    <li><a href="{% url 'instrumentos_lista' %}">Instrumentos</a></li>
   </ul>
   <div class="nav-cta">
     <a href="{% url 'login' %}" class="btn btn-outline nav-entrar">Entrar</a>
@@ -815,6 +816,7 @@
   <a href="#funcionalidades" onclick="closeMenu()">Funcionalidades</a>
   <a href="#como-funciona" onclick="closeMenu()">Como funciona</a>
   <a href="#preco" onclick="closeMenu()">Planos</a>
+  <a href="{% url 'instrumentos_lista' %}" onclick="closeMenu()">Instrumentos</a>
   <a href="{% url 'login' %}" style="margin-top:0.5rem;background:var(--grad);color:var(--white);font-weight:700;border-radius:8px;text-align:center;">Entrar na plataforma</a>
 </div>
 
@@ -861,8 +863,8 @@
         <div class="stat-label">Docs na Biblioteca</div>
       </div>
       <div class="stat">
-        <div class="stat-value">5</div>
-        <div class="stat-label">Docs Clínicos Digitais</div>
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Pontuação Automática</div>
       </div>
     </div>
   </div>
@@ -1040,7 +1042,7 @@
           <div class="step-num">1</div>
           <div class="step-content">
             <h4>Gere o link da avaliação</h4>
-             <div class="stat-label">Acesso completo a partir de R$10/mês</div>
+            <p>Escolha o instrumento, vincule ao paciente e gere um link em segundos — direto do seu painel, sem nenhuma configuração extra.</p>
           </div>
         </div>
         <div class="step">
@@ -1193,8 +1195,11 @@
         <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
         <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Suporte prioritário</li>
       </ul>
-      <a href="{% url 'registrar' %}?plano=plus" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+      <a href="{% url 'registrar' %}?plano=plus" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-bottom:.5rem;">
         Começar com PLUS
+      </a>
+      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;background:#fff;">
+        <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Começar com teste grátis
       </a>
     </div>
 
@@ -1240,8 +1245,11 @@
         <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Suporte prioritário</li>
         <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Acesso antecipado a novos módulos</li>
       </ul>
-      <a href="{% url 'registrar' %}?plano=elite" class="btn btn-lg" style="width:100%;justify-content:center;background:linear-gradient(135deg,#39abcb,#6accdc);color:#fff;box-shadow:0 4px 20px rgba(57,171,203,0.4);">
+      <a href="{% url 'registrar' %}?plano=elite" class="btn btn-lg" style="width:100%;justify-content:center;background:linear-gradient(135deg,#39abcb,#6accdc);color:#fff;box-shadow:0 4px 20px rgba(57,171,203,0.4);margin-bottom:.5rem;">
         Começar com ELITE
+      </a>
+      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;background:#fff;">
+        <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Começar com teste grátis
       </a>
     </div>
 

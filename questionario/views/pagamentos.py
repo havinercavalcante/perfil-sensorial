@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from ..models import (
+    Indicacao,
     ModuloAvaliacao,
     MODULOS_POR_PLANO,
     PerfilMedico,
@@ -138,6 +139,19 @@ def aprovar_solicitacao(request, sol_id):
         codigos = MODULOS_POR_PLANO.get(sol.plano, [])
         modulos = ModuloAvaliacao.objects.filter(codigo__in=codigos)
         perfil.modulos_liberados.set(modulos)
+
+        # Programa de indicação: primeira conversão em plano pago concede dias extras a quem indicou
+        indicacao = Indicacao.objects.filter(indicado=sol.user, recompensa_aplicada=False).select_related("indicador__perfil").first()
+        if indicacao:
+            perfil_indicador = getattr(indicacao.indicador, "perfil", None)
+            if perfil_indicador:
+                agora_recompensa = timezone.now()
+                base = perfil_indicador.plano_expiracao if (perfil_indicador.plano_expiracao and perfil_indicador.plano_expiracao > agora_recompensa) else agora_recompensa
+                perfil_indicador.plano_expiracao = base + timezone.timedelta(days=Indicacao.RECOMPENSA_DIAS)
+                perfil_indicador.save(update_fields=["plano_expiracao"])
+            indicacao.recompensa_aplicada = True
+            indicacao.recompensa_aplicada_em = timezone.now()
+            indicacao.save(update_fields=["recompensa_aplicada", "recompensa_aplicada_em"])
 
         # Notifica usuário
         _notificar_usuario_aprovado(sol, perfil.plano_expiracao)

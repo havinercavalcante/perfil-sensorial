@@ -125,8 +125,15 @@
   </div>
   {% else %}
   {% for msg in messages %}<div class="alert">{{ msg }}</div>{% endfor %}
+  {% if ref_code %}
+  <div class="alert" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0;">
+    <i data-lucide="gift" style="width:15px;height:15px;vertical-align:-2px;margin-right:.3rem;"></i>
+    Você foi convidado(a) por um colega — ao confirmar seu cadastro, vocês dois aproveitam os benefícios da indicação.
+  </div>
+  {% endif %}
   <form method="post">
     {% csrf_token %}
+    {% if ref_code %}<input type="hidden" name="ref" value="{{ ref_code }}">{% endif %}
 
     <div class="section-label">Dados Pessoais</div>
     <div class="form-group">

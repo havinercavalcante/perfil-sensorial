@@ -1,0 +1,43 @@
+{% extends "questionario/seo/_base_seo.html" %}
+
+{% block seo_title %}Instrumentos de Avaliação Clínica Online — IntegraMente{% endblock %}
+{% block seo_description %}Conheça os instrumentos de avaliação clínica disponíveis no IntegraMente — Perfil Sensorial, SDQ, M-CHAT-R, Vineland-3, SNAP-IV, DASS-21 e muitos outros, todos com pontuação automática.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .inst-card {
+    display: block; text-decoration: none; border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 1.1rem 1.2rem; background: #fff; transition: all .15s;
+  }
+  .inst-card:hover { border-color: var(--primary); box-shadow: 0 6px 20px rgba(57,171,203,.15); transform: translateY(-2px); }
+  .inst-card h3 { font-size: 1rem; color: var(--primary-dark); margin-bottom: .3rem; }
+  .inst-card p { font-size: .82rem; color: var(--text-muted); margin: 0; }
+  .inst-card .tag { display: inline-block; font-size: .7rem; font-weight: 700; color: var(--primary-dark); background: var(--bg); border-radius: 100px; padding: .15rem .6rem; margin-top: .5rem; }
+</style>
+{% endblock %}
+
+{% block seo_content %}
+<div class="breadcrumb"><a href="{% url 'index' %}">Início</a> · Instrumentos</div>
+<h1>Instrumentos de avaliação clínica disponíveis</h1>
+<p class="subtitle">
+  Conheça alguns dos mais de 70 instrumentos validados disponíveis no IntegraMente —
+  todos com aplicação online, pontuação automática e histórico organizado por paciente.
+</p>
+
+<div class="cta-box">
+  <h3>Quer ver todos os instrumentos por especialidade?</h3>
+  <p>Crie sua conta gratuita e explore o catálogo completo — Terapia Ocupacional, Psicologia, Fonoaudiologia, Pediatria, ABA, Neuropsicologia e Psicopedagogia.</p>
+  <a href="{% url 'registrar' %}" class="btn"><i data-lucide="arrow-right" style="width:16px;height:16px;"></i> Criar conta grátis</a>
+</div>
+
+<div class="grid">
+  {% for inst in instrumentos %}
+  <a href="{% url 'instrumento_detalhe' inst.slug %}" class="inst-card">
+    <h3>{{ inst.nome_curto }}</h3>
+    <p>{{ inst.especialidade }} · {{ inst.faixa_etaria }}</p>
+    <span class="tag">Ver detalhes</span>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -20,7 +20,7 @@
 <div style="max-width:620px; margin:0 auto;">
   <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="settings" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Meu Perfil</h2>
 
-  <div class="card" style="text-align:center; padding:2rem;">
+  <div class="card" id="tour-perfil-card" style="text-align:center; padding:2rem;">
     <div style="width:72px; height:72px; border-radius:50%; background:var(--primary); color:#fff; font-size:1.8rem; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
       {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
     </div>
@@ -67,7 +67,7 @@
       </div>
 
       <!-- ── Especialidades ──────────────────────────────────── -->
-      <div class="form-group">
+      <div class="form-group" id="tour-perfil-esp">
         <label><i data-lucide="stethoscope" style="width:13px;height:13px;vertical-align:middle;"></i> Especialidade(s)</label>
         <p class="esp-hint">Selecione todas as áreas em que você atua. O administrador liberará os questionários correspondentes.</p>
         <div class="esp-grid">
@@ -81,7 +81,7 @@
         </div>
       </div>
 
-      <div style="border-top:1px solid var(--border); margin:1.2rem 0; padding-top:1.2rem;">
+      <div id="tour-perfil-senha" style="border-top:1px solid var(--border); margin:1.2rem 0; padding-top:1.2rem;">
         <div class="card-title" style="margin-bottom:.8rem;"><i data-lucide="lock" style="width:16px;height:16px;"></i> Alterar Senha <span style="font-size:.78rem; font-weight:400; color:var(--text-muted);">(deixe em branco para manter a atual)</span></div>
         <div class="form-row">
           <div class="form-group">
@@ -109,5 +109,73 @@
       chk.closest('.esp-item').classList.toggle('checked', chk.checked);
     });
   });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_perfil_v1';
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="settings" ' + ICO + '></i> Meu Perfil',
+        description: 'Aqui você gerencia seus dados pessoais, profissionais, especialidades e senha de acesso.'
+      }
+    },
+    {
+      element: '#tour-perfil-card',
+      popover: {
+        title: '<i data-lucide="user" ' + ICO + '></i> Resumo da conta',
+        description: 'Veja seu nome, especialidades, registro profissional e um resumo do total de pacientes e avaliações ativas.',
+        side: 'bottom', align: 'start'
+      }
+    },
+    {
+      element: '#tour-perfil-esp',
+      popover: {
+        title: '<i data-lucide="stethoscope" ' + ICO + '></i> Especialidades',
+        description: 'Marque todas as áreas em que você atua. Com base nelas, o administrador libera os questionários e instrumentos correspondentes para o seu plano.',
+        side: 'top', align: 'start'
+      }
+    },
+    {
+      element: '#tour-perfil-senha',
+      popover: {
+        title: '<i data-lucide="lock" ' + ICO + '></i> Alterar senha',
+        description: 'Quer trocar sua senha? Preencha estes dois campos. Se preferir manter a atual, é só deixá-los em branco.',
+        side: 'top', align: 'start'
+      }
+    },
+    {
+      popover: {
+        title: '<i data-lucide="check-circle" ' + ICO + '></i> Tudo certo!',
+        description: 'Não esqueça de clicar em <strong>"Salvar Alterações"</strong> ao final do formulário para aplicar suas mudanças.'
+      }
+    }
+  ];
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function(popover) { if (window.lucide && popover && popover.wrapper) lucide.createIcons({ rootElement: popover.wrapper }); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}

@@ -1,17 +1,22 @@
+import uuid
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils import timezone
 
-from ..models import PerfilMedico, Especialidade, HistoricoLogin, ModuloAvaliacao, _parse_dispositivo
+from ..models import PerfilMedico, Especialidade, HistoricoLogin, ModuloAvaliacao, Indicacao, _parse_dispositivo
 
 
 def _get_ip(request):
@@ -82,6 +87,7 @@ def logout_view(request):
 
 def registrar_view(request):
     especialidades = Especialidade.objects.all().order_by("nome")
+    ref_code = (request.POST.get("ref") or request.GET.get("ref") or "").strip()
 
     if request.method == "POST":
         nome = request.POST.get("nome", "").strip()
@@ -120,6 +126,7 @@ def registrar_view(request):
                 "especialidades": especialidades,
                 "especialidades_selecionadas": especialidades_ids,
                 "plano_selecionado": plano,
+                "ref_code": ref_code,
             })
 
         partes = nome.strip().split(" ", 1)
@@ -140,6 +147,19 @@ def registrar_view(request):
         if plano == "trial":
             modulos_trial = ModuloAvaliacao.objects.filter(codigo__in=PerfilMedico.MODULOS_TRIAL)
             perfil.modulos_liberados.set(modulos_trial)
+
+        # Registra indicação, se o cadastro veio por um link de indicação válido (código UUID)
+        if ref_code:
+            try:
+                codigo_uuid = uuid.UUID(ref_code)
+            except (ValueError, AttributeError):
+                codigo_uuid = None
+            if codigo_uuid:
+                indicador_perfil = PerfilMedico.objects.filter(
+                    codigo_indicacao=codigo_uuid, user__is_active=True
+                ).exclude(user=user).select_related("user").first()
+                if indicador_perfil:
+                    Indicacao.objects.create(indicador=indicador_perfil.user, indicado=user)
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
@@ -170,6 +190,7 @@ def registrar_view(request):
         "especialidades": especialidades,
         "especialidades_selecionadas": [],
         "plano_selecionado": plano_inicial,
+        "ref_code": ref_code,
     })
 
 
@@ -198,6 +219,68 @@ def confirmar_email_view(request, uidb64, token):
         "especialidades_selecionadas": [],
         "link_invalido": True,
     })
+
+
+@login_required
+def indicacoes(request):
+    """Painel de indicação: link pessoal do profissional e status das indicações feitas."""
+    perfil, _ = PerfilMedico.objects.get_or_create(user=request.user)
+    link_indicacao = request.build_absolute_uri(f"/registrar/?ref={perfil.codigo_indicacao}")
+    feitas = (
+        Indicacao.objects
+        .filter(indicador=request.user)
+        .select_related("indicado")
+        .order_by("-criado_em")
+    )
+
+    mensagem_padrao = (
+        f"Olá! Estou usando o IntegraMente para aplicar avaliações clínicas com pontuação "
+        f"automática e queria te indicar — você ganha 7 dias grátis para testar: {link_indicacao}"
+    )
+
+    return render(request, "questionario/auth/indicacoes.html", {
+        "link_indicacao": link_indicacao,
+        "mensagem_padrao": mensagem_padrao,
+        "indicacoes_feitas": feitas,
+        "recompensa_dias": Indicacao.RECOMPENSA_DIAS,
+    })
+
+
+@login_required
+def enviar_indicacao_email(request):
+    """Envia o link de indicação do profissional para o e-mail de um colega (via modal/AJAX)."""
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "message": "Método não permitido."}, status=405)
+
+    destino = request.POST.get("email_destino", "").strip()
+    if not destino:
+        return JsonResponse({"ok": False, "message": "Informe um e-mail."})
+
+    try:
+        validate_email(destino)
+    except ValidationError:
+        return JsonResponse({"ok": False, "message": "E-mail inválido."})
+
+    perfil, _ = PerfilMedico.objects.get_or_create(user=request.user)
+    link_indicacao = request.build_absolute_uri(f"/registrar/?ref={perfil.codigo_indicacao}")
+    nome_indicador = request.user.get_full_name() or request.user.username
+    html = render_to_string("questionario/emails/email_indicacao.html", {
+        "nome_indicador": nome_indicador,
+        "link": link_indicacao,
+    })
+    send_mail(
+        subject=f"{nome_indicador} te convidou para experimentar o IntegraMente",
+        message=(
+            f"{nome_indicador} usa o IntegraMente para aplicar avaliações clínicas "
+            f"com pontuação automática e quer te apresentar a plataforma.\n\n"
+            f"Teste grátis por 7 dias: {link_indicacao}"
+        ),
+        from_email=None,
+        recipient_list=[destino],
+        html_message=html,
+        fail_silently=True,
+    )
+    return JsonResponse({"ok": True, "message": f"Convite enviado para {destino}!"})
 
 
 @login_required

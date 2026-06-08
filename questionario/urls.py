@@ -14,7 +14,12 @@ urlpatterns = [
     path("registrar/", views.registrar_view, name="registrar"),
     path("confirmar-email/<uidb64>/<token>/", views.confirmar_email_view, name="confirmar_email"),
     path("meu-perfil/", views.meu_perfil, name="meu_perfil"),
+    path("indicacoes/", views.indicacoes, name="indicacoes"),
+    path("indicacoes/enviar-email/", views.enviar_indicacao_email, name="enviar_indicacao_email"),
     path("privacidade/", views.politica_privacidade, name="politica_privacidade"),
+    # SEO público — páginas por instrumento
+    path("instrumentos/", views.instrumentos_lista, name="instrumentos_lista"),
+    path("instrumentos/<slug:slug>/", views.instrumento_detalhe, name="instrumento_detalhe"),
     # Pagamentos (fluxo manual com PIX) — painel gerenciado pelo admin Django
     path("planos/", views.solicitar_plano, name="solicitar_plano"),
     # App
@@ -23,6 +28,7 @@ urlpatterns = [
     path("pacientes/", views.lista_pacientes, name="lista_pacientes"),
     path("pacientes/novo/", views.novo_paciente, name="novo_paciente"),
     path("pacientes/<uuid:paciente_id>/", views.detalhe_paciente, name="detalhe_paciente"),
+    path("pacientes/<uuid:paciente_id>/evolucao/", views.evolucao_paciente, name="evolucao_paciente"),
     path("pacientes/<uuid:paciente_id>/nova-avaliacao/", views.nova_avaliacao, name="nova_avaliacao"),
     path("avaliacao/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.questionario_view, name="questionario"),
     path("questionario/publico/<str:token>/<int:pagina>/", views.questionario_publico_view, name="questionario_publico"),

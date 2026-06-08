@@ -89,7 +89,7 @@
     </div>
     <div class="bib-subtitle">Laudos, contratos, recursos terapêuticos e materiais clínicos para download</div>
   </div>
-  <form method="get" class="bib-search">
+  <form method="get" class="bib-search" id="tour-bib-busca">
     {% if categoria_ativa %}
       <input type="hidden" name="categoria" value="{{ categoria_ativa }}">
     {% endif %}
@@ -159,7 +159,7 @@ function toggleFiltro() {
 </div>
 
 {% if documentos %}
-<div class="doc-grid">
+<div class="doc-grid" id="tour-bib-grid">
   {% for item in documentos %}
   {% with doc=item.doc %}
   <div class="doc-card {% if not item.acesso %}bloqueado{% endif %}">
@@ -259,4 +259,82 @@ function toggleFiltro() {
 {% endif %}
 
 {% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_biblioteca_v1';
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="library" ' + ICO + '></i> Biblioteca de Documentos',
+        description: 'Aqui você encontra laudos, contratos, recursos terapêuticos e materiais clínicos prontos para baixar e usar no seu dia a dia.'
+      }
+    }
+  ];
+
+  if (document.getElementById('tour-bib-busca')) {
+    etapas.push({
+      element: '#tour-bib-busca',
+      popover: {
+        title: '<i data-lucide="search" ' + ICO + '></i> Busca rápida',
+        description: 'Digite parte do título do documento para encontrá-lo rapidamente.',
+        side: 'bottom', align: 'end'
+      }
+    });
+  }
+
+  if (document.getElementById('btn-filtro')) {
+    etapas.push({
+      element: '#btn-filtro',
+      popover: {
+        title: '<i data-lucide="sliders-horizontal" ' + ICO + '></i> Filtrar por categoria',
+        description: 'Clique aqui para filtrar os documentos por categoria, como laudos, contratos ou materiais terapêuticos.',
+        side: 'bottom', align: 'start'
+      }
+    });
+  }
+
+  if (document.getElementById('tour-bib-grid')) {
+    etapas.push({
+      element: '#tour-bib-grid',
+      popover: {
+        title: '<i data-lucide="download" ' + ICO + '></i> Baixar e visualizar',
+        description: 'Cada card mostra o plano necessário para acessar o documento. Use <strong>"Baixar"</strong> para salvar ou <strong>"Ver"</strong> para pré-visualizar PDFs.',
+        side: 'top', align: 'start'
+      }
+    });
+  }
+
+  etapas.push({
+    popover: {
+      title: '<i data-lucide="check-circle" ' + ICO + '></i> Tudo certo!',
+      description: 'Agora você já sabe como encontrar e baixar os documentos da biblioteca.'
+    }
+  });
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function(popover) { if (window.lucide && popover && popover.wrapper) lucide.createIcons({ rootElement: popover.wrapper }); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
+</script>
 {% endblock %}

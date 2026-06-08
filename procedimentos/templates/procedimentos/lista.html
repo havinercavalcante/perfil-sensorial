@@ -68,7 +68,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="lista-header">
+<div class="lista-header" id="tour-proc-header">
   <div>
     <div class="lista-title">
       <i data-lucide="file-text" style="width:20px;height:20px;color:var(--primary)"></i>
@@ -89,7 +89,7 @@
 </div>
 
 {% if documentos %}
-<div class="doc-grid">
+<div class="doc-grid" id="tour-proc-grid">
   {% for doc in documentos %}
   <div class="doc-card" id="card-{{ doc.uuid }}">
     <button type="button" class="btn-del"
@@ -235,5 +235,69 @@ function confirmarExcluir() {
     }
   });
 }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+  var TOUR_KEY = 'im_tour_procedimentos_v1';
+  var ICO = 'style="width:16px;height:16px;vertical-align:middle;margin-right:.3rem;"';
+
+  var etapas = [
+    {
+      popover: {
+        title: '<i data-lucide="file-text" ' + ICO + '></i> Procedimentos',
+        description: 'Gere e gerencie documentos como anamnese, ficha de triagem, carta de encaminhamento, atestado e relatório para este paciente.'
+      }
+    },
+    {
+      element: '#tour-proc-header',
+      popover: {
+        title: '<i data-lucide="plus" ' + ICO + '></i> Novo documento',
+        description: 'Clique em <strong>"Novo documento"</strong> para gerar um novo modelo. Para anamneses, você escolhe o tipo mais adequado ao caso.',
+        side: 'bottom', align: 'end'
+      }
+    }
+  ];
+
+  if (document.getElementById('tour-proc-grid')) {
+    etapas.push({
+      element: '#tour-proc-grid',
+      popover: {
+        title: '<i data-lucide="folder-open" ' + ICO + '></i> Documentos salvos',
+        description: 'Aqui ficam os documentos já gerados. Use <strong>"Abrir"</strong> para editar e o ícone de lixeira para excluir.',
+        side: 'top', align: 'start'
+      }
+    });
+  }
+
+  etapas.push({
+    popover: {
+      title: '<i data-lucide="check-circle" ' + ICO + '></i> Tudo certo!',
+      description: 'Você já sabe como gerar e organizar os procedimentos deste paciente.'
+    }
+  });
+
+  window.startTour = function(force) {
+    var driverFn = window.driver.js.driver;
+    var driverObj = driverFn({
+      nextBtnText: 'Próximo <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-right" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>',
+      prevBtnText: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-left" aria-hidden="true" style="width:14px;height:14px;" class="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior',
+      doneBtnText: '✓ Concluir',
+      onPopoverRender: function(popover) { if (window.lucide && popover && popover.wrapper) lucide.createIcons({ rootElement: popover.wrapper }); },
+      onDestroyed: function() { localStorage.setItem(TOUR_KEY, 'done'); },
+      steps: etapas
+    });
+    driverObj.drive();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    var tourDone = localStorage.getItem(TOUR_KEY) === 'done';
+    if (forceTour || !tourDone) {
+      setTimeout(function() { window.startTour(true); }, 700);
+    }
+  });
+})();
 </script>
 {% endblock %}
