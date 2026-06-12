@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete seu Perfil – IntegraMente</title>
+<style>
+  :root {
+    --primary: #39abcb; --primary-light: #6accdc; --primary-dark: #0c3c7b;
+    --border: #85cde2; --bg: #d5eef5;
+    --text: #0c3c7b; --text-muted: #39abcb;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+  .box { background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .header { text-align: center; margin-bottom: 1.6rem; }
+  .header .icon { font-size: 2.2rem; display: block; margin-bottom: .5rem; }
+  .header h1 { font-size: 1.25rem; color: var(--primary-dark); font-weight: 800; }
+  .header p { color: var(--text-muted); font-size: .88rem; margin-top: .3rem; line-height: 1.5; }
+.section-label { font-size: .73rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: .4rem; margin: 1.2rem 0 .8rem; }
+  .form-group { margin-bottom: .9rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media(max-width:480px) { .form-row { grid-template-columns: 1fr; } .box { padding: 1.5rem 1.2rem; } }
+  label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .3px; }
+  input[type=text], input[type=tel] { width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .92rem; color: var(--text); transition: border-color .2s; background: #fff; }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(57,171,203,.1); }
+  .esp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .8rem; margin-top: .4rem; }
+  @media(max-width:480px) { .esp-grid { grid-template-columns: 1fr; } }
+  .esp-item { display: flex; align-items: center; gap: .45rem; padding: .42rem .6rem; border-radius: 7px; border: 1.5px solid transparent; cursor: pointer; transition: background .15s, border-color .15s; }
+  .esp-item:hover { background: var(--bg); }
+  .esp-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+  .esp-item.checked { background: #e4f5fb; border-color: var(--primary); }
+  .esp-label { font-size: .87rem; color: var(--text); font-weight: 500; line-height: 1.3; }
+  .esp-hint { font-size: .79rem; color: var(--text-muted); font-style: italic; }
+  .btn-group { display: flex; gap: .8rem; margin-top: 1.4rem; }
+  .btn { flex: 1; padding: .75rem; border: none; border-radius: 8px; font-size: .95rem; font-weight: 700; cursor: pointer; transition: background .2s; text-align: center; text-decoration: none; display: inline-block; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-skip { background: #f3f4f6; color: #6b7280; border: 1.5px solid #e5e7eb; }
+  .btn-skip:hover { background: #e5e7eb; }
+  .welcome-badge { display: flex; align-items: flex-start; gap: .7rem; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 10px; padding: .85rem 1rem; margin-bottom: 1.4rem; }
+  .welcome-badge strong { color: #065F46; font-size: .9rem; display: block; }
+  .welcome-badge span { color: #047857; font-size: .82rem; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="box">
+
+  <!-- Boas-vindas -->
+  <div class="welcome-badge">
+    <i data-lucide="circle-check-big" style="width:22px;height:22px;color:#10B981;flex-shrink:0;margin-top:2px;"></i>
+    <div>
+      <strong>Bem-vindo(a), {{ user.first_name }}!</strong>
+      <span>Conta confirmada. Complete seu perfil profissional para que o administrador libere os questionários corretos para você.</span>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="section-label">Dados Profissionais</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="registro_profissional">Registro Profissional</label>
+        <input type="text" name="registro_profissional" id="registro_profissional"
+               value="{{ perfil.registro_profissional }}"
+               placeholder="CREFITO, CRP, CRFa… 00000/UF">
+      </div>
+      <div class="form-group">
+        <label for="telefone">Telefone <span style="color:#DC2626;">*</span></label>
+        <input type="tel" name="telefone" id="telefone"
+               value="{{ post.telefone|default:perfil.telefone }}"
+               placeholder="(00) 00000-0000" maxlength="15" required
+               style="{% if erro_telefone %}border-color:#EF4444;{% endif %}">
+        {% if erro_telefone %}<small style="color:#DC2626;font-size:.8rem;">Informe o telefone.</small>{% endif %}
+      </div>
+    </div>
+
+    <div class="section-label">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:.25rem;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Especialidade(s) <span style="color:#DC2626;font-weight:800;font-size:.8rem;">*</span>
+    </div>
+    {% if erro_especialidade %}
+    <p style="color:#DC2626;font-size:.82rem;margin-bottom:.4rem;">Selecione ao menos uma especialidade.</p>
+    {% endif %}
+    <p class="esp-hint" style="margin-bottom:.6rem;">Selecione todas as áreas em que você atua.</p>
+    <div class="esp-grid">
+      {% for esp in especialidades %}
+      <label class="esp-item {% if esp.id in especialidades_selecionadas %}checked{% endif %}">
+        <input type="checkbox" name="especialidades" value="{{ esp.id }}"
+               {% if esp.id in especialidades_selecionadas %}checked{% endif %}>
+        <span class="esp-label">{{ esp.nome }}</span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary" style="flex:1;">Salvar e começar <i data-lucide="chevrons-right" style="width:15px;height:15px;"></i></button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+  document.getElementById('telefone').addEventListener('input', function (e) {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 10)     v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+    else                   v = v.replace(/^(\d{0,2})$/, '($1');
+    e.target.value = v;
+  });
+
+  document.querySelectorAll('.esp-item input[type=checkbox]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      chk.closest('.esp-item').classList.toggle('checked', chk.checked);
+    });
+  });
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

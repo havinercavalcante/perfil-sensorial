@@ -20,104 +20,48 @@
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Segoe UI", system-ui, sans-serif; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-  .box { position: relative; background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-  .logo { text-align: center; margin-bottom: 1.8rem; }
+  .box { position: relative; background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .logo { text-align: center; margin-bottom: 1.2rem; }
   .logo h1 { font-size: 1.2rem; color: var(--primary-dark); font-weight: 800; }
-  .logo p { color: var(--primary); font-size: .85rem; }
-  .section-label { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: .4rem; margin: 1.2rem 0 .8rem; }
+  .logo p { color: var(--text-muted); font-size: .85rem; margin-top: .25rem; }
+  .trial-badge { display: flex; align-items: center; justify-content: center; gap: .5rem; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 10px; padding: .6rem 1rem; margin-bottom: 1.4rem; color: #065F46; font-size: .88rem; font-weight: 700; }
   .form-group { margin-bottom: .9rem; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-  @media(max-width:600px) { .form-row { grid-template-columns: 1fr; } .box { padding: 1.5rem 1.2rem; } }
   label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .3px; }
   label .req { color: #DC2626; }
-  input { width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .92rem; color: var(--text); transition: border-color .2s; background: #fff; }
+  input[type=text], input[type=email], input[type=password] { width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .92rem; color: var(--text); transition: border-color .2s; background: #fff; }
   input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(57,171,203,.1); }
-  .btn { width: 100%; padding: .75rem; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: .5rem; transition: background .2s; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media(max-width:480px) { .form-row { grid-template-columns: 1fr; } .box { padding: 1.5rem 1.2rem; } }
+  .btn { width: 100%; padding: .8rem; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: .6rem; transition: background .2s; }
   .btn:hover { background: var(--primary-dark); }
   .btn-back { position: absolute; top: 1rem; left: 1.2rem; display: inline-flex; align-items: center; gap: .35rem; color: var(--text-muted); font-size: .82rem; font-weight: 600; text-decoration: none; padding: .3rem .1rem; border-radius: 6px; transition: color .2s; opacity: .7; }
   .btn-back:hover { color: var(--primary-dark); opacity: 1; }
   .link-row { text-align: center; margin-top: 1rem; font-size: .87rem; color: var(--text-muted); }
   .link-row a { color: var(--primary); font-weight: 600; text-decoration: none; }
   .alert { padding: .7rem 1rem; border-radius: 8px; margin-bottom: .7rem; font-size: .85rem; background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444; }
-  .alert-success { background: #D1FAE5; color: #065F46; border-left-color: #10B981; }
   .alert-warning { background: #FEF3C7; color: #92400E; border-left-color: #F59E0B; }
   .confirm-box { text-align: center; padding: 2rem 1rem; }
   .confirm-box .icon { font-size: 3rem; margin-bottom: 1rem; }
   .confirm-box h2 { color: var(--primary-dark); font-size: 1.3rem; margin-bottom: .6rem; }
   .confirm-box p { color: var(--text-muted); font-size: .92rem; line-height: 1.6; margin-bottom: 1.2rem; }
   .confirm-box strong { color: var(--text); }
-  /* LGPD */
-  .lgpd-box { display: flex; align-items: flex-start; gap: .6rem; background: #f0f9ff; border: 1.5px solid var(--border); border-radius: 8px; padding: .75rem .9rem; margin-top: 1rem; }
+  .lgpd-box { display: flex; align-items: flex-start; gap: .6rem; background: #f0f9ff; border: 1.5px solid var(--border); border-radius: 8px; padding: .75rem .9rem; margin-top: .4rem; }
   .lgpd-box input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--primary); flex-shrink: 0; margin-top: 2px; cursor: pointer; }
   .lgpd-box span { font-size: .82rem; color: var(--text); line-height: 1.5; }
   .lgpd-box a { color: var(--primary); font-weight: 600; text-decoration: none; }
   .lgpd-box a:hover { text-decoration: underline; }
-  /* Especialidades */
-  .esp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .8rem; }
-  @media(max-width:500px) { .esp-grid { grid-template-columns: 1fr; } }
-  .esp-item { display: flex; align-items: center; gap: .45rem; padding: .38rem .55rem; border-radius: 7px; border: 1.5px solid transparent; cursor: pointer; transition: background .15s, border-color .15s; text-transform: none; font-weight: normal; margin-bottom: 0; letter-spacing: 0; }
-  .esp-item:hover { background: var(--bg); }
-  .esp-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
-  .esp-item.checked { background: #e4f5fb; border-color: var(--primary); }
-  .esp-label { font-size: .87rem; color: var(--text); font-weight: 500; line-height: 1.3; }
-  .esp-hint { font-size: .78rem; color: var(--text-muted); font-style: italic; margin-bottom: .5rem; }
-  /* Planos */
-  .plano-grid { display: flex; flex-direction: column; gap: .45rem; margin-bottom: .5rem; }
-  .plano-card {
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: .75rem 1rem;
-    cursor: pointer;
-    transition: border-color .2s, background .2s, box-shadow .2s;
-    display: flex;
-    align-items: center;
-    gap: .85rem;
-    position: relative;
-  }
-  .plano-card:hover { border-color: var(--primary); background: #f0f9ff; }
-  .plano-card.selected { border-color: var(--primary-dark); background: #e4f5fb; box-shadow: 0 0 0 3px rgba(57,171,203,.15); }
-  .plano-card.popular { border-color: var(--primary); }
-  .plano-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
-
-  /* Radio circle */
-  .plano-radio {
-    width: 18px; height: 18px; flex-shrink: 0;
-    border-radius: 50%; border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color .2s;
-  }
-  .plano-radio::after {
-    content: ''; width: 8px; height: 8px;
-    border-radius: 50%; background: transparent;
-    transition: background .2s;
-  }
-  .plano-card.selected .plano-radio { border-color: var(--primary-dark); }
-  .plano-card.selected .plano-radio::after { background: var(--primary-dark); }
-
-  /* Trial overrides */
-  #card-trial { border-color: #10B981; }
-  #card-trial:hover { background: #f0fdf4; }
-  #card-trial.selected { border-color: #10B981; background: #ecfdf5; box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
-  #card-trial.selected .plano-radio { border-color: #10B981; }
-  #card-trial.selected .plano-radio::after { background: #10B981; }
-
-  .plano-info { flex: 1; min-width: 0; }
-  .plano-nome { font-size: .9rem; font-weight: 800; color: var(--primary-dark); display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
-  .plano-modulos { font-size: .71rem; color: var(--text-muted); margin-top: .18rem; line-height: 1.35; }
-
-  .plano-right { text-align: right; flex-shrink: 0; }
-  .plano-preco { font-size: 1rem; font-weight: 700; color: var(--primary); line-height: 1.2; }
-  .plano-preco small { font-size: .67rem; font-weight: 500; }
-  .plano-badge { display: inline-block; font-size: .63rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 20px; padding: .08rem .45rem; margin-bottom: .2rem; white-space: nowrap; }
+  .divider { border: none; border-top: 1px solid #e5e7eb; margin: 1.2rem 0; }
 </style>
 </head>
 <body>
 <div class="box">
-  <a href="{% url 'login' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Login</a>
+  <a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>
+
   <div class="logo">
     <h1><i data-lucide="user-plus" style="width:22px;height:22px;vertical-align:middle;margin-right:.4rem;"></i>Criar Conta</h1>
-    <p>Preencha os dados para acessar o sistema</p>
+    <p>Comece a usar gratuitamente</p>
   </div>
+
   {% if aguardando_confirmacao %}
   <div class="confirm-box">
     <div class="icon">📧</div>
@@ -126,135 +70,108 @@
     <p style="font-size:.82rem;color:var(--text-muted);">Não recebeu? Verifique a caixa de spam.</p>
     <a href="{% url 'login' %}" class="btn" style="display:inline-block;text-decoration:none;max-width:220px;">Ir para o Login</a>
   </div>
+
   {% elif link_invalido %}
   <div class="alert alert-warning" style="text-align:center;">
     Este link de confirmação é inválido ou já foi utilizado.<br>
     <a href="{% url 'registrar' %}" style="color:inherit;font-weight:700;">Criar nova conta</a>
   </div>
+
   {% else %}
+
+  {% if plano_selecionado == 'trial' or not plano_selecionado %}
+  <div class="trial-badge">
+    <i data-lucide="gift" style="width:16px;height:16px;color:#10B981;"></i>
+    7 dias grátis &mdash; sem cartão de crédito
+  </div>
+  {% elif plano_selecionado == 'start' %}
+  <div class="trial-badge" style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">
+    <i data-lucide="rocket" style="width:16px;height:16px;color:#3b82f6;"></i>
+    Plano START &mdash; R$&nbsp;39,90/mês &mdash; 7 dias grátis para começar
+  </div>
+  {% elif plano_selecionado == 'plus' %}
+  <div class="trial-badge" style="background:#f0f9ff;border-color:#38bdf8;color:#0c3c7b;">
+    <i data-lucide="star" style="width:16px;height:16px;color:#0ea5e9;"></i>
+    Plano PLUS &mdash; R$&nbsp;79,90/mês &mdash; 7 dias grátis para começar
+  </div>
+  {% elif plano_selecionado == 'elite' %}
+  <div class="trial-badge" style="background:#f5f3ff;border-color:#a78bfa;color:#4c1d95;">
+    <i data-lucide="gem" style="width:16px;height:16px;color:#7c3aed;"></i>
+    Plano ELITE &mdash; R$&nbsp;149,90/mês &mdash; 7 dias grátis para começar
+  </div>
+  {% endif %}
+
   {% for msg in messages %}<div class="alert">{{ msg }}</div>{% endfor %}
+
   {% if ref_code %}
-  <div class="alert" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0;">
+  <div class="alert" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0;margin-bottom:.9rem;">
     <i data-lucide="gift" style="width:15px;height:15px;vertical-align:-2px;margin-right:.3rem;"></i>
     Você foi convidado(a) por um colega — ao confirmar seu cadastro, vocês dois aproveitam os benefícios da indicação.
   </div>
   {% endif %}
+
   <form method="post">
     {% csrf_token %}
+    <input type="hidden" name="plano" value="{{ plano_selecionado|default:'trial' }}">
     {% if ref_code %}<input type="hidden" name="ref" value="{{ ref_code }}">{% endif %}
 
-    <div class="section-label">Dados Pessoais</div>
     <div class="form-group">
-      <label>Nome completo <span class="req">*</span></label>
-      <input type="text" name="nome" id="nome" value="{{ post.nome|default:'' }}" required placeholder="Dr(a). Nome Sobrenome">
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Registro Profissional</label>
-        <input type="text" name="registro_profissional" value="{{ post.registro_profissional|default:'' }}" placeholder="CREFITO, CRP, CRFa, CRM... 00000/UF">
-      </div>
-      <div class="form-group">
-        <label>Telefone</label>
-        <input type="tel" name="telefone" id="telefone" value="{{ post.telefone|default:'' }}" placeholder="(00) 00000-0000" maxlength="15">
-      </div>
-    </div>
-    <div class="form-group">
-      <label>E-mail <span class="req">*</span></label>
-      <input type="email" name="email" value="{{ post.email|default:'' }}" required placeholder="email@clinica.com">
+      <label for="nome">Nome completo <span class="req">*</span></label>
+      <input type="text" name="nome" id="nome" value="{{ post.nome|default:'' }}" required placeholder="Dr(a). Nome Sobrenome" autocomplete="name">
     </div>
 
-    <div class="section-label"><i data-lucide="stethoscope" style="width:13px;height:13px;vertical-align:middle;"></i> Especialidade(s)</div>
-    <p class="esp-hint">Selecione todas as áreas em que você atua. O administrador liberará os questionários correspondentes.</p>
-    <div class="esp-grid">
-      {% for esp in especialidades %}
-      <label class="esp-item {% if esp.id|stringformat:'s' in especialidades_selecionadas %}checked{% endif %}">
-        <input type="checkbox" name="especialidades" value="{{ esp.id }}"
-               {% if esp.id|stringformat:'s' in especialidades_selecionadas %}checked{% endif %}>
-        <span class="esp-label">{{ esp.nome }}</span>
-      </label>
-      {% endfor %}
+    <div class="form-group">
+      <label for="email">E-mail <span class="req">*</span></label>
+      <input type="email" name="email" id="email" value="{{ post.email|default:'' }}" required placeholder="email@clinica.com" autocomplete="email">
     </div>
 
-    <div class="section-label">Acesso ao Sistema</div>
     <div class="form-group">
-      <label>Nome de usuário <span class="req">*</span></label>
+      <label for="username">Nome de usuário <span class="req">*</span></label>
       <input type="text" name="username" id="username" value="{{ post.username|default:'' }}" required placeholder="Ex: dra.ana" autocomplete="username">
       <small id="username-hint" style="display:none;margin-top:.3rem;color:#6B7280;font-size:.78rem;">Será salvo como: <strong id="username-preview"></strong></small>
     </div>
+
+    <hr class="divider">
+
     <div class="form-row">
       <div class="form-group">
-        <label>Senha <span class="req">*</span></label>
-        <input type="password" name="password" required placeholder="Mínimo 8 caracteres">
+        <label for="password">Senha <span class="req">*</span></label>
+        <div style="position:relative;">
+          <input type="password" name="password" id="password" required placeholder="Mínimo 8 caracteres" autocomplete="new-password" style="padding-right:2.8rem;">
+          <button type="button" onclick="toggleSenha('password','eye1','eye-off1')" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#39abcb;padding:0;display:flex;align-items:center;">
+            <svg id="eye1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-off1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
       </div>
       <div class="form-group">
-        <label>Confirmar senha <span class="req">*</span></label>
-        <input type="password" name="password2" required placeholder="Repita a senha">
+        <label for="password2">Confirmar senha <span class="req">*</span></label>
+        <div style="position:relative;">
+          <input type="password" name="password2" id="password2" required placeholder="Repita a senha" autocomplete="new-password" style="padding-right:2.8rem;">
+          <button type="button" onclick="toggleSenha('password2','eye2','eye-off2')" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#39abcb;padding:0;display:flex;align-items:center;">
+            <svg id="eye2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-off2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
     <label class="lgpd-box">
       <input type="checkbox" name="consentimento" value="1" required>
-      <span>Li e concordo com a <a href="{% url 'politica_privacidade' %}" target="_blank">Política de Privacidade</a> e autorizo o tratamento dos meus dados pessoais conforme a LGPD (Lei nº 13.709/2018).</span>
+      <span>Li e concordo com a <a href="{% url 'politica_privacidade' %}" target="_blank">Política de Privacidade</a> e autorizo o tratamento dos meus dados pessoais conforme a LGPD.</span>
     </label>
 
-    <div class="section-label"><i data-lucide="layers" style="width:13px;height:13px;vertical-align:middle;"></i> Plano de Assinatura</div>
-    <p class="esp-hint">Comece grátis por 7 dias ou escolha já o seu plano.</p>
-    <div class="plano-grid">
-
-      <label class="plano-card {% if plano_selecionado == 'trial' or not plano_selecionado %}selected{% endif %}" id="card-trial" onclick="selecionarPlano('trial')">
-        <input type="radio" name="plano" value="trial" {% if plano_selecionado == 'trial' or not plano_selecionado %}checked{% endif %}>
-        <div class="plano-radio"></div>
-        <div class="plano-info">
-          <div class="plano-nome" style="color:#065F46;"><i data-lucide="gift" style="width:14px;height:14px;"></i>GRÁTIS — 7 dias</div>
-          <div class="plano-modulos">Perfil Sensorial · Bebê · Escolar · SPM</div>
-        </div>
-        <div class="plano-right">
-          <div class="plano-badge" style="background:#10B981;">Recomendado</div>
-          <div class="plano-preco" style="color:#10B981;">R$&nbsp;0<small>/7 dias</small></div>
-        </div>
-      </label>
-
-      <label class="plano-card {% if plano_selecionado == 'start' %}selected{% endif %}" id="card-start" onclick="selecionarPlano('start')">
-        <input type="radio" name="plano" value="start" {% if plano_selecionado == 'start' %}checked{% endif %}>
-        <div class="plano-radio"></div>
-        <div class="plano-info">
-          <div class="plano-nome"><i data-lucide="rocket" style="width:14px;height:14px;"></i>START</div>
-          <div class="plano-modulos">Perfil Sensorial · Bebê · Escolar · SPM</div>
-        </div>
-        <div class="plano-right">
-          <div class="plano-preco">R$&nbsp;39<small>,90/mês</small></div>
-        </div>
-      </label>
-
-      <label class="plano-card popular {% if plano_selecionado == 'plus' %}selected{% endif %}" id="card-plus" onclick="selecionarPlano('plus')">
-        <input type="radio" name="plano" value="plus" {% if plano_selecionado == 'plus' %}checked{% endif %}>
-        <div class="plano-radio"></div>
-        <div class="plano-info">
-          <div class="plano-nome"><i data-lucide="star" style="width:14px;height:14px;"></i>PLUS</div>
-          <div class="plano-modulos">START + Vineland · PEDI · Portage</div>
-        </div>
-        <div class="plano-right">
-          <div class="plano-badge"><i data-lucide="star" style="width:8px;height:8px;vertical-align:middle;margin-right:2px;"></i>Mais Popular</div>
-          <div class="plano-preco">R$&nbsp;79<small>,90/mês</small></div>
-        </div>
-      </label>
-
-      <label class="plano-card {% if plano_selecionado == 'elite' %}selected{% endif %}" id="card-elite" onclick="selecionarPlano('elite')">
-        <input type="radio" name="plano" value="elite" {% if plano_selecionado == 'elite' %}checked{% endif %}>
-        <div class="plano-radio"></div>
-        <div class="plano-info">
-          <div class="plano-nome"><i data-lucide="gem" style="width:14px;height:14px;"></i>ELITE</div>
-          <div class="plano-modulos">Todos os módulos + ilimitado</div>
-        </div>
-        <div class="plano-right">
-          <div class="plano-preco">R$&nbsp;149<small>,90/mês</small></div>
-        </div>
-      </label>
-
-    </div>
-
-    <button type="submit" class="btn">Criar Conta <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+    {% if plano_selecionado == 'start' %}
+    <button type="submit" class="btn">Começar com START <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+    {% elif plano_selecionado == 'plus' %}
+    <button type="submit" class="btn">Começar com PLUS <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+    {% elif plano_selecionado == 'elite' %}
+    <button type="submit" class="btn">Começar com ELITE <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+    {% else %}
+    <button type="submit" class="btn">Criar conta grátis <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+    {% endif %}
   </form>
+
   <div class="link-row">Já tem conta? <a href="{% url 'login' %}">Entrar</a></div>
   {% endif %}
 </div>
@@ -263,64 +180,75 @@
 <script>
   lucide.createIcons();
 
-  function selecionarPlano(plano) {
-    document.querySelectorAll('.plano-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById('card-' + plano).classList.add('selected');
-    document.querySelector('input[name=plano][value="' + plano + '"]').checked = true;
+  function toggleSenha(inputId, eyeOnId, eyeOffId) {
+    var input  = document.getElementById(inputId);
+    var eyeOn  = document.getElementById(eyeOnId);
+    var eyeOff = document.getElementById(eyeOffId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      eyeOn.style.display  = 'none';
+      eyeOff.style.display = 'block';
+    } else {
+      input.type = 'password';
+      eyeOn.style.display  = 'block';
+      eyeOff.style.display = 'none';
+    }
   }
 
-  document.getElementById('telefone').addEventListener('input', function (e) {
-    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
-    if (v.length > 10)      v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-    else if (v.length > 6)  v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
-    else if (v.length > 2)  v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
-    else                    v = v.replace(/^(\d{0,2})$/, '($1');
-    e.target.value = v;
-  });
-  document.querySelectorAll('.esp-item input[type=checkbox]').forEach(chk => {
-    chk.addEventListener('change', () => {
-      chk.closest('.esp-item').classList.toggle('checked', chk.checked);
-    });
-  });
-
-  function sanitizarUsername(v) {
+  // Remove acentos e caracteres inválidos para username — usado só na auto-sugestão
+  function sanitizarBase(v) {
     return v
       .normalize('NFD').replace(/[̀-ͯ]/g, '')
       .toLowerCase()
-      .replace(/\s+/g, '.')
       .replace(/[^a-z0-9._-]/g, '')
       .replace(/\.{2,}/g, '.');
   }
 
-  const usernameInput = document.getElementById('username');
-  const usernameHint  = document.getElementById('username-hint');
+  // Sugestão: primeiro nome + último sobrenome (ignora nomes do meio)
+  function sugerirUsername(nomeCompleto) {
+    const semPrefixo = nomeCompleto.replace(/^dr[ao]?\.\s*/i, '').trim();
+    const partes = semPrefixo.split(/\s+/).filter(p => p.length > 0);
+    if (partes.length === 0) return '';
+    const base = partes.length >= 2
+      ? partes[0] + '.' + partes[partes.length - 1]
+      : partes[0];
+    return sanitizarBase(base);
+  }
+
+  // Digitação manual: permite os mesmos chars que Django aceita (letras, números, . @ + - _)
+  function limparManual(v) {
+    return v
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9.@+_-]/g, '');
+  }
+
+  const nomeInput       = document.getElementById('nome');
+  const usernameInput   = document.getElementById('username');
+  const usernameHint    = document.getElementById('username-hint');
   const usernamePreview = document.getElementById('username-preview');
-  let usernameTouched = usernameInput.value.length > 0;
 
-  usernameInput.addEventListener('input', function() {
-    usernameTouched = true;
-    const clean = sanitizarUsername(this.value);
-    if (clean !== this.value) {
-      this.value = clean;
-    }
-    if (clean) {
-      usernameHint.style.display = 'block';
+  if (nomeInput && usernameInput) {
+    let usernameTouched = usernameInput.value.length > 0;
+
+    usernameInput.addEventListener('input', function () {
+      usernameTouched = true;
+      const clean = limparManual(this.value);
+      if (clean !== this.value) this.value = clean;
+      usernameHint.style.display = clean ? 'block' : 'none';
       usernamePreview.textContent = clean;
-    } else {
-      usernameHint.style.display = 'none';
-    }
-  });
+    });
 
-  document.getElementById('nome').addEventListener('blur', function() {
-    if (usernameTouched) return;
-    const sugerido = sanitizarUsername(this.value.replace(/^dr[ao]?\.\s*/i, ''));
-    if (sugerido) {
-      usernameInput.value = sugerido;
-      usernameHint.style.display = 'block';
-      usernamePreview.textContent = sugerido;
-    }
-  });
+    nomeInput.addEventListener('blur', function () {
+      if (usernameTouched) return;
+      const sugerido = sugerirUsername(this.value);
+      if (sugerido) {
+        usernameInput.value = sugerido;
+        usernameHint.style.display = 'block';
+        usernamePreview.textContent = sugerido;
+      }
+    });
+  }
 </script>
 </body>
-</html>
 </html>

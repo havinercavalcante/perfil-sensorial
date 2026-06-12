@@ -85,8 +85,22 @@ def logout_view(request):
     return redirect("login")
 
 
+def _gerar_username(email):
+    """Gera username único baseado na parte local do e-mail."""
+    import re
+    base = re.sub(r"[^a-z0-9._-]", "", email.split("@")[0].lower())[:30] or "usuario"
+    username = base
+    contador = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base}{contador}"
+        contador += 1
+    return username
+
+
+_PLANOS_VALIDOS = ("trial", "start", "plus", "elite")
+
+
 def registrar_view(request):
-    especialidades = Especialidade.objects.all().order_by("nome")
     ref_code = (request.POST.get("ref") or request.GET.get("ref") or "").strip()
 
     if request.method == "POST":
@@ -95,23 +109,19 @@ def registrar_view(request):
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
-        registro_profissional = request.POST.get("registro_profissional", "").strip()
-        telefone = request.POST.get("telefone", "").strip()
-        plano = request.POST.get("plano", "trial").strip()
-        if plano not in ("trial", "start", "plus", "elite"):
-            plano = "trial"
-        especialidades_ids = request.POST.getlist("especialidades")
-
         consentimento = request.POST.get("consentimento", "")
+        plano = request.POST.get("plano", "trial").strip()
+        if plano not in _PLANOS_VALIDOS:
+            plano = "trial"
 
         erros = []
-        if not nome or not username or not password or not email:
+        if not nome or not email or not username or not password:
             erros.append("Preencha todos os campos obrigatórios.")
         if password != password2:
             erros.append("As senhas não coincidem.")
         if len(password) < 8:
             erros.append("A senha deve ter pelo menos 8 caracteres.")
-        if User.objects.filter(username=username).exists():
+        if username and User.objects.filter(username=username).exists():
             erros.append("Este nome de usuário já está em uso.")
         if email and User.objects.filter(email=email).exists():
             erros.append("Este e-mail já está cadastrado.")
@@ -123,8 +133,6 @@ def registrar_view(request):
                 messages.error(request, e)
             return render(request, "questionario/auth/registrar.html", {
                 "post": request.POST,
-                "especialidades": especialidades,
-                "especialidades_selecionadas": especialidades_ids,
                 "plano_selecionado": plano,
                 "ref_code": ref_code,
             })
@@ -137,16 +145,11 @@ def registrar_view(request):
         )
         perfil = PerfilMedico.objects.create(
             user=user,
-            registro_profissional=registro_profissional,
-            telefone=telefone,
             plano=plano,
             trial_inicio=timezone.now() if plano == "trial" else None,
         )
-        if especialidades_ids:
-            perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
-        if plano == "trial":
-            modulos_trial = ModuloAvaliacao.objects.filter(codigo__in=PerfilMedico.MODULOS_TRIAL)
-            perfil.modulos_liberados.set(modulos_trial)
+        modulos_trial = ModuloAvaliacao.objects.filter(codigo__in=PerfilMedico.MODULOS_TRIAL)
+        perfil.modulos_liberados.set(modulos_trial)
 
         # Registra indicação, se o cadastro veio por um link de indicação válido (código UUID)
         if ref_code:
@@ -177,18 +180,14 @@ def registrar_view(request):
             fail_silently=True,
         )
         return render(request, "questionario/auth/registrar.html", {
-            "especialidades": especialidades,
-            "especialidades_selecionadas": [],
             "aguardando_confirmacao": True,
             "email_destino": email,
         })
 
-    plano_inicial = request.GET.get("plano", "")
-    if plano_inicial not in ("trial", "start", "plus", "elite"):
-        plano_inicial = ""
+    plano_inicial = request.GET.get("plano", "trial").strip()
+    if plano_inicial not in _PLANOS_VALIDOS:
+        plano_inicial = "trial"
     return render(request, "questionario/auth/registrar.html", {
-        "especialidades": especialidades,
-        "especialidades_selecionadas": [],
         "plano_selecionado": plano_inicial,
         "ref_code": ref_code,
     })
@@ -211,12 +210,9 @@ def confirmar_email_view(request, uidb64, token):
         request.session.save()
         perfil.session_key = request.session.session_key or ""
         perfil.save(update_fields=["session_key"])
-        messages.success(request, f"Bem-vindo(a), {user.first_name}! Sua conta foi confirmada com sucesso.")
-        return redirect("index")
+        return redirect("completar_cadastro")
 
     return render(request, "questionario/auth/registrar.html", {
-        "especialidades": Especialidade.objects.all().order_by("nome"),
-        "especialidades_selecionadas": [],
         "link_invalido": True,
     })
 
@@ -321,6 +317,46 @@ def meu_perfil(request):
 
     especialidades_selecionadas = list(perfil.especialidades.values_list("id", flat=True))
     return render(request, "questionario/auth/meu_perfil.html", {
+        "perfil": perfil,
+        "especialidades": especialidades,
+        "especialidades_selecionadas": especialidades_selecionadas,
+    })
+
+
+@login_required
+def completar_cadastro(request):
+    perfil, _ = PerfilMedico.objects.get_or_create(user=request.user)
+    especialidades = Especialidade.objects.all().order_by("nome")
+
+    if request.method == "POST":
+        telefone = request.POST.get("telefone", "").strip()
+        registro_profissional = request.POST.get("registro_profissional", "").strip()
+        especialidades_ids = request.POST.getlist("especialidades")
+
+        erros = {}
+        if not telefone:
+            erros["telefone"] = True
+        if not especialidades_ids:
+            erros["especialidade"] = True
+
+        if erros:
+            return render(request, "questionario/auth/completar_cadastro.html", {
+                "perfil": perfil,
+                "especialidades": especialidades,
+                "especialidades_selecionadas": especialidades_ids,
+                "erro_telefone": erros.get("telefone"),
+                "erro_especialidade": erros.get("especialidade"),
+                "post": request.POST,
+            })
+
+        perfil.registro_profissional = registro_profissional
+        perfil.telefone = telefone
+        perfil.save(update_fields=["registro_profissional", "telefone"])
+        perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
+        return redirect("index")
+
+    especialidades_selecionadas = list(perfil.especialidades.values_list("id", flat=True))
+    return render(request, "questionario/auth/completar_cadastro.html", {
         "perfil": perfil,
         "especialidades": especialidades,
         "especialidades_selecionadas": especialidades_selecionadas,

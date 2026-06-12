@@ -251,6 +251,13 @@ class PerfilMedico(models.Model):
         related_name="profissionais",
     )
     telefone = models.CharField("Telefone", max_length=20, blank=True)
+    TIPO_CONTA_CHOICES = [
+        ("profissional", "Profissional autônomo"),
+        ("clinica", "Clínica / Equipe"),
+    ]
+    tipo_conta = models.CharField(
+        "Tipo de conta", max_length=15, choices=TIPO_CONTA_CHOICES, default="profissional"
+    )
     plano = models.CharField(
         "Plano", max_length=10, choices=PLANO_CHOICES, default="trial"
     )

@@ -52,6 +52,25 @@ def _build_pedi_lista(queryset, request):
     return result
 
 
+def contato_view(request):
+    from django.core.mail import send_mail
+    if request.method == "POST":
+        nome = request.POST.get("nome", "").strip()
+        email = request.POST.get("email", "").strip()
+        mensagem = request.POST.get("mensagem", "").strip()
+        if not nome or not email or not mensagem:
+            return render(request, "questionario/landing.html", {"contato_erro": "Preencha todos os campos."})
+        send_mail(
+            subject=f"[IntegraMente] Contato de {nome}",
+            message=f"Nome: {nome}\nE-mail: {email}\n\n{mensagem}",
+            from_email=None,
+            recipient_list=["integramente.pro@gmail.com"],
+            fail_silently=True,
+        )
+        return render(request, "questionario/landing.html", {"contato_enviado": True})
+    return redirect("index")
+
+
 def index(request):
     if not request.user.is_authenticated:
         return render(request, "questionario/landing.html")

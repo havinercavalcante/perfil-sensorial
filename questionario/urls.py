@@ -14,9 +14,11 @@ urlpatterns = [
     path("registrar/", views.registrar_view, name="registrar"),
     path("confirmar-email/<uidb64>/<token>/", views.confirmar_email_view, name="confirmar_email"),
     path("meu-perfil/", views.meu_perfil, name="meu_perfil"),
+    path("completar-cadastro/", views.completar_cadastro, name="completar_cadastro"),
     path("indicacoes/", views.indicacoes, name="indicacoes"),
     path("indicacoes/enviar-email/", views.enviar_indicacao_email, name="enviar_indicacao_email"),
     path("privacidade/", views.politica_privacidade, name="politica_privacidade"),
+    path("contato/", views.contato_view, name="contato"),
     # SEO público — páginas por instrumento
     path("instrumentos/", views.instrumentos_lista, name="instrumentos_lista"),
     path("instrumentos/<slug:slug>/", views.instrumento_detalhe, name="instrumento_detalhe"),
