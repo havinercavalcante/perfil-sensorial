@@ -210,7 +210,7 @@ def confirmar_email_view(request, uidb64, token):
         request.session.save()
         perfil.session_key = request.session.session_key or ""
         perfil.save(update_fields=["session_key"])
-        return redirect("completar_cadastro")
+        return redirect("/completar-cadastro/?novo=1")
 
     return render(request, "questionario/auth/registrar.html", {
         "link_invalido": True,
