@@ -199,23 +199,47 @@ def portage_resultado(request, avaliacao_id):
     idade_paciente = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
     dominios_resultado = []
     for dom in PORTAGE_DOMINIOS:
-        campo = PORTAGE_PONT_MAP[dom['key']]
         faixas_dom = _faixas_por_idade(dom['faixas'], idade_paciente)
-        itens_faixa = [n for f in faixas_dom for n in f['itens']]
+        faixa_atual = faixas_dom[0]
+        itens_faixa = faixa_atual['itens']
         total_itens = len(itens_faixa)
         sim = avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=itens_faixa, valor=2).count()
         pct = int(sim / total_itens * 100) if total_itens else 0
         atingiu = adequado_para_faixa(dom['key'], faixas_dom)
+
+        idx_faixa = next(i for i, f in enumerate(dom['faixas']) if f['faixa'] == faixa_atual['faixa'])
+        if pct >= 80:
+            nivel_label = f"Adequado — {faixa_atual['label']}"
+            nivel_classe = "nivel-ok"
+        elif pct >= 50:
+            nivel_label = f"Em desenvolvimento — {faixa_atual['label']}"
+            nivel_classe = "nivel-medio"
+        else:
+            if idx_faixa > 0:
+                nivel_label = f"Estimado: {dom['faixas'][idx_faixa - 1]['label']}"
+            else:
+                nivel_label = "Habilidades emergentes (0–1 ano)"
+            nivel_classe = "nivel-baixo"
+
+        perguntas = PORTAGE_PERGUNTAS_MAP[dom['key']]
+        mediacao_nums = sorted(avaliacao.respostas.filter(
+            dominio=dom['key'], numero_item__in=itens_faixa, valor=1
+        ).values_list('numero_item', flat=True))
+        metas = [{'numero': n, 'texto': perguntas.get(n, '')} for n in mediacao_nums]
+
         dominios_resultado.append({
-            'key':      dom['key'],
-            'nome':     dom['nome'],
-            'sigla':    dom['sigla'],
-            'cor':      dom['cor'],
-            'sim':      sim,
-            'total':    total_itens,
-            'pct':      pct,
-            'faixa_label': faixas_dom[0]['label'],
-            'atingiu':  atingiu,
+            'key':         dom['key'],
+            'nome':        dom['nome'],
+            'sigla':       dom['sigla'],
+            'cor':         dom['cor'],
+            'sim':         sim,
+            'total':       total_itens,
+            'pct':         pct,
+            'faixa_label': faixa_atual['label'],
+            'atingiu':     atingiu,
+            'nivel_label': nivel_label,
+            'nivel_classe': nivel_classe,
+            'metas':       metas,
         })
 
     total_sim = sum(d['sim'] for d in dominios_resultado)
@@ -225,6 +249,8 @@ def portage_resultado(request, avaliacao_id):
     if request.method == "POST" and "observacoes" in request.POST:
         avaliacao.observacoes = request.POST.get("observacoes", "").strip()
         avaliacao.save(update_fields=["observacoes"])
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True})
         messages.success(request, "Observações salvas.")
         return redirect("portage_resultado", avaliacao_id=avaliacao_id)
 
@@ -233,7 +259,7 @@ def portage_resultado(request, avaliacao_id):
     outras = [av for av in todas_av if av.id != avaliacao.id]
     comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
     dominios_comp = [
-        {"nome": d["nome"], "campo": f"pont_{d['key']}", "max": 100}
+        {"nome": d["nome"], "campo": PORTAGE_PONT_MAP[d['key']], "max": 100}
         for d in dominios_resultado
     ]
     cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B"]
@@ -241,6 +267,8 @@ def portage_resultado(request, avaliacao_id):
     for i, dom in enumerate(dominios_comp):
         valores = [(getattr(av, dom["campo"]) or 0) for av in todas_av]
         comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+
+    tem_metas = any(d['metas'] for d in dominios_resultado)
 
     return render(request, "questionario/avaliacoes/portage_resultado.html", {
         "avaliacao": avaliacao,
@@ -253,6 +281,7 @@ def portage_resultado(request, avaliacao_id):
         "comparativo_datasets": json.dumps(comparativo_datasets),
         "tem_comparativo": len(todas_av) > 1,
         "outras_avaliacoes": outras,
+        "tem_metas": tem_metas,
     })
 
 

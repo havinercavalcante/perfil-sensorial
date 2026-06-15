@@ -16,28 +16,52 @@
     display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;
     padding:1.2rem 1.5rem; border-radius:12px;
     border:2px solid var(--pt); background:color-mix(in srgb, var(--pt) 5%, #fff);
-    margin-bottom:1.5rem;
+    margin-bottom:1rem;
   }
   .tot-label { font-size:.85rem; font-weight:700; color:var(--pt-dark); }
   .tot-valor { font-size:2.2rem; font-weight:900; color:var(--pt); line-height:1; }
   .tot-max   { font-size:.8rem; color:var(--text-muted); }
 
-  .dom-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .dom-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; }
   .dom-card {
     border-radius:12px; padding:1.2rem 1rem; color:#fff; text-align:center;
-    background:var(--dc, var(--pt));
+    background:var(--dc, var(--pt)); position:relative; overflow:hidden;
   }
-  .dom-sigla   { font-size:.72rem; font-weight:800; letter-spacing:.06em; opacity:.8; margin-bottom:.2rem; }
-  .dom-nome    { font-size:.82rem; font-weight:700; margin-bottom:.3rem; }
-  .dom-valor   { font-size:2rem; font-weight:800; line-height:1; }
-  .dom-max     { font-size:.72rem; opacity:.7; margin-bottom:.4rem; }
-  .dom-idade   { font-size:.78rem; opacity:.9; font-weight:600; margin-top:.3rem; }
-  .dom-bar .progress-bar-wrap { background:rgba(255,255,255,.25); }
+  .dom-sigla  { font-size:.72rem; font-weight:800; letter-spacing:.06em; opacity:.8; margin-bottom:.2rem; }
+  .dom-nome   { font-size:.82rem; font-weight:700; margin-bottom:.5rem; }
+  .dom-pct    { font-size:2.2rem; font-weight:900; line-height:1; }
+  .dom-sub    { font-size:.72rem; opacity:.75; margin:.2rem 0 .5rem; }
+  .dom-bar .progress-bar-wrap { background:rgba(255,255,255,.25); border-radius:4px; }
   .dom-bar .progress-bar-fill { background:rgba(255,255,255,.85) !important; }
+  .dom-badge {
+    display:inline-block; margin-top:.5rem; padding:.2rem .6rem;
+    border-radius:20px; font-size:.7rem; font-weight:700; letter-spacing:.03em;
+  }
+  .dom-badge.ok  { background:rgba(255,255,255,.3); }
+  .dom-badge.nok { background:rgba(0,0,0,.2); }
+  .dom-nivel {
+    font-size:.72rem; opacity:.85; margin-top:.35rem; font-style:italic;
+  }
 
-  .obs-card { margin-top:1.5rem; }
-  .obs-card textarea { width:100%; min-height:100px; border-radius:8px; border:1.5px solid var(--border); padding:.75rem; font-size:.9rem; resize:vertical; }
-  .obs-card textarea:focus { outline:none; border-color:var(--pt); }
+  .metas-section .meta-dom-titulo {
+    font-size:.82rem; font-weight:700; margin-bottom:.5rem;
+    display:flex; align-items:center; gap:.4rem;
+  }
+  .meta-dom-cor { width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .meta-item {
+    display:flex; gap:.6rem; align-items:flex-start;
+    padding:.45rem .6rem; border-radius:6px;
+    background:var(--bg-subtle, #F8F9FA); margin-bottom:.35rem;
+    font-size:.82rem; line-height:1.4;
+  }
+  .meta-num {
+    font-size:.7rem; font-weight:700; color:var(--text-muted);
+    white-space:nowrap; padding-top:.1rem;
+  }
+  .sem-metas { font-size:.82rem; color:var(--text-muted); font-style:italic; }
+
+  .chart-wrap { position:relative; height:280px; }
+  .radar-wrap { position:relative; height:300px; }
 
   @media (max-width:600px) {
     .dom-grid { grid-template-columns:1fr; }
@@ -72,72 +96,135 @@
       <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
         <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
       </button>
-      <a href="{% url 'portage_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo</a>
-      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar</a>
+      <a href="{% url 'portage_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo
+      </a>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+        Voltar
+      </a>
     </div>
   </div>
 </div>
 
-<!-- Pontuação geral -->
-<div class="tot-card">
-  <div>
-    <div class="tot-label">Total de itens com SIM</div>
-    <div class="tot-valor">{{ total_sim }}</div>
-    <div class="tot-max">de {{ total_itens }} itens avaliados</div>
+<!-- Resultado geral -->
+<div class="card">
+  <div class="card-title">
+    <i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Resultado Geral
   </div>
-  <div style="flex:1; min-width:180px;">
-    <div class="progress-bar-wrap" style="height:10px;">
-      <div class="progress-bar-fill" style="width:{{ pct_geral }}%; background:var(--pt); height:10px;"></div>
+  <div class="tot-card">
+    <div>
+      <div class="tot-label">Total de itens com SIM</div>
+      <div class="tot-valor">{{ total_sim }}</div>
+      <div class="tot-max">de {{ total_itens }} itens avaliados</div>
     </div>
-    <div style="font-size:.78rem; color:var(--text-muted); margin-top:.3rem;">{{ pct_geral }}% executados de forma independente</div>
-  </div>
-</div>
-
-<!-- Cards por domínio -->
-<div class="dom-grid">
-  {% for dom in dominios %}
-  <div class="dom-card" style="--dc: {{ dom.cor }};">
-    <div class="dom-sigla">{{ dom.sigla }}</div>
-    <div class="dom-nome">{{ dom.nome }}</div>
-    <div class="dom-valor">{{ dom.sim }}</div>
-    <div class="dom-max">de {{ dom.total }} itens · faixa {{ dom.faixa_label }}</div>
-    <div class="dom-bar">
-      <div class="progress-bar-wrap" style="height:6px; margin:.4rem auto; max-width:80%;">
-        <div class="progress-bar-fill" style="width:{{ dom.pct }}%; height:6px;"></div>
+    <div style="flex:1; min-width:180px;">
+      <div class="progress-bar-wrap" style="height:10px; margin-bottom:.4rem;">
+        <div class="progress-bar-fill" style="width:{{ pct_geral }}%; background:var(--pt); height:10px;"></div>
       </div>
+      <div style="font-size:.78rem; color:var(--text-muted);">{{ pct_geral }}% executados de forma independente</div>
     </div>
-    {% if dom.atingiu %}
-    <div class="dom-idade">✓ Adequado para a faixa</div>
-    {% else %}
-    <div class="dom-idade">✗ Abaixo da faixa</div>
-    {% endif %}
   </div>
+
+  <!-- Radar chart -->
+  <div class="radar-wrap">
+    <canvas id="radarChart"></canvas>
+  </div>
+</div>
+
+<!-- Domínios -->
+<div class="card">
+  <div class="card-title">
+    <i data-lucide="layout-grid" style="width:18px;height:18px;"></i> Resultado por Domínio
+  </div>
+  <div class="dom-grid">
+    {% for dom in dominios %}
+    <div class="dom-card" style="--dc: {{ dom.cor }};">
+      <div class="dom-sigla">{{ dom.sigla }}</div>
+      <div class="dom-nome">{{ dom.nome }}</div>
+      <div class="dom-pct">{{ dom.pct }}%</div>
+      <div class="dom-sub">{{ dom.sim }} de {{ dom.total }} itens &nbsp;·&nbsp; faixa {{ dom.faixa_label }}</div>
+      <div class="dom-bar">
+        <div class="progress-bar-wrap" style="height:6px; max-width:80%; margin:0 auto;">
+          <div class="progress-bar-fill" style="width:{{ dom.pct }}%; height:6px;"></div>
+        </div>
+      </div>
+      {% if dom.atingiu %}
+      <span class="dom-badge ok">✓ Adequado para a faixa</span>
+      {% else %}
+      <span class="dom-badge nok">✗ Abaixo da faixa</span>
+      {% endif %}
+      <div class="dom-nivel">{{ dom.nivel_label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Alvos de intervenção -->
+<div class="card metas-section">
+  <div class="card-title" style="color:#C0392B;">
+    <i data-lucide="target" style="width:18px;height:18px;"></i>
+    Alvos de Intervenção — Habilidades Emergentes (SIM com Mediação)
+  </div>
+  <p style="font-size:.82rem; color:var(--text-muted); margin:0 0 1rem;">
+    Itens respondidos como <strong>"Sim com mediação"</strong> indicam habilidades em processo de consolidação — são os alvos prioritários para a intervenção terapêutica.
+  </p>
+  {% if not tem_metas %}
+  <p class="sem-metas">Nenhum item respondido como "Sim com mediação" nesta avaliação.</p>
+  {% else %}
+  {% for dom in dominios %}
+  {% if dom.metas %}
+  <div style="margin-bottom:1rem;">
+    <div class="meta-dom-titulo">
+      <span class="meta-dom-cor" style="background:{{ dom.cor }};"></span>
+      {{ dom.nome }} ({{ dom.sigla }}) — faixa {{ dom.faixa_label }}
+    </div>
+    {% for meta in dom.metas %}
+    <div class="meta-item">
+      <span class="meta-num">{{ meta.numero }}.</span>
+      <span>{{ meta.texto }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
   {% endfor %}
+  {% endif %}
+</div>
+
+<!-- Gráfico de barras -->
+<div class="card">
+  <div class="card-title">
+    <i data-lucide="trending-up" style="width:18px;height:18px;"></i> Visualização por Domínio
+  </div>
+  <div class="chart-wrap">
+    <canvas id="barChart"></canvas>
+  </div>
 </div>
 
 <!-- Legenda -->
 <div class="card">
   <div class="card-title" style="color:var(--pt);">
-    <i data-lucide="info" style="width:16px;height:16px;"></i> Critério de adequação à faixa etária
+    <i data-lucide="book-open" style="width:16px;height:16px;"></i> Critério de adequação à faixa etária
   </div>
   <p style="font-size:.85rem; color:var(--text-muted); line-height:1.7; margin:0;">
     Os itens apresentados correspondem à faixa etária da criança no momento da avaliação.
     O critério de <strong>adequado para a faixa</strong> exige ao menos <strong>80% de itens com SIM</strong>
-    (executados de forma independente). Itens com <em>Sim com mediação</em> ou <em>Ainda não</em> não são contabilizados.
+    (executados de forma independente).<br>
+    <strong>Escala de resposta:</strong> 0 = Ainda não &nbsp;|&nbsp; 1 = Sim com mediação &nbsp;|&nbsp; 2 = Sim (independente)
   </p>
 </div>
 
-<!-- Visualizar respostas -->
+<!-- Respostas -->
 <div class="card no-print">
   <div class="card-title"><i data-lucide="eye" style="width:18px;height:18px;"></i> Respostas</div>
   <a href="{% url 'portage_visualizar' avaliacao.uuid 1 %}" class="btn btn-secondary btn-sm">
-    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas
+    <i data-lucide="eye" style="width:14px;height:14px;"></i> Ver respostas detalhadas
   </a>
 </div>
 
 {% if tem_comparativo %}
 <div class="card no-print-hide">
-  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal — Itens com SIM por Domínio</div>
   <div style="position:relative; height:300px;">
     <canvas id="comparativoChart"></canvas>
   </div>
@@ -148,7 +235,9 @@
 <div class="card no-print-hide">
   <div class="card-title"><i data-lucide="calendar" style="width:18px;height:18px;"></i> Outras Avaliações do Paciente</div>
   <div class="table-responsive"><table>
-    <thead><tr><th>Data</th><th>Soc.</th><th>Cog.</th><th>Lin.</th><th>AC</th><th>Mot.</th><th></th></tr></thead>
+    <thead>
+      <tr><th>Data</th><th>Soc.</th><th>Cog.</th><th>Lin.</th><th>AC</th><th>Mot.</th><th></th></tr>
+    </thead>
     <tbody>
     {% for av in outras_avaliacoes %}
     <tr>
@@ -167,24 +256,110 @@
 {% endif %}
 
 <!-- Observações -->
-<div class="card obs-card">
+<div class="card">
   <div class="card-title" style="color:var(--pt);">
-    <i data-lucide="pencil" style="width:16px;height:16px;"></i> Observações clínicas
+    <i data-lucide="pencil" style="width:16px;height:16px;"></i> Observações Clínicas
   </div>
-  <form method="post">
+  <form id="formObs" method="post">
     {% csrf_token %}
-    <textarea name="observacoes" placeholder="Registre observações, conclusões ou recomendações...">{{ avaliacao.observacoes }}</textarea>
-    <div style="margin-top:.75rem; text-align:right;">
-      <button type="submit" class="btn btn-primary" style="background:var(--pt); border-color:var(--pt);">
-        <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar observações
+    <textarea name="observacoes" rows="5" placeholder="Registre observações, conclusões ou recomendações..."
+      style="width:100%; resize:vertical; border-radius:8px; border:1.5px solid var(--border); padding:.75rem; font-size:.9rem; box-sizing:border-box;">{{ avaliacao.observacoes }}</textarea>
+    <div style="display:flex; align-items:center; gap:1rem; margin-top:.75rem; flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" style="background:var(--pt);border-color:var(--pt);" onclick="salvarObs()">
+        <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar Observações
       </button>
+      <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
     </div>
   </form>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
 <script>
+const dominiosData = [
+  {% for dom in dominios %}
+  { nome: "{{ dom.nome }}", sigla: "{{ dom.sigla }}", pct: {{ dom.pct }}, cor: "{{ dom.cor }}", sim: {{ dom.sim }}, total: {{ dom.total }} },
+  {% endfor %}
+];
+
+// Radar chart
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: dominiosData.map(d => d.sigla),
+    datasets: [{
+      label: '% de itens com SIM',
+      data: dominiosData.map(d => d.pct),
+      backgroundColor: 'rgba(155, 89, 182, 0.2)',
+      borderColor: '#9B59B6',
+      borderWidth: 2,
+      pointBackgroundColor: dominiosData.map(d => d.cor),
+      pointRadius: 5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      r: {
+        beginAtZero: true, max: 100,
+        ticks: { callback: v => v + '%', stepSize: 20, font: { size: 10 } },
+        pointLabels: { font: { size: 12, weight: 'bold' } },
+        grid: { color: 'rgba(0,0,0,.08)' },
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%' } }
+    }
+  }
+});
+
+// Bar chart
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: dominiosData.map(d => d.nome),
+    datasets: [{
+      label: '% de itens com SIM',
+      data: dominiosData.map(d => d.pct),
+      backgroundColor: dominiosData.map(d => d.cor + 'CC'),
+      borderColor: dominiosData.map(d => d.cor),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true, max: 100,
+        ticks: { callback: v => v + '%' },
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      annotation: {
+        annotations: {
+          linha80: {
+            type: 'line', yMin: 80, yMax: 80,
+            borderColor: '#E74C3C', borderWidth: 1.5,
+            borderDash: [6, 3],
+            label: { content: '80% (adequado)', display: true, position: 'end', font: { size: 10 }, color: '#E74C3C', backgroundColor: 'transparent' }
+          }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          afterLabel: ctx => {
+            const d = dominiosData[ctx.dataIndex];
+            return `${d.sim} de ${d.total} itens`;
+          }
+        }
+      }
+    }
+  }
+});
+
 {% if tem_comparativo %}
 const compLabels = {{ comparativo_labels|safe }};
 const compDatasets = {{ comparativo_datasets|safe }};
@@ -193,10 +368,29 @@ new Chart(document.getElementById('comparativoChart'), {
   data: { labels: compLabels, datasets: compDatasets },
   options: {
     responsive: true, maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
     plugins: { legend: { position: 'bottom' } }
   }
 });
 {% endif %}
+
+function salvarObs() {
+  const form = document.getElementById('formObs');
+  const status = document.getElementById('obs-status');
+  const data = new FormData(form);
+  fetch(window.location.href, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  }).catch(() => {
+    status.textContent = 'Erro ao salvar';
+    status.style.color = '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
 </script>
 {% endblock %}
