@@ -964,6 +964,7 @@ class RespostaPortage(models.Model):
     dominio     = models.CharField(max_length=20)
     numero_item = models.IntegerField()
     valor       = models.IntegerField()   # 2=SIM, 1=SIM COM MEDIAÇÃO, 0=AINDA NÃO
+    observacao  = models.TextField(blank=True, default="")
 
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")

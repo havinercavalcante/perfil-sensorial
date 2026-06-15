@@ -49,6 +49,10 @@
     border-color:var(--pc);
     background:color-mix(in srgb, var(--pc) 4%, #fff);
   }
+  .pergunta-card.faltando {
+    border-color:#EF4444 !important;
+    background:#FFF5F5 !important;
+  }
   .pergunta-num  { font-size:.72rem; font-weight:700; color:var(--text-muted); margin-bottom:.3rem; }
   .pergunta-texto { font-size:.91rem; color:var(--text); line-height:1.55; margin-bottom:1rem; }
 
@@ -65,13 +69,38 @@
   .opcao-label:hover { border-color:var(--pc); background:color-mix(in srgb, var(--pc) 10%, #fff); }
   .opcao-label input { display:none; }
   .opcao-label.selected { border-color:var(--pc); background:var(--pc); color:#fff; font-weight:700; }
+  .opcao-num { font-size:1.05rem; font-weight:800; }
 
   .readonly-badge {
     display:inline-flex; align-items:center; gap:.35rem;
     background:#f0f0f0; border:1px solid #ccc; border-radius:6px;
     padding:.3rem .75rem; font-size:.78rem; color:#666; margin-bottom:1rem;
   }
-  .opcao-num { font-size:1.05rem; font-weight:800; }
+
+  .alerta-incompleto {
+    background:#FEF3C7; border:1px solid #FCD34D; border-radius:10px;
+    padding:.85rem 1rem; margin-bottom:1rem; font-size:.84rem; color:#92400E;
+    display:none;
+  }
+  .alerta-incompleto.visivel { display:block; }
+
+  .obs-toggle {
+    display:inline-flex; align-items:center; gap:.3rem;
+    background:none; border:none; cursor:pointer;
+    font-size:.75rem; color:var(--text-muted); padding:.2rem 0; margin-top:.5rem;
+    transition:color .15s;
+  }
+  .obs-toggle:hover { color:var(--pc); }
+  .obs-toggle svg { width:13px; height:13px; flex-shrink:0; }
+  .obs-field { margin-top:.4rem; }
+  .obs-item-textarea {
+    width:100%; border:1.5px solid var(--border); border-radius:8px;
+    padding:.5rem .7rem; font-size:.8rem; color:var(--text); line-height:1.45;
+    resize:vertical; min-height:52px; background:#FAFAFA;
+    transition:border-color .15s; font-family:inherit; box-sizing:border-box;
+  }
+  .obs-item-textarea:focus { outline:none; border-color:var(--pc); background:#fff; }
+  .obs-item-textarea:disabled { background:#f5f5f5; color:#888; cursor:not-allowed; }
 
   .nav-footer {
     display:flex; justify-content:space-between; align-items:center;
@@ -87,17 +116,24 @@
 
 {% block content %}
 
-<div class="progress-header">
+<div style="margin-bottom:1.2rem;">
   <div class="progress-info">
-    <span>Domínio {{ pagina }} de {{ total }}</span>
+    <span>Página {{ pagina }} de {{ total }}</span>
     <span>{{ progresso }}% concluído</span>
   </div>
   <div class="progress-bar-wrap">
     <div class="progress-bar-fill" style="width:{{ progresso }}%; background:var(--pc);"></div>
   </div>
   <div class="steps-bar">
-    {% for i, nome in paginas_dominios %}
-    <div class="step-dot {% if i < pagina %}done{% elif i == pagina %}active{% endif %}" title="{{ nome }}"></div>
+    {% for d in paginas_dominios %}
+    <div class="step-dot {{ d.status }}" title="{{ d.nome }}" style="cursor:default;"></div>
+    {% endfor %}
+  </div>
+  <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.4rem;">
+    {% for d in paginas_dominios %}
+    <span style="font-size:.68rem; color:{% if d.status == 'done' %}var(--pc){% elif d.status == 'active' %}var(--pc-dark){% else %}var(--text-muted){% endif %}; font-weight:{% if d.status == 'active' %}700{% else %}400{% endif %};">
+      {% if d.status == 'done' %}✓ {% endif %}{{ d.nome }}
+    </span>
     {% endfor %}
   </div>
 </div>
@@ -105,8 +141,7 @@
 <div class="secao-header">
   <h2><strong>{{ dominio.sigla }}</strong> — {{ dominio.nome }}</h2>
   <p>
-    {% if publico %}{{ avaliacao.paciente.nome }}{% else %}{{ avaliacao.paciente.nome }}{% endif %}
-    &nbsp;·&nbsp; {{ todos_itens|length }} itens neste domínio
+    {{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ faixa_label }} &nbsp;·&nbsp; faixa {{ faixa_no_dominio }} de {{ total_no_dominio }} &nbsp;·&nbsp; {{ todos_itens|length }} itens
   </p>
 </div>
 
@@ -123,14 +158,18 @@
 <div class="readonly-badge"><i data-lucide="eye" style="width:14px;height:14px;"></i> Visualização — respostas salvas</div>
 {% endif %}
 
+<div class="alerta-incompleto {% if itens_faltando %}visivel{% endif %}" id="alerta-incompleto">
+  <strong>Atenção:</strong> {{ itens_faltando|length }} item(ns) sem resposta. Preencha todos os itens para continuar.
+</div>
+
 <form method="post" id="form-portage">
   {% csrf_token %}
-  <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
 
   {% for faixa in faixas %}
   <div class="faixa-titulo">{{ faixa.label }}</div>
   {% for p in faixa.itens %}
-  <div class="pergunta-card{% if p.resposta_salva is not None %} respondida{% endif %}" id="card-{{ p.numero }}">
+  <div class="pergunta-card{% if p.resposta_salva is not None %} respondida{% endif %}{% if p.numero in itens_faltando %} faltando{% endif %}"
+       id="card-{{ p.numero }}">
     <div class="pergunta-num">Item {{ p.numero }}</div>
     <div class="pergunta-texto">{{ p.texto }}</div>
     <div class="opcoes-grid">
@@ -139,11 +178,21 @@
              id="label-{{ p.numero }}-{{ val }}">
         <input type="radio" name="item_{{ p.numero }}" value="{{ val }}"
                {% if p.resposta_salva == val %}checked{% endif %}
+               {% if readonly %}disabled{% endif %}
                onchange="marcarRespondida({{ p.numero }}, this)">
         <span class="opcao-num">{{ val }}</span>
         <span>{{ label }}</span>
       </label>
       {% endfor %}
+    </div>
+    <button type="button" class="obs-toggle" onclick="toggleObs({{ p.numero }})">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Observação{% if p.observacao_salva %} <span style="color:var(--pc);">●</span>{% endif %}
+    </button>
+    <div class="obs-field" id="obs-{{ p.numero }}" {% if not p.observacao_salva %}style="display:none"{% endif %}>
+      <textarea name="obs_{{ p.numero }}" class="obs-item-textarea"
+                placeholder="Observação sobre este item (opcional)..."
+                {% if readonly %}disabled{% endif %}>{{ p.observacao_salva }}</textarea>
     </div>
   </div>
   {% endfor %}
@@ -153,52 +202,48 @@
     <div>
       {% if pagina_anterior %}
       {% if readonly %}
-      <a href="{% url 'portage_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+      <a href="{% url 'portage_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
+      </a>
       {% elif publico %}
-      <a href="{% url 'portage_publico' token pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+      <a href="{% url 'portage_publico' token pagina_anterior %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
+      </a>
       {% else %}
-      <a href="{% url 'portage_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Anterior</a>
+      <a href="{% url 'portage_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
+      </a>
       {% endif %}
       {% elif readonly %}
-      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Paciente</a>
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Paciente
+      </a>
       {% elif not publico %}
-      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Paciente</a>
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Paciente
+      </a>
       {% endif %}
     </div>
+
     {% if readonly %}
     {% if pagina == total %}
     <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">Fechar</a>
     {% else %}
-    <a href="{% url 'portage_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-secondary">Próximo Domínio <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></a>
+    <a href="{% url 'portage_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-secondary">
+      Próximo Domínio <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 5 5-5 5"/><path d="m6 7 5 5-5 5"/></svg>
+    </a>
     {% endif %}
     {% else %}
     <button type="submit" class="btn btn-primary" style="background:var(--pc); border-color:var(--pc);">
       {% if pagina == total %}
       <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação
       {% else %}
-      Próximo Domínio <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i>
+      Próximo Domínio <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 5 5-5 5"/><path d="m6 7 5 5-5 5"/></svg>
       {% endif %}
     </button>
     {% endif %}
   </div>
 </form>
-
-<!-- Modal: itens faltando -->
-<div id="modal-faltando" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
-  <div style="background:#fff; border-radius:14px; padding:1.5rem; max-width:440px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.2);">
-    <div style="display:flex; align-items:center; gap:.6rem; margin-bottom:.75rem;">
-      <span style="font-size:1.3rem;">⚠️</span>
-      <h3 style="margin:0; font-size:1rem; color:#92400E;">Itens sem resposta</h3>
-    </div>
-    <p style="font-size:.88rem; color:#555; margin-bottom:.5rem;">Os seguintes itens deste domínio <strong>não foram preenchidos</strong>:</p>
-    <div id="modal-itens-lista" style="font-size:.85rem; color:#444; background:#FEF3C7; border-radius:8px; padding:.6rem .9rem; margin-bottom:.9rem; line-height:1.8;"></div>
-    <p style="font-size:.83rem; color:#777; margin-bottom:1.2rem;">Deseja continuar mesmo assim? Os itens não preenchidos ficam sem pontuação.</p>
-    <div style="display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap;">
-      <button type="button" onclick="fecharModalFaltando()" class="btn btn-secondary">Voltar e preencher</button>
-      <button type="button" onclick="confirmarContinuar()" class="btn btn-primary" style="background:var(--pc); border-color:var(--pc);">Continuar mesmo assim</button>
-    </div>
-  </div>
-</div>
 
 <script>
 const READONLY = {% if readonly %}true{% else %}false{% endif %};
@@ -208,6 +253,7 @@ function marcarRespondida(num, input) {
   const card = document.getElementById('card-' + num);
   if (!card) return;
   card.classList.add('respondida');
+  card.classList.remove('faltando');
   card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
   input.closest('.opcao-label').classList.add('selected');
 }
@@ -216,36 +262,29 @@ if (READONLY) {
   document.querySelectorAll('#form-portage input[type="radio"]').forEach(el => el.disabled = true);
 }
 
-function abrirModalFaltando(numeros) {
-  const lista = document.getElementById('modal-itens-lista');
-  lista.innerHTML = numeros.map(n => `<strong>Item ${n}</strong>`).join(' &middot; ');
-  document.getElementById('modal-faltando').style.display = 'flex';
-}
-
-function fecharModalFaltando() {
-  document.getElementById('modal-faltando').style.display = 'none';
-}
-
-function confirmarContinuar() {
-  document.getElementById('confirmar-incompleto').value = '1';
-  fecharModalFaltando();
-  document.getElementById('form-portage').submit();
+function toggleObs(numero) {
+  const el = document.getElementById('obs-' + numero);
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    el.querySelector('textarea').focus();
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 document.getElementById('form-portage').addEventListener('submit', function(e) {
-  if (document.getElementById('confirmar-incompleto').value === '1') return;
   const itens = [{% for n in todos_itens %}{{ n }},{% endfor %}];
   const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+
   if (faltando.length > 0) {
     e.preventDefault();
     faltando.forEach(n => {
       const card = document.getElementById('card-' + n);
-      if (card) {
-        card.style.borderColor = '#F59E0B';
-        card.style.background = '#FFFBEB';
-      }
+      if (card) card.classList.add('faltando');
     });
-    abrirModalFaltando(faltando);
+    const alerta = document.getElementById('alerta-incompleto');
+    alerta.innerHTML = `<strong>Atenção:</strong> ${faltando.length} item(ns) sem resposta. Preencha todos os itens para continuar.`;
+    alerta.classList.add('visivel');
     const primeiro = document.getElementById('card-' + faltando[0]);
     if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -254,7 +293,12 @@ document.getElementById('form-portage').addEventListener('submit', function(e) {
 {% if itens_faltando %}
 window.addEventListener('DOMContentLoaded', function() {
   const faltando = {{ itens_faltando }};
-  if (faltando.length > 0) abrirModalFaltando(faltando);
+  if (faltando.length > 0) {
+    const alerta = document.getElementById('alerta-incompleto');
+    alerta.classList.add('visivel');
+    const primeiro = document.getElementById('card-' + faltando[0]);
+    if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 });
 {% endif %}
 </script>

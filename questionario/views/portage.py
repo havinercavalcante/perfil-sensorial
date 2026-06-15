@@ -53,21 +53,49 @@ def _calcular_pontuacao(avaliacao):
 
 
 def _faixas_por_idade(faixas, idade_anos):
-    """Retorna apenas a faixa correspondente à idade do paciente."""
+    """Retorna todas as faixas de 0 até a idade do paciente."""
     adequadas = [f for f in faixas if int(f['faixa'].split('_')[0]) <= idade_anos]
-    return [adequadas[-1]] if adequadas else [faixas[0]]
+    return adequadas if adequadas else [faixas[0]]
 
 
-def _get_perguntas_por_faixa(dom, respostas_salvas, faixas=None):
-    """Retorna lista de faixas com itens e respostas para renderizar."""
+def _get_paginas(idade_anos):
+    """Retorna lista de {'dom', 'faixa'} — uma entrada por faixa × domínio."""
+    paginas = []
+    for dom in PORTAGE_DOMINIOS:
+        for f in _faixas_por_idade(dom['faixas'], idade_anos):
+            paginas.append({'dom': dom, 'faixa': f})
+    return paginas
+
+
+def _get_dominios_progresso(paginas, pagina_atual):
+    """Retorna 5 dicts de domínio com status done/active/'' para os step-dots."""
+    resultado = []
+    for dom in PORTAGE_DOMINIOS:
+        nums = [i + 1 for i, p in enumerate(paginas) if p['dom']['key'] == dom['key']]
+        if not nums:
+            continue
+        if pagina_atual > nums[-1]:
+            status = 'done'
+        elif pagina_atual >= nums[0]:
+            status = 'active'
+        else:
+            status = ''
+        resultado.append({'nome': dom['nome'], 'status': status, 'primeira_pagina': nums[0]})
+    return resultado
+
+
+def _get_perguntas_por_faixa(dom, respostas_salvas, faixas=None, observacoes=None):
+    """Retorna lista de faixas com itens, respostas e observações para renderizar."""
     perguntas_map = PORTAGE_PERGUNTAS_MAP[dom['key']]
+    obs = observacoes or {}
     faixas_render = []
     for f in (faixas if faixas is not None else dom['faixas']):
         itens_render = [
             {
-                'numero': n,
-                'texto':  perguntas_map.get(n, ''),
+                'numero':         n,
+                'texto':          perguntas_map.get(n, ''),
                 'resposta_salva': respostas_salvas.get(n),
+                'observacao_salva': obs.get(n, ''),
             }
             for n in f['itens']
         ]
@@ -101,22 +129,27 @@ def portage_form(request, avaliacao_id, pagina):
     if avaliacao.status == "concluida":
         return redirect("portage_resultado", avaliacao_id=avaliacao_id)
 
-    if pagina < 1 or pagina > TOTAL_PAGINAS:
+    idade = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
+    paginas = _get_paginas(idade)
+    total_paginas = len(paginas)
+
+    if pagina < 1 or pagina > total_paginas:
         return redirect("portage_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    dom = PORTAGE_DOMINIOS[pagina - 1]
-    faixas_dom = _faixas_por_idade(dom['faixas'], _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data))
-    todos_itens = [n for f in faixas_dom for n in f['itens']]
-    respostas_salvas = {
-        r.numero_item: r.valor
-        for r in avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=todos_itens)
-    }
+    pagina_info = paginas[pagina - 1]
+    dom = pagina_info['dom']
+    faixa = pagina_info['faixa']
+    todos_itens = list(faixa['itens'])
+
+    respostas_qs = avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=todos_itens)
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    observacoes_salvas = {r.numero_item: r.observacao for r in respostas_qs}
 
     itens_faltando_local = []
     respostas_para_render = respostas_salvas
+    observacoes_para_render = observacoes_salvas
 
     if request.method == "POST":
-        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
         novas = {}
         erros = []
         for n in todos_itens:
@@ -133,35 +166,42 @@ def portage_form(request, avaliacao_id, pagina):
                 except (ValueError, TypeError):
                     erros.append(n)
 
-        if erros and not confirmar_incompleto:
-            respostas_para_render = dict(respostas_salvas)
-            respostas_para_render.update(novas)
+        novas_obs = {n: request.POST.get(f"obs_{n}", "").strip() for n in todos_itens}
+        observacoes_para_render = {**observacoes_salvas, **novas_obs}
+
+        if erros:
+            respostas_para_render = {**respostas_salvas, **novas}
             itens_faltando_local = erros
         else:
             for n, v in novas.items():
                 RespostaPortage.objects.update_or_create(
                     avaliacao=avaliacao, dominio=dom['key'], numero_item=n,
-                    defaults={"valor": v}
+                    defaults={"valor": v, "observacao": novas_obs.get(n, "")}
                 )
             proxima = pagina + 1
-            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.pagina_atual = min(proxima, total_paginas)
             avaliacao.save(update_fields=["pagina_atual"])
-            if proxima > TOTAL_PAGINAS:
+            if proxima > total_paginas:
                 return redirect("portage_concluir", avaliacao_id=avaliacao_id)
             return redirect("portage_form", avaliacao_id=avaliacao_id, pagina=proxima)
 
-    faixas_render = _get_perguntas_por_faixa(dom, respostas_para_render, faixas=faixas_dom)
+    faixas_do_dom = [p for p in paginas if p['dom']['key'] == dom['key']]
+    idx_no_dom = next(i for i, p in enumerate(faixas_do_dom) if p['faixa']['faixa'] == faixa['faixa'])
+    faixas_render = _get_perguntas_por_faixa(dom, respostas_para_render, faixas=[faixa], observacoes=observacoes_para_render)
 
     return render(request, "questionario/avaliacoes/portage_form.html", {
         "avaliacao": avaliacao,
         "dominio": dom,
+        "faixa_label": faixa['label'],
+        "faixa_no_dominio": idx_no_dom + 1,
+        "total_no_dominio": len(faixas_do_dom),
         "faixas": faixas_render,
         "todos_itens": todos_itens,
         "opcoes": PORTAGE_OPCOES,
         "pagina": pagina,
-        "total": TOTAL_PAGINAS,
-        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
-        "paginas_dominios": [(i + 1, PORTAGE_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_dominios": _get_dominios_progresso(paginas, pagina),
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "itens_faltando": itens_faltando_local,
     })
@@ -186,60 +226,69 @@ def portage_resultado(request, avaliacao_id):
         avaliacao = _calcular_pontuacao(avaliacao)
         avaliacao.save(update_fields=["pont_soc", "pont_cog", "pont_lin", "pont_ac", "pont_mot"])
 
-    # Calcular resultados por domínio baseado na faixa etária do paciente
-    def adequado_para_faixa(dom_key, faixas_dom):
-        """Verifica se o paciente atingiu ≥80% de SIM na faixa etária."""
-        f = faixas_dom[0]
-        total = len(f['itens'])
-        if total == 0:
-            return False
-        sim = avaliacao.respostas.filter(dominio=dom_key, numero_item__in=f['itens'], valor=2).count()
-        return sim / total >= 0.8
-
     idade_paciente = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
     dominios_resultado = []
     for dom in PORTAGE_DOMINIOS:
         faixas_dom = _faixas_por_idade(dom['faixas'], idade_paciente)
-        faixa_atual = faixas_dom[0]
-        itens_faixa = faixa_atual['itens']
-        total_itens = len(itens_faixa)
-        sim = avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=itens_faixa, valor=2).count()
-        pct = int(sim / total_itens * 100) if total_itens else 0
-        atingiu = adequado_para_faixa(dom['key'], faixas_dom)
+        faixa_atual = faixas_dom[-1]  # faixa da idade da criança
 
-        idx_faixa = next(i for i, f in enumerate(dom['faixas']) if f['faixa'] == faixa_atual['faixa'])
-        if pct >= 80:
-            nivel_label = f"Adequado — {faixa_atual['label']}"
-            nivel_classe = "nivel-ok"
-        elif pct >= 50:
-            nivel_label = f"Em desenvolvimento — {faixa_atual['label']}"
-            nivel_classe = "nivel-medio"
-        else:
-            if idx_faixa > 0:
-                nivel_label = f"Estimado: {dom['faixas'][idx_faixa - 1]['label']}"
+        # Estatísticas por faixa
+        faixas_resultado = []
+        for f in faixas_dom:
+            total_f = len(f['itens'])
+            sim_f = avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=f['itens'], valor=2).count()
+            pct_f = int(sim_f / total_f * 100) if total_f else 0
+            faixas_resultado.append({
+                'label':   f['label'],
+                'sim':     sim_f,
+                'total':   total_f,
+                'pct':     pct_f,
+                'atingiu': pct_f >= 80,
+            })
+
+        # Resultado da faixa atual (para cards e gráficos)
+        dados_atual = faixas_resultado[-1]
+        pct = dados_atual['pct']
+        atingiu = dados_atual['atingiu']
+
+        # Nível desenvolvimental: a faixa mais alta com ≥80% SIM
+        nivel_faixa_label = None
+        for f_data in faixas_resultado:
+            if f_data['atingiu']:
+                nivel_faixa_label = f_data['label']
+
+        if nivel_faixa_label:
+            if nivel_faixa_label == faixa_atual['label']:
+                nivel_label = f"Adequado — {nivel_faixa_label}"
+                nivel_classe = "nivel-ok"
             else:
-                nivel_label = "Habilidades emergentes (0–1 ano)"
+                nivel_label = f"Nível desenvolvimental: {nivel_faixa_label}"
+                nivel_classe = "nivel-medio"
+        else:
+            nivel_label = "Habilidades emergentes"
             nivel_classe = "nivel-baixo"
 
+        # Alvos de intervenção: SIM com mediação na faixa atual
         perguntas = PORTAGE_PERGUNTAS_MAP[dom['key']]
         mediacao_nums = sorted(avaliacao.respostas.filter(
-            dominio=dom['key'], numero_item__in=itens_faixa, valor=1
+            dominio=dom['key'], numero_item__in=faixa_atual['itens'], valor=1
         ).values_list('numero_item', flat=True))
         metas = [{'numero': n, 'texto': perguntas.get(n, '')} for n in mediacao_nums]
 
         dominios_resultado.append({
-            'key':         dom['key'],
-            'nome':        dom['nome'],
-            'sigla':       dom['sigla'],
-            'cor':         dom['cor'],
-            'sim':         sim,
-            'total':       total_itens,
-            'pct':         pct,
-            'faixa_label': faixa_atual['label'],
-            'atingiu':     atingiu,
-            'nivel_label': nivel_label,
+            'key':          dom['key'],
+            'nome':         dom['nome'],
+            'sigla':        dom['sigla'],
+            'cor':          dom['cor'],
+            'sim':          dados_atual['sim'],
+            'total':        dados_atual['total'],
+            'pct':          pct,
+            'faixa_label':  faixa_atual['label'],
+            'atingiu':      atingiu,
+            'nivel_label':  nivel_label,
             'nivel_classe': nivel_classe,
-            'metas':       metas,
+            'faixas':       faixas_resultado,
+            'metas':        metas,
         })
 
     total_sim = sum(d['sim'] for d in dominios_resultado)
@@ -258,15 +307,24 @@ def portage_resultado(request, avaliacao_id):
     todas_av = list(paciente.avaliacoes_portage.filter(status="concluida").order_by("data"))
     outras = [av for av in todas_av if av.id != avaliacao.id]
     comparativo_labels = json.dumps([av.data.strftime("%d/%m/%Y") for av in todas_av])
-    dominios_comp = [
-        {"nome": d["nome"], "campo": PORTAGE_PONT_MAP[d['key']], "max": 100}
-        for d in dominios_resultado
-    ]
     cores_linha = ["#2E7D6B", "#3E73D1", "#E8793A", "#9B59B6", "#E8B84B"]
     comparativo_datasets = []
-    for i, dom in enumerate(dominios_comp):
-        valores = [(getattr(av, dom["campo"]) or 0) for av in todas_av]
-        comparativo_datasets.append({"label": dom["nome"], "data": valores, "borderColor": cores_linha[i], "backgroundColor": cores_linha[i] + "33", "tension": 0.3})
+    for i, dom in enumerate(PORTAGE_DOMINIOS):
+        valores = []
+        for av in todas_av:
+            idade_av = _idade_na_data(av.paciente.data_nascimento, av.data)
+            faixas_av = _faixas_por_idade(dom['faixas'], idade_av)
+            faixa_av = faixas_av[-1]
+            total_av = len(faixa_av['itens'])
+            sim_av = av.respostas.filter(dominio=dom['key'], numero_item__in=faixa_av['itens'], valor=2).count()
+            valores.append(int(sim_av / total_av * 100) if total_av else 0)
+        comparativo_datasets.append({
+            "label": dom['nome'],
+            "data": valores,
+            "borderColor": cores_linha[i],
+            "backgroundColor": cores_linha[i] + "33",
+            "tension": 0.3,
+        })
 
     tem_metas = any(d['metas'] for d in dominios_resultado)
 
@@ -301,28 +359,39 @@ def portage_deletar(request, avaliacao_id):
 def portage_visualizar(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoPortage, uuid=avaliacao_id, paciente__medico=request.user)
 
-    if pagina < 1 or pagina > TOTAL_PAGINAS:
+    idade = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
+    paginas = _get_paginas(idade)
+    total_paginas = len(paginas)
+
+    if pagina < 1 or pagina > total_paginas:
         return redirect("portage_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
-    dom = PORTAGE_DOMINIOS[pagina - 1]
-    faixas_dom = _faixas_por_idade(dom['faixas'], _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data))
-    todos_itens = [n for f in faixas_dom for n in f['itens']]
-    respostas_salvas = {
-        r.numero_item: r.valor
-        for r in avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=todos_itens)
-    }
-    faixas_render = _get_perguntas_por_faixa(dom, respostas_salvas, faixas=faixas_dom)
+    pagina_info = paginas[pagina - 1]
+    dom = pagina_info['dom']
+    faixa = pagina_info['faixa']
+    todos_itens = list(faixa['itens'])
+
+    respostas_qs = avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=todos_itens)
+    respostas_salvas = {r.numero_item: r.valor for r in respostas_qs}
+    observacoes_salvas = {r.numero_item: r.observacao for r in respostas_qs}
+
+    faixas_do_dom = [p for p in paginas if p['dom']['key'] == dom['key']]
+    idx_no_dom = next(i for i, p in enumerate(faixas_do_dom) if p['faixa']['faixa'] == faixa['faixa'])
+    faixas_render = _get_perguntas_por_faixa(dom, respostas_salvas, faixas=[faixa], observacoes=observacoes_salvas)
 
     return render(request, "questionario/avaliacoes/portage_form.html", {
         "avaliacao": avaliacao,
         "dominio": dom,
+        "faixa_label": faixa['label'],
+        "faixa_no_dominio": idx_no_dom + 1,
+        "total_no_dominio": len(faixas_do_dom),
         "faixas": faixas_render,
         "todos_itens": todos_itens,
         "opcoes": PORTAGE_OPCOES,
         "pagina": pagina,
-        "total": TOTAL_PAGINAS,
-        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
-        "paginas_dominios": [(i + 1, PORTAGE_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_dominios": _get_dominios_progresso(paginas, pagina),
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "itens_faltando": [],
         "readonly": True,
@@ -336,12 +405,18 @@ def portage_publico_view(request, token, pagina):
     if avaliacao.status == "concluida":
         return render(request, "questionario/dashboard/concluido.html")
 
-    if pagina < 1 or pagina > TOTAL_PAGINAS:
+    idade = _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data)
+    paginas = _get_paginas(idade)
+    total_paginas = len(paginas)
+
+    if pagina < 1 or pagina > total_paginas:
         pagina = 1
 
-    dom = PORTAGE_DOMINIOS[pagina - 1]
-    faixas_dom = _faixas_por_idade(dom['faixas'], _idade_na_data(avaliacao.paciente.data_nascimento, avaliacao.data))
-    todos_itens = [n for f in faixas_dom for n in f['itens']]
+    pagina_info = paginas[pagina - 1]
+    dom = pagina_info['dom']
+    faixa = pagina_info['faixa']
+    todos_itens = list(faixa['itens'])
+
     respostas_salvas = {
         r.numero_item: r.valor
         for r in avaliacao.respostas.filter(dominio=dom['key'], numero_item__in=todos_itens)
@@ -351,7 +426,6 @@ def portage_publico_view(request, token, pagina):
     respostas_para_render = respostas_salvas
 
     if request.method == "POST":
-        confirmar_incompleto = request.POST.get("confirmar_incompleto") == "1"
         novas = {}
         erros = []
         for n in todos_itens:
@@ -368,9 +442,8 @@ def portage_publico_view(request, token, pagina):
                 except (ValueError, TypeError):
                     erros.append(n)
 
-        if erros and not confirmar_incompleto:
-            respostas_para_render = dict(respostas_salvas)
-            respostas_para_render.update(novas)
+        if erros:
+            respostas_para_render = {**respostas_salvas, **novas}
             itens_faltando_local = erros
         else:
             for n, v in novas.items():
@@ -379,9 +452,9 @@ def portage_publico_view(request, token, pagina):
                     defaults={"valor": v}
                 )
             proxima = pagina + 1
-            avaliacao.pagina_atual = min(proxima, TOTAL_PAGINAS)
+            avaliacao.pagina_atual = min(proxima, total_paginas)
             avaliacao.save(update_fields=["pagina_atual"])
-            if proxima > TOTAL_PAGINAS:
+            if proxima > total_paginas:
                 avaliacao = _calcular_pontuacao(avaliacao)
                 avaliacao.status = "concluida"
                 avaliacao.save()
@@ -392,18 +465,23 @@ def portage_publico_view(request, token, pagina):
                 return render(request, "questionario/dashboard/concluido.html")
             return redirect("portage_publico", token=token, pagina=proxima)
 
-    faixas_render = _get_perguntas_por_faixa(dom, respostas_para_render, faixas=faixas_dom)
+    faixas_do_dom = [p for p in paginas if p['dom']['key'] == dom['key']]
+    idx_no_dom = next(i for i, p in enumerate(faixas_do_dom) if p['faixa']['faixa'] == faixa['faixa'])
+    faixas_render = _get_perguntas_por_faixa(dom, respostas_para_render, faixas=[faixa])
 
     return render(request, "questionario/avaliacoes/portage_form.html", {
         "avaliacao": avaliacao,
         "dominio": dom,
+        "faixa_label": faixa['label'],
+        "faixa_no_dominio": idx_no_dom + 1,
+        "total_no_dominio": len(faixas_do_dom),
         "faixas": faixas_render,
         "todos_itens": todos_itens,
         "opcoes": PORTAGE_OPCOES,
         "pagina": pagina,
-        "total": TOTAL_PAGINAS,
-        "progresso": int((pagina - 1) / TOTAL_PAGINAS * 100),
-        "paginas_dominios": [(i + 1, PORTAGE_DOMINIOS[i]["nome"]) for i in range(TOTAL_PAGINAS)],
+        "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_dominios": _get_dominios_progresso(paginas, pagina),
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "publico": True,
         "token": token,

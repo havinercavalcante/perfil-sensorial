@@ -43,6 +43,20 @@
     font-size:.72rem; opacity:.85; margin-top:.35rem; font-style:italic;
   }
 
+  .faixas-breakdown { margin-top:1.25rem; }
+  .faixa-row {
+    display:flex; align-items:center; gap:.6rem;
+    font-size:.78rem; padding:.35rem .5rem; border-radius:6px;
+    margin-bottom:.25rem; background:var(--bg-subtle,#F8F9FA);
+  }
+  .faixa-row-label { min-width:90px; font-weight:600; color:var(--text-muted); }
+  .faixa-row-bar { flex:1; }
+  .faixa-row-bar .progress-bar-wrap { height:7px; }
+  .faixa-row-pct { min-width:36px; text-align:right; font-weight:700; font-size:.78rem; }
+  .faixa-row-ok   { background:#ECFDF5; }
+  .faixa-row-nok  { background:#FEF2F2; }
+  .faixa-row-cur  { background:#EEF2FF; font-weight:700; border:1.5px solid #C7D2FE; }
+
   .metas-section .meta-dom-titulo {
     font-size:.82rem; font-weight:700; margin-bottom:.5rem;
     display:flex; align-items:center; gap:.4rem;
@@ -114,9 +128,9 @@
   </div>
   <div class="tot-card">
     <div>
-      <div class="tot-label">Total de itens com SIM</div>
+      <div class="tot-label">Itens com SIM — faixa etária atual</div>
       <div class="tot-valor">{{ total_sim }}</div>
-      <div class="tot-max">de {{ total_itens }} itens avaliados</div>
+      <div class="tot-max">de {{ total_itens }} itens na faixa atual (5 domínios)</div>
     </div>
     <div style="flex:1; min-width:180px;">
       <div class="progress-bar-wrap" style="height:10px; margin-bottom:.4rem;">
@@ -135,7 +149,7 @@
 <!-- Domínios -->
 <div class="card">
   <div class="card-title">
-    <i data-lucide="layout-grid" style="width:18px;height:18px;"></i> Resultado por Domínio
+    <i data-lucide="layout-grid" style="width:18px;height:18px;"></i> Resultado por Domínio — faixa atual
   </div>
   <div class="dom-grid">
     {% for dom in dominios %}
@@ -158,6 +172,37 @@
     </div>
     {% endfor %}
   </div>
+</div>
+
+<!-- Breakdown por faixa etária -->
+<div class="card">
+  <div class="card-title">
+    <i data-lucide="layers" style="width:18px;height:18px;"></i> Desempenho por Faixa Etária
+  </div>
+  <p style="font-size:.82rem; color:var(--text-muted); margin:0 0 1rem;">
+    Resultado de cada faixa avaliada desde 0 até a idade atual da criança.
+    <span style="display:inline-block; background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:4px; padding:0 .4rem; font-size:.75rem; font-weight:700; margin-left:.3rem;">faixa atual</span>
+  </p>
+  {% for dom in dominios %}
+  <div style="margin-bottom:1.25rem;">
+    <div style="font-size:.82rem; font-weight:700; margin-bottom:.4rem; display:flex; align-items:center; gap:.4rem;">
+      <span style="width:10px;height:10px;border-radius:50%;background:{{ dom.cor }};display:inline-block;flex-shrink:0;"></span>
+      {{ dom.nome }}
+    </div>
+    {% for f in dom.faixas %}
+    <div class="faixa-row {% if forloop.last %}faixa-row-cur{% elif f.atingiu %}faixa-row-ok{% else %}faixa-row-nok{% endif %}">
+      <span class="faixa-row-label">{{ f.label }}</span>
+      <div class="faixa-row-bar">
+        <div class="progress-bar-wrap" style="height:7px;">
+          <div class="progress-bar-fill" style="width:{{ f.pct }}%; background:{{ dom.cor }}; height:7px;"></div>
+        </div>
+      </div>
+      <span class="faixa-row-pct" style="color:{{ dom.cor }};">{{ f.pct }}%</span>
+      <span style="font-size:.7rem; min-width:22px;">{% if f.atingiu %}✓{% else %}—{% endif %}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
 </div>
 
 <!-- Alvos de intervenção -->
@@ -224,7 +269,7 @@
 
 {% if tem_comparativo %}
 <div class="card no-print-hide">
-  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal — Itens com SIM por Domínio</div>
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal — % de SIM na Faixa Etária (por Domínio)</div>
   <div style="position:relative; height:300px;">
     <canvas id="comparativoChart"></canvas>
   </div>
@@ -368,8 +413,11 @@ new Chart(document.getElementById('comparativoChart'), {
   data: { labels: compLabels, datasets: compDatasets },
   options: {
     responsive: true, maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-    plugins: { legend: { position: 'bottom' } }
+    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%' } }
+    }
   }
 });
 {% endif %}
