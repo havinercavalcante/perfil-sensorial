@@ -9,11 +9,23 @@ from ..models import Paciente, AvaliacaoVineland, RespostaVineland
 from ..data.vineland_data import (
     VINELAND_GRUPOS, VINELAND_PERGUNTAS, VINELAND_CATEGORIA,
     VINELAND_OPCOES, VINELAND_CATEGORIAS_CONFIG,
-    calcular_pontuacao_vineland, classificar_qs,
+    calcular_pontuacao_vineland, classificar_qs, grupos_para_idade,
 )
 from ..services import notificar_terapeuta
 
-VINELAND_TOTAL_PAGINAS = len(VINELAND_GRUPOS)
+
+def _calc_idade_meses(data_ref, data_nascimento):
+    """Age in months of the patient on data_ref."""
+    meses = (data_ref.year - data_nascimento.year) * 12 + (data_ref.month - data_nascimento.month)
+    if data_ref.day < data_nascimento.day:
+        meses -= 1
+    return max(meses, 1)
+
+
+def _grupos_avaliacao(avaliacao):
+    """Groups applicable for the patient's age at assessment date."""
+    idade = _calc_idade_meses(avaliacao.data, avaliacao.paciente.data_nascimento)
+    return grupos_para_idade(idade)
 
 
 @login_required
@@ -37,10 +49,13 @@ def vineland_form(request, avaliacao_id, pagina):
     if avaliacao.status == "concluida":
         return redirect("vineland_resultado", avaliacao_id=avaliacao_id)
 
-    if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
+    grupos = _grupos_avaliacao(avaliacao)
+    total_paginas = len(grupos)
+
+    if pagina < 1 or pagina > total_paginas:
         return redirect("vineland_form", avaliacao_id=avaliacao_id, pagina=1)
 
-    grupo = VINELAND_GRUPOS[pagina - 1]
+    grupo = grupos[pagina - 1]
     itens = grupo["itens"]
     respostas_salvas = {
         r.numero_item: r.resposta
@@ -60,9 +75,9 @@ def vineland_form(request, avaliacao_id, pagina):
                 avaliacao=avaliacao, numero_item=item, defaults={"resposta": valor}
             )
         proxima = pagina + 1
-        avaliacao.pagina_atual = min(proxima, VINELAND_TOTAL_PAGINAS)
+        avaliacao.pagina_atual = min(proxima, total_paginas)
         avaliacao.save(update_fields=["pagina_atual"])
-        if proxima > VINELAND_TOTAL_PAGINAS:
+        if proxima > total_paginas:
             return redirect("vineland_concluir", avaliacao_id=avaliacao_id)
         return redirect("vineland_form", avaliacao_id=avaliacao_id, pagina=proxima)
 
@@ -82,9 +97,9 @@ def vineland_form(request, avaliacao_id, pagina):
         "perguntas": perguntas,
         "opcoes": VINELAND_OPCOES,
         "pagina": pagina,
-        "total": VINELAND_TOTAL_PAGINAS,
-        "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
-        "paginas_grupos": [(i + 1, VINELAND_GRUPOS[i]["nome"]) for i in range(VINELAND_TOTAL_PAGINAS)],
+        "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_grupos": [(i + 1, grupos[i]["nome"]) for i in range(total_paginas)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
     })
 
@@ -168,20 +183,51 @@ def vineland_resultado(request, avaliacao_id):
     if hoje.day < b.day:
         ic_meses -= 1
 
+    CORES_CATEGORIA = {
+        "C": "#3E73D1", "L": "#39abcb", "O": "#E8793A", "S": "#9B59B6",
+        "AG": "#C0392B", "AGE": "#16A085", "AC": "#D4AC0D", "AV": "#1ABC9C",
+    }
+    CAMPO_CATEGORIA = {
+        "C": "pont_comunicacao", "L": "pont_locomocao",
+        "O": "pont_ocupacao", "S": "pont_socializacao",
+        "AG": "pont_autogoverno", "AGE": "pont_age",
+        "AC": "pont_ac", "AV": "pont_av",
+    }
+
+    # Compute age-appropriate max based on groups assessed
+    grupos_av = _grupos_avaliacao(avaliacao)
+    itens_avaliados = [item for g in grupos_av for item in g["itens"]]
+    max_total = len(itens_avaliados)
+    max_por_cat = {cod: 0 for cod in VINELAND_CATEGORIAS_CONFIG}
+    for item in itens_avaliados:
+        cat = VINELAND_CATEGORIA.get(item)
+        if cat and cat in max_por_cat:
+            max_por_cat[cat] += 1
+
+    faixa_etaria = f"{grupos_av[0]['nome'].split(': ')[1]} → {grupos_av[-1]['nome'].split(': ')[1]}" if len(grupos_av) > 1 else grupos_av[0]['nome'].split(': ')[1]
+
     categorias = [
         {
             "cod": cod,
             "nome": cfg["nome"],
-            "max": cfg["max"],
-            "valor": getattr(avaliacao, {
-                "C": "pont_comunicacao", "L": "pont_locomocao",
-                "O": "pont_ocupacao", "S": "pont_socializacao",
-                "AG": "pont_autogoverno", "AGE": "pont_age",
-                "AC": "pont_ac", "AV": "pont_av",
-            }[cod]) or 0,
+            "max": max_por_cat[cod],
+            "valor": getattr(avaliacao, CAMPO_CATEGORIA[cod]) or 0,
+            "cor": CORES_CATEGORIA[cod],
         }
         for cod, cfg in VINELAND_CATEGORIAS_CONFIG.items()
+        if max_por_cat[cod] > 0
     ]
+
+    categorias_json = json.dumps([
+        {
+            "nome": c["nome"],
+            "valor": float(c["valor"]),
+            "max": c["max"],
+            "pct": round(float(c["valor"]) / c["max"] * 100) if c["max"] else 0,
+            "cor": c["cor"],
+        }
+        for c in categorias
+    ])
 
     qs_class = classificar_qs(avaliacao.quociente_social) if avaliacao.quociente_social else None
 
@@ -206,6 +252,9 @@ def vineland_resultado(request, avaliacao_id):
         "paciente": paciente,
         "ic_meses": ic_meses,
         "categorias": categorias,
+        "categorias_json": categorias_json,
+        "max_total": max_total,
+        "faixa_etaria": faixa_etaria,
         "qs_classificacao": qs_class,
         "comparativo_labels": comparativo_labels,
         "comparativo_datasets": json.dumps(comparativo_datasets),
@@ -217,10 +266,13 @@ def vineland_resultado(request, avaliacao_id):
 @login_required
 def vineland_visualizar(request, avaliacao_id, pagina):
     avaliacao = get_object_or_404(AvaliacaoVineland, uuid=avaliacao_id, paciente__medico=request.user)
-    if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
+    grupos = _grupos_avaliacao(avaliacao)
+    total_paginas = len(grupos)
+
+    if pagina < 1 or pagina > total_paginas:
         return redirect("vineland_visualizar", avaliacao_id=avaliacao_id, pagina=1)
 
-    grupo = VINELAND_GRUPOS[pagina - 1]
+    grupo = grupos[pagina - 1]
     itens = grupo["itens"]
     respostas_salvas = {r.numero_item: r.resposta for r in avaliacao.respostas.filter(numero_item__in=itens)}
 
@@ -231,9 +283,9 @@ def vineland_visualizar(request, avaliacao_id, pagina):
     ]
     return render(request, "questionario/avaliacoes/vineland_form.html", {
         "avaliacao": avaliacao, "grupo": grupo, "perguntas": perguntas,
-        "opcoes": VINELAND_OPCOES, "pagina": pagina, "total": VINELAND_TOTAL_PAGINAS,
-        "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
-        "paginas_grupos": [(i + 1, VINELAND_GRUPOS[i]["nome"]) for i in range(VINELAND_TOTAL_PAGINAS)],
+        "opcoes": VINELAND_OPCOES, "pagina": pagina, "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_grupos": [(i + 1, grupos[i]["nome"]) for i in range(total_paginas)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "readonly": True,
     })
@@ -257,10 +309,13 @@ def vineland_publico_view(request, token, pagina):
     if avaliacao.status == "concluida":
         return render(request, "questionario/dashboard/concluido.html")
 
-    if pagina < 1 or pagina > VINELAND_TOTAL_PAGINAS:
+    grupos = _grupos_avaliacao(avaliacao)
+    total_paginas = len(grupos)
+
+    if pagina < 1 or pagina > total_paginas:
         pagina = 1
 
-    grupo = VINELAND_GRUPOS[pagina - 1]
+    grupo = grupos[pagina - 1]
     itens = grupo["itens"]
     respostas_salvas = {
         r.numero_item: r.resposta
@@ -280,9 +335,9 @@ def vineland_publico_view(request, token, pagina):
                 avaliacao=avaliacao, numero_item=item, defaults={"resposta": valor}
             )
         proxima = pagina + 1
-        avaliacao.pagina_atual = min(proxima, VINELAND_TOTAL_PAGINAS)
+        avaliacao.pagina_atual = min(proxima, total_paginas)
         avaliacao.save(update_fields=["pagina_atual"])
-        if proxima > VINELAND_TOTAL_PAGINAS:
+        if proxima > total_paginas:
             respostas_dict = {r.numero_item: r.resposta for r in avaliacao.respostas.all()}
             p = calcular_pontuacao_vineland(respostas_dict)
             avaliacao.pont_total = p["total"]
@@ -319,9 +374,9 @@ def vineland_publico_view(request, token, pagina):
         "perguntas": perguntas,
         "opcoes": VINELAND_OPCOES,
         "pagina": pagina,
-        "total": VINELAND_TOTAL_PAGINAS,
-        "progresso": int((pagina - 1) / VINELAND_TOTAL_PAGINAS * 100),
-        "paginas_grupos": [(i + 1, VINELAND_GRUPOS[i]["nome"]) for i in range(VINELAND_TOTAL_PAGINAS)],
+        "total": total_paginas,
+        "progresso": int((pagina - 1) / total_paginas * 100),
+        "paginas_grupos": [(i + 1, grupos[i]["nome"]) for i in range(total_paginas)],
         "pagina_anterior": pagina - 1 if pagina > 1 else None,
         "publico": True,
         "token": token,

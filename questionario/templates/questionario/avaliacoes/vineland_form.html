@@ -161,8 +161,8 @@
 
 <!-- Cabeçalho do grupo de idade -->
 <div class="grupo-header">
-  <h2><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.3rem;"></i>{{ grupo.nome }}</h2>
-  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens neste grupo</p>
+  <h2><i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;margin-right:.3rem;"></i>{{ grupo.nome|cut:"Nível de Idade: " }}</h2>
+  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ perguntas|length }} itens neste grupo &nbsp;·&nbsp; Nível de Idade</p>
 </div>
 
 <!-- Instrução -->

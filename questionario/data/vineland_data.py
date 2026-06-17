@@ -1,69 +1,41 @@
 VINELAND_GRUPOS = [
-    {
-        "nome": "Nível de Idade: 0 meses a 1 ano",
-        "itens": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-    },
-    {
-        "nome": "Nível de Idade: 1 a 2 anos",
-        "itens": [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
-    },
-    {
-        "nome": "Nível de Idade: 2 a 3 anos",
-        "itens": [35, 36, 37, 38, 39, 40, 41, 42, 43, 44],
-    },
-    {
-        "nome": "Nível de Idade: 3 a 4 anos",
-        "itens": [45, 46, 47, 48, 49, 50],
-    },
-    {
-        "nome": "Nível de Idade: 4 a 5 anos",
-        "itens": [51, 52, 53, 54, 55, 56],
-    },
-    {
-        "nome": "Nível de Idade: 5 a 6 anos",
-        "itens": [57, 58, 59, 60, 61],
-    },
-    {
-        "nome": "Nível de Idade: 6 a 7 anos",
-        "itens": [62, 63, 64, 65],
-    },
-    {
-        "nome": "Nível de Idade: 7 a 8 anos",
-        "itens": [66, 67, 68, 69, 70],
-    },
-    {
-        "nome": "Nível de Idade: 8 a 9 anos",
-        "itens": [71, 72, 73, 74],
-    },
-    {
-        "nome": "Nível de Idade: 9 a 10 anos",
-        "itens": [75, 76, 77],
-    },
-    {
-        "nome": "Nível de Idade: 10 a 11 anos",
-        "itens": [78, 79, 80, 81],
-    },
-    {
-        "nome": "Nível de Idade: 11 a 12 anos",
-        "itens": [82, 83, 84],
-    },
-    {
-        "nome": "Nível de Idade: 12 a 15 anos",
-        "itens": [85, 86, 87, 88, 89],
-    },
-    {
-        "nome": "Nível de Idade: 15 a 18 anos",
-        "itens": [90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101],
-    },
-    {
-        "nome": "Nível de Idade: 20 a 25 anos",
-        "itens": [102, 103, 104, 105],
-    },
-    {
-        "nome": "Nível de Idade: 25 anos ou mais",
-        "itens": [106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117],
-    },
+    {"nome": "Nível de Idade: 0 meses a 1 ano",  "min_meses": 0,   "itens": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]},
+    {"nome": "Nível de Idade: 1 a 2 anos",        "min_meses": 12,  "itens": [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]},
+    {"nome": "Nível de Idade: 2 a 3 anos",        "min_meses": 24,  "itens": [35, 36, 37, 38, 39, 40, 41, 42, 43, 44]},
+    {"nome": "Nível de Idade: 3 a 4 anos",        "min_meses": 36,  "itens": [45, 46, 47, 48, 49, 50]},
+    {"nome": "Nível de Idade: 4 a 5 anos",        "min_meses": 48,  "itens": [51, 52, 53, 54, 55, 56]},
+    {"nome": "Nível de Idade: 5 a 6 anos",        "min_meses": 60,  "itens": [57, 58, 59, 60, 61]},
+    {"nome": "Nível de Idade: 6 a 7 anos",        "min_meses": 72,  "itens": [62, 63, 64, 65]},
+    {"nome": "Nível de Idade: 7 a 8 anos",        "min_meses": 84,  "itens": [66, 67, 68, 69, 70]},
+    {"nome": "Nível de Idade: 8 a 9 anos",        "min_meses": 96,  "itens": [71, 72, 73, 74]},
+    {"nome": "Nível de Idade: 9 a 10 anos",       "min_meses": 108, "itens": [75, 76, 77]},
+    {"nome": "Nível de Idade: 10 a 11 anos",      "min_meses": 120, "itens": [78, 79, 80, 81]},
+    {"nome": "Nível de Idade: 11 a 12 anos",      "min_meses": 132, "itens": [82, 83, 84]},
+    {"nome": "Nível de Idade: 12 a 15 anos",      "min_meses": 144, "itens": [85, 86, 87, 88, 89]},
+    {"nome": "Nível de Idade: 15 a 18 anos",      "min_meses": 180, "itens": [90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101]},
+    {"nome": "Nível de Idade: 20 a 25 anos",      "min_meses": 240, "itens": [102, 103, 104, 105]},
+    {"nome": "Nível de Idade: 25 anos ou mais",   "min_meses": 300, "itens": [106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117]},
 ]
+
+
+def grupos_para_idade(idade_meses: int) -> list:
+    """Returns groups applicable for a person of the given age in months.
+
+    For bounded groups: include if age has surpassed the group's start (min_meses < idade).
+    For the last open-ended group ("25 anos ou mais"): include if age >= 25 years.
+    Always returns at least the first group.
+    """
+    idade = max(idade_meses, 1)
+    resultado = []
+    ultimo_idx = len(VINELAND_GRUPOS) - 1
+    for i, g in enumerate(VINELAND_GRUPOS):
+        if i == ultimo_idx:
+            if g["min_meses"] <= idade:
+                resultado.append(g)
+        else:
+            if g["min_meses"] < idade:
+                resultado.append(g)
+    return resultado or [VINELAND_GRUPOS[0]]
 
 # Legenda: C=Comunicação, L=Locomoção, O=Ocupação, S=Socialização,
 #          AG=Autogoverno, AGE=Auto-auxílio geral, AC=Auto-auxílio para comer,
