@@ -1,0 +1,47 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block content %}
+{% if totais_resumo %}
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+  {% with t=totais_resumo %}
+  <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#2563eb;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Landing Page</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#1e40af;line-height:1.2;">{{ t.landing|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/</div>
+  </div>
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#16a34a;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Login</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#15803d;line-height:1.2;">{{ t.login|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/login/</div>
+  </div>
+  <div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#9333ea;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Cadastro</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#7e22ce;line-height:1.2;">{{ t.cadastro|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/registrar/</div>
+  </div>
+  <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#ea580c;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Instrumentos</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#c2410c;line-height:1.2;">{{ t.instrumentos|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/instrumentos/</div>
+  </div>
+  <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#0284c7;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Planos</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#0369a1;line-height:1.2;">{{ t.planos|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/planos/</div>
+  </div>
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Privacidade</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#374151;line-height:1.2;">{{ t.privacidade|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/privacidade/</div>
+  </div>
+  <div style="background:#fdf2f8;border:1px solid #fbcfe8;border-radius:8px;padding:14px 20px;min-width:140px;">
+    <div style="font-size:.7rem;color:#db2777;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Contato</div>
+    <div style="font-size:1.8rem;font-weight:700;color:#be185d;line-height:1.2;">{{ t.contato|default:"0" }}</div>
+    <div style="font-size:.7rem;color:#6b7280;">/contato/</div>
+  </div>
+  {% endwith %}
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

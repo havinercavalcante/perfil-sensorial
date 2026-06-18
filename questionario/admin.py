@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path
 from django.utils import timezone
@@ -9,7 +11,7 @@ from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
     SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos, PainelRecebimento,
-    Indicacao, get_modulos_para_plano,
+    Indicacao, get_modulos_para_plano, PageVisit,
 )
 
 
@@ -920,3 +922,55 @@ class PainelRecebimentoAdmin(admin.ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
+
+
+# ── Visitas de Páginas ────────────────────────────────────────────────────────
+
+@admin.register(PageVisit)
+class PageVisitAdmin(admin.ModelAdmin):
+    list_display   = ("pagina_badge", "visitado_em", "ip", "referrer_curto")
+    list_filter    = ("pagina",)
+    date_hierarchy = "visitado_em"
+    search_fields  = ("ip", "referrer")
+    readonly_fields = ("pagina", "ip", "user_agent", "referrer", "visitado_em")
+    ordering       = ("-visitado_em",)
+
+    change_list_template = "admin/pagevisit_changelist.html"
+
+    def pagina_badge(self, obj):
+        cores = {
+            "landing":  ("#eff6ff", "#2563eb"),
+            "login":    ("#f0fdf4", "#16a34a"),
+            "cadastro": ("#fdf4ff", "#9333ea"),
+        }
+        bg, fg = cores.get(obj.pagina, ("#f3f4f6", "#374151"))
+        return format_html(
+            '<span style="background:{};color:{};padding:2px 8px;border-radius:4px;'
+            'font-size:.78rem;font-weight:600;">{}</span>',
+            bg, fg, obj.get_pagina_display(),
+        )
+    pagina_badge.short_description = "Página"
+
+    def referrer_curto(self, obj):
+        if not obj.referrer:
+            return "—"
+        return obj.referrer[:60] + ("…" if len(obj.referrer) > 60 else "")
+    referrer_curto.short_description = "Origem"
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        totais = {
+            row["pagina"]: row["total"]
+            for row in PageVisit.objects.values("pagina").annotate(total=Count("id"))
+        }
+        extra_context["totais_resumo"] = totais
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser

@@ -3,6 +3,16 @@ from datetime import timedelta
 from django.shortcuts import render, redirect
 from django.utils import timezone
 
+_TRACKED_PAGES = {
+    "/":               "landing",
+    "/login/":         "login",
+    "/registrar/":     "cadastro",
+    "/instrumentos/":  "instrumentos",
+    "/privacidade/":   "privacidade",
+    "/contato/":       "contato",
+    "/planos/":        "planos",
+}
+
 
 class CustomErrorMiddleware:
     def __init__(self, get_response):
@@ -80,3 +90,30 @@ class TrialExpiradoMiddleware:
                 pass
 
         return self.get_response(request)
+
+
+class PageVisitMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        pagina_key = _TRACKED_PAGES.get(request.path)
+        if pagina_key and request.method == "GET" and response.status_code == 200:
+            try:
+                from .models import PageVisit
+                ip = (
+                    request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
+                    or request.META.get("REMOTE_ADDR")
+                )
+                PageVisit.objects.create(
+                    pagina=pagina_key,
+                    ip=ip or None,
+                    user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+                    referrer=(request.META.get("HTTP_REFERER") or "")[:500],
+                )
+            except Exception:
+                pass
+
+        return response

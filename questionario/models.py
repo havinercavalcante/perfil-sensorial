@@ -3596,3 +3596,29 @@ class PainelRecebimento(SolicitacaoPlano):
         proxy               = True
         verbose_name        = "Painel de Recebimento"
         verbose_name_plural = "Painel de Recebimento"
+
+
+class PageVisit(models.Model):
+    PAGINA_CHOICES = [
+        ("landing",      "Landing Page (/)"),
+        ("login",        "Login (/login/)"),
+        ("cadastro",     "Cadastro (/registrar/)"),
+        ("instrumentos", "Instrumentos (/instrumentos/)"),
+        ("privacidade",  "Privacidade (/privacidade/)"),
+        ("contato",      "Contato (/contato/)"),
+        ("planos",       "Planos (/planos/)"),
+    ]
+
+    pagina      = models.CharField(max_length=20, choices=PAGINA_CHOICES)
+    ip          = models.GenericIPAddressField(null=True, blank=True)
+    user_agent  = models.TextField(blank=True, default="")
+    referrer    = models.URLField(max_length=500, blank=True, default="")
+    visitado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering            = ["-visitado_em"]
+        verbose_name        = "Visita de Página"
+        verbose_name_plural = "Visitas de Páginas"
+
+    def __str__(self):
+        return f"{self.get_pagina_display()} — {self.visitado_em:%d/%m/%Y %H:%M}"

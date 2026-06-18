@@ -43,9 +43,10 @@
 /* ─── stat cards ─────────────────────────────────── */
 .cards{
   display:grid;
-  grid-template-columns:repeat(6,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:var(--gap); margin-bottom:var(--gap);
 }
+.card-green::before{ background:linear-gradient(90deg,#059669,#4ade80) !important; }
 .card{
   background:var(--ca); border:1px solid var(--bo);
   border-radius:var(--r); padding:20px 18px 16px;
@@ -165,6 +166,7 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
   display:flex; flex-wrap:wrap; align-items:center; gap:6px 22px;
   padding:13px 20px; background:var(--ca); border:1px solid var(--bo);
   border-radius:var(--r); font-size:.8rem; color:var(--mu); box-shadow:var(--sh);
+  margin-bottom:28px;
 }
 .strip strong{ color:var(--tx); }
 .strip-dot{ width:7px; height:7px; border-radius:50%;
@@ -203,7 +205,10 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
 
 /* ─── RESPONSIVE ─────────────────────────────────── */
 @media(max-width:1200px){
-  .cards{ grid-template-columns:repeat(3,1fr); }
+  .cards{ grid-template-columns:repeat(4,1fr); }
+}
+@media(max-width:900px){
+  .cards{ grid-template-columns:repeat(2,1fr); }
 }
 @media(max-width:950px){
   .chart-grid{ grid-template-columns:1fr; }
@@ -246,15 +251,12 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
     </div>
   </div>
 
-  <!-- ── Cards ── -->
+  <!-- ── 8 KPI Cards (4 × 2) ── -->
   <div class="sec">
     <div class="cards">
-
       <div class="card">
         <div class="card-top">
-          <div class="card-ico">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
+          <div class="card-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         </div>
         <div class="card-num">{{ s.total_medicos }}</div>
         <div class="card-lbl">Profissionais</div>
@@ -262,9 +264,7 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
 
       <div class="card">
         <div class="card-top">
-          <div class="card-ico">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </div>
+          <div class="card-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           {% if s.novos_pacientes_30d > 0 %}<span class="card-badge">+{{ s.novos_pacientes_30d }}/30d</span>{% endif %}
         </div>
         <div class="card-num">{{ s.total_pacientes }}</div>
@@ -273,9 +273,7 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
 
       <div class="card">
         <div class="card-top">
-          <div class="card-ico">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
-          </div>
+          <div class="card-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6"/><path d="M9 16h4"/></svg></div>
         </div>
         <div class="card-num">{{ s.total_avaliacoes }}</div>
         <div class="card-lbl">Avaliações criadas</div>
@@ -283,19 +281,33 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
 
       <div class="card">
         <div class="card-top">
-          <div class="card-ico g">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
+          <div class="card-ico g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
         </div>
         <div class="card-num g">{{ s.total_concluidas }}</div>
         <div class="card-lbl">Concluídas</div>
       </div>
 
+      <div class="card card-green">
+        <div class="card-top">
+          <div class="card-ico g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <span class="card-badge">mensal</span>
+        </div>
+        <div class="card-num g" style="font-size:1.35rem;letter-spacing:-.03em;">{{ s.mrr }}</div>
+        <div class="card-lbl">MRR</div>
+      </div>
+
+      <div class="card card-green">
+        <div class="card-top">
+          <div class="card-ico g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
+          {% if s.sol_total_pendentes > 0 %}<span class="card-badge" style="background:rgba(234,88,12,.12);color:#c2410c;">{{ s.sol_total_pendentes }} pend.</span>{% endif %}
+        </div>
+        <div class="card-num g">{{ s.fin_total_ativos }}</div>
+        <div class="card-lbl">Assinantes ativos</div>
+      </div>
+
       <div class="card">
         <div class="card-top">
-          <div class="card-ico">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </div>
+          <div class="card-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E73D1" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
         </div>
         <div class="card-num">{{ s.total_links }}</div>
         <div class="card-lbl">Links enviados</div>
@@ -303,12 +315,99 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
 
       <div class="card">
         <div class="card-top">
-          <div class="card-ico g">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </div>
+          <div class="card-ico g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
         </div>
         <div class="card-num g">{{ s.links_usados }}</div>
         <div class="card-lbl">Links utilizados</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Activity strip ── -->
+  <div class="strip">
+    <span class="strip-dot"></span>
+    <span>Últimos <strong>7 dias</strong>: <strong>{{ s.pacientes_7d }}</strong> novos pacientes</span>
+    <span>Últimos <strong>30 dias</strong>: <strong>{{ s.novos_pacientes_30d }}</strong> novos pacientes</span>
+    <span>Links aproveitados: <strong>{{ s.links_usados }}</strong> de <strong>{{ s.total_links }}</strong></span>
+    {% if s.sol_total_pendentes > 0 %}
+    <span style="color:#b45309;">⚠ <strong>{{ s.sol_total_pendentes }}</strong> solicitação(ões) de plano pendente(s)</span>
+    {% endif %}
+  </div>
+
+  <!-- ── Financeiro + Solicitações de Plano (2 colunas) ── -->
+  <div class="sec">
+    <div class="tbl-grid">
+
+      <div class="tbl-wrap">
+        <div class="tbl-hd" style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="tbl-hd-t">💰 Financeiro</span>
+          <a href="/admin/questionario/painelpagamentos/recebimento/" style="font-size:.75rem;color:var(--br);font-weight:600;text-decoration:none;">Ver recebimento →</a>
+        </div>
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#f0fdf4;border-radius:8px;border-left:4px solid #059669;">
+            <div style="flex:1;">
+              <div style="font-size:.7rem;color:#059669;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">MRR Total</div>
+              <div style="font-size:1.5rem;font-weight:900;color:#065f46;letter-spacing:-.02em;">{{ s.mrr }}</div>
+            </div>
+            <div style="font-size:.8rem;color:#6b7280;">{{ s.fin_total_ativos }} ativo{{ s.fin_total_ativos|pluralize }}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:80px;padding:10px 12px;background:#eff6ff;border-radius:8px;border-left:3px solid #3b82f6;">
+              <div style="font-size:.65rem;color:#3b82f6;font-weight:700;text-transform:uppercase;">START</div>
+              <div style="font-size:1.5rem;font-weight:800;color:#1d4ed8;">{{ s.fin_breakdown.start }}</div>
+              <div style="font-size:.65rem;color:var(--mu);">R$ 39,90</div>
+            </div>
+            <div style="flex:1;min-width:80px;padding:10px 12px;background:#faf5ff;border-radius:8px;border-left:3px solid #8b5cf6;">
+              <div style="font-size:.65rem;color:#8b5cf6;font-weight:700;text-transform:uppercase;">PLUS</div>
+              <div style="font-size:1.5rem;font-weight:800;color:#6d28d9;">{{ s.fin_breakdown.plus }}</div>
+              <div style="font-size:.65rem;color:var(--mu);">R$ 79,90</div>
+            </div>
+            <div style="flex:1;min-width:80px;padding:10px 12px;background:#eff6ff;border-radius:8px;border-left:3px solid #0c3c7b;">
+              <div style="font-size:.65rem;color:#0c3c7b;font-weight:700;text-transform:uppercase;">ELITE</div>
+              <div style="font-size:1.5rem;font-weight:800;color:#0c3c7b;">{{ s.fin_breakdown.elite }}</div>
+              <div style="font-size:.65rem;color:var(--mu);">R$ 149,90</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <div class="tbl-hd" style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="tbl-hd-t">Solicitações de Plano</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            {% if s.sol_total_pendentes > 0 %}<span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:20px;font-size:.72rem;font-weight:700;">{{ s.sol_total_pendentes }} pendente{{ s.sol_total_pendentes|pluralize }}</span>{% endif %}
+            <a href="/admin/questionario/painelpagamentos/" style="font-size:.72rem;color:var(--br);font-weight:600;text-decoration:none;">Ver tudo →</a>
+          </div>
+        </div>
+        {% if s.sol_pendentes %}
+        <div class="tbl-scroll">
+          <table class="t">
+            <thead><tr><th>Profissional</th><th>Plano</th><th>Data</th><th></th></tr></thead>
+            <tbody>
+              {% for sol in s.sol_pendentes %}
+              <tr>
+                <td>
+                  <div style="font-weight:600;font-size:.83rem;">{{ sol.user.get_full_name|default:sol.user.username }}</div>
+                  <div style="font-size:.72rem;color:var(--mu);">{{ sol.user.email }}</div>
+                </td>
+                <td>
+                  {% if sol.plano == "elite" %}<span class="tag" style="background:#0c3c7b;color:#fff;">ELITE</span>
+                  {% elif sol.plano == "plus" %}<span class="tag" style="background:#8b5cf6;color:#fff;">PLUS</span>
+                  {% else %}<span class="tag b">START</span>{% endif %}
+                </td>
+                <td style="color:var(--mu);font-size:.75rem;white-space:nowrap;">{{ sol.criado_em|date:"d/m/Y" }}</td>
+                <td><a href="/admin/questionario/painelpagamentos/" style="font-size:.72rem;color:var(--br);font-weight:600;text-decoration:none;">Revisar →</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="padding:24px;text-align:center;color:var(--mu);font-size:.83rem;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">✓</div>
+          Nenhuma solicitação pendente
+        </div>
+        {% endif %}
       </div>
 
     </div>
@@ -335,11 +434,10 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
     </div>
   </div>
 
-  <!-- ── Tabelas: módulos + profissionais ── -->
+  <!-- ── Módulos + Profissionais (2 colunas) ── -->
   <div class="sec">
     <div class="sec-title">Detalhamento por módulo e profissional</div>
     <div class="tbl-grid">
-
       <div class="tbl-wrap">
         <div class="tbl-hd"><span class="tbl-hd-t">Avaliações por módulo</span></div>
         <div class="tbl-scroll">
@@ -398,17 +496,26 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
     <div class="tbl-full">
       <div class="tbl-scroll">
         <table class="t">
-          <thead><tr><th>Nome</th><th>Profissional</th><th>Responsável</th><th>Cadastrado em</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Profissional</th><th>Responsável</th><th>Avaliações</th><th>Cadastrado em</th></tr></thead>
           <tbody>
             {% for pac in s.pacientes_recentes %}
             <tr>
               <td><a href="/admin/questionario/paciente/{{ pac.id }}/change/">{{ pac.nome }}</a></td>
               <td>{{ pac.medico.get_full_name|default:pac.medico.username }}</td>
               <td>{{ pac.responsavel }}</td>
+              <td>
+                {% if pac.tipos_avaliacoes %}
+                  {% for nome in pac.tipos_avaliacoes %}
+                    <span style="display:inline-block;background:#eff6ff;color:#2563eb;padding:1px 7px;border-radius:4px;font-size:.72rem;font-weight:600;margin:1px 2px 1px 0;white-space:nowrap;">{{ nome }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span style="color:var(--mu);font-size:.75rem;">—</span>
+                {% endif %}
+              </td>
               <td style="color:var(--mu);font-size:.75rem;">{{ pac.criado_em|date:"d/m/Y H:i" }}</td>
             </tr>
             {% empty %}
-            <tr class="empty"><td colspan="4">Nenhum paciente cadastrado</td></tr>
+            <tr class="empty"><td colspan="5">Nenhum paciente cadastrado</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -416,12 +523,54 @@ table.t .empty td{ text-align:center; color:var(--fa); padding:22px; font-size:.
     </div>
   </div>
 
-  <!-- ── Activity strip ── -->
-  <div class="strip">
-    <span class="strip-dot"></span>
-    <span>Últimos <strong>7 dias</strong>: <strong>{{ s.pacientes_7d }}</strong> novos pacientes</span>
-    <span>Últimos <strong>30 dias</strong>: <strong>{{ s.novos_pacientes_30d }}</strong> novos pacientes</span>
-    <span>Links aproveitados: <strong>{{ s.links_usados }}</strong> de <strong>{{ s.total_links }}</strong></span>
+  <!-- ── Visitas de Páginas ── -->
+  <div class="sec">
+    <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <span>Visitas de Páginas</span>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:.75rem;color:var(--mu);">{{ s.visitas_total }} total</span>
+        <a href="/admin/questionario/pagevisit/" style="font-size:.75rem;color:var(--br);font-weight:600;text-decoration:none;">Ver detalhes →</a>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;">
+      {% with v=s.visitas %}
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#2563eb;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Landing</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#1e40af;">{{ v.landing|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/</div>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Login</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#15803d;">{{ v.login|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/login/</div>
+      </div>
+      <div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Cadastro</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#7e22ce;">{{ v.cadastro|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/registrar/</div>
+      </div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#ea580c;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Instrumentos</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#c2410c;">{{ v.instrumentos|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/instrumentos/</div>
+      </div>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#0284c7;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Planos</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#0369a1;">{{ v.planos|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/planos/</div>
+      </div>
+      <div style="background:#fdf2f8;border:1px solid #fbcfe8;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#db2777;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Contato</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#be185d;">{{ v.contato|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/contato/</div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:.65rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Privacidade</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#374151;">{{ v.privacidade|default:"0" }}</div>
+        <div style="font-size:.65rem;color:var(--mu);">/privacidade/</div>
+      </div>
+      {% endwith %}
+    </div>
   </div>
 
   <!-- ── Modelos do sistema (lista de apps do admin) ── -->
