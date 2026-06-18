@@ -287,7 +287,7 @@
     <div class="user-menu" id="userMenu">
       <div class="user-btn" onclick="toggleDropdown()">
         <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
-        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+        <span class="user-name">{{ user.username }}</span>
         <i data-lucide="chevron-down" style="width:13px;height:13px;opacity:.7;"></i>
       </div>
       <div class="dropdown" id="dropdown">

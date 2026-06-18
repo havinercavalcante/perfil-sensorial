@@ -9,7 +9,7 @@ from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
     SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos, PainelRecebimento,
-    Indicacao,
+    Indicacao, get_modulos_para_plano,
 )
 
 
@@ -323,7 +323,8 @@ class PerfilMedicoAdmin(admin.ModelAdmin):
 
     @admin.display(description="Módulos do plano atual")
     def modulos_do_plano_display(self, obj):
-        codigos = MODULOS_POR_PLANO.get(obj.plano, [])
+        esps = list(obj.especialidades.values_list("codigo", flat=True))
+        codigos = get_modulos_para_plano(esps, obj.plano) if esps else set(MODULOS_POR_PLANO.get(obj.plano, []))
         if not codigos:
             return "—"
         nomes = list(ModuloAvaliacao.objects.filter(codigo__in=codigos).values_list("nome", flat=True))
@@ -424,7 +425,8 @@ def _aprovar_solicitacoes(modeladmin, request, queryset):
             perfil.user.is_active = True
             perfil.user.save(update_fields=["is_active"])
         perfil.save(update_fields=["plano", "plano_expiracao"])
-        codigos = MODULOS_POR_PLANO.get(sol.plano, [])
+        esps = list(perfil.especialidades.values_list("codigo", flat=True))
+        codigos = get_modulos_para_plano(esps, sol.plano)
         perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
         aprovados += 1
 
@@ -498,7 +500,8 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                             perfil.user.is_active = True
                             perfil.user.save(update_fields=["is_active"])
                         perfil.save(update_fields=["plano", "plano_expiracao"])
-                        codigos = MODULOS_POR_PLANO.get(sol.plano, [])
+                        esps = list(perfil.especialidades.values_list("codigo", flat=True))
+                        codigos = get_modulos_para_plano(esps, sol.plano)
                         perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
                         _notificar_usuario_aprovado(sol, perfil.plano_expiracao)
                         dj_messages.success(
@@ -525,7 +528,8 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                     # Atualiza plano se foi enviado
                     if novo_plano in ("start", "plus", "elite"):
                         perfil.plano = novo_plano
-                        codigos = MODULOS_POR_PLANO.get(novo_plano, [])
+                        esps = list(perfil.especialidades.values_list("codigo", flat=True))
+                        codigos = get_modulos_para_plano(esps, novo_plano)
                         perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
                     # Renova vencimento: +30 dias a partir de hoje (ou da expiração atual se ainda vigente)
                     if perfil.plano_expiracao and perfil.plano_expiracao > agora:
@@ -563,7 +567,8 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                     if plano in ("trial", "start", "plus", "elite"):
                         perfil.plano = plano
                         if plano != "trial":
-                            codigos = MODULOS_POR_PLANO.get(plano, [])
+                            esps = list(perfil.especialidades.values_list("codigo", flat=True))
+                            codigos = get_modulos_para_plano(esps, plano)
                             perfil.modulos_liberados.set(
                                 ModuloAvaliacao.objects.filter(codigo__in=codigos)
                             )

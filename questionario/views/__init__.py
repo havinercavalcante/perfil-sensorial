@@ -121,6 +121,8 @@ from .inventario_dislexia import (
     nova_avaliacao_inventario_dislexia, inventario_dislexia_form,
     inventario_dislexia_resultado, inventario_dislexia_deletar,
 )
+# ── Nutrição / Terapia Alimentar ───────────────────────────────────────────
+from .terapia_alimentar import *
 # ──────────────────────────────────────────────────────────────────────────
 from .laudos import laudo_generico
 from .pagamentos import solicitar_plano, painel_pagamentos, aprovar_solicitacao, rejeitar_solicitacao

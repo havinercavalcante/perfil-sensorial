@@ -1,0 +1,219 @@
+{% extends "questionario/base.html" %}
+{% block title %}Anamnese Alimentar — Página {{ pagina }} de {{ total }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --nut: #27AE60; --nut-dark: #1A5E38; }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--nut-dark), var(--nut));
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .secao-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .2rem; }
+  .secao-header p  { font-size: .82rem; opacity: .8; }
+
+  .steps-bar { display: flex; gap: 4px; margin-top: .6rem; }
+  .step-dot { height: 6px; flex: 1; border-radius: 3px; background: rgba(255,255,255,.25); }
+  .step-dot.done   { background: rgba(255,255,255,.8); }
+  .step-dot.active { background: rgba(255,255,255,.5); }
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: rgba(255,255,255,.8); margin-top: .3rem; }
+
+  .grupo-titulo {
+    font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--nut-dark); padding: .4rem .75rem; margin: 1.1rem 0 .75rem;
+    background: color-mix(in srgb, var(--nut) 10%, #fff);
+    border-left: 4px solid var(--nut); border-radius: 0 6px 6px 0;
+  }
+
+  /* Checkbox grid */
+  .checkbox-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: .5rem; margin-bottom: .75rem;
+  }
+  .checkbox-item {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .45rem .65rem; border-radius: 8px;
+    border: 1.5px solid var(--border); background: #fff;
+    cursor: pointer; transition: border-color .15s, background .15s;
+    font-size: .85rem; user-select: none;
+  }
+  .checkbox-item:hover { border-color: var(--nut); background: color-mix(in srgb, var(--nut) 5%, #fff); }
+  .checkbox-item input[type=checkbox] { accent-color: var(--nut); width: 16px; height: 16px; flex-shrink: 0; }
+  .checkbox-item.checked { border-color: var(--nut); background: color-mix(in srgb, var(--nut) 8%, #fff); font-weight: 600; }
+
+  .form-textarea label { font-size: .83rem; font-weight: 600; color: var(--text); display: block; margin-bottom: .35rem; }
+  .form-textarea textarea {
+    width: 100%; box-sizing: border-box; border-radius: 8px;
+    border: 1.5px solid var(--border); padding: .65rem .75rem;
+    font-size: .9rem; font-family: inherit; resize: vertical; min-height: 80px;
+    outline: none; transition: border-color .15s;
+  }
+  .form-textarea textarea:focus { border-color: var(--nut); }
+
+  /* Sensorial table */
+  .sens-table { width: 100%; border-collapse: collapse; }
+  .sens-table th {
+    background: color-mix(in srgb, var(--nut) 10%, #fff);
+    color: var(--nut-dark); font-size: .78rem; font-weight: 700;
+    padding: .5rem .75rem; border: 1px solid color-mix(in srgb, var(--nut) 20%, #fff);
+    text-align: left;
+  }
+  .sens-table td { padding: .4rem .6rem; border: 1px solid var(--border); vertical-align: middle; }
+  .sens-table .sens-label { font-size: .85rem; font-weight: 600; min-width: 200px; }
+  .sens-table textarea {
+    width: 100%; box-sizing: border-box; border: none; background: transparent;
+    font-size: .83rem; font-family: inherit; resize: vertical; min-height: 44px; outline: none;
+  }
+  .sens-table textarea:focus { background: color-mix(in srgb, var(--nut) 5%, #fff); }
+  .sens-table tr:nth-child(even) td { background: #FAFFFE; }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
+
+  @media print {
+    nav, .btn-back, .no-print { display: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho -->
+<div class="secao-header">
+  <h2><i data-lucide="clipboard" style="width:18px;height:18px;vertical-align:middle;margin-right:.4rem;"></i>Anamnese Alimentar — {{ paciente.nome }}</h2>
+  <p>{% if pagina == 1 %}Página 1: História{% else %}Página 2: Frequência Sensorial Alimentar{% endif %}</p>
+  <div class="steps-bar">
+    {% for i in "12" %}{% with forloop.counter as n %}<div class="step-dot {% if n < pagina %}done{% elif n == pagina %}active{% endif %}"></div>{% endwith %}{% endfor %}
+  </div>
+  <div class="progress-info">
+    <span>Página {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+</div>
+
+<form method="post" id="anamnese-form">
+  {% csrf_token %}
+
+  {% if pagina == 1 %}
+  <!-- Página 1: História -->
+
+  <div class="card">
+    <div class="card-title"><i data-lucide="activity" style="width:18px;height:18px;"></i> Histórico de Saúde</div>
+
+    <div class="grupo-titulo">A criança apresentou alguma das questões?</div>
+    <div class="checkbox-grid">
+      <label class="checkbox-item{% if avaliacao.hist_alergia %} checked{% endif %}">
+        <input type="checkbox" name="hist_alergia" value="1" {% if avaliacao.hist_alergia %}checked{% endif %}> Alergia alimentar
+      </label>
+      <label class="checkbox-item{% if avaliacao.hist_refluxo %} checked{% endif %}">
+        <input type="checkbox" name="hist_refluxo" value="1" {% if avaliacao.hist_refluxo %}checked{% endif %}> Refluxo
+      </label>
+      <label class="checkbox-item{% if avaliacao.hist_prob_gi %} checked{% endif %}">
+        <input type="checkbox" name="hist_prob_gi" value="1" {% if avaliacao.hist_prob_gi %}checked{% endif %}> Outro problema gastrointestinal
+      </label>
+      <label class="checkbox-item{% if avaliacao.hist_dif_respiratoria %} checked{% endif %}">
+        <input type="checkbox" name="hist_dif_respiratoria" value="1" {% if avaliacao.hist_dif_respiratoria %}checked{% endif %}> Dificuldade respiratória
+      </label>
+      <label class="checkbox-item{% if avaliacao.hist_baixo_peso %} checked{% endif %}">
+        <input type="checkbox" name="hist_baixo_peso" value="1" {% if avaliacao.hist_baixo_peso %}checked{% endif %}> Baixo peso ao nascer
+      </label>
+      <label class="checkbox-item{% if avaliacao.hist_prematuridade %} checked{% endif %}">
+        <input type="checkbox" name="hist_prematuridade" value="1" {% if avaliacao.hist_prematuridade %}checked{% endif %}> Prematuridade
+      </label>
+      <label class="checkbox-item{% if avaliacao.hist_tonus %} checked{% endif %}">
+        <input type="checkbox" name="hist_tonus" value="1" {% if avaliacao.hist_tonus %}checked{% endif %}> Alterações de tônus muscular
+      </label>
+    </div>
+
+    <div class="form-textarea" style="margin-bottom:1.2rem;">
+      <label>Explane a respeito</label>
+      <textarea name="hist_explane" placeholder="Descreva detalhes sobre as questões marcadas acima...">{{ avaliacao.hist_explane }}</textarea>
+    </div>
+
+    <div class="grupo-titulo">Dificuldade ou impacto nas funções de alimentação</div>
+    <div class="checkbox-grid">
+      <label class="checkbox-item{% if avaliacao.func_amamentacao %} checked{% endif %}">
+        <input type="checkbox" name="func_amamentacao" value="1" {% if avaliacao.func_amamentacao %}checked{% endif %}> Amamentação
+      </label>
+      <label class="checkbox-item{% if avaliacao.func_mamadeira %} checked{% endif %}">
+        <input type="checkbox" name="func_mamadeira" value="1" {% if avaliacao.func_mamadeira %}checked{% endif %}> Mamadeira
+      </label>
+      <label class="checkbox-item{% if avaliacao.func_papinhas %} checked{% endif %}">
+        <input type="checkbox" name="func_papinhas" value="1" {% if avaliacao.func_papinhas %}checked{% endif %}> Transição para papinhas
+      </label>
+      <label class="checkbox-item{% if avaliacao.func_solidos %} checked{% endif %}">
+        <input type="checkbox" name="func_solidos" value="1" {% if avaliacao.func_solidos %}checked{% endif %}> Transição para sólidos
+      </label>
+      <label class="checkbox-item{% if avaliacao.func_maos %} checked{% endif %}">
+        <input type="checkbox" name="func_maos" value="1" {% if avaliacao.func_maos %}checked{% endif %}> Comer com as mãos / se suja
+      </label>
+      <label class="checkbox-item{% if avaliacao.func_utensilios %} checked{% endif %}">
+        <input type="checkbox" name="func_utensilios" value="1" {% if avaliacao.func_utensilios %}checked{% endif %}> Uso de utensílios
+      </label>
+      <label class="checkbox-item{% if avaliacao.func_copo %} checked{% endif %}">
+        <input type="checkbox" name="func_copo" value="1" {% if avaliacao.func_copo %}checked{% endif %}> Uso do copo
+      </label>
+    </div>
+
+    <div class="form-textarea" style="margin-bottom:1.2rem;">
+      <label>Explane a respeito</label>
+      <textarea name="func_explane" placeholder="Descreva detalhes sobre as dificuldades marcadas acima...">{{ avaliacao.func_explane }}</textarea>
+    </div>
+
+    <div class="form-textarea">
+      <label>Como e quando aconteceu a diminuição do consumo e variedade alimentar?</label>
+      <textarea name="historico_declinio" rows="4" placeholder="Descreva a evolução da seletividade alimentar...">{{ avaliacao.historico_declinio }}</textarea>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Página 2: Frequência Sensorial Alimentar -->
+  <div class="card">
+    <div class="card-title"><i data-lucide="zap" style="width:18px;height:18px;"></i> Frequência Sensorial Alimentar</div>
+    <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">Para cada item, registre as observações clínicas sobre a reatividade sensorial da criança em relação ao alimento.</p>
+
+    {% for grupo in grupos %}
+    <div class="grupo-titulo">{{ grupo.nome }}</div>
+    <table class="sens-table" style="margin-bottom:1rem;">
+      <thead>
+        <tr>
+          <th style="min-width:200px;">Característica</th>
+          <th>Observações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for label, field_value, field_name in grupo.itens %}
+        <tr>
+          <td class="sens-label">{{ label }}</td>
+          <td><textarea name="{{ field_name }}" rows="2" placeholder="Observações...">{{ field_value }}</textarea></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="nav-row no-print">
+    {% if pagina_anterior %}
+      <a href="{% url 'anamnese_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+    {% else %}<div></div>{% endif %}
+    <button type="submit" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">
+      {% if pagina == total %}<i data-lucide="check-circle" style="width:14px;height:14px;"></i> Concluir{% else %}Próximo <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>{% endif %}
+    </button>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle checked class on checkbox items
+document.querySelectorAll('.checkbox-item input[type=checkbox]').forEach(function(cb){
+  cb.addEventListener('change', function(){
+    cb.closest('.checkbox-item').classList.toggle('checked', cb.checked);
+  });
+});
+</script>
+{% endblock %}

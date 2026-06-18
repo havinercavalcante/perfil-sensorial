@@ -14,6 +14,7 @@ from ..models import (
     MODULOS_POR_PLANO,
     PerfilMedico,
     SolicitacaoPlano,
+    get_modulos_para_plano,
 )
 
 
@@ -135,8 +136,9 @@ def aprovar_solicitacao(request, sol_id):
             perfil.user.save(update_fields=["is_active"])
         perfil.save(update_fields=["plano", "plano_expiracao"])
 
-        # Libera módulos do plano
-        codigos = MODULOS_POR_PLANO.get(sol.plano, [])
+        # Libera módulos do plano conforme especialidade
+        esps = list(perfil.especialidades.values_list("codigo", flat=True))
+        codigos = get_modulos_para_plano(esps, sol.plano)
         modulos = ModuloAvaliacao.objects.filter(codigo__in=codigos)
         perfil.modulos_liberados.set(modulos)
 

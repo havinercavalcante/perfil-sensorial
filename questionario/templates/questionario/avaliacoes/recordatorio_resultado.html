@@ -1,0 +1,254 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado Recordatório Alimentar — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --nut: #27AE60; --nut-dark: #1A5E38; }
+
+  .resultado-header {
+    background: linear-gradient(135deg, var(--nut-dark), var(--nut));
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.35rem; margin-bottom: .3rem; }
+  .resultado-header p  { opacity: .85; font-size: .9rem; }
+
+  .dia-badge {
+    display: inline-block; padding: .25rem .75rem; border-radius: 20px;
+    font-size: .75rem; font-weight: 700; letter-spacing: .04em;
+    background: color-mix(in srgb, var(--nut) 12%, #fff); color: var(--nut-dark);
+    margin-bottom: .75rem;
+  }
+
+  .rec-table-wrap { overflow-x: auto; margin-bottom: .5rem; }
+  .rec-table { width: 100%; border-collapse: collapse; font-size: .83rem; min-width: 500px; }
+  .rec-table th {
+    background: color-mix(in srgb, var(--nut) 10%, #fff);
+    color: var(--nut-dark); font-size: .76rem; font-weight: 700;
+    padding: .5rem .65rem; border: 1px solid color-mix(in srgb, var(--nut) 20%, #fff);
+    text-align: left;
+  }
+  .rec-table td { padding: .4rem .6rem; border: 1px solid var(--border); vertical-align: top; font-size: .83rem; }
+  .rec-table .refeicao-label { font-weight: 600; color: var(--nut-dark); white-space: nowrap; }
+  .rec-table tr:nth-child(even) td { background: #FAFFFE; }
+  .rec-table .vazio { color: var(--text-muted); font-style: italic; font-size: .78rem; }
+
+  .inv-section { margin-bottom: 1rem; }
+  .inv-section-title {
+    font-size: .82rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--nut-dark); padding: .4rem .75rem; margin-bottom: .5rem;
+    background: color-mix(in srgb, var(--nut) 10%, #fff);
+    border-left: 4px solid var(--nut); border-radius: 0 6px 6px 0;
+  }
+
+  .inv-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+  .inv-table th {
+    background: color-mix(in srgb, var(--nut) 8%, #fff);
+    color: var(--nut-dark); font-size: .76rem; font-weight: 700;
+    padding: .45rem .6rem; border: 1px solid color-mix(in srgb, var(--nut) 20%, #fff);
+    text-align: left;
+  }
+  .inv-table td { padding: .35rem .6rem; border: 1px solid var(--border); font-size: .82rem; }
+  .inv-table tr:nth-child(even) td { background: #FAFFFE; }
+  .vazio-aviso { font-size: .82rem; color: var(--text-muted); font-style: italic; padding: .5rem 0; }
+
+  @media print {
+    nav, .btn-back, .no-print { display: none !important; }
+    .resultado-header { background: var(--nut-dark) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card, .inv-section { page-break-inside: avoid; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho -->
+<div class="resultado-header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <h1><i data-lucide="utensils" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Recordatório Alimentar — {{ paciente.nome }}</h1>
+      <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Recordatório dos 3 dias -->
+{% for dia in dias %}
+<div class="card">
+  <div class="card-title"><i data-lucide="calendar" style="width:18px;height:18px;"></i> {{ dia.label }}</div>
+  <div class="rec-table-wrap">
+    <table class="rec-table">
+      <thead>
+        <tr>
+          <th style="min-width:120px;">Refeição</th>
+          <th>Horário</th>
+          <th style="min-width:200px;">O que comeu</th>
+          <th>Onde</th>
+          <th>Com quem</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rf_label, entrada in dia.refeicoes_linhas %}
+        <tr>
+          <td class="refeicao-label">{{ rf_label }}</td>
+          <td>{% if entrada and entrada.horario %}{{ entrada.horario }}{% else %}<span class="vazio">—</span>{% endif %}</td>
+          <td>{% if entrada and entrada.o_que_comeu %}{{ entrada.o_que_comeu }}{% else %}<span class="vazio">—</span>{% endif %}</td>
+          <td>{% if entrada and entrada.onde %}{{ entrada.onde }}{% else %}<span class="vazio">—</span>{% endif %}</td>
+          <td>{% if entrada and entrada.com_quem %}{{ entrada.com_quem }}{% else %}<span class="vazio">—</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Inventários -->
+<div class="card">
+  <div class="card-title"><i data-lucide="list" style="width:18px;height:18px;"></i> Inventário Alimentar</div>
+
+  <div class="inv-section">
+    <div class="inv-section-title">Alimentos que a criança DEIXOU DE COMER</div>
+    {% if recusados %}
+    <div style="overflow-x:auto;">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Alimento</th>
+            <th>Preparo</th>
+            <th>Horário</th>
+            <th>Observação</th>
+            <th>Há quanto tempo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recusados %}
+          <tr>
+            <td>{{ item.alimento }}</td>
+            <td>{{ item.preparo|default:"—" }}</td>
+            <td>{{ item.horario|default:"—" }}</td>
+            <td>{{ item.observacao|default:"—" }}</td>
+            <td>{{ item.tempo|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="vazio-aviso">Nenhum alimento registrado.</p>
+    {% endif %}
+  </div>
+
+  <div class="inv-section">
+    <div class="inv-section-title">CARDÁPIO FAMILIAR</div>
+    {% if familiares %}
+    <div style="overflow-x:auto;">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Alimento</th>
+            <th>Preparo</th>
+            <th>Horário</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in familiares %}
+          <tr>
+            <td>{{ item.alimento }}</td>
+            <td>{{ item.preparo|default:"—" }}</td>
+            <td>{{ item.horario|default:"—" }}</td>
+            <td>{{ item.observacao|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="vazio-aviso">Nenhum alimento registrado.</p>
+    {% endif %}
+  </div>
+
+  <div class="inv-section">
+    <div class="inv-section-title">Alimentos que a criança COME ATUALMENTE</div>
+    {% if aceitos %}
+    <div style="overflow-x:auto;">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Alimento</th>
+            <th>Preparo</th>
+            <th>Horário</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in aceitos %}
+          <tr>
+            <td>{{ item.alimento }}</td>
+            <td>{{ item.preparo|default:"—" }}</td>
+            <td>{{ item.horario|default:"—" }}</td>
+            <td>{{ item.observacao|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="vazio-aviso">Nenhum alimento registrado.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Observações clínicas -->
+<div class="card">
+  <div class="card-title" style="color:var(--nut);">
+    <i data-lucide="pencil" style="width:16px;height:16px;"></i> Observações Clínicas
+  </div>
+  <form id="formObs" method="post" action="{% url 'salvar_observacoes_recordatorio' avaliacao.uuid %}">
+    {% csrf_token %}
+    <textarea name="observacoes" rows="5" placeholder="Registre observações, conclusões ou recomendações..."
+      style="width:100%;resize:vertical;border-radius:8px;border:1.5px solid var(--border);padding:.75rem;font-size:.9rem;box-sizing:border-box;">{{ avaliacao.observacoes }}</textarea>
+    <div style="display:flex;align-items:center;gap:1rem;margin-top:.75rem;flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" style="background:var(--nut);border-color:var(--nut);" onclick="salvarObs()">
+        <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar Observações
+      </button>
+      <span id="obs-status" style="font-size:.82rem;color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function salvarObs() {
+  const form   = document.getElementById('formObs');
+  const status = document.getElementById('obs-status');
+  const data   = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  }).catch(() => {
+    status.textContent = 'Erro ao salvar';
+    status.style.color = '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
+{% endblock %}

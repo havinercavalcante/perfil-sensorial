@@ -852,13 +852,13 @@
       em um só lugar
     </h1>
     <p>
-      O IntegraMente reúne mais de 70 instrumentos validados para crianças e adultos —
-      da Terapia Ocupacional à Psicologia Clínica — com resultados automáticos,
+      O IntegraMente reúne mais de 80 instrumentos validados para crianças e adultos —
+      da Terapia Ocupacional à Nutrição Clínica — com resultados automáticos,
       documentos digitais e histórico completo por paciente.
     </p>
     <p style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:-.8rem;margin-bottom:2.5rem;font-weight:500;">
       <i data-lucide="shield-check" style="width:14px;height:14px;vertical-align:middle;margin-right:.3rem;opacity:.85;"></i>
-      Usado por terapeutas ocupacionais, fonoaudiólogos e psicólogos em todo o Brasil
+      Usado por terapeutas ocupacionais, fonoaudiólogos, psicólogos e nutricionistas em todo o Brasil
     </p>
     <div class="hero-actions">
       <a href="{% url 'registrar' %}" class="btn btn-xl btn-hero-primary">
@@ -870,11 +870,11 @@
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-value">70+</div>
+        <div class="stat-value">80+</div>
         <div class="stat-label">Instrumentos</div>
       </div>
       <div class="stat">
-        <div class="stat-value">8</div>
+        <div class="stat-value">9</div>
         <div class="stat-label">Especialidades</div>
       </div>
       <div class="stat" style="background:rgba(255,255,255,0.12);">
@@ -992,6 +992,19 @@
         <span class="tag">Rastreio de Dislexia</span>
         <span class="tag">Checklist Dislexia</span>
         <span class="tag">Protocolo Dislexia</span>
+      </div>
+    </div>
+
+    <div class="disc-card">
+      <div class="disc-icon"><i data-lucide="apple" style="width:22px;height:22px;color:white;"></i></div>
+      <h3>Nutrição</h3>
+      <p>Avaliação completa para terapia alimentar — recordatório de 3 dias, inventário alimentar, anamnese e perfil sensorial da alimentação, com link para os pais preencherem em casa.</p>
+      <div class="disc-tools">
+        <span class="tag">Recordatório Alimentar</span>
+        <span class="tag">Inventário Alimentar</span>
+        <span class="tag">Anamnese Alimentar</span>
+        <span class="tag">Frequência Sensorial</span>
+        <span class="tag">Triagem Alimentação Seletiva</span>
       </div>
     </div>
 
@@ -1191,6 +1204,7 @@
     <div class="section-label" style="justify-content:center;">— Planos</div>
     <h2 class="section-title">Escolha o plano ideal para você</h2>
     <p class="section-sub" style="margin:0 auto;">Sem taxas ocultas. Cancele quando quiser.</p>
+    <p style="font-size:.82rem;color:#4a7a9b;margin-top:.6rem;font-style:italic;">Os módulos liberados variam conforme a especialidade cadastrada.</p>
   </div>
 
   <div class="pricing-grid">
@@ -1215,14 +1229,15 @@
       </div>
 
       <div class="plan-divider"></div>
-      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos disponíveis:</div>
+      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos essenciais por especialidade:</div>
       <ul class="plan-modules">
-        <li>Perfil Sensorial</li>
-        <li>Perfil Sensorial Bebê/Criança Pequena</li>
-        <li>Questionário Sensorial Escolar</li>
-        <li>SPM — Sensory Processing Measure</li>
+        <li><strong>TO:</strong> Perfil Sensorial, Bebê, Escolar, SPM</li>
+        <li><strong>Psicologia:</strong> PHQ-9, GAD-7, SDQ, M-CHAT</li>
+        <li><strong>Fonoaudiologia:</strong> Linguagem, Alimentação Seletiva</li>
+        <li><strong>Nutrição:</strong> Anamnese Alimentar</li>
+        <li><strong>Pediatria / ABA / Psicopedagogia</strong> e mais</li>
       </ul>
-      <div style="font-size:0.75rem;color:#4a7a9b;font-style:italic;">Focado em avaliações sensoriais e motoras.</div>
+      <div style="font-size:0.75rem;color:#4a7a9b;font-style:italic;">Módulos selecionados conforme sua especialidade.</div>
 
       <div class="plan-divider"></div>
       <ul class="plan-features">
@@ -1262,15 +1277,15 @@
       </div>
 
       <div class="plan-divider"></div>
-      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos disponíveis:</div>
+      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos ampliados por especialidade:</div>
       <ul class="plan-modules">
         <li>Todos os módulos do START</li>
-        <li>Vineland + PEDI + Portage</li>
-        <li>Conners-3, ETDAH, SDQ, SNAP-IV</li>
-        <li>SCARED, MASC, AUQEI, SCQ, AQ-10</li>
-        <li>BDI, BAI, DASS-21, HAD, BSL-23</li>
-        <li>PHQ-9, GAD-7, EPDS, GHQ-12</li>
-        <li>Denver II + QMPI + Dislexia</li>
+        <li><strong>TO:</strong> + Vineland, PEDI, Portage, EDM, MABC-2, Beery</li>
+        <li><strong>Psicologia:</strong> + Conners, ETDAH, BDI, BAI, DASS-21, EPDS e 20+ escalas</li>
+        <li><strong>Fonoaudiologia:</strong> todos os 6 módulos</li>
+        <li><strong>Neuropsicologia:</strong> + QMPI, Conners, escalas de humor</li>
+        <li><strong>Psicopedagogia:</strong> + Conners, ETDAH, Protocolo Dislexia</li>
+        <li><strong>Pediatria / ABA / Nutrição</strong> completos</li>
       </ul>
 
       <div class="plan-divider"></div>
@@ -1310,16 +1325,15 @@
       </div>
 
       <div class="plan-divider"></div>
-      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Todos os módulos disponíveis:</div>
+      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Acesso completo por especialidade:</div>
       <ul class="plan-modules">
         <li>Todos os módulos do PLUS</li>
-        <li>Vineland-3, EDM, MABC-2, Beery VMI</li>
-        <li>PCL-5, BPQ, BSL-23, MSI-BPD</li>
-        <li>K-10, UCLA, Rosenberg, AUDIT</li>
-        <li>BIS-11, LSAS, HAM-A, GDS-15</li>
-        <li>CDI, IAR, PAS, Risco de Suicídio</li>
-        <li>Agorafobia, Pânico e muito mais</li>
-        <li>Anamneses digitais + Documentos</li>
+        <li><strong>TO:</strong> + Vineland-3 (versão atualizada)</li>
+        <li><strong>Psicologia:</strong> + PCL-5, BPQ, BSL-23, Dep. Emocional</li>
+        <li><strong>Neuropsicologia:</strong> + BSL-23, BPQ, PCL-5</li>
+        <li><strong>Psicopedagogia:</strong> + Inventário de Sinais Disléxicos</li>
+        <li>Anamneses digitais + Documentos IA</li>
+        <li>Acesso antecipado a novos módulos</li>
       </ul>
 
       <div class="plan-divider"></div>

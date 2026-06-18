@@ -125,6 +125,9 @@ class ModuloAvaliacao(models.Model):
         ("checklist_dislexia",     "Checklist de Dislexia"),
         ("prot_dislexia_prof",     "Protocolo Dislexia — Avaliação Escolar"),
         ("inventario_dislexia",    "Inventário de Sinais Disléxicos"),
+        # ── Nutrição / Terapia Alimentar ─────────────────────────────────────
+        ("recordatorio_alimentar",   "Recordatório Alimentar (3 dias)"),
+        ("anamnese_alimentar",       "Anamnese Alimentar"),
     ]
     codigo = models.CharField("Código", max_length=30, unique=True, choices=MODULO_CHOICES)
     nome = models.CharField("Nome", max_length=100)
@@ -149,6 +152,7 @@ ESPECIALIDADE_CHOICES = [
     ("pediatra",              "Pediatria"),
     ("neuropediatra",         "Neuropediatria"),
     ("analista_aba",          "ABA / Análise do Comportamento"),
+    ("nutricionista",          "Nutrição"),
 ]
 
 MODULOS_POR_ESPECIALIDADE = {
@@ -213,6 +217,9 @@ MODULOS_POR_ESPECIALIDADE = {
     "analista_aba": [
         "habilidades_adaptativas", "comportamento_funcional",
         "mchat", "vineland3",
+    ],
+    "nutricionista": [
+        "recordatorio_alimentar", "anamnese_alimentar", "alimentacao_seletiva",
     ],
 }
 
@@ -826,6 +833,163 @@ class Indicacao(models.Model):
         return f"{self.indicador.username} indicou {self.indicado.username}"
 
 
+# ── Terapia Alimentar ─────────────────────────────────────────────────────────
+
+class AvaliacaoRecordatorio(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_recordatorio")
+    token = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data = models.DateField("Data da avaliação", default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual = models.IntegerField(default=1)
+    observacoes = models.TextField("Observações clínicas", blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Recordatório Alimentar"
+        verbose_name_plural = "Recordatórios Alimentares"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Recordatório — {self.paciente.nome} — {self.data}"
+
+
+REFEICAO_CHOICES = [
+    ("cafe", "Café da manhã"),
+    ("lanche_manha", "Lanche da manhã"),
+    ("almoco", "Almoço"),
+    ("lanche_tarde", "Lanche da tarde"),
+    ("jantar", "Jantar"),
+    ("ceia", "Ceia"),
+    ("entre_refeicoes", "Entre refeições"),
+]
+
+DIA_CHOICES = [
+    ("1", "Dia 1 — semana"),
+    ("2", "Dia 2 — semana"),
+    ("3", "Dia 3 — fim de semana"),
+]
+
+
+class EntradaRecordatorio(models.Model):
+    avaliacao = models.ForeignKey(AvaliacaoRecordatorio, on_delete=models.CASCADE, related_name="entradas")
+    dia = models.CharField(max_length=1, choices=DIA_CHOICES)
+    refeicao = models.CharField(max_length=20, choices=REFEICAO_CHOICES)
+    horario = models.CharField(max_length=20, blank=True, default="")
+    o_que_comeu = models.TextField(blank=True, default="")
+    onde = models.CharField(max_length=100, blank=True, default="")
+    com_quem = models.CharField(max_length=100, blank=True, default="")
+
+    class Meta:
+        unique_together = ("avaliacao", "dia", "refeicao")
+        ordering = ["dia", "refeicao"]
+
+
+TIPO_INVENTARIO_CHOICES = [
+    ("recusado", "Deixou de comer"),
+    ("familiar", "Cardápio familiar"),
+    ("aceito", "Come atualmente"),
+]
+
+
+class InventarioAlimento(models.Model):
+    avaliacao = models.ForeignKey(AvaliacaoRecordatorio, on_delete=models.CASCADE, related_name="inventario")
+    tipo = models.CharField(max_length=10, choices=TIPO_INVENTARIO_CHOICES)
+    ordem = models.IntegerField(default=0)
+    alimento = models.CharField(max_length=200, blank=True, default="")
+    preparo = models.TextField(blank=True, default="")
+    horario = models.CharField(max_length=50, blank=True, default="")
+    observacao = models.TextField(blank=True, default="")
+    tempo = models.CharField(max_length=100, blank=True, default="")  # only for 'recusado'
+
+    class Meta:
+        ordering = ["tipo", "ordem"]
+
+
+class AvaliacaoAnamnese(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_anamnese")
+    data = models.DateField("Data da avaliação", default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual = models.IntegerField(default=1)
+
+    # Parte 1: História
+    hist_alergia = models.BooleanField(default=False)
+    hist_refluxo = models.BooleanField(default=False)
+    hist_prob_gi = models.BooleanField(default=False)
+    hist_dif_respiratoria = models.BooleanField(default=False)
+    hist_baixo_peso = models.BooleanField(default=False)
+    hist_prematuridade = models.BooleanField(default=False)
+    hist_tonus = models.BooleanField(default=False)
+    hist_explane = models.TextField(blank=True, default="")
+
+    func_amamentacao = models.BooleanField(default=False)
+    func_mamadeira = models.BooleanField(default=False)
+    func_papinhas = models.BooleanField(default=False)
+    func_solidos = models.BooleanField(default=False)
+    func_maos = models.BooleanField(default=False)
+    func_utensilios = models.BooleanField(default=False)
+    func_copo = models.BooleanField(default=False)
+    func_explane = models.TextField(blank=True, default="")
+    historico_declinio = models.TextField(blank=True, default="")
+
+    # Parte 2: Frequência Sensorial
+    # Visual
+    sens_visual_forma = models.TextField(blank=True, default="")
+    sens_visual_cor = models.TextField(blank=True, default="")
+    sens_visual_tamanho = models.TextField(blank=True, default="")
+    sens_visual_outros = models.TextField(blank=True, default="")
+    # Olfato
+    sens_olfato_pouco = models.TextField(blank=True, default="")
+    sens_olfato_intenso = models.TextField(blank=True, default="")
+    sens_olfato_nao_importa = models.TextField(blank=True, default="")
+    sens_olfato_outros = models.TextField(blank=True, default="")
+    # Tato
+    sens_tato_frio = models.TextField(blank=True, default="")
+    sens_tato_quente = models.TextField(blank=True, default="")
+    sens_tato_morno = models.TextField(blank=True, default="")
+    sens_tato_mole = models.TextField(blank=True, default="")
+    sens_tato_dura = models.TextField(blank=True, default="")
+    sens_tato_semi_dura = models.TextField(blank=True, default="")
+    sens_tato_liso = models.TextField(blank=True, default="")
+    sens_tato_rugoso = models.TextField(blank=True, default="")
+    sens_tato_aspero = models.TextField(blank=True, default="")
+    sens_tato_pegajoso = models.TextField(blank=True, default="")
+    sens_tato_seco = models.TextField(blank=True, default="")
+    sens_tato_umido = models.TextField(blank=True, default="")
+    # Propriocepção
+    sens_propr_complexos = models.TextField(blank=True, default="")
+    sens_propr_simples = models.TextField(blank=True, default="")
+    sens_propr_forca = models.TextField(blank=True, default="")
+    sens_propr_resistencia = models.TextField(blank=True, default="")
+    # Gosto
+    sens_gosto_doce = models.TextField(blank=True, default="")
+    sens_gosto_salgado = models.TextField(blank=True, default="")
+    sens_gosto_amargo = models.TextField(blank=True, default="")
+    sens_gosto_acido = models.TextField(blank=True, default="")
+    sens_gosto_umami = models.TextField(blank=True, default="")
+    # Auditivo
+    sens_audit_barulho = models.TextField(blank=True, default="")
+    sens_audit_crocante = models.TextField(blank=True, default="")
+    sens_audit_silencioso = models.TextField(blank=True, default="")
+
+    observacoes = models.TextField("Observações clínicas", blank=True, default="")
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Anamnese Alimentar"
+        verbose_name_plural = "Anamneses Alimentares"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"Anamnese Alimentar — {self.paciente.nome} — {self.data}"
+
+
 class LinkConvite(models.Model):
     TIPO_CHOICES = [
         # ── Terapia Ocupacional ──────────────────────────────────────────
@@ -912,6 +1076,8 @@ class LinkConvite(models.Model):
         ("iar",                     "IAR — Ansiedade Infantil"),
         ("pas",                     "PAS — Ansiedade Pré-Escolar"),
         ("cdi",                     "CDI — Depressão Infantil"),
+        # ── Nutrição / Terapia Alimentar ─────────────────────────────────────
+        ("recordatorio_alimentar",   "Recordatório Alimentar (Pais)"),
     ]
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
@@ -2656,32 +2822,103 @@ class AvaliacaoInventarioDislexia(models.Model):
 
 # ── Solicitação de Upgrade de Plano ───────────────────────────────────────────
 
-# Módulos liberados automaticamente por plano
-_MODULOS_PLUS_EXTRA = [
-    # psicologia infantil (pais) — rastreios comuns
-    "conners_pais", "etdah_pais", "auqei", "aq10_child",
-    "scared", "masc", "scq",
-    # psicologia professor
-    "conners_prof", "etdah_prof",
-    # psicologia adulto — rastreios básicos
-    "bdi", "bai", "dass21", "had",
-    # pediatria / neuropediatria
-    "denver",
-    # neuropsicologia
-    "qmpi",
-    # psicopedagogia — rastreios e protocolos básicos
-    "quest_dislexia", "checklist_dislexia", "prot_dislexia_prof",
-]
-# ELITE-only (não incluídos no PLUS):
-# pcl5 — rastreio de PTSD (especializado)
-# bsl23, bpq, dep_emocional — transtornos de personalidade (especializado)
-# inventario_dislexia — inventário avançado de sinais disléxicos
+# Módulos por plano por especialidade — define o acesso em cada tier
+MODULOS_POR_PLANO_POR_ESPECIALIDADE = {
+    "terapeuta_ocupacional": {
+        "trial": ["sensorial", "bebe", "escolar", "spm"],
+        "start": ["sensorial", "bebe", "escolar", "spm"],
+        "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage",
+                  "edm", "mabc2", "beery"],
+        "elite": ["sensorial", "vineland", "escolar", "bebe", "spm",
+                  "edm", "mabc2", "beery", "pedi", "vineland3", "portage"],
+    },
+    "psicologo": {
+        "trial": ["phq9", "gad7", "sdq", "mchat"],
+        "start": ["phq9", "gad7", "sdq", "mchat",
+                  "snap_iv", "epds", "ghq12", "bdi", "bai", "dass21",
+                  "auqei", "k10", "rosenberg"],
+        "plus":  ["phq9", "gad7", "sdq", "mchat",
+                  "snap_iv", "epds", "ghq12", "bdi", "bai", "dass21",
+                  "auqei", "k10", "rosenberg",
+                  "conners_pais", "etdah_pais", "conners_prof", "etdah_prof",
+                  "aq10_child", "scared", "masc", "scq", "cars",
+                  "ucla", "msi_bpd", "audit", "bis11", "lsas", "hama",
+                  "risco_suicidio", "agorafobia", "panico",
+                  "iar", "pas", "cdi", "gds15", "had", "aq10_adulto"],
+        "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["psicologo"])),
+    },
+    "fonoaudiologo": {
+        "trial": ["linguagem", "alimentacao_seletiva"],
+        "start": ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil"],
+        "plus":  ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil",
+                  "processamento_auditivo", "idv10"],
+        "elite": ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil",
+                  "processamento_auditivo", "idv10"],
+    },
+    "neuropsicoplogo": {
+        "trial": ["rastreio_cognitivo", "phq9", "gad7", "mchat"],
+        "start": ["rastreio_cognitivo", "phq9", "gad7", "mchat",
+                  "sdq", "snap_iv", "qmpi", "bdi", "bai", "dass21", "ghq12"],
+        "plus":  ["rastreio_cognitivo", "phq9", "gad7", "mchat",
+                  "sdq", "snap_iv", "qmpi", "bdi", "bai", "dass21", "ghq12",
+                  "conners_pais", "etdah_pais", "conners_prof", "etdah_prof",
+                  "aq10_child", "scq", "cars",
+                  "k10", "ucla", "msi_bpd", "bis11", "lsas", "hama",
+                  "risco_suicidio", "agorafobia", "panico",
+                  "iar", "pas", "cdi", "had", "aq10_adulto"],
+        "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["neuropsicoplogo"])),
+    },
+    "psicopedagogo": {
+        "trial": ["quest_dislexia", "checklist_dislexia", "sdq"],
+        "start": ["quest_dislexia", "checklist_dislexia", "sdq",
+                  "psicopedagogica", "snap_iv"],
+        "plus":  ["quest_dislexia", "checklist_dislexia", "sdq",
+                  "psicopedagogica", "snap_iv",
+                  "conners_pais", "conners_prof", "etdah_pais", "etdah_prof",
+                  "prot_dislexia_prof"],
+        "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["psicopedagogo"])),
+    },
+    "pediatra": {
+        "trial": ["mchat", "desenvolvimento"],
+        "start": ["mchat", "desenvolvimento", "denver", "snap_iv", "epds"],
+        "plus":  ["mchat", "desenvolvimento", "denver", "snap_iv", "epds",
+                  "sono_infantil", "auqei", "iar", "pas", "cdi"],
+        "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["pediatra"])),
+    },
+    "neuropediatra": {
+        "trial": ["mchat", "desenvolvimento"],
+        "start": ["mchat", "desenvolvimento", "denver", "snap_iv"],
+        "plus":  ["mchat", "desenvolvimento", "denver", "snap_iv", "cars", "sensorial"],
+        "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["neuropediatra"])),
+    },
+    "analista_aba": {
+        "trial": ["mchat", "vineland3"],
+        "start": ["mchat", "vineland3", "habilidades_adaptativas"],
+        "plus":  list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["analista_aba"])),
+        "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["analista_aba"])),
+    },
+    "nutricionista": {
+        "trial": ["anamnese_alimentar"],
+        "start": ["anamnese_alimentar", "recordatorio_alimentar"],
+        "plus":  ["anamnese_alimentar", "recordatorio_alimentar", "alimentacao_seletiva"],
+        "elite": ["anamnese_alimentar", "recordatorio_alimentar", "alimentacao_seletiva"],
+    },
+}
 
+
+def get_modulos_para_plano(especialidades_codigos, plano):
+    """Retorna set de códigos de módulos para o plano e especialidades dados."""
+    codigos = set()
+    for esp in especialidades_codigos:
+        tier = MODULOS_POR_PLANO_POR_ESPECIALIDADE.get(esp, {})
+        codigos.update(tier.get(plano, []))
+    return codigos
+
+
+# Mantido para compatibilidade com exibição no admin (baseado em TO)
 MODULOS_POR_PLANO = {
-    "start": ["sensorial", "bebe", "escolar", "spm"],
-    "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage",
-              "phq9", "gad7", "epds", "ghq12"] + _MODULOS_PLUS_EXTRA,
-    "elite": [c[0] for c in ModuloAvaliacao.MODULO_CHOICES],
+    plano: MODULOS_POR_PLANO_POR_ESPECIALIDADE["terapeuta_ocupacional"][plano]
+    for plano in ("start", "plus", "elite")
 }
 
 PRECO_PLANO = {

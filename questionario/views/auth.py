@@ -16,7 +16,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils import timezone
 
-from ..models import PerfilMedico, Especialidade, HistoricoLogin, ModuloAvaliacao, Indicacao, _parse_dispositivo
+from ..models import PerfilMedico, Especialidade, HistoricoLogin, ModuloAvaliacao, Indicacao, _parse_dispositivo, MODULOS_POR_ESPECIALIDADE, get_modulos_para_plano
 
 
 def _get_ip(request):
@@ -296,7 +296,16 @@ def meu_perfil(request):
         perfil.save()
 
         especialidades_ids = request.POST.getlist("especialidades")
-        perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
+        especialidades_objs = Especialidade.objects.filter(id__in=especialidades_ids)
+        perfil.especialidades.set(especialidades_objs)
+
+        # Trial: re-sincroniza módulos se especialidade mudou
+        if perfil.plano == "trial":
+            codigos = get_modulos_para_plano(
+                [esp.codigo for esp in especialidades_objs], "trial"
+            )
+            if codigos:
+                perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
 
         # Trocar senha, se preenchida
         nova_senha = request.POST.get("nova_senha", "")
@@ -352,7 +361,18 @@ def completar_cadastro(request):
         perfil.registro_profissional = registro_profissional
         perfil.telefone = telefone
         perfil.save(update_fields=["registro_profissional", "telefone"])
-        perfil.especialidades.set(Especialidade.objects.filter(id__in=especialidades_ids))
+
+        especialidades_objs = Especialidade.objects.filter(id__in=especialidades_ids)
+        perfil.especialidades.set(especialidades_objs)
+
+        # Trial: atualiza módulos conforme a(s) especialidade(s) escolhida(s)
+        if perfil.plano == "trial":
+            codigos = get_modulos_para_plano(
+                [esp.codigo for esp in especialidades_objs], "trial"
+            )
+            if codigos:
+                perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
+
         return redirect("index")
 
     especialidades_selecionadas = list(perfil.especialidades.values_list("id", flat=True))

@@ -1,0 +1,292 @@
+{% extends "questionario/base.html" %}
+{% block title %}Recordatório Alimentar — Página {{ pagina }} de {{ total }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --nut: #27AE60; --nut-dark: #1A5E38; }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--nut-dark), var(--nut));
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .secao-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .2rem; }
+  .secao-header p  { font-size: .82rem; opacity: .8; }
+
+  .progress-info { display: flex; justify-content: space-between; font-size: .82rem; color: rgba(255,255,255,.8); margin-top: .4rem; }
+  .steps-bar { display: flex; gap: 3px; margin-top: .6rem; flex-wrap: wrap; }
+  .step-dot { height: 6px; flex: 1; min-width: 20px; border-radius: 3px; background: rgba(255,255,255,.25); }
+  .step-dot.done   { background: rgba(255,255,255,.8); }
+  .step-dot.active { background: rgba(255,255,255,.5); }
+
+  /* Recordatório table */
+  .rec-table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+  .rec-table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 600px; }
+  .rec-table th {
+    background: color-mix(in srgb, var(--nut) 12%, #fff);
+    color: var(--nut-dark); font-size: .78rem; font-weight: 700;
+    padding: .55rem .7rem; border: 1px solid color-mix(in srgb, var(--nut) 25%, #fff);
+    text-align: left;
+  }
+  .rec-table td {
+    padding: .4rem .5rem; border: 1px solid var(--border); vertical-align: top;
+  }
+  .rec-table .refeicao-label {
+    font-weight: 600; color: var(--nut-dark); font-size: .82rem; white-space: nowrap;
+  }
+  .rec-table textarea {
+    width: 100%; border: none; background: transparent; resize: vertical;
+    font-size: .83rem; min-height: 44px; line-height: 1.4;
+    color: var(--text); font-family: inherit;
+    outline: none; box-sizing: border-box;
+  }
+  .rec-table textarea:focus { background: color-mix(in srgb, var(--nut) 5%, #fff); }
+  .rec-table tr:nth-child(even) td { background: #FAFFFE; }
+  .rec-table.readonly textarea { pointer-events: none; color: var(--text-muted); }
+
+  /* Inventário table */
+  .inv-table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+  .inv-table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 480px; }
+  .inv-table th {
+    background: color-mix(in srgb, var(--nut) 12%, #fff);
+    color: var(--nut-dark); font-size: .78rem; font-weight: 700;
+    padding: .55rem .7rem; border: 1px solid color-mix(in srgb, var(--nut) 25%, #fff);
+    text-align: left;
+  }
+  .inv-table td { padding: .35rem .5rem; border: 1px solid var(--border); vertical-align: top; }
+  .inv-table input[type=text], .inv-table textarea {
+    width: 100%; border: none; background: transparent;
+    font-size: .83rem; font-family: inherit; color: var(--text);
+    outline: none; padding: 0; box-sizing: border-box;
+  }
+  .inv-table textarea { resize: vertical; min-height: 36px; }
+  .inv-table input:focus, .inv-table textarea:focus { background: color-mix(in srgb, var(--nut) 5%, #fff); }
+  .inv-table tr:nth-child(even) td { background: #FAFFFE; }
+
+  .btn-add-row {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .45rem 1rem; border-radius: 8px; font-size: .82rem;
+    font-weight: 600; cursor: pointer; border: 1.5px dashed var(--nut);
+    color: var(--nut); background: color-mix(in srgb, var(--nut) 5%, #fff);
+    margin-top: .5rem; transition: background .15s;
+  }
+  .btn-add-row:hover { background: color-mix(in srgb, var(--nut) 12%, #fff); }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
+
+  @media (max-width: 600px) {
+    .rec-table { min-width: 420px; }
+    .inv-table { min-width: 360px; }
+  }
+  @media print {
+    nav, .btn-back, .no-print { display: none !important; }
+    .rec-table textarea, .inv-table input, .inv-table textarea { border: none; }
+  }
+</style>
+{% endblock %}
+
+{% if not publico %}
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+{% endif %}
+
+{% block content %}
+
+<!-- Cabeçalho -->
+<div class="secao-header">
+  <h2><i data-lucide="utensils" style="width:18px;height:18px;vertical-align:middle;margin-right:.4rem;"></i>Recordatório Alimentar{% if not publico %} — {{ paciente.nome }}{% endif %}</h2>
+  <p>{{ titulo_pagina }}</p>
+  <div class="steps-bar">
+    {% for i in "123456" %}{% with forloop.counter as n %}<div class="step-dot {% if n < pagina %}done{% elif n == pagina %}active{% endif %}"></div>{% endwith %}{% endfor %}
+  </div>
+  <div class="progress-info">
+    <span>Página {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+</div>
+
+{% if tipo_pagina == "recordatorio" %}
+<!-- Páginas 1–3: tabela de refeições -->
+<div class="card">
+  <div class="card-title"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> {{ titulo_pagina }}</div>
+  <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">Preencha o que a criança comeu em cada refeição neste dia.</p>
+
+  <form method="post" id="form-rec">
+    {% csrf_token %}
+    <div class="rec-table-wrap">
+      <table class="rec-table{% if readonly %} readonly{% endif %}">
+        <thead>
+          <tr>
+            <th style="min-width:130px;">Refeição</th>
+            <th style="min-width:90px;">Horário</th>
+            <th style="min-width:220px;">O que comeu / Com o que comeu <small>(quantidades)</small></th>
+            <th>Onde</th>
+            <th>Com quem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for code, label, entrada in refeicoes_com_entrada %}
+          <tr>
+            <td class="refeicao-label">{{ label }}</td>
+            <td>
+              <textarea name="{{ code }}_horario" rows="2"{% if readonly %} readonly{% endif %}>{% if entrada %}{{ entrada.horario }}{% endif %}</textarea>
+            </td>
+            <td>
+              <textarea name="{{ code }}_o_que" rows="2"{% if readonly %} readonly{% endif %}>{% if entrada %}{{ entrada.o_que_comeu }}{% endif %}</textarea>
+            </td>
+            <td>
+              <textarea name="{{ code }}_onde" rows="2"{% if readonly %} readonly{% endif %}>{% if entrada %}{{ entrada.onde }}{% endif %}</textarea>
+            </td>
+            <td>
+              <textarea name="{{ code }}_com_quem" rows="2"{% if readonly %} readonly{% endif %}>{% if entrada %}{{ entrada.com_quem }}{% endif %}</textarea>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if not readonly %}
+    <div class="nav-row no-print">
+      {% if pagina_anterior %}
+        {% if publico %}
+          <a href="{% url 'recordatorio_publico' token pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+        {% else %}
+          <a href="{% url 'recordatorio_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+        {% endif %}
+      {% else %}<div></div>{% endif %}
+      <button type="submit" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">
+        {% if pagina == total %}<i data-lucide="check-circle" style="width:14px;height:14px;"></i> Concluir{% else %}Próximo <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>{% endif %}
+      </button>
+    </div>
+    {% else %}
+    <div class="nav-row no-print">
+      {% if pagina_anterior %}
+        <a href="{% url 'recordatorio_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+      {% else %}<div></div>{% endif %}
+      {% if pagina < total %}
+        <a href="{% url 'recordatorio_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">Próximo <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
+      {% else %}
+        <a href="{% url 'recordatorio_resultado' avaliacao.uuid %}" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">Ver resultado <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i></a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+{% else %}
+<!-- Páginas 4–6: tabela de inventário -->
+<div class="card">
+  <div class="card-title"><i data-lucide="list" style="width:18px;height:18px;"></i> {{ titulo_pagina }}</div>
+  {% if tipo_inventario == "recusado" %}
+  <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">Liste os alimentos que a criança parou de aceitar, informando forma de preparo, horário habitual e há quanto tempo ocorreu a recusa.</p>
+  {% elif tipo_inventario == "familiar" %}
+  <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">Liste os alimentos que fazem parte do cardápio da família, mesmo que a criança não os consuma atualmente.</p>
+  {% else %}
+  <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">Liste os alimentos que a criança aceita comer atualmente, com detalhes de preparo e preferências.</p>
+  {% endif %}
+
+  <form method="post" id="form-inv">
+    {% csrf_token %}
+    <div class="inv-table-wrap">
+      <table class="inv-table" id="inv-table">
+        <thead>
+          <tr>
+            <th style="width:2rem;">#</th>
+            <th style="min-width:150px;">Alimento</th>
+            <th style="min-width:130px;">Preparo</th>
+            <th>Horário</th>
+            <th style="min-width:150px;">Observação</th>
+            {% if tipo_inventario == "recusado" %}<th>Há quanto tempo</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody id="inv-tbody">
+          {% for item in inventario %}
+          <tr>
+            <td style="text-align:center;color:var(--text-muted);font-size:.78rem;">{{ forloop.counter }}</td>
+            <td><input type="text" name="alimento_{{ forloop.counter0 }}" value="{{ item.alimento }}"{% if readonly %} readonly{% endif %}></td>
+            <td><textarea name="preparo_{{ forloop.counter0 }}" rows="2"{% if readonly %} readonly{% endif %}>{{ item.preparo }}</textarea></td>
+            <td><input type="text" name="horario_{{ forloop.counter0 }}" value="{{ item.horario }}"{% if readonly %} readonly{% endif %}></td>
+            <td><textarea name="observacao_{{ forloop.counter0 }}" rows="2"{% if readonly %} readonly{% endif %}>{{ item.observacao }}</textarea></td>
+            {% if tipo_inventario == "recusado" %}<td><input type="text" name="tempo_{{ forloop.counter0 }}" value="{{ item.tempo }}"{% if readonly %} readonly{% endif %}></td>{% endif %}
+          </tr>
+          {% endfor %}
+          {% with inventario|length as filled %}
+          {% for i in "12345678" %}{% with forloop.counter as rn %}{% if rn > filled %}
+          <tr>
+            <td style="text-align:center;color:var(--text-muted);font-size:.78rem;" class="row-num">{{ rn }}</td>
+            <td><input type="text" name="alimento_{{ rn|add:"-1" }}"{% if readonly %} readonly{% endif %}></td>
+            <td><textarea name="preparo_{{ rn|add:"-1" }}" rows="2"{% if readonly %} readonly{% endif %}></textarea></td>
+            <td><input type="text" name="horario_{{ rn|add:"-1" }}"{% if readonly %} readonly{% endif %}></td>
+            <td><textarea name="observacao_{{ rn|add:"-1" }}" rows="2"{% if readonly %} readonly{% endif %}></textarea></td>
+            {% if tipo_inventario == "recusado" %}<td><input type="text" name="tempo_{{ rn|add:"-1" }}"{% if readonly %} readonly{% endif %}></td>{% endif %}
+          </tr>
+          {% endif %}{% endwith %}{% endfor %}
+          {% endwith %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if not readonly %}
+    <button type="button" class="btn-add-row no-print" id="btn-add-row">
+      <i data-lucide="plus" style="width:14px;height:14px;"></i> Adicionar linha
+    </button>
+    <div class="nav-row no-print">
+      {% if pagina_anterior %}
+        {% if publico %}
+          <a href="{% url 'recordatorio_publico' token pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+        {% else %}
+          <a href="{% url 'recordatorio_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+        {% endif %}
+      {% else %}<div></div>{% endif %}
+      <button type="submit" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">
+        {% if pagina == total %}<i data-lucide="check-circle" style="width:14px;height:14px;"></i> Concluir{% else %}Próximo <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>{% endif %}
+      </button>
+    </div>
+    {% else %}
+    <div class="nav-row no-print">
+      {% if pagina_anterior %}
+        <a href="{% url 'recordatorio_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior</a>
+      {% else %}<div></div>{% endif %}
+      {% if pagina < total %}
+        <a href="{% url 'recordatorio_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">Próximo <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
+      {% else %}
+        <a href="{% url 'recordatorio_resultado' avaliacao.uuid %}" class="btn btn-primary" style="background:var(--nut);border-color:var(--nut);">Ver resultado <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i></a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </form>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const btnAdd = document.getElementById('btn-add-row');
+  const tbody  = document.getElementById('inv-tbody');
+  if (!btnAdd || !tbody) return;
+
+  const tipoInv = "{{ tipo_inventario|default:'' }}";
+
+  btnAdd.addEventListener('click', function(){
+    const rows = tbody.querySelectorAll('tr');
+    const idx  = rows.length;
+    const tr   = document.createElement('tr');
+    let cells = `
+      <td style="text-align:center;color:var(--text-muted);font-size:.78rem;">${idx + 1}</td>
+      <td><input type="text" name="alimento_${idx}"></td>
+      <td><textarea name="preparo_${idx}" rows="2"></textarea></td>
+      <td><input type="text" name="horario_${idx}"></td>
+      <td><textarea name="observacao_${idx}" rows="2"></textarea></td>
+    `;
+    if (tipoInv === 'recusado') {
+      cells += `<td><input type="text" name="tempo_${idx}"></td>`;
+    }
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+    // Trigger lucide for any new icons (none here but good practice)
+    if (window.lucide) window.lucide.createIcons();
+  });
+})();
+</script>
+{% endblock %}

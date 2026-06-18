@@ -720,6 +720,22 @@ urlpatterns = [
     path("epds/<uuid:avaliacao_id>/laudo/",   views.laudo_generico, {"tipo": "epds"},  name="epds_laudo"),
     path("pcl5/<uuid:avaliacao_id>/laudo/",   views.laudo_generico, {"tipo": "pcl5"},  name="pcl5_laudo"),
     path("ghq12/<uuid:avaliacao_id>/laudo/",  views.laudo_generico, {"tipo": "ghq12"}, name="ghq12_laudo"),
+    # ── Nutrição / Terapia Alimentar ─────────────────────────────────────────
+    # Recordatório Alimentar
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-recordatorio/", views.nova_avaliacao_recordatorio, name="nova_avaliacao_recordatorio"),
+    path("recordatorio/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.recordatorio_form, name="recordatorio_form"),
+    path("recordatorio/<uuid:avaliacao_id>/resultado/", views.recordatorio_resultado, name="recordatorio_resultado"),
+    path("recordatorio/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.recordatorio_visualizar, name="recordatorio_visualizar"),
+    path("recordatorio/<uuid:avaliacao_id>/deletar/", views.recordatorio_deletar, name="recordatorio_deletar"),
+    path("recordatorio/<uuid:avaliacao_id>/email/", views.enviar_email_recordatorio, name="enviar_email_recordatorio"),
+    path("recordatorio/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_recordatorio, name="salvar_observacoes_recordatorio"),
+    path("recordatorio/publico/<str:token>/<int:pagina>/", views.recordatorio_publico_view, name="recordatorio_publico"),
+    # Anamnese Alimentar
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-anamnese/", views.nova_avaliacao_anamnese, name="nova_avaliacao_anamnese"),
+    path("anamnese/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.anamnese_form, name="anamnese_form"),
+    path("anamnese/<uuid:avaliacao_id>/resultado/", views.anamnese_resultado, name="anamnese_resultado"),
+    path("anamnese/<uuid:avaliacao_id>/deletar/", views.anamnese_deletar, name="anamnese_deletar"),
+    path("anamnese/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_anamnese, name="salvar_observacoes_anamnese"),
 ]
 
 if settings.DEBUG:

@@ -11,3 +11,5 @@ venv/
 docs_extraidos/
 docs/
 logs/
+.logs/
+logs/auditoria.log

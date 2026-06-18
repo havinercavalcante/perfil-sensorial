@@ -1,0 +1,200 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado Anamnese Alimentar — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --nut: #27AE60; --nut-dark: #1A5E38; }
+
+  .resultado-header {
+    background: linear-gradient(135deg, var(--nut-dark), var(--nut));
+    color: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .resultado-header h1 { font-size: 1.35rem; margin-bottom: .3rem; }
+  .resultado-header p  { opacity: .85; font-size: .9rem; }
+
+  .grupo-titulo {
+    font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--nut-dark); padding: .4rem .75rem; margin: 1.1rem 0 .75rem;
+    background: color-mix(in srgb, var(--nut) 10%, #fff);
+    border-left: 4px solid var(--nut); border-radius: 0 6px 6px 0;
+  }
+  .grupo-titulo:first-child { margin-top: 0; }
+
+  .checkbox-result-grid {
+    display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem;
+  }
+  .checkbox-result-item {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .3rem .75rem; border-radius: 20px; font-size: .82rem; font-weight: 600;
+  }
+  .checkbox-result-item.marcado {
+    background: color-mix(in srgb, var(--nut) 15%, #fff);
+    color: var(--nut-dark); border: 1.5px solid color-mix(in srgb, var(--nut) 30%, #fff);
+  }
+  .checkbox-result-item.nao-marcado {
+    background: #F3F4F6; color: #9CA3AF; border: 1.5px solid #E5E7EB;
+    text-decoration: line-through;
+  }
+
+  .texto-obs {
+    background: #F9FAFB; border-radius: 8px; padding: .75rem 1rem;
+    font-size: .88rem; line-height: 1.55; color: var(--text);
+    border: 1px solid var(--border); margin-bottom: .75rem; white-space: pre-wrap;
+  }
+  .texto-obs.vazio { font-style: italic; color: var(--text-muted); }
+
+  .sens-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+  .sens-table th {
+    background: color-mix(in srgb, var(--nut) 8%, #fff);
+    color: var(--nut-dark); font-size: .76rem; font-weight: 700;
+    padding: .45rem .65rem; border: 1px solid color-mix(in srgb, var(--nut) 20%, #fff);
+    text-align: left;
+  }
+  .sens-table td { padding: .4rem .65rem; border: 1px solid var(--border); font-size: .83rem; }
+  .sens-table .sens-label { font-weight: 600; min-width: 200px; }
+  .sens-table tr:nth-child(even) td { background: #FAFFFE; }
+  .sens-table .obs-texto { white-space: pre-wrap; line-height: 1.45; }
+  .sens-table .obs-vazio { color: var(--text-muted); font-style: italic; }
+
+  @media print {
+    nav, .btn-back, .no-print { display: none !important; }
+    .resultado-header { background: var(--nut-dark) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card { page-break-inside: avoid; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho -->
+<div class="resultado-header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <h1><i data-lucide="clipboard" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Anamnese Alimentar — {{ paciente.nome }}</h1>
+      <p>Avaliação em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;" class="no-print">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- História -->
+<div class="card">
+  <div class="card-title"><i data-lucide="activity" style="width:18px;height:18px;"></i> Histórico de Saúde</div>
+
+  <div class="grupo-titulo">A criança apresentou alguma das questões?</div>
+  <div class="checkbox-result-grid">
+    {% for label, marcado in hist_itens %}
+    <span class="checkbox-result-item {% if marcado %}marcado{% else %}nao-marcado{% endif %}">
+      {% if marcado %}<i data-lucide="check" style="width:12px;height:12px;"></i>{% endif %}
+      {{ label }}
+    </span>
+    {% endfor %}
+  </div>
+
+  {% if avaliacao.hist_explane %}
+  <div class="texto-obs">{{ avaliacao.hist_explane }}</div>
+  {% endif %}
+
+  <div class="grupo-titulo">Dificuldade ou impacto nas funções de alimentação</div>
+  <div class="checkbox-result-grid">
+    {% for label, marcado in func_itens %}
+    <span class="checkbox-result-item {% if marcado %}marcado{% else %}nao-marcado{% endif %}">
+      {% if marcado %}<i data-lucide="check" style="width:12px;height:12px;"></i>{% endif %}
+      {{ label }}
+    </span>
+    {% endfor %}
+  </div>
+
+  {% if avaliacao.func_explane %}
+  <div class="texto-obs">{{ avaliacao.func_explane }}</div>
+  {% endif %}
+
+  {% if avaliacao.historico_declinio %}
+  <div class="grupo-titulo">Histórico de declínio alimentar</div>
+  <div class="texto-obs">{{ avaliacao.historico_declinio }}</div>
+  {% endif %}
+</div>
+
+<!-- Frequência Sensorial -->
+<div class="card">
+  <div class="card-title"><i data-lucide="zap" style="width:18px;height:18px;"></i> Frequência Sensorial Alimentar</div>
+
+  {% for grupo in sensorial_grupos %}
+  <div class="grupo-titulo">{{ grupo.nome }}</div>
+  <table class="sens-table">
+    <thead>
+      <tr>
+        <th style="min-width:200px;">Característica</th>
+        <th>Observações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for label, valor in grupo.itens %}
+      <tr>
+        <td class="sens-label">{{ label }}</td>
+        <td>
+          {% if valor %}
+          <span class="obs-texto">{{ valor }}</span>
+          {% else %}
+          <span class="obs-vazio">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+</div>
+
+<!-- Observações clínicas -->
+<div class="card">
+  <div class="card-title" style="color:var(--nut);">
+    <i data-lucide="pencil" style="width:16px;height:16px;"></i> Observações Clínicas
+  </div>
+  <form id="formObs" method="post" action="{% url 'salvar_observacoes_anamnese' avaliacao.uuid %}">
+    {% csrf_token %}
+    <textarea name="observacoes" rows="5" placeholder="Registre observações, conclusões ou recomendações..."
+      style="width:100%;resize:vertical;border-radius:8px;border:1.5px solid var(--border);padding:.75rem;font-size:.9rem;box-sizing:border-box;">{{ avaliacao.observacoes }}</textarea>
+    <div style="display:flex;align-items:center;gap:1rem;margin-top:.75rem;flex-wrap:wrap;" class="no-print">
+      <button type="button" class="btn btn-primary btn-sm" style="background:var(--nut);border-color:var(--nut);" onclick="salvarObs()">
+        <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar Observações
+      </button>
+      <span id="obs-status" style="font-size:.82rem;color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function salvarObs() {
+  const form   = document.getElementById('formObs');
+  const status = document.getElementById('obs-status');
+  const data   = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  }).catch(() => {
+    status.textContent = 'Erro ao salvar';
+    status.style.color = '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+</script>
+{% endblock %}
