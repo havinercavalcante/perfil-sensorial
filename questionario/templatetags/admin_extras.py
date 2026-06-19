@@ -203,9 +203,12 @@ def dashboard_stats():
     total_ativos = len(ativos)
 
     # ── Visitas de páginas ───────────────────────────────────────────────────
+    hoje = timezone.localdate()
     visitas = {
         row['pagina']: row['total']
-        for row in PageVisit.objects.values('pagina').annotate(total=Count('id'))
+        for row in PageVisit.objects.filter(
+            visitado_em__date=hoje
+        ).values('pagina').annotate(total=Count('id'))
     }
     visitas_total = sum(visitas.values())
 
