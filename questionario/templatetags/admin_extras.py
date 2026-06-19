@@ -183,6 +183,7 @@ def dashboard_stats():
 
     # ── Financeiro (MRR) ─────────────────────────────────────────────────────
     agora = timezone.now()
+    inicio_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     ativos = list(
         PerfilMedico.objects.filter(
             plano__in=('start', 'plus', 'elite'),
@@ -190,7 +191,12 @@ def dashboard_stats():
             plano_expiracao__gt=agora,
         )
     )
-    mrr = sum(_VALOR_PLANO.get(p.plano, Decimal('0')) for p in ativos)
+    # pagamentos aprovados no mês corrente
+    aprovadas_mes = SolicitacaoPlano.objects.filter(
+        status='aprovado',
+        aprovado_em__gte=inicio_mes,
+    )
+    mrr = sum(_VALOR_PLANO.get(s.plano, Decimal('0')) for s in aprovadas_mes)
     fin_breakdown = {
         'start': sum(1 for p in ativos if p.plano == 'start'),
         'plus':  sum(1 for p in ativos if p.plano == 'plus'),

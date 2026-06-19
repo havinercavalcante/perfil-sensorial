@@ -587,6 +587,30 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
                     nome = perfil.user.get_full_name() or perfil.user.username
                     dj_messages.success(request, f"✅ Dados de {nome} atualizados.")
 
+            # ── Editar registro do histórico ──────────────────────────────────
+            elif action == "editar_historico":
+                sol_id = request.POST.get("sol_id")
+                if sol_id:
+                    sol = get_object_or_404(SolicitacaoPlano, pk=sol_id)
+                    novo_plano = request.POST.get("plano", "").strip()
+                    novo_status = request.POST.get("status", "").strip()
+                    nova_nota = request.POST.get("nota_admin", "").strip()
+                    if novo_plano in ("start", "plus", "elite"):
+                        sol.plano = novo_plano
+                    if novo_status in ("aprovado", "rejeitado"):
+                        sol.status = novo_status
+                    sol.nota_admin = nova_nota
+                    sol.save(update_fields=["plano", "status", "nota_admin"])
+                    dj_messages.success(request, "✅ Registro atualizado.")
+
+            # ── Deletar registro do histórico ─────────────────────────────────
+            elif action == "deletar_historico":
+                sol_id = request.POST.get("sol_id")
+                if sol_id:
+                    sol = get_object_or_404(SolicitacaoPlano, pk=sol_id)
+                    sol.delete()
+                    dj_messages.success(request, "🗑️ Registro removido do histórico.")
+
             # ── Desativar usuário (não pagou) ─────────────────────────────────
             elif action == "desativar":
                 perfil_id = request.POST.get("perfil_id")
@@ -622,7 +646,7 @@ class SolicitacaoPlanoAdmin(admin.ModelAdmin):
             SolicitacaoPlano.objects
             .exclude(status="pendente")
             .select_related("user", "aprovado_por")
-            .order_by("-aprovado_em")[:30]
+            .order_by("-aprovado_em")
         )
 
         # Assinantes com plano pago

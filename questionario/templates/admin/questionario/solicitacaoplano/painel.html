@@ -432,7 +432,7 @@
   <div class="table-scroll">
   <table class="pay-table">
     <thead><tr>
-      <th>Data</th><th>Profissional</th><th>Plano</th><th>Status</th><th>Aprovado por</th><th>Nota</th>
+      <th>Data</th><th>Profissional</th><th>Plano</th><th>Status</th><th>Aprovado por</th><th>Nota</th><th></th>
     </tr></thead>
     <tbody>
       {% for sol in historico %}
@@ -452,6 +452,22 @@
         </td>
         <td style="font-size:.78rem">{% if sol.aprovado_por %}{{ sol.aprovado_por.get_full_name|default:sol.aprovado_por.username }}{% else %}—{% endif %}</td>
         <td style="font-size:.76rem;max-width:180px;color:#6b7280">{{ sol.nota_admin|default:"—" }}</td>
+        <td style="white-space:nowrap;">
+          <button type="button"
+            onclick="abrirEditarHistorico({{ sol.id }},'{{ sol.plano }}','{{ sol.status }}','{{ sol.nota_admin|escapejs }}')"
+            style="background:#e0f2fe;border:none;border-radius:5px;padding:4px 10px;font-size:.75rem;color:#0369a1;cursor:pointer;font-weight:600;margin-right:4px;">
+            ✏️ Editar
+          </button>
+          <form method="POST" style="display:inline" onsubmit="return confirm('Remover este registro do histórico?')">
+            {% csrf_token %}
+            <input type="hidden" name="action_painel" value="deletar_historico"/>
+            <input type="hidden" name="sol_id" value="{{ sol.id }}"/>
+            <button type="submit"
+              style="background:#fee2e2;border:none;border-radius:5px;padding:4px 10px;font-size:.75rem;color:#b91c1c;cursor:pointer;font-weight:600;">
+              🗑️
+            </button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -468,6 +484,60 @@
     🔗 Ver página de solicitação de plano →
   </a>
 </div>
+
+<!-- ── MODAL EDITAR HISTÓRICO ── -->
+<div class="modal-overlay" id="modal-editar-historico" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div class="modal-box" style="background:#fff;border-radius:12px;padding:28px 32px;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:1rem;margin-bottom:20px;color:#0c3c7b;">
+      ✏️ Editar Registro
+      <button type="button" onclick="fecharEditarHistorico()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#6b7280;">✕</button>
+    </div>
+    <form method="POST" id="form-editar-historico">
+      {% csrf_token %}
+      <input type="hidden" name="action_painel" value="editar_historico"/>
+      <input type="hidden" name="sol_id" id="eh-sol-id"/>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Plano</label>
+        <select name="plano" id="eh-plano" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.88rem;">
+          <option value="start">START — R$ 39,90/mês</option>
+          <option value="plus">PLUS — R$ 79,90/mês</option>
+          <option value="elite">ELITE — R$ 149,90/mês</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Status</label>
+        <select name="status" id="eh-status" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.88rem;">
+          <option value="aprovado">✅ Aprovado</option>
+          <option value="rejeitado">❌ Rejeitado</option>
+        </select>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Nota</label>
+        <textarea name="nota_admin" id="eh-nota" rows="3" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.88rem;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" onclick="fecharEditarHistorico()" style="padding:8px 18px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;font-size:.85rem;cursor:pointer;">Cancelar</button>
+        <button type="submit" style="padding:8px 18px;border:none;border-radius:6px;background:#0c3c7b;color:#fff;font-size:.85rem;font-weight:600;cursor:pointer;">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function abrirEditarHistorico(id, plano, status, nota) {
+  document.getElementById('eh-sol-id').value = id;
+  document.getElementById('eh-plano').value = plano;
+  document.getElementById('eh-status').value = status;
+  document.getElementById('eh-nota').value = nota;
+  var m = document.getElementById('modal-editar-historico');
+  m.style.display = 'flex';
+}
+function fecharEditarHistorico() {
+  document.getElementById('modal-editar-historico').style.display = 'none';
+}
+document.getElementById('modal-editar-historico').addEventListener('click', function(e) {
+  if (e.target === this) fecharEditarHistorico();
+});
+</script>
 
 <!-- ── MODAL EDITAR PROFISSIONAL ── -->
 <div class="modal-overlay" id="modal-editar">
