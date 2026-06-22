@@ -1,4 +1,5 @@
-{% load admin_extras %}<!DOCTYPE html>
+{% load admin_extras %}
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -15,7 +16,7 @@
           <!-- Header -->
           <tr>
             <td align="center" style="background-color:#ffffff;border-radius:12px 12px 0 0;padding:24px 32px;border-left:1px solid #85cde2;border-right:1px solid #85cde2;border-top:1px solid #85cde2;">
-              {% logo_url as src %}<img src="{{ src }}" alt="IntegraMente" style="height:44px;display:block;margin:0 auto;">
+              <img src="{% logo_url %}" alt="IntegraMente" style="height:44px;display:block;margin:0 auto;">
             </td>
           </tr>
 

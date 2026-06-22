@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,6 +10,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoHAMA, RespostaHAMA
 from ..data.data_hama import HAMA_ITENS, HAMA_OPCOES, HAMA_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 _COR    = "#884EA0"
 _TITULO = "HAM-A — Ansiedade de Hamilton"
@@ -202,7 +205,6 @@ def hama_publico(request, token, pagina):
 
 @login_required
 def enviar_email_hama(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.template.loader import render_to_string
     av = get_object_or_404(AvaliacaoHAMA, uuid=avaliacao_id, paciente__medico=request.user)
@@ -218,8 +220,8 @@ def enviar_email_hama(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("hama_publico", kwargs={"token": av.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="HAM-A — Ansiedade de Hamilton — IntegraMente", message=f"Responda em: {link}",
-                  from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="HAM-A — Ansiedade de Hamilton — IntegraMente", message=f"Responda em: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax: return JsonResponse({"ok": False, "message": f"Falha: {exc}"})
     av.email_enviado_em = tz.now(); av.save(update_fields=["email_enviado_em"])

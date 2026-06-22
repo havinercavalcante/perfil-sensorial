@@ -1,9 +1,9 @@
+from django.conf import settings
 import uuid
 import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 
 logger = logging.getLogger("auditoria")
 
+from ..tasks import enviar_email
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
     AvaliacaoBebe, AvaliacaoSPM, AvaliacaoVineland3, AvaliacaoPEDI, AvaliacaoPortage, LinkConvite,
@@ -133,6 +134,11 @@ def gerar_link(request):
         "iar": "iar",
         "pas": "pas",
         "cdi": "cdi",
+        # Seletividade Alimentar
+        "ebai": "ebai",
+        "seps": "seps",
+        "eca":  "eca",
+        "tod":  "tod",
     }
 
     modulos_liberados = set()
@@ -182,15 +188,15 @@ def enviar_email_convite(request):
         return JsonResponse({"ok": False, "message": "E-mail inválido."})
 
     nome_medico = request.user.get_full_name() or request.user.username
+    from django.templatetags.static import static
     html = render_to_string("questionario/emails/email_convite.html", {
         "link": link,
         "tipo_display": tipo_display,
         "nome_medico": nome_medico,
     })
-    send_mail(
+    enviar_email.delay(
         subject=f"IntegraMente — {tipo_display}",
         message=f"Acesse o link para responder o questionário:\n\n{link}",
-        from_email=None,
         recipient_list=[email_dest],
         html_message=html,
         fail_silently=False,

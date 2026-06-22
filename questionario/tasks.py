@@ -1,9 +1,30 @@
 from celery import shared_task
 
 
+def _send_email_com_logo(subject, message, recipient_list, html_message=None, fail_silently=False):
+    from django.core.mail import send_mail
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=None,
+        recipient_list=recipient_list,
+        html_message=html_message,
+        fail_silently=fail_silently,
+    )
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def enviar_email(self, subject, message, recipient_list, html_message=None, fail_silently=False):
+    try:
+        _send_email_com_logo(subject, message, recipient_list, html_message, fail_silently)
+    except Exception as exc:
+        raise self.retry(exc=exc)
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def enviar_email_notificacao(self, paciente_id, tipo, link):
     """Envia e-mail de notificação ao terapeuta quando uma avaliação é concluída."""
+    from django.conf import settings
     from django.core.mail import send_mail
     from django.template.loader import render_to_string
 
@@ -50,17 +71,15 @@ def enviar_email_notificacao(self, paciente_id, tipo, link):
             "nome_tipo": nome_tipo,
             "link": link,
         })
-        send_mail(
+        _send_email_com_logo(
             subject=f"IntegraMente — Avaliação concluída: {paciente.nome}",
             message=(
                 f"Olá, {nome_terapeuta}!\n\n"
                 f"O responsável de {paciente.nome} concluiu o questionário de {nome_tipo}.\n"
                 f"Acesse o sistema para visualizar os resultados: {link}"
             ),
-            from_email=None,
             recipient_list=[terapeuta.email],
             html_message=html,
-            fail_silently=False,
         )
     except Exception as exc:
         raise self.retry(exc=exc)
@@ -77,7 +96,6 @@ def desativar_trials_expirados():
       - Envia e-mail ao usuário avisando que o trial expirou
     """
     from django.conf import settings
-    from django.core.mail import send_mail
     from django.template.loader import render_to_string
     from django.utils import timezone
     from .models import PerfilMedico
@@ -103,10 +121,9 @@ def desativar_trials_expirados():
                     "nome": perfil.user.first_name or perfil.user.username,
                     "url_planos": "https://integramente.pro/planos/",
                 })
-                send_mail(
+                _send_email_com_logo(
                     subject="IntegraMente — Seu período de teste encerrou",
                     message=f"Olá! Seu trial de 7 dias encerrou. Escolha um plano em: https://integramente.pro/planos/",
-                    from_email=None,
                     recipient_list=[perfil.user.email],
                     html_message=html,
                     fail_silently=True,
@@ -130,10 +147,9 @@ def desativar_trials_expirados():
                     "total": total,
                     "painel_url": "https://integramente.pro/admin/questionario/solicitacaoplano/painel/",
                 })
-                send_mail(
+                _send_email_com_logo(
                     subject=f"[IntegraMente] {total} trial(s) expirado(s) hoje",
                     message=f"{total} trial(s) expirado(s):\n{linhas}",
-                    from_email=None,
                     recipient_list=[admin_email],
                     html_message=html,
                     fail_silently=True,
@@ -153,7 +169,6 @@ def verificar_planos_expirando():
     3) Envia e-mail ao admin com resumo do dia
     """
     from django.conf import settings
-    from django.core.mail import send_mail
     from django.template.loader import render_to_string
     from django.utils import timezone
     from .models import PerfilMedico
@@ -177,10 +192,9 @@ def verificar_planos_expirando():
                     "expiracao": perfil.plano_expiracao,
                     "url_renovar": "https://integramente.pro/planos/",
                 })
-                send_mail(
+                _send_email_com_logo(
                     subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} vence em 3 dias",
                     message=f"Seu plano vence em {perfil.plano_expiracao.strftime('%d/%m/%Y')}. Renove em: https://integramente.pro/planos/",
-                    from_email=None,
                     recipient_list=[perfil.user.email],
                     html_message=html,
                     fail_silently=True,
@@ -210,10 +224,9 @@ def verificar_planos_expirando():
                     "plano": perfil.get_plano_display(),
                     "url_renovar": "https://integramente.pro/planos/",
                 })
-                send_mail(
+                _send_email_com_logo(
                     subject=f"IntegraMente — Seu plano {perfil.get_plano_display()} venceu",
                     message=f"Seu plano venceu. Renove em: https://integramente.pro/planos/",
-                    from_email=None,
                     recipient_list=[perfil.user.email],
                     html_message=html,
                     fail_silently=True,
@@ -231,10 +244,9 @@ def verificar_planos_expirando():
                     "vencidos": desativados,
                     "painel_url": "https://integramente.pro/admin/questionario/solicitacaoplano/painel/",
                 })
-                send_mail(
+                _send_email_com_logo(
                     subject=f"[IntegraMente] Resumo de planos — {agora.strftime('%d/%m/%Y')}",
                     message=f"Vencendo em 3 dias: {prestes_a_vencer.count()} | Vencidos hoje: {len(desativados)}",
-                    from_email=None,
                     recipient_list=[admin_email],
                     html_message=html,
                     fail_silently=True,

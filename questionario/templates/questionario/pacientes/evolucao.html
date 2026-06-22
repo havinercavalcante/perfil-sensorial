@@ -57,9 +57,9 @@
       <div class="timeline-data">{{ ev.data|date:"d \d\e F \d\e Y" }}</div>
       <div class="timeline-tipo">{{ ev.tipo }}</div>
       {% if ev.link %}
-      <a class="timeline-link" href="{{ ev.link }}">Ver resultado →</a>
+      <a class="timeline-link" href="{{ ev.link }}">Ver resultado <i data-lucide="chevrons-right" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i></a>
       {% else %}
-      <a class="timeline-link" href="{% url 'detalhe_paciente' paciente.uuid %}">Ver paciente →</a>
+      <a class="timeline-link" href="{% url 'detalhe_paciente' paciente.uuid %}">Ver paciente <i data-lucide="chevrons-right" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i></a>
       {% endif %}
     </div>
     {% endfor %}

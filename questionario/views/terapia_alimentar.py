@@ -1,3 +1,4 @@
+from django.conf import settings
 import uuid as _uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -13,6 +14,8 @@ from ..models import (
     AvaliacaoAnamnese,
     REFEICAO_CHOICES,
 )
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 TOTAL_PAGINAS_RECORDATORIO = 6
 TOTAL_PAGINAS_ANAMNESE = 2
@@ -140,7 +143,6 @@ def recordatorio_deletar(request, avaliacao_id):
 
 @login_required
 def enviar_email_recordatorio(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.template.loader import render_to_string
 
@@ -158,10 +160,9 @@ def enviar_email_recordatorio(request, avaliacao_id):
     link = request.build_absolute_uri(f"/recordatorio/publico/{avaliacao.token}/1/")
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="Recordatório Alimentar — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nPreencha o Recordatório Alimentar no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

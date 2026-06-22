@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -14,6 +15,8 @@ from ..data.vineland3_data import (
     VINELAND3_MAXIMOS,
 )
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 
 def _v3_salvar_pontuacao(avaliacao):
@@ -261,7 +264,6 @@ def salvar_observacoes_vineland3(request, avaliacao_id):
 
 @login_required
 def enviar_email_vineland3(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoVineland3, uuid=avaliacao_id, paciente__medico=request.user)
@@ -277,10 +279,9 @@ def enviar_email_vineland3(request, avaliacao_id):
     link = request.build_absolute_uri(f"/vineland3/publico/{avaliacao.token}/1/")
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="Vineland-3 — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário Vineland-3 no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -11,6 +12,8 @@ from ..data.data_quest_dislexia import (
     QUEST_DISLEXIA_ITENS, QUEST_DISLEXIA_SUBESCALAS,
     QUEST_DISLEXIA_OPCOES, QUEST_DISLEXIA_CORTE,
 )
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 QUEST_DISLEXIA_PAGINAS = [
     {"key": "linguagem_oral",  "nome": "Linguagem Oral",   "cor": "#3498DB", "campo": "pont_linguagem_oral"},
@@ -240,7 +243,6 @@ def salvar_observacoes_quest_dislexia(request, avaliacao_id):
 
 @login_required
 def enviar_email_quest_dislexia(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.urls import reverse
     avaliacao = get_object_or_404(AvaliacaoQuestDislexia, uuid=avaliacao_id, paciente__medico=request.user)
@@ -261,8 +263,8 @@ def enviar_email_quest_dislexia(request, avaliacao_id):
     )
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="Questionário de Dislexia — IntegraMente", message=f"Link: {link}",
-                  from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="Questionário de Dislexia — IntegraMente", message=f"Link: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})

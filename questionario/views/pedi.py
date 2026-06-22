@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -12,6 +13,8 @@ from ..data.pedi_data import (
     CA_AUTOCUIDADO_ITENS, CA_MOBILIDADE_ITENS, CA_FUNCAO_SOCIAL_ITENS,
     lookup_escore_continuo,
 )
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 _PEDI_FS_MAX = {"autocuidado": 73, "mobilidade": 59, "funcao_social": 65}
 _PEDI_CA_MAX = {"autocuidado": 40, "mobilidade": 35, "funcao_social": 25}
@@ -286,7 +289,6 @@ def salvar_observacoes_pedi(request, avaliacao_id):
 
 @login_required
 def enviar_email_pedi(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.http import JsonResponse
     avaliacao = get_object_or_404(AvaliacaoPEDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -301,10 +303,9 @@ def enviar_email_pedi(request, avaliacao_id):
     link = request.build_absolute_uri(f"/pedi/publico/{avaliacao.token}/1/")
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="PEDI — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário PEDI no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

@@ -32,6 +32,9 @@
         var val = CONTEUDO[el.getAttribute("data-key")];
         if (val !== undefined && val !== "") el.innerHTML = val;
       });
+      if (typeof window.onConteudoRestored === "function") {
+        window.onConteudoRestored(CONTEUDO);
+      }
       {% if atualizado_em %}
       setSavedLabel("Salvo em {{ atualizado_em|date:'d/m/Y' }} às {{ atualizado_em|date:'H:i' }}");
       {% endif %}
@@ -43,6 +46,9 @@
     document.querySelectorAll(".edit-block[data-key]").forEach(function (el) {
       conteudo[el.getAttribute("data-key")] = el.innerHTML;
     });
+    if (typeof window.getExtraConteudo === "function") {
+      Object.assign(conteudo, window.getExtraConteudo());
+    }
 
     var btn = document.getElementById("btnSalvar");
     btn.disabled = true;

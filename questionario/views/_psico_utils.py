@@ -1,3 +1,4 @@
+from django.conf import settings
 """
 Utilitários compartilhados para os módulos de psicologia.
 Reduz duplicação de código entre os 21 novos módulos.
@@ -10,8 +11,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.urls import reverse
-from django.core.mail import send_mail
 from django.utils import timezone as tz
+
+from ..tasks import enviar_email
 
 
 def classificar(score, corte_list):
@@ -83,15 +85,16 @@ def enviar_email_avaliacao(request, avaliacao, url_name, label, pagina=1):
         link = request.build_absolute_uri(
             reverse(url_name, kwargs={"token": avaliacao.token})
         )
+    from django.templatetags.static import static
     html = render_to_string(
         "questionario/emails/email_link_avaliacao.html",
         {"paciente": paciente, "link": link}
     )
     try:
-        send_mail(
+        enviar_email.delay(
             subject=f"{label} — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-            from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False,
+            recipient_list=[email_dest], html_message=html, fail_silently=False,
         )
     except Exception as exc:
         if is_ajax:

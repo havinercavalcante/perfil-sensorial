@@ -38,9 +38,16 @@ python documentos/analisar_docs.py
 
 echo "==> Configurando Gunicorn como servico..."
 cp deploy/gunicorn.service /etc/systemd/system/gunicorn.service
+
+echo "==> Configurando Celery worker como servico..."
+cp deploy/celery.service /etc/systemd/system/celery.service
+
+echo "==> Configurando Celery Beat como servico..."
+cp deploy/celery-beat.service /etc/systemd/system/celery-beat.service
+
 systemctl daemon-reload
-systemctl enable gunicorn
-systemctl start gunicorn
+systemctl enable gunicorn celery celery-beat
+systemctl start gunicorn celery celery-beat
 
 echo "==> Configurando Nginx..."
 cp deploy/nginx.conf /etc/nginx/sites-available/integramente.pro

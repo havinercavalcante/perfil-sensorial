@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -10,6 +11,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoDepEmocional, RespostaDepEmocional
 from ..data.data_dep_emocional import DEP_EMOCIONAL_ITENS, DEP_EMOCIONAL_SUBESCALAS, DEP_EMOCIONAL_OPCOES, DEP_EMOCIONAL_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 DEP_EMOCIONAL_PAGINAS = [{'key': 'ansiedade_separacao', 'nome': 'Ansiedade de Separação', 'cor': '#E74C3C', 'campo': 'pont_ansiedade_separacao'}, {'key': 'expressao_afetiva', 'nome': 'Expressão Afetiva', 'cor': '#3498DB', 'campo': 'pont_expressao_afetiva'}, {'key': 'modificacao_planos', 'nome': 'Modificação de Planos', 'cor': '#27AE60', 'campo': 'pont_modificacao_planos'}, {'key': 'miedo_soledad', 'nome': 'Medo da Solidão', 'cor': '#9B59B6', 'campo': 'pont_miedo_soledad'}, {'key': 'expresion_limite', 'nome': 'Expressão Limite', 'cor': '#E67E22', 'campo': 'pont_expresion_limite'}, {'key': 'busqueda_atencion', 'nome': 'Busca de Atenção', 'cor': '#F39C12', 'campo': 'pont_busqueda_atencion'}]
 TOTAL_PAGINAS = 6
@@ -205,7 +208,6 @@ def salvar_observacoes_dep_emocional(request, avaliacao_id):
 
 @login_required
 def enviar_email_dep_emocional(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoDepEmocional, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -223,7 +225,8 @@ def enviar_email_dep_emocional(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("dep_emocional_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="Questionário de Dependência Emocional — IntegraMente", message=f"Link: {link}", from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="Questionário de Dependência Emocional — IntegraMente", message=f"Link: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})

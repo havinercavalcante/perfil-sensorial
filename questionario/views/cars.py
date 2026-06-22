@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -10,6 +11,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoCARS, RespostaCARS
 from ..data.data_cars import CARS_ITENS, CARS_OPCOES, CARS_CLASSIFICACAO
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 
 def _calcular_cars(avaliacao):
@@ -154,7 +157,6 @@ def salvar_observacoes_cars(request, avaliacao_id):
 
 @login_required
 def enviar_email_cars(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.template.loader import render_to_string
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoCARS, uuid=avaliacao_id, paciente__medico=request.user)
@@ -172,10 +174,9 @@ def enviar_email_cars(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("cars_publico", kwargs={"token": avaliacao.token}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="CARS-2 — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nPreencha o questionário CARS-2 no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

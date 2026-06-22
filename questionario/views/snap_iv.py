@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -10,6 +11,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoSNAPIV, RespostaSNAPIV
 from ..data.data_snap_iv import SNAP_IV_ITENS, SNAP_IV_SUBESCALAS, SNAP_IV_OPCOES, SNAP_IV_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 # ── Paginação por subescala ───────────────────────────────────────────────────
 
@@ -266,7 +269,6 @@ def salvar_observacoes_snap_iv(request, avaliacao_id):
 
 @login_required
 def enviar_email_snap_iv(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoSNAPIV, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -284,10 +286,9 @@ def enviar_email_snap_iv(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("snap_iv_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="SNAP-IV — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário SNAP-IV no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

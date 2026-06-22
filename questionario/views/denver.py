@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -8,6 +9,8 @@ from django.http import JsonResponse
 
 from ..models import Paciente, AvaliacaoDenver, RespostaDenver
 from ..data.data_denver import DENVER_ITENS, DENVER_DOMINIOS, DENVER_OPCOES
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 # 4 paginas — 1 por dominio
 DENVER_PAGINAS = [
@@ -338,7 +341,6 @@ def denver_publico(request, token, pagina):
 
 @login_required
 def enviar_email_denver(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.urls import reverse
     from django.template.loader import render_to_string
@@ -362,10 +364,10 @@ def enviar_email_denver(request, avaliacao_id):
         {"paciente": paciente, "link": link}
     )
     try:
-        send_mail(
+        enviar_email.delay(
             subject="Checklist Denver II — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-            from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False,
+            recipient_list=[email_dest], html_message=html, fail_silently=False,
         )
     except Exception as exc:
         if is_ajax:

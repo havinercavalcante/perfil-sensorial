@@ -12,6 +12,7 @@ class ProcedimentoDocumento(models.Model):
         ("anamnese_tea",      "Anamnese — TEA / Autismo"),
         ("anamnese_tdah",     "Anamnese — TDAH"),
         ("anamnese_casal",    "Anamnese — Casal"),
+        ("anamnese_seletividade_alimentar", "Anamnese — Seletividade Alimentar"),
         # Outros procedimentos
         ("ficha_triagem",        "Ficha de Triagem"),
         ("carta_encaminhamento", "Carta de Encaminhamento"),
@@ -21,7 +22,7 @@ class ProcedimentoDocumento(models.Model):
 
     uuid         = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="procedimentos")
-    tipo         = models.CharField(max_length=30, choices=TIPO_CHOICES)
+    tipo         = models.CharField(max_length=40, choices=TIPO_CHOICES)
     titulo       = models.CharField("Título", max_length=200, blank=True)
     conteudo     = models.JSONField(default=dict)
     atualizado_em = models.DateTimeField(auto_now=True)

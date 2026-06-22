@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,6 +10,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoPHQ9, RespostaPHQ9
 from ..data.data_phq9 import PHQ9_ITENS, PHQ9_OPCOES, PHQ9_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 _COR   = "#1D6A96"
 _TITULO = "PHQ-9 — Questionário de Saúde do Paciente"
@@ -223,7 +226,6 @@ def phq9_publico(request, token, pagina):
 
 @login_required
 def enviar_email_phq9(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.template.loader import render_to_string
     av = get_object_or_404(AvaliacaoPHQ9, uuid=avaliacao_id, paciente__medico=request.user)
@@ -241,8 +243,8 @@ def enviar_email_phq9(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("phq9_publico", kwargs={"token": av.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="PHQ-9 — IntegraMente", message=f"Responda o questionário em: {link}",
-                  from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="PHQ-9 — IntegraMente", message=f"Responda o questionário em: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})

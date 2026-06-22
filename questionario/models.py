@@ -128,6 +128,11 @@ class ModuloAvaliacao(models.Model):
         # ── Nutrição / Terapia Alimentar ─────────────────────────────────────
         ("recordatorio_alimentar",   "Recordatório Alimentar (3 dias)"),
         ("anamnese_alimentar",       "Anamnese Alimentar"),
+        # ── Seletividade Alimentar ────────────────────────────────────────
+        ("ebai",  "EBAI — Escala Brasileira de Alimentação Infantil"),
+        ("seps",  "SEPS — Escala de Problemas Sensoriais na Alimentação"),
+        ("eca",   "ECA — Escala de Avaliação do Comportamento Alimentar"),
+        ("tod",   "TOD — Escala de Comportamentos Disruptivos"),
     ]
     codigo = models.CharField("Código", max_length=30, unique=True, choices=MODULO_CHOICES)
     nome = models.CharField("Nome", max_length=100)
@@ -159,6 +164,7 @@ MODULOS_POR_ESPECIALIDADE = {
     "terapeuta_ocupacional": [
         "sensorial", "vineland", "escolar", "bebe", "spm",
         "edm", "mabc2", "beery", "pedi", "vineland3", "portage",
+        "ebai", "seps", "eca", "tod",
     ],
     "psicologo": [
         # triagem geral
@@ -181,6 +187,7 @@ MODULOS_POR_ESPECIALIDADE = {
     "fonoaudiologo": [
         "linguagem", "alimentacao_seletiva",
         "habitos_orais", "voz_infantil", "processamento_auditivo", "idv10",
+        "ebai", "seps", "eca",
     ],
     "neuropsicoplogo": [
         "rastreio_cognitivo", "sdq", "snap_iv", "mchat", "cars",
@@ -217,9 +224,11 @@ MODULOS_POR_ESPECIALIDADE = {
     "analista_aba": [
         "habilidades_adaptativas", "comportamento_funcional",
         "mchat", "vineland3",
+        "ebai", "seps", "eca", "tod",
     ],
     "nutricionista": [
         "recordatorio_alimentar", "anamnese_alimentar", "alimentacao_seletiva",
+        "ebai", "seps", "eca",
     ],
 }
 
@@ -282,6 +291,9 @@ class PerfilMedico(models.Model):
     )
     codigo_indicacao = models.UUIDField(
         "Código de indicação", default=uuid.uuid4, editable=False, unique=True
+    )
+    token_confirmacao = models.UUIDField(
+        "Token de confirmação de e-mail", null=True, blank=True, unique=True
     )
 
     class Meta:
@@ -1078,6 +1090,11 @@ class LinkConvite(models.Model):
         ("cdi",                     "CDI — Depressão Infantil"),
         # ── Nutrição / Terapia Alimentar ─────────────────────────────────────
         ("recordatorio_alimentar",   "Recordatório Alimentar (Pais)"),
+        # ── Seletividade Alimentar ────────────────────────────────────────
+        ("ebai",  "EBAI — Escala Brasileira de Alimentação Infantil"),
+        ("seps",  "SEPS — Escala de Problemas Sensoriais na Alimentação"),
+        ("eca",   "ECA — Avaliação do Comportamento Alimentar"),
+        ("tod",   "TOD — Escala de Comportamentos Disruptivos"),
     ]
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
@@ -2826,11 +2843,14 @@ class AvaliacaoInventarioDislexia(models.Model):
 MODULOS_POR_PLANO_POR_ESPECIALIDADE = {
     "terapeuta_ocupacional": {
         "trial": ["sensorial", "bebe", "escolar", "spm"],
-        "start": ["sensorial", "bebe", "escolar", "spm"],
+        "start": ["sensorial", "bebe", "escolar", "spm",
+                  "ebai", "seps", "eca", "tod"],
         "plus":  ["sensorial", "bebe", "escolar", "spm", "vineland", "pedi", "portage",
-                  "edm", "mabc2", "beery"],
+                  "edm", "mabc2", "beery",
+                  "ebai", "seps", "eca", "tod"],
         "elite": ["sensorial", "vineland", "escolar", "bebe", "spm",
-                  "edm", "mabc2", "beery", "pedi", "vineland3", "portage"],
+                  "edm", "mabc2", "beery", "pedi", "vineland3", "portage",
+                  "ebai", "seps", "eca", "tod"],
     },
     "psicologo": {
         "trial": ["phq9", "gad7", "sdq", "mchat"],
@@ -2849,11 +2869,14 @@ MODULOS_POR_PLANO_POR_ESPECIALIDADE = {
     },
     "fonoaudiologo": {
         "trial": ["linguagem", "alimentacao_seletiva"],
-        "start": ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil"],
+        "start": ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil",
+                  "ebai", "seps", "eca"],
         "plus":  ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil",
-                  "processamento_auditivo", "idv10"],
+                  "processamento_auditivo", "idv10",
+                  "ebai", "seps", "eca"],
         "elite": ["linguagem", "alimentacao_seletiva", "habitos_orais", "voz_infantil",
-                  "processamento_auditivo", "idv10"],
+                  "processamento_auditivo", "idv10",
+                  "ebai", "seps", "eca"],
     },
     "neuropsicoplogo": {
         "trial": ["rastreio_cognitivo", "phq9", "gad7", "mchat"],
@@ -2893,15 +2916,19 @@ MODULOS_POR_PLANO_POR_ESPECIALIDADE = {
     },
     "analista_aba": {
         "trial": ["mchat", "vineland3"],
-        "start": ["mchat", "vineland3", "habilidades_adaptativas"],
+        "start": ["mchat", "vineland3", "habilidades_adaptativas",
+                  "ebai", "seps", "eca", "tod"],
         "plus":  list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["analista_aba"])),
         "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["analista_aba"])),
     },
     "nutricionista": {
         "trial": ["anamnese_alimentar"],
-        "start": ["anamnese_alimentar", "recordatorio_alimentar"],
-        "plus":  ["anamnese_alimentar", "recordatorio_alimentar", "alimentacao_seletiva"],
-        "elite": ["anamnese_alimentar", "recordatorio_alimentar", "alimentacao_seletiva"],
+        "start": ["anamnese_alimentar", "recordatorio_alimentar",
+                  "ebai", "seps", "eca"],
+        "plus":  ["anamnese_alimentar", "recordatorio_alimentar", "alimentacao_seletiva",
+                  "ebai", "seps", "eca"],
+        "elite": ["anamnese_alimentar", "recordatorio_alimentar", "alimentacao_seletiva",
+                  "ebai", "seps", "eca"],
     },
 }
 
@@ -3578,6 +3605,142 @@ class RespostaPanico(models.Model):
         unique_together = ("avaliacao", "numero_item")
         ordering = ["numero_item"]
 
+# ── EBAI — Escala Brasileira de Alimentação Infantil ─────────────────────────
+
+class AvaliacaoEBAI(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_ebai")
+    token            = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual     = models.IntegerField(default=1)
+    pont_bruto       = models.IntegerField("Pontuação Bruta (14–98)", null=True, blank=True)
+    escore_t         = models.IntegerField("Escore T", null=True, blank=True)
+    observacoes      = models.TextField(blank=True, default="")
+    email_enviado_em = models.DateTimeField(null=True, blank=True)
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "EBAI — Escala Brasileira de Alimentação Infantil"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"EBAI — {self.paciente.nome} — {self.data}"
+
+class RespostaEBAI(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoEBAI, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── SEPS — Escala de Problemas Sensoriais na Alimentação ──────────────────────
+
+class AvaliacaoSEPS(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid               = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_seps")
+    token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data               = models.DateField(default=timezone.now)
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual       = models.IntegerField(default=1)
+    pont_aversao_toque = models.IntegerField("Aversão ao toque da comida (0–16)", null=True, blank=True)
+    pont_foco_unica    = models.IntegerField("Foco numa única comida (0–16)", null=True, blank=True)
+    pont_vomito        = models.IntegerField("Vômito (0–16)", null=True, blank=True)
+    pont_sensib_temp   = models.IntegerField("Sensibilidade à temperatura (0–16)", null=True, blank=True)
+    pont_expulsao      = models.IntegerField("Expulsão (0–12)", null=True, blank=True)
+    pont_encher        = models.IntegerField("Encher demasiado (0–12)", null=True, blank=True)
+    observacoes        = models.TextField(blank=True, default="")
+    email_enviado_em   = models.DateTimeField(null=True, blank=True)
+    criado_em          = models.DateTimeField(auto_now_add=True)
+    atualizado_em      = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "SEPS — Escala de Problemas Sensoriais na Alimentação"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"SEPS — {self.paciente.nome} — {self.data}"
+
+class RespostaSEPS(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoSEPS, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── ECA — Escala de Avaliação do Comportamento Alimentar ──────────────────────
+
+class AvaliacaoECA(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid               = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente           = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_eca")
+    token              = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data               = models.DateField(default=timezone.now)
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual       = models.IntegerField(default=1)
+    pont_mastigacao    = models.IntegerField("Motricidade na Mastigação", null=True, blank=True)
+    pont_seletividade  = models.IntegerField("Seletividade Alimentar", null=True, blank=True)
+    pont_comportamental= models.IntegerField("Aspectos Comportamentais", null=True, blank=True)
+    pont_gi            = models.IntegerField("Sintomas Gastrointestinais", null=True, blank=True)
+    pont_sensorial     = models.IntegerField("Sensibilidade Sensorial", null=True, blank=True)
+    pont_habilidades   = models.IntegerField("Habilidades nas Refeições", null=True, blank=True)
+    observacoes        = models.TextField(blank=True, default="")
+    email_enviado_em   = models.DateTimeField(null=True, blank=True)
+    criado_em          = models.DateTimeField(auto_now_add=True)
+    atualizado_em      = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "ECA — Escala de Avaliação do Comportamento Alimentar"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"ECA — {self.paciente.nome} — {self.data}"
+
+class RespostaECA(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoECA, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
+# ── TOD — Escala de Avaliação de Comportamentos Disruptivos ───────────────────
+
+class AvaliacaoTOD(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    uuid                  = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente              = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_tod")
+    token                 = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    data                  = models.DateField(default=timezone.now)
+    status                = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual          = models.IntegerField(default=1)
+    pont_total            = models.IntegerField("Pontuação Total (0–135)", null=True, blank=True)
+    itens_corte_positivos = models.IntegerField("Itens de corte positivos (≥2)", null=True, blank=True)
+    observacoes           = models.TextField(blank=True, default="")
+    email_enviado_em      = models.DateTimeField(null=True, blank=True)
+    criado_em             = models.DateTimeField(auto_now_add=True)
+    atualizado_em         = models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = "TOD — Escala de Avaliação de Comportamentos Disruptivos"
+        ordering = ["-data"]
+    def __str__(self):
+        return f"TOD — {self.paciente.nome} — {self.data}"
+
+class RespostaTOD(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoTOD, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+    observacao  = models.TextField(blank=True, default="")
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["numero_item"]
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 class PainelPagamentos(SolicitacaoPlano):
@@ -3622,3 +3785,42 @@ class PageVisit(models.Model):
 
     def __str__(self):
         return f"{self.get_pagina_display()} — {self.visitado_em:%d/%m/%Y %H:%M}"
+
+
+class StatusIncident(models.Model):
+    IMPACT_CHOICES = [
+        ("none",        "Sem Impacto"),
+        ("minor",       "Impacto Menor"),
+        ("major",       "Impacto Maior"),
+        ("critical",    "Crítico"),
+        ("maintenance", "Manutenção Programada"),
+    ]
+    STATUS_CHOICES = [
+        ("investigating", "Investigando"),
+        ("identified",    "Identificado"),
+        ("monitoring",    "Monitorando"),
+        ("resolved",      "Resolvido"),
+        ("scheduled",     "Agendado"),
+        ("in_progress",   "Em Andamento"),
+        ("completed",     "Concluído"),
+    ]
+
+    titulo      = models.CharField(max_length=200)
+    descricao   = models.TextField()
+    impacto     = models.CharField(max_length=20, choices=IMPACT_CHOICES, default="minor")
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="investigating")
+    iniciado_em = models.DateTimeField(default=timezone.now)
+    resolvido_em = models.DateTimeField(null=True, blank=True)
+    criado_em   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering            = ["-iniciado_em"]
+        verbose_name        = "Incidente / Manutenção"
+        verbose_name_plural = "Incidentes / Manutenções"
+
+    def __str__(self):
+        return f"[{self.get_status_display()}] {self.titulo}"
+
+    @property
+    def ativo(self):
+        return self.status not in ("resolved", "completed")

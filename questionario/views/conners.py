@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -13,6 +14,8 @@ from ..data.data_conners import (
     CONNERS_SUBESCALAS, CONNERS_OPCOES, CONNERS_CORTE,
 )
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 # ─── páginas (uma por subescala) ─────────────────────────────────────────────
 CONNERS_PAGINAS = [
@@ -236,7 +239,6 @@ def salvar_observacoes_conners_pais(request, avaliacao_id):
 
 @login_required
 def enviar_email_conners_pais(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoConners, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -254,7 +256,8 @@ def enviar_email_conners_pais(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("conners_pais_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="Conners-3 — IntegraMente", message=f"Link: {link}", from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="Conners-3 — IntegraMente", message=f"Link: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})
@@ -443,7 +446,6 @@ def salvar_observacoes_conners_prof(request, avaliacao_id):
 
 @login_required
 def enviar_email_conners_prof(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoConners, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -461,7 +463,8 @@ def enviar_email_conners_prof(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("conners_prof_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="Conners-3 — IntegraMente", message=f"Link: {link}", from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="Conners-3 — IntegraMente", message=f"Link: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})

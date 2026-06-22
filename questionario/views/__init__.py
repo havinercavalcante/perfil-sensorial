@@ -1,3 +1,4 @@
+from .status import status_view
 from .auth import *
 from .seo import *
 from .pacientes import *
@@ -120,6 +121,23 @@ from .prot_dislexia_prof import (
 from .inventario_dislexia import (
     nova_avaliacao_inventario_dislexia, inventario_dislexia_form,
     inventario_dislexia_resultado, inventario_dislexia_deletar,
+)
+# ── Escalas de Alimentação Infantil ───────────────────────────────────────
+from .ebai import (
+    nova_avaliacao_ebai, ebai_form, ebai_resultado, ebai_visualizar,
+    ebai_deletar, salvar_observacoes_ebai, enviar_email_ebai, ebai_publico,
+)
+from .seps import (
+    nova_avaliacao_seps, seps_form, seps_resultado, seps_visualizar,
+    seps_deletar, salvar_observacoes_seps, enviar_email_seps, seps_publico,
+)
+from .eca import (
+    nova_avaliacao_eca, eca_form, eca_resultado, eca_visualizar,
+    eca_deletar, salvar_observacoes_eca, enviar_email_eca, eca_publico,
+)
+from .tod import (
+    nova_avaliacao_tod, tod_form, tod_resultado, tod_visualizar,
+    tod_deletar, salvar_observacoes_tod, enviar_email_tod, tod_publico,
 )
 # ── Nutrição / Terapia Alimentar ───────────────────────────────────────────
 from .terapia_alimentar import *

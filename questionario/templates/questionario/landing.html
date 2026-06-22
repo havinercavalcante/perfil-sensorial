@@ -2,14 +2,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18231981645"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'AW-18231981645');
-  </script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','AW-18231981645');</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IntegraMente — Avaliações Clínicas Multidisciplinares</title>
@@ -20,802 +14,358 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --primary:       #39abcb;
-      --primary-light: #6accdc;
-      --primary-dark:  #0c3c7b;
-      --bg:            #d5eef5;
-      --border:        #85cde2;
-      --white:         #ffffff;
-      --text:          #0c3c7b;
-      --text-muted:    #39abcb;
-      --grad: linear-gradient(135deg, #0c3c7b 0%, #39abcb 65%, #6accdc 100%);
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    :root{
+      --blue:#39abcb;--blue-lt:#6accdc;--navy:#0c3c7b;
+      --dark:#060e1f;--dark2:#0b1a35;--dark3:#0d2040;
+      --light:#f0f8fc;--lighter:#e8f4f9;--white:#ffffff;
+      --grad:linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 50%,#39abcb 100%);
+      --grad-b:linear-gradient(135deg,#39abcb 0%,#6accdc 100%);
     }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      background: var(--white);
-      color: var(--text);
-      overflow-x: hidden;
-      line-height: 1.6;
-    }
+    body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--white);color:var(--dark);overflow-x:hidden;line-height:1.6}
+    .g-text{background:var(--grad-b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
     /* ── NAV ── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.85rem 6vw;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(133,205,226,0.4);
-      box-shadow: 0 2px 16px rgba(12,60,123,0.07);
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      text-decoration: none;
-    }
-
-    .nav-logo img { height: 30px; width: auto; border-radius: 10px; padding: 2px; }
-
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-      list-style: none;
-    }
-
-    .nav-links a {
-      color: var(--primary-dark);
-      text-decoration: none;
-      font-size: 0.88rem;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--primary); }
-
-    .nav-cta { display: flex; gap: 0.65rem; align-items: center; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.55rem 1.3rem;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-outline {
-      color: var(--primary-dark);
-      border: 1.5px solid var(--border);
-      background: transparent;
-    }
-    .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: rgba(57,171,203,0.06); }
-
-    .btn-primary {
-      background: var(--grad);
-      color: var(--white);
-      box-shadow: 0 4px 16px rgba(57,171,203,0.35);
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(57,171,203,0.45); }
-
-    .btn-lg { padding: 0.85rem 2rem; font-size: 1rem; border-radius: 10px; }
-    .btn-xl { padding: 1rem 2.2rem; font-size: 1.05rem; border-radius: 12px; }
-
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 8rem 6vw 5rem;
-      position: relative;
-      overflow: hidden;
-      background: var(--grad);
-    }
-
-    .hero-noise {
-      position: absolute; inset: 0; z-index: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      opacity: 0.4;
-    }
-
-    .hero-circles {
-      position: absolute; inset: 0; z-index: 0; overflow: hidden;
-    }
-    .hero-circles span {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .hero-circles span:nth-child(1) { width: 500px; height: 500px; top: -150px; right: -100px; }
-    .hero-circles span:nth-child(2) { width: 300px; height: 300px; bottom: -80px; left: -60px; }
-    .hero-circles span:nth-child(3) { width: 180px; height: 180px; bottom: 120px; right: 15%; }
-
-    .hero-content { position: relative; z-index: 1; max-width: 780px; }
-
-    .hero-logo {
-      margin: 0 auto 2rem;
-      display: block;
-      height: 110px;
-      width: auto;
-      filter: drop-shadow(0 8px 32px rgba(0,0,0,0.2));
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.28);
-      border-radius: 100px;
-      padding: 0.38rem 1rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: rgba(255,255,255,0.95);
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      backdrop-filter: blur(8px);
-    }
-
-    .hero-badge-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #fff;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(1.5); }
-    }
-
-    .hero h1 {
-      font-size: clamp(2.4rem, 5.5vw, 3.8rem);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      color: var(--white);
-      margin-bottom: 1.2rem;
-    }
-
-    .hero h1 em {
-      font-style: normal;
-      color: rgba(255,255,255,0.75);
-    }
-
-    .hero p {
-      font-size: 1.1rem;
-      color: rgba(255,255,255,0.85);
-      max-width: 560px;
-      margin: 0 auto 2.5rem;
-      line-height: 1.75;
-      font-weight: 400;
-    }
-
-    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-
-    .btn-hero-primary {
-      background: var(--primary-dark);
-      color: var(--white);
-      font-weight: 700;
-      box-shadow: 0 6px 24px rgba(12,60,123,0.35);
-    }
-    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(12,60,123,0.5); }
-
-    .btn-hero-outline {
-      background: rgba(255,255,255,0.12);
-      color: var(--white);
-      border: 1.5px solid rgba(255,255,255,0.35);
-      backdrop-filter: blur(8px);
-    }
-    .btn-hero-outline:hover { background: rgba(255,255,255,0.22); }
-
-    .hero-stats {
-      display: flex;
-      gap: 0;
-      justify-content: center;
-      margin-top: 4rem;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.35);
-      border-radius: 16px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      overflow: hidden;
-      max-width: 560px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .stat {
-      flex: 1;
-      padding: 1.25rem 1rem;
-      text-align: center;
-      border-right: 1px solid rgba(255,255,255,0.2);
-    }
-    .stat:last-child { border-right: none; }
-
-    .stat-value { font-size: 1.7rem; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 1px 8px rgba(0,0,0,0.25); }
-    .stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.9); font-weight: 600; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.07em; }
-
-    /* ── WAVE DIVIDER ── */
-    .wave {
-      display: block;
-      width: 100%;
-      overflow: hidden;
-      line-height: 0;
-      background: var(--white);
-    }
-    .wave svg { display: block; }
-
-    /* ── SECTIONS ── */
-    section { padding: 5.5rem 6vw; }
-
-    .section-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      margin-bottom: 0.6rem;
-    }
-
-    .section-title {
-      font-size: clamp(1.7rem, 3vw, 2.4rem);
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
-      color: var(--primary-dark);
-      margin-bottom: 0.85rem;
-    }
-
-    .section-sub {
-      font-size: 1rem;
-      color: #4a7a9b;
-      max-width: 500px;
-      line-height: 1.7;
-    }
-
-    .section-header { margin-bottom: 3rem; }
-
-    /* ── DISCIPLINES ── */
-    .disciplines { background: var(--white); }
-
-    .disciplines-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-      gap: 1.1rem;
-    }
-
-    .disc-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.6rem;
-      transition: all 0.25s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .disc-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--grad);
-      opacity: 0;
-      transition: opacity 0.25s;
-    }
-
-    .disc-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(12,60,123,0.1);
-      border-color: var(--primary);
-    }
-    .disc-card:hover::after { opacity: 1; }
-
-    .disc-icon {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-    }
-
-    .disc-card h3 { font-size: 0.97rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.5rem; }
-    .disc-card p { font-size: 0.85rem; color: #4a7a9b; line-height: 1.6; margin-bottom: 0.9rem; }
-
-    .disc-tools { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-
-    .tag {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.2rem 0.55rem;
-      border-radius: 5px;
-      background: rgba(57,171,203,0.12);
-      color: var(--primary-dark);
-      border: 1px solid rgba(57,171,203,0.25);
-    }
-
-    /* ── FEATURES ── */
-    .features { background: var(--bg); }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .feat-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.75rem;
-      transition: all 0.25s;
-    }
-    .feat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(12,60,123,0.09); border-color: var(--primary); }
-
-    .feat-icon {
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-    }
-
-    .feat-card h3 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.45rem; }
-    .feat-card p { font-size: 0.875rem; color: #4a7a9b; line-height: 1.65; }
-
-    /* ── HOW IT WORKS ── */
-    .how { background: var(--white); }
-
-    .how-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5rem;
-      align-items: center;
-    }
-
-    .steps { display: flex; flex-direction: column; gap: 1.75rem; }
-
-    .step { display: flex; gap: 1.1rem; align-items: flex-start; }
-
-    .step-num {
-      flex-shrink: 0;
-      width: 38px; height: 38px;
-      border-radius: 10px;
-      background: var(--grad);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: var(--white);
-      box-shadow: 0 4px 12px rgba(57,171,203,0.35);
-    }
-
-    .step-content h4 { font-size: 0.97rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.25rem; }
-    .step-content p { font-size: 0.855rem; color: #4a7a9b; line-height: 1.65; }
-
-    /* mockup */
-    .mockup-card {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 1.75rem;
-      box-shadow: 0 24px 60px rgba(12,60,123,0.12);
-    }
-
-    .mockup-bar { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem; }
-    .mockup-dot { width: 9px; height: 9px; border-radius: 50%; }
-
-    .mockup-chart { display: flex; gap: 0.5rem; align-items: flex-end; height: 110px; margin-bottom: 1.25rem; }
-    .bar-item { flex: 1; border-radius: 5px 5px 0 0; }
-
-    .mockup-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
-    .legend-item { display: flex; align-items: center; gap: 0.45rem; font-size: 0.76rem; color: #4a7a9b; }
-    .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-
-    /* ── PRICING ── */
-    .pricing { background: var(--bg); }
-
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
-      align-items: start;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .pricing-card {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem 1.75rem;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.25s, box-shadow 0.25s;
-    }
-
-    .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(12,60,123,0.13); }
-
-    .pricing-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 4px;
-      background: var(--grad);
-    }
-
-    .pricing-card.popular {
-      border-color: var(--primary);
-      box-shadow: 0 16px 48px rgba(57,171,203,0.2);
-    }
-
-    .pricing-card.elite {
-      background: var(--primary-dark);
-      border-color: var(--primary-dark);
-    }
-    .pricing-card.elite::before { background: linear-gradient(90deg, #39abcb, #6accdc); }
-
-    .popular-badge {
-      position: absolute;
-      top: -1px; left: 50%; transform: translateX(-50%);
-      background: var(--grad);
-      color: var(--white);
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.3rem 1.1rem;
-      border-radius: 0 0 10px 10px;
-    }
-
-    .plan-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; margin-top: 0.5rem; }
-
-    .plan-icon {
-      width: 42px; height: 42px; border-radius: 50%;
-      border: 2px solid var(--primary);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; flex-shrink: 0;
-      color: var(--primary);
-    }
-    .pricing-card.elite .plan-icon { border-color: var(--primary-light); color: var(--primary-light); }
-
-    .plan-name { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.01em; color: var(--primary-dark); }
-    .pricing-card.elite .plan-name { color: var(--white); }
-
-    .plan-price {
-      display: flex; align-items: baseline; gap: 0.15rem;
-      margin: 0.6rem 0 0.25rem;
-    }
-    .plan-currency { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
-    .plan-amount { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em; color: var(--primary-dark); }
-    .plan-cents { font-size: 1rem; font-weight: 700; color: var(--primary-dark); align-self: flex-start; margin-top: 0.5rem; }
-    .plan-period { font-size: 0.8rem; color: var(--text-muted); }
-
-    .pricing-card.elite .plan-currency,
-    .pricing-card.elite .plan-amount,
-    .pricing-card.elite .plan-cents { color: var(--white); }
-    .pricing-card.elite .plan-period { color: rgba(255,255,255,0.55); }
-
-    .plan-desc { font-size: 0.82rem; color: #4a7a9b; line-height: 1.5; margin-bottom: 1.25rem; min-height: 2.5rem; }
-    .pricing-card.elite .plan-desc { color: rgba(255,255,255,0.65); }
-
-    .plan-divider { height: 1px; background: var(--border); margin: 1rem 0; }
-    .pricing-card.elite .plan-divider { background: rgba(255,255,255,0.12); }
-
-    .plan-section-title {
-      display: flex; align-items: center; gap: 0.4rem;
-      font-size: 0.75rem; font-weight: 700;
-      color: var(--primary-dark);
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 0.6rem;
-    }
-    .pricing-card.elite .plan-section-title { color: rgba(255,255,255,0.7); }
-
-    .plan-modules {
-      list-style: none; margin-bottom: 1rem;
-      display: flex; flex-direction: column; gap: 0.3rem;
-    }
-    .plan-modules li {
-      font-size: 0.82rem; color: #4a7a9b;
-      padding-left: 0.8rem; position: relative;
-    }
-    .plan-modules li::before { content: '•'; position: absolute; left: 0; color: var(--primary); font-weight: 700; }
-    .pricing-card.elite .plan-modules li { color: rgba(255,255,255,0.7); }
-    .pricing-card.elite .plan-modules li::before { color: var(--primary-light); }
-
-    .plan-features {
-      list-style: none;
-      display: flex; flex-direction: column; gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .plan-features li {
-      display: flex; align-items: flex-start; gap: 0.5rem;
-      font-size: 0.85rem; color: #4a7a9b; line-height: 1.4;
-    }
-    .plan-features li .check {
-      flex-shrink: 0; margin-top: 0.1rem;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: rgba(57,171,203,0.15);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; color: var(--primary); font-weight: 700;
-    }
-    .pricing-card.elite .plan-features li { color: rgba(255,255,255,0.75); }
-    .pricing-card.elite .plan-features li .check { background: rgba(106,204,220,0.2); color: var(--primary-light); }
-
-    .plan-highlights {
-      display: flex; flex-direction: column; gap: 0.35rem;
-      margin-bottom: 1.25rem;
-    }
-    .plan-highlight {
-      font-size: 0.82rem; font-weight: 700; color: var(--primary-dark);
-      background: rgba(57,171,203,0.1);
-      border-radius: 7px; padding: 0.4rem 0.7rem;
-      border-left: 3px solid var(--primary);
-    }
-    .pricing-card.elite .plan-highlight { background: rgba(255,255,255,0.08); border-color: var(--primary-light); color: var(--white); }
-
-    /* ── CTA ── */
-    .cta-section {
-      background: var(--grad);
-      text-align: center;
-      padding: 7rem 6vw;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-section::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");
-    }
-
-    .cta-logo { height: 80px; width: auto; display: block; margin: 0 auto 1.5rem; filter: brightness(0) invert(1) opacity(0.9); position: relative; z-index: 1; }
-
-    .cta-section h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 900; letter-spacing: -0.02em; color: var(--white); margin-bottom: 0.9rem; position: relative; z-index: 1; }
-    .cta-section p { font-size: 1rem; color: rgba(255,255,255,0.82); margin-bottom: 2.25rem; position: relative; z-index: 1; }
-    .cta-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
-
-    /* ── FOOTER ── */
-    footer {
-      background: #fff;
-      border-top: 1px solid #e8f4f9;
-      padding: 2.5rem 6vw;
-    }
-
-    .footer-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      text-align: center;
-    }
-    .footer-logo { display: flex; align-items: center; text-decoration: none; }
-    .footer-logo img { height: 64px; width: auto; }
-    .footer-links {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      list-style: none;
-    }
-    .footer-links li { display: flex; align-items: center; }
-    .footer-links li + li::before {
-      content: "|";
-      color: #c5dde8;
-      margin: 0 0.75rem;
-      font-size: 0.75rem;
-    }
-    .footer-links a {
-      color: var(--primary);
-      font-size: 0.83rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .footer-links a:hover { color: var(--primary-dark); }
-    .footer-copy { font-size: 0.76rem; color: #aac4d2; }
-
-    /* ── SECTION NAV ── */
-    #sectionNav {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      z-index: 900;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(57,171,203,0.45);
-      transition: background 0.2s, transform 0.2s, box-shadow 0.2s, opacity 0.3s;
-      opacity: 0;
-      pointer-events: none;
-    }
-    #sectionNav.visible { opacity: 1; pointer-events: auto; }
-    #sectionNav:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(12,60,123,0.4); }
-
-    /* ── TABLET ── */
-    @media (max-width: 900px) {
-      .how-layout { grid-template-columns: 1fr; gap: 2.5rem; }
-      .mockup-card { max-width: 480px; margin: 0 auto; }
-      .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
-    }
-
-    /* ── MOBILE ── */
-    /* ── TRUST BADGES ── */
-    .trust-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.5rem 1.25rem;
-      font-size: 0.8rem;
-      color: #4a7a9b;
-      font-weight: 600;
-      background: transparent;
-    }
-
-    .trust-sep {
-      width: 1px;
-      height: 1.1rem;
-      background: var(--border);
-      flex-shrink: 0;
-    }
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:0 6vw;height:64px;background:transparent;transition:background .35s,box-shadow .35s}
+    nav.scrolled{background:rgba(6,14,31,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(255,255,255,.06)}
+    .nav-logo{display:flex;align-items:center;gap:.5rem;text-decoration:none}
+    .nav-logo img{height:28px;border-radius:8px}
+    .nav-links{display:flex;gap:1.8rem;list-style:none}
+    .nav-links a{color:rgba(255,255,255,.75);text-decoration:none;font-size:.84rem;font-weight:500;transition:color .2s}
+    .nav-links a:hover{color:var(--blue-lt)}
+    .nav-cta{display:flex;gap:.6rem;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.2rem;border-radius:8px;font-size:.84rem;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
+    .btn-ghost{color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2);background:transparent}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff}
+    .btn-primary{background:var(--grad-b);color:var(--dark);font-weight:700;box-shadow:0 4px 20px rgba(57,171,203,.4)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(57,171,203,.55)}
+    .btn-lg{padding:.78rem 1.75rem;font-size:.92rem;border-radius:10px}
+    .btn-xl{padding:.92rem 2.1rem;font-size:.98rem;border-radius:12px}
 
     /* ── HAMBURGER ── */
-    .hamburger {
-      display: none;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0.3rem;
-      color: var(--primary-dark);
-      flex-direction: column;
-      gap: 5px;
+    .hamburger{display:none;background:none;border:none;cursor:pointer;padding:.3rem;flex-direction:column;gap:5px}
+    .hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,.85);border-radius:2px;transition:all .25s}
+    .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    .hamburger.open span:nth-child(2){opacity:0}
+    .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+    .mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:rgba(6,14,31,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(57,171,203,.15);padding:1rem 5vw 1.5rem;z-index:999;flex-direction:column;gap:.2rem}
+    .mobile-menu.open{display:flex}
+    .mobile-menu a{display:block;padding:.75rem .5rem;color:rgba(255,255,255,.82);text-decoration:none;font-size:.93rem;font-weight:600;border-radius:8px;transition:background .2s;border-bottom:1px solid rgba(255,255,255,.05)}
+    .mobile-menu a:last-child{border-bottom:none}
+    .mobile-menu a:hover{background:rgba(57,171,203,.1);color:var(--blue-lt)}
+
+    /* ── HERO ── */
+    .hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:8rem 6vw 5rem;background:var(--dark);position:relative;overflow:hidden;gap:4rem}
+    .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+    .hero-bg::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(57,171,203,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(57,171,203,.04) 1px,transparent 1px);background-size:56px 56px}
+    .blob{position:absolute;border-radius:50%;filter:blur(80px);animation:blob-drift ease-in-out infinite}
+    .blob-1{width:700px;height:700px;background:radial-gradient(circle,rgba(12,60,123,.55) 0%,transparent 70%);top:-200px;right:-150px;animation-duration:18s}
+    .blob-2{width:500px;height:500px;background:radial-gradient(circle,rgba(57,171,203,.28) 0%,transparent 70%);bottom:-100px;left:-100px;animation-duration:14s;animation-delay:-5s}
+    .blob-3{width:360px;height:360px;background:radial-gradient(circle,rgba(106,204,220,.18) 0%,transparent 70%);top:40%;left:35%;animation-duration:22s;animation-delay:-10s}
+    @keyframes blob-drift{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-40px) scale(1.05)}50%{transform:translate(-20px,-60px) scale(.95)}75%{transform:translate(-40px,20px) scale(1.02)}}
+
+    .hero-left{position:relative;z-index:1}
+    .hero-chip{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem 1rem;background:rgba(57,171,203,.12);border:1px solid rgba(57,171,203,.3);border-radius:100px;font-size:.7rem;font-weight:700;color:var(--blue-lt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.5rem}
+    .hero-chip-dot{width:6px;height:6px;border-radius:50%;background:var(--blue-lt);animation:pulse-dot 2s infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(106,204,220,.5)}50%{opacity:.6;transform:scale(1.4);box-shadow:0 0 0 5px rgba(106,204,220,0)}}
+
+    .hero h1{font-size:clamp(2.5rem,5vw,3.9rem);font-weight:900;letter-spacing:-.04em;line-height:1.08;color:var(--white);margin-bottom:1.3rem}
+    .hero h1 .accent{background:linear-gradient(135deg,#39abcb,#6accdc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-desc{font-size:1.02rem;color:rgba(255,255,255,.62);max-width:520px;line-height:1.78;margin-bottom:.85rem}
+    .hero-sub{font-size:.8rem;color:rgba(255,255,255,.42);margin-bottom:2.2rem;display:flex;align-items:center;gap:.4rem}
+    .hero-actions{display:flex;gap:.9rem;flex-wrap:wrap;margin-bottom:3rem}
+
+    .btn-cta{background:linear-gradient(135deg,#39abcb,#6accdc);color:#040d1e;font-weight:800;box-shadow:0 8px 32px rgba(57,171,203,.45);animation:cta-glow 3s ease-in-out infinite}
+    @keyframes cta-glow{0%,100%{box-shadow:0 8px 32px rgba(57,171,203,.45)}50%{box-shadow:0 8px 56px rgba(57,171,203,.72),0 0 100px rgba(57,171,203,.22)}}
+    .btn-cta:hover{transform:translateY(-3px)}
+    .btn-outline-w{color:rgba(255,255,255,.85);border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);backdrop-filter:blur(8px)}
+    .btn-outline-w:hover{background:rgba(255,255,255,.12);color:#fff}
+
+    .hero-stats{display:flex;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden}
+    .h-stat{flex:1;padding:1.1rem 1rem;text-align:center;border-right:1px solid rgba(255,255,255,.07)}
+    .h-stat:last-child{border-right:none}
+    .h-stat-v{font-size:1.6rem;font-weight:900;line-height:1;background:linear-gradient(135deg,#fff,var(--blue-lt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .h-stat-l{font-size:.66rem;color:rgba(255,255,255,.45);font-weight:600;margin-top:.3rem;text-transform:uppercase;letter-spacing:.07em}
+
+    /* Hero right — mockup */
+    .hero-right{position:relative;z-index:1;display:flex;justify-content:center;align-items:center}
+    .hero-mockup{width:100%;max-width:490px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;backdrop-filter:blur(20px);padding:1.5rem;box-shadow:0 40px 100px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.07);animation:mockup-float 7s ease-in-out infinite}
+    @keyframes mockup-float{0%,100%{transform:perspective(1400px) rotateX(5deg) rotateY(-8deg) translateY(0)}50%{transform:perspective(1400px) rotateX(5deg) rotateY(-8deg) translateY(-20px)}}
+    .m-header{display:flex;align-items:center;gap:.45rem;margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,255,255,.07)}
+    .m-dot{width:9px;height:9px;border-radius:50%}
+    .m-title{font-size:.7rem;font-weight:600;color:rgba(255,255,255,.5);margin-left:.3rem}
+    .m-patient{display:flex;align-items:center;gap:.75rem;margin-bottom:1.1rem}
+    .m-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#39abcb,#0c3c7b);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;color:#fff;flex-shrink:0}
+    .m-name{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.9)}
+    .m-sub{font-size:.68rem;color:rgba(255,255,255,.38)}
+    .m-badge{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:100px;padding:.22rem .65rem;font-size:.66rem;font-weight:700;color:#6ee7b7}
+    .m-lbl{font-size:.65rem;font-weight:700;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem}
+    .m-bars{display:flex;gap:.5rem;align-items:flex-end;height:88px;margin-bottom:.5rem}
+    .m-bar{flex:1;border-radius:5px 5px 0 0;animation:bar-grow 1.2s cubic-bezier(.23,1,.32,1) both;transform-origin:bottom}
+    @keyframes bar-grow{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+    .m-bars-l{display:flex;justify-content:space-between;font-size:.6rem;color:rgba(255,255,255,.3);margin-bottom:1rem;font-weight:600}
+    .m-scores{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+    .m-score{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:.5rem .65rem;display:flex;align-items:center;justify-content:space-between}
+    .m-score-l{font-size:.65rem;color:rgba(255,255,255,.45);font-weight:600}
+    .m-score-v{font-size:.85rem;font-weight:800;color:rgba(255,255,255,.88)}
+
+    .float-badge{position:absolute;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;backdrop-filter:blur(12px);padding:.6rem .9rem;display:flex;align-items:center;gap:.5rem;font-size:.74rem;font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .float-b1{top:12%;right:-4%;animation:fb1 5s ease-in-out infinite}
+    .float-b2{bottom:18%;left:-7%;animation:fb2 6s ease-in-out infinite 1s}
+    @keyframes fb1{0%,100%{transform:translateY(0) rotate(2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+    @keyframes fb2{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(10px) rotate(-2deg)}}
+
+    /* ── TRUST STRIP ── */
+    .trust-strip{background:var(--lighter);border-top:1px solid #ddeef6;border-bottom:1px solid #ddeef6;padding:1.4rem 6vw;overflow:hidden}
+    .trust-inner{display:flex;gap:2.5rem;align-items:center;justify-content:center;flex-wrap:wrap}
+    .trust-item{display:flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;color:#4a7a9b}
+
+    /* ── SECTION COMMON ── */
+    .sec-lbl{display:inline-flex;align-items:center;gap:.45rem;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.6rem}
+    .sec-lbl::before{content:'';width:18px;height:2px;border-radius:1px}
+    .sec-lbl.on-light{color:var(--blue)}
+    .sec-lbl.on-light::before{background:var(--blue)}
+    .sec-lbl.on-dark{color:var(--blue-lt)}
+    .sec-lbl.on-dark::before{background:var(--blue-lt)}
+    .sec-h2{font-size:clamp(1.8rem,3.2vw,2.6rem);font-weight:900;letter-spacing:-.03em;line-height:1.15}
+    .sec-h2.dark{color:var(--dark)}
+    .sec-h2.light{color:var(--white)}
+    .sec-p{font-size:.94rem;line-height:1.75;max-width:500px}
+    .sec-p.dark{color:#4a7a9b}
+    .sec-p.light{color:rgba(255,255,255,.55)}
+
+    /* ── SPECIALTIES ── */
+    .specs{background:var(--white);padding:6rem 6vw}
+    .specs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:1.2rem;margin-top:3rem}
+    .spec-card{background:var(--white);border:1.5px solid #e2f0f8;border-radius:20px;padding:1.75rem;transition:border-color .3s,box-shadow .3s;position:relative;overflow:hidden;will-change:transform}
+    .spec-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad-b);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+    .spec-card:hover{border-color:rgba(57,171,203,.4);box-shadow:0 16px 48px rgba(12,60,123,.1)}
+    .spec-card:hover::before{transform:scaleX(1)}
+    .spec-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;margin-bottom:1.2rem;box-shadow:0 8px 24px rgba(57,171,203,.28)}
+    .spec-card h3{font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:.45rem}
+    .spec-card p{font-size:.83rem;color:#5a8a9f;line-height:1.65;margin-bottom:1rem}
+    .spec-tags{display:flex;flex-wrap:wrap;gap:.3rem}
+    .spec-tag{font-size:.67rem;font-weight:700;padding:.2rem .55rem;border-radius:6px;background:rgba(57,171,203,.1);color:var(--navy);border:1px solid rgba(57,171,203,.18)}
+
+    /* ── FEATURES DARK ── */
+    .feats{background:var(--dark);padding:7rem 6vw;position:relative;overflow:hidden}
+    .feats::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(57,171,203,.4),transparent)}
+    .feats-hd{margin-bottom:3.5rem}
+    .bento{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    .bc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:1.75rem;transition:background .3s,border-color .3s;will-change:transform;position:relative;overflow:hidden}
+    .bc:hover{background:rgba(57,171,203,.08);border-color:rgba(57,171,203,.25)}
+    .bc.s2{grid-column:span 2}
+    .bc.s3{grid-column:span 3}
+    .b-icon{width:48px;height:48px;border-radius:12px;background:rgba(57,171,203,.14);border:1px solid rgba(57,171,203,.22);display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem}
+    .bc h3{font-size:.97rem;font-weight:800;color:var(--white);margin-bottom:.4rem}
+    .bc p{font-size:.83rem;color:rgba(255,255,255,.48);line-height:1.65}
+    .b-num{font-size:3.2rem;font-weight:900;background:var(--grad-b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:.3rem;margin-top:.6rem}
+
+    /* ── HOW IT WORKS ── */
+    .how{background:var(--light);padding:7rem 6vw}
+    .how-inner{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+    .steps{display:flex;flex-direction:column;gap:0}
+    .step-item{display:flex;gap:1.5rem;position:relative;padding-bottom:2.5rem}
+    .step-item:last-child{padding-bottom:0}
+    .step-item::after{content:'';position:absolute;left:20px;top:44px;width:2px;height:calc(100% - 44px);background:linear-gradient(to bottom,rgba(57,171,203,.4),transparent)}
+    .step-item:last-child::after{display:none}
+    .step-num{flex-shrink:0;width:42px;height:42px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:900;color:var(--white);box-shadow:0 4px 16px rgba(57,171,203,.4);position:relative;z-index:1}
+    .step-text h4{font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:.3rem}
+    .step-text p{font-size:.85rem;color:#5a8a9f;line-height:1.65}
+    .how-mockup{background:var(--white);border-radius:24px;padding:1.75rem;box-shadow:0 32px 80px rgba(12,60,123,.14);border:1.5px solid #d8eef8;animation:how-float 6s ease-in-out infinite}
+    @keyframes how-float{0%,100%{transform:translateY(0) rotate(.3deg)}50%{transform:translateY(-12px) rotate(-.3deg)}}
+    .hw-bar{display:flex;align-items:center;gap:.4rem;margin-bottom:1.2rem}
+    .hw-dot{width:9px;height:9px;border-radius:50%}
+    .hw-chart{display:flex;gap:.5rem;align-items:flex-end;height:120px;margin-bottom:.55rem}
+    .hw-bi{flex:1;border-radius:7px 7px 0 0}
+    .hw-ll{display:flex;justify-content:space-between;font-size:.65rem;color:#7aabb8;font-weight:700;margin-bottom:1.2rem}
+    .hw-lg{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+    .lg-row{display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#5a8a9f}
+    .lg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .hw-total{margin-top:1.2rem;padding:1rem;background:var(--light);border-radius:12px;border:1px solid #d8eef8}
+    .hw-total-l{font-size:.67rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em}
+    .hw-total-v{font-size:1.45rem;font-weight:900;color:var(--navy);margin-top:.12rem}
+    .hw-total-s{font-size:.76rem;color:var(--blue);font-weight:700;margin-top:.1rem}
+
+    /* ── TESTIMONIALS DARK ── */
+    .depos{background:var(--dark2);padding:7rem 6vw;position:relative;overflow:hidden}
+    .depos::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(57,171,203,.3),transparent)}
+    .depos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:1.25rem;margin-top:3rem}
+    .depo-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:1.75rem;display:flex;flex-direction:column;gap:1rem;transition:border-color .3s,background .3s;will-change:transform;position:relative;overflow:hidden}
+    .depo-card:hover{border-color:rgba(57,171,203,.28);background:rgba(57,171,203,.05)}
+    .depo-stars{display:flex;gap:2px}
+    .depo-text{font-size:.88rem;color:rgba(255,255,255,.7);line-height:1.75;flex:1}
+    .depo-footer{display:flex;align-items:center;gap:.75rem;padding-top:.85rem;border-top:1px solid rgba(255,255,255,.06)}
+    .depo-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.86rem;color:#fff;flex-shrink:0}
+    .depo-name{font-weight:700;color:rgba(255,255,255,.9);font-size:.84rem}
+    .depo-role{font-size:.72rem;color:rgba(57,171,203,.8)}
+
+    /* ── PRICING ── */
+    .pricing{background:var(--white);padding:7rem 6vw}
+    .pricing-hd{text-align:center;margin-bottom:3.5rem}
+    .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:1080px;margin:0 auto;align-items:start}
+    .pc{border-radius:24px;padding:2rem 1.75rem;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;will-change:transform}
+    .pc::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad-b)}
+    .pc-base{background:var(--light);border:1.5px solid #d8eef8}
+    .pc-pop{background:var(--white);border:2px solid var(--blue);box-shadow:0 24px 72px rgba(57,171,203,.2);transform:translateY(-12px) scale(1.02)}
+    .pc-dark{background:var(--dark);border:1.5px solid rgba(255,255,255,.08)}
+    .pc-pop-badge{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--grad-b);color:var(--dark);font-size:.67rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:.28rem 1.2rem;border-radius:0 0 12px 12px}
+    .pc-ph{display:flex;align-items:center;gap:.7rem;margin-bottom:.75rem;margin-top:.25rem}
+    .pc-icon{width:40px;height:40px;border-radius:50%;border:2px solid rgba(57,171,203,.4);display:flex;align-items:center;justify-content:center;color:var(--blue);flex-shrink:0}
+    .pc-dark .pc-icon{border-color:rgba(106,204,220,.4);color:var(--blue-lt)}
+    .pc-name{font-size:1.35rem;font-weight:900;letter-spacing:-.01em}
+    .pc-base .pc-name,.pc-pop .pc-name{color:var(--navy)}
+    .pc-dark .pc-name{color:var(--white)}
+    .pc-price{display:flex;align-items:baseline;gap:.1rem;margin:.5rem 0 .2rem}
+    .pc-cur{font-size:.94rem;font-weight:700}
+    .pc-val{font-size:2.55rem;font-weight:900;letter-spacing:-.03em}
+    .pc-cts{font-size:.94rem;font-weight:700;align-self:flex-start;margin-top:.58rem}
+    .pc-base .pc-cur,.pc-base .pc-val,.pc-base .pc-cts,.pc-pop .pc-cur,.pc-pop .pc-val,.pc-pop .pc-cts{color:var(--navy)}
+    .pc-dark .pc-cur,.pc-dark .pc-val,.pc-dark .pc-cts{color:var(--white)}
+    .pc-period{font-size:.76rem;color:var(--blue);margin-bottom:.7rem}
+    .pc-dark .pc-period{color:rgba(255,255,255,.4)}
+    .pc-desc{font-size:.8rem;color:#5a8a9f;line-height:1.5;margin-bottom:1.2rem;min-height:2.2rem}
+    .pc-dark .pc-desc{color:rgba(255,255,255,.5)}
+    .pc-hl{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1.2rem}
+    .pc-hl-i{font-size:.8rem;font-weight:700;color:var(--navy);background:rgba(57,171,203,.1);border-radius:8px;padding:.36rem .65rem;border-left:3px solid var(--blue)}
+    .pc-dark .pc-hl-i{background:rgba(255,255,255,.07);border-color:var(--blue-lt);color:var(--white)}
+    .pc-div{height:1px;background:#d8eef8;margin:1rem 0}
+    .pc-dark .pc-div{background:rgba(255,255,255,.08)}
+    .pc-sec{font-size:.69rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--navy);margin-bottom:.5rem}
+    .pc-dark .pc-sec{color:rgba(255,255,255,.45)}
+    .pc-mods{list-style:none;margin-bottom:1rem;display:flex;flex-direction:column;gap:.28rem}
+    .pc-mods li{font-size:.79rem;color:#5a8a9f;padding-left:.85rem;position:relative}
+    .pc-mods li::before{content:'•';position:absolute;left:0;color:var(--blue);font-weight:700}
+    .pc-dark .pc-mods li{color:rgba(255,255,255,.58)}
+    .pc-dark .pc-mods li::before{color:var(--blue-lt)}
+    .pc-feats{list-style:none;display:flex;flex-direction:column;gap:.42rem;margin-bottom:1.5rem}
+    .pc-feats li{display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:#5a8a9f;line-height:1.4}
+    .pc-chk{flex-shrink:0;margin-top:.1rem;width:17px;height:17px;border-radius:50%;background:rgba(57,171,203,.12);display:flex;align-items:center;justify-content:center;font-size:.62rem;color:var(--blue)}
+    .pc-dark .pc-feats li{color:rgba(255,255,255,.62)}
+    .pc-dark .pc-chk{background:rgba(106,204,220,.14);color:var(--blue-lt)}
+
+    /* ── CONTACT ── */
+    .contact{background:var(--dark3);padding:6rem 6vw;position:relative;overflow:hidden}
+    .contact::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(57,171,203,.3),transparent)}
+    .contact-inner{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start}
+    .ci-item{display:flex;align-items:center;gap:.9rem;margin-top:1.4rem}
+    .ci-icon{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ci-lbl{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-lt);margin-bottom:.12rem}
+    .ci-val{font-weight:700;font-size:.9rem;color:rgba(255,255,255,.88);text-decoration:none}
+    .ci-val:hover{color:var(--blue-lt)}
+    .c-form{display:flex;flex-direction:column;gap:.82rem}
+    .fg label{display:block;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--blue-lt);margin-bottom:.28rem}
+    .fg input,.fg textarea{width:100%;padding:.68rem 1rem;border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:.9rem;font-family:inherit;color:rgba(255,255,255,.9);background:rgba(255,255,255,.05);transition:border-color .2s,box-shadow .2s,background .2s;outline:none}
+    .fg input::placeholder,.fg textarea::placeholder{color:rgba(255,255,255,.28)}
+    .fg input:focus,.fg textarea:focus{border-color:var(--blue);background:rgba(57,171,203,.07);box-shadow:0 0 0 3px rgba(57,171,203,.12)}
+    .fg textarea{resize:vertical;min-height:96px}
+    .c-submit{padding:.78rem;border:none;border-radius:10px;background:linear-gradient(135deg,#39abcb,#6accdc);color:#040d1e;font-size:.9rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:all .25s}
+    .c-submit:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(57,171,203,.4)}
+    .c-success{background:rgba(16,185,129,.1);border:1.5px solid rgba(110,231,183,.4);border-radius:14px;padding:1.75rem;text-align:center}
+    .c-error{background:rgba(239,68,68,.1);border-left:4px solid #ef4444;border-radius:8px;padding:.65rem 1rem;font-size:.82rem;color:#fca5a5;margin-bottom:.5rem}
+
+    /* ── CTA ── */
+    .cta{background:var(--white);padding:8rem 6vw;text-align:center;position:relative;overflow:hidden;border-top:1px solid #ddeef6}
+    .cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(57,171,203,.08) 0%,transparent 70%)}
+    .cta-inner{position:relative;z-index:1;max-width:700px;margin:0 auto}
+    .cta h2{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;letter-spacing:-.03em;color:var(--navy);margin-bottom:1rem}
+    .cta p{font-size:1rem;color:#5a8a9f;margin-bottom:2.5rem}
+    .cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    .btn-outline-dk{color:var(--navy);border:2px solid #c8dfe8;background:transparent;font-weight:700}
+    .btn-outline-dk:hover{border-color:var(--blue);color:var(--blue);background:rgba(57,171,203,.06)}
+
+    /* ── FOOTER ── */
+    footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding:2rem 6vw}
+    .footer-inner{display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center}
+    .footer-links{display:flex;align-items:center;gap:0;list-style:none}
+    .footer-links li{display:flex;align-items:center}
+    .footer-links li+li::before{content:"|";color:rgba(255,255,255,.14);margin:0 .75rem;font-size:.75rem}
+    .footer-links a{color:rgba(57,171,203,.7);font-size:.8rem;font-weight:600;text-decoration:none;transition:color .2s}
+    .footer-links a:hover{color:var(--blue-lt)}
+    .footer-copy{font-size:.72rem;color:rgba(255,255,255,.22)}
+
+    /* ── SCROLL BTN ── */
+    #scrollBtn{position:fixed;bottom:2rem;right:2rem;z-index:900;width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(57,171,203,.5);opacity:0;pointer-events:none;transition:opacity .3s,transform .2s,background .2s}
+    #scrollBtn.visible{opacity:1;pointer-events:auto}
+    #scrollBtn:hover{background:var(--navy);transform:translateY(-2px)}
+
+    /* ── TILT SHINE ── */
+    .tilt-shine{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at var(--sx,50%) var(--sy,20%),rgba(255,255,255,.2) 0%,transparent 60%);pointer-events:none;z-index:4;opacity:0;transition:opacity .3s}
+
+    /* ── REVEAL ── */
+    .reveal{opacity:0;transform:translateY(26px);transition:opacity .55s ease,transform .55s ease}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:1024px){
+      .bento{grid-template-columns:repeat(2,1fr)}
+      .bc.s3{grid-column:span 2}
     }
-    .hamburger span {
-      display: block;
-      width: 22px; height: 2px;
-      background: var(--primary-dark);
-      border-radius: 2px;
-      transition: all 0.25s;
+    @media(max-width:900px){
+      .hero{grid-template-columns:1fr;padding:7rem 5vw 4rem;gap:3rem}
+      .hero-right{order:-1}
+      .hero-mockup{max-width:400px}
+      .float-badge{display:none}
+      .how-inner{grid-template-columns:1fr;gap:3rem}
+      .how-mockup{max-width:480px;margin:0 auto}
+      .pricing-grid{grid-template-columns:1fr;max-width:480px;margin:0 auto}
+      .pc-pop{transform:none}
+      .contact-inner{grid-template-columns:1fr;gap:2.5rem}
     }
-    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hamburger.open span:nth-child(2) { opacity: 0; }
-    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-    .mobile-menu {
-      display: none;
-      position: fixed;
-      top: 58px; left: 0; right: 0;
-      background: rgba(255,255,255,0.97);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 5vw 1.25rem;
-      z-index: 99;
-      box-shadow: 0 8px 24px rgba(12,60,123,0.1);
-      flex-direction: column;
-      gap: 0.25rem;
+    @media(max-width:768px){
+      nav{padding:0 5vw}
+      .nav-links{display:none}
+      .nav-cta .btn-ghost,.nav-cta .btn-primary{display:none}
+      .hamburger{display:flex}
+      .specs-grid{grid-template-columns:1fr}
+      .depos-grid{grid-template-columns:1fr}
+      .bento{grid-template-columns:1fr}
+      .bc.s2,.bc.s3{grid-column:span 1}
+      .b-num{font-size:2.4rem}
+      .hero h1{font-size:clamp(1.95rem,8.5vw,2.7rem)}
+      .hero-left{text-align:center}
+      .hero-chip{justify-content:center}
+      .hero-desc,.hero-sub{margin-left:auto;margin-right:auto}
+      .hero-sub{justify-content:center}
+      .hero-actions{flex-direction:column;align-items:center}
+      .hero-actions .btn-xl{width:100%;max-width:300px;justify-content:center}
+      .hero-stats{flex-wrap:wrap}
+      .h-stat{flex:1 1 50%;border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+      .h-stat:nth-child(odd){border-right:1px solid rgba(255,255,255,.07)}
+      .h-stat:nth-child(3),.h-stat:nth-child(4){border-bottom:none}
+      .cta-btns{flex-direction:column;align-items:center}
+      .cta-btns .btn-xl{width:100%;max-width:300px;justify-content:center}
+      .footer-links{flex-wrap:wrap;justify-content:center}
+      .trust-inner{gap:1.5rem}
+      .depos-grid{gap:.9rem}
+      .contact-inner{grid-template-columns:1fr;gap:2rem}
+      .pricing-hd p{margin:0 auto}
     }
-    .mobile-menu.open { display: flex; }
-    .mobile-menu a {
-      display: block;
-      padding: 0.7rem 0.5rem;
-      color: var(--primary-dark);
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 600;
-      border-radius: 8px;
-      transition: background 0.2s;
-      border-bottom: 1px solid rgba(133,205,226,0.25);
-    }
-    .mobile-menu a:last-child { border-bottom: none; }
-    .mobile-menu a:hover { background: var(--bg); }
-
-    @media (max-width: 768px) {
-      nav { padding: 0.75rem 5vw; }
-      .nav-links { display: none; }
-      .nav-cta { gap: 0.5rem; }
-      .hamburger { display: flex; }
-
-      .hero { padding: 6.5rem 5vw 3.5rem; min-height: auto; }
-      .hero h1 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
-      .hero p { font-size: 0.97rem; }
-      .hero-actions { flex-direction: column; align-items: center; gap: 0.75rem; }
-      .hero-actions .btn-xl { width: 100%; max-width: 320px; justify-content: center; }
-
-      .hero-stats {
-        margin-top: 2.5rem;
-        max-width: 100%;
-        flex-wrap: wrap;
-        border-radius: 12px;
-      }
-      .stat { flex: 1 1 50%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.15); padding: 1rem 0.75rem; }
-      .stat:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.15); }
-      .stat:nth-child(3), .stat:nth-child(4) { border-bottom: none; }
-      .stat-value { font-size: 1.4rem; }
-
-      section { padding: 3.5rem 5vw; }
-      .section-header { margin-bottom: 2rem; }
-
-      .disciplines-grid { grid-template-columns: 1fr; }
-      .features-grid { grid-template-columns: 1fr; }
-
-      .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-      .pricing-card { padding: 1.75rem 1.5rem; }
-
-      .cta-section { padding: 4.5rem 5vw; }
-      .cta-section h2 { font-size: clamp(1.5rem, 7vw, 2rem); }
-      .cta-actions { flex-direction: column; align-items: center; gap: 0.75rem; }
-      .cta-actions .btn-xl { width: 100%; max-width: 320px; justify-content: center; }
-      .cta-logo { height: 60px; }
-
-      .footer-links { flex-wrap: wrap; justify-content: center; }
-
-      .trust-sep { display: none; }
-      .trust-badge { padding: 0.5rem 1rem; font-size: 0.74rem; }
-
-      .contact-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
-      .depo-grid { grid-template-columns: 1fr !important; }
-    }
-
-    /* ── SMALL MOBILE ── */
-    @media (max-width: 420px) {
-      .btn-outline.nav-entrar { display: none; }
-      .hero { padding: 6rem 4vw 3rem; }
-      .hero h1 { font-size: 1.75rem; }
-      .hero-badge { font-size: 0.68rem; padding: 0.3rem 0.75rem; }
-      .disc-card, .feat-card { padding: 1.25rem; }
-      .mockup-legend { grid-template-columns: 1fr; }
+    @media(max-width:480px){
+      .hero{padding:6rem 4vw 3rem}
+      .hero h1{font-size:1.85rem}
     }
   </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
+<nav id="nav">
   <a href="#" class="nav-logo">
     <img src="{% static 'logonav.png' %}" alt="IntegraMente" />
   </a>
   <ul class="nav-links">
-    <li><a href="#disciplinas">Especialidades</a></li>
+    <li><a href="#especialidades">Especialidades</a></li>
     <li><a href="#funcionalidades">Funcionalidades</a></li>
     <li><a href="#como-funciona">Como funciona</a></li>
     <li><a href="#depoimentos">Depoimentos</a></li>
-    <li><a href="#preco">Planos</a></li>
+    <li><a href="#planos">Planos</a></li>
     <li><a href="{% url 'instrumentos_lista' %}">Instrumentos</a></li>
     <li><a href="#contato">Contato</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="{% url 'login' %}" class="btn btn-outline nav-entrar">Entrar</a>
+    <a href="{% url 'login' %}" class="btn btn-ghost">Entrar</a>
     <a href="{% url 'registrar' %}" class="btn btn-primary">Criar conta</a>
     <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
       <span></span><span></span><span></span>
@@ -825,641 +375,603 @@
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="#disciplinas" onclick="closeMenu()">Especialidades</a>
+  <a href="#especialidades" onclick="closeMenu()">Especialidades</a>
   <a href="#funcionalidades" onclick="closeMenu()">Funcionalidades</a>
   <a href="#como-funciona" onclick="closeMenu()">Como funciona</a>
   <a href="#depoimentos" onclick="closeMenu()">Depoimentos</a>
-  <a href="#preco" onclick="closeMenu()">Planos</a>
+  <a href="#planos" onclick="closeMenu()">Planos</a>
   <a href="#contato" onclick="closeMenu()">Contato</a>
   <a href="{% url 'instrumentos_lista' %}" onclick="closeMenu()">Instrumentos</a>
-  <a href="{% url 'login' %}" style="margin-top:0.5rem;background:var(--grad);color:var(--white);font-weight:700;border-radius:8px;text-align:center;">Entrar na plataforma</a>
+  <a href="{% url 'login' %}" onclick="closeMenu()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.9);text-align:center;border-radius:10px;padding:.85rem;font-weight:700;font-size:.95rem;margin-top:.25rem;border-bottom:none;display:block;">Entrar na plataforma</a>
+  <a href="{% url 'registrar' %}" onclick="closeMenu()" style="background:linear-gradient(135deg,#39abcb,#6accdc);color:#040d1e;font-weight:800;border-radius:10px;text-align:center;margin-top:.5rem;padding:1rem 1.5rem;font-size:1rem;box-shadow:0 6px 28px rgba(57,171,203,.55),0 0 0 2px rgba(106,204,220,.4);border-bottom:none;display:block;">Criar conta grátis <i data-lucide="chevrons-right" style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i></a>
 </div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-noise"></div>
-  <div class="hero-circles">
-    <span></span><span></span><span></span>
+<!-- ════════════════ HERO ════════════════ -->
+<section id="home" class="hero">
+  <div class="hero-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
   </div>
-  <div class="hero-content">
-    <div class="hero-badge">
-      <span class="hero-badge-dot"></span>
+
+  <div class="hero-left">
+    <div class="hero-chip">
+      <span class="hero-chip-dot"></span>
       Plataforma Clínica Multidisciplinar
     </div>
     <h1>
-      Avaliações clínicas<br />
-      <em>precisas e organizadas</em><br />
+      Avaliações clínicas<br>
+      <span class="accent">precisas e digitais</span><br>
       em um só lugar
     </h1>
-    <p>
-      O IntegraMente reúne mais de 80 instrumentos validados para crianças e adultos —
-      da Terapia Ocupacional à Nutrição Clínica — com resultados automáticos,
+    <p class="hero-desc">
+      Mais de <strong style="color:#fff;">80 instrumentos validados</strong> para crianças e adultos —
+      da Terapia Ocupacional à Nutrição — com resultados automáticos,
       documentos digitais e histórico completo por paciente.
     </p>
-    <p style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:-.8rem;margin-bottom:2.5rem;font-weight:500;">
-      <i data-lucide="shield-check" style="width:14px;height:14px;vertical-align:middle;margin-right:.3rem;opacity:.85;"></i>
-      Usado por terapeutas ocupacionais, fonoaudiólogos, psicólogos e nutricionistas em todo o Brasil
+    <p class="hero-sub">
+      <i data-lucide="shield-check" style="width:13px;height:13px;flex-shrink:0;"></i>
+      Usado por TO, fonoaudiólogos, psicólogos e nutricionistas em todo o Brasil
     </p>
     <div class="hero-actions">
-      <a href="{% url 'registrar' %}" class="btn btn-xl btn-hero-primary">
-        Começar agora <i data-lucide="arrow-right" style="width:18px;height:18px;"></i>
+      <a href="{% url 'registrar' %}" class="btn btn-xl btn-cta">
+        Começar agora <i data-lucide="chevrons-right" style="width:18px;height:18px;"></i>
       </a>
-      <a href="#preco" class="btn btn-xl btn-hero-outline">
-        Ver planos
-      </a>
+      <a href="#planos" class="btn btn-xl btn-outline-w">Ver planos</a>
     </div>
     <div class="hero-stats">
-      <div class="stat">
-        <div class="stat-value">80+</div>
-        <div class="stat-label">Instrumentos</div>
+      <div class="h-stat">
+        <div class="h-stat-v" data-raw="80+">0+</div>
+        <div class="h-stat-l">Instrumentos</div>
       </div>
-      <div class="stat">
-        <div class="stat-value">9</div>
-        <div class="stat-label">Especialidades</div>
+      <div class="h-stat">
+        <div class="h-stat-v" data-raw="9">0</div>
+        <div class="h-stat-l">Especialidades</div>
       </div>
-      <div class="stat" style="background:rgba(255,255,255,0.12);">
-        <div class="stat-value" style="font-size:2rem;">400+</div>
-        <div class="stat-label">Docs na Biblioteca</div>
+      <div class="h-stat">
+        <div class="h-stat-v" data-raw="400+">0+</div>
+        <div class="h-stat-l">Docs Biblioteca</div>
       </div>
-      <div class="stat" style="background:rgba(255,255,255,0.12);">
-        <div class="stat-value" style="font-size:2rem;color:#6ee7b7;">100%</div>
-        <div class="stat-label" style="color:#a7f3d0;">Pontuação Automática</div>
+      <div class="h-stat">
+        <div class="h-stat-v" data-raw="100%" style="-webkit-text-fill-color:#6ee7b7;">0%</div>
+        <div class="h-stat-l">Pontuação Auto</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="float-badge float-b1">
+      <i data-lucide="zap" style="width:13px;height:13px;color:#6accdc;"></i>
+      Resultado automático!
+    </div>
+    <div class="float-badge float-b2">
+      <i data-lucide="users" style="width:13px;height:13px;color:#6accdc;"></i>
+      1.200+ profissionais
+    </div>
+
+    <div class="hero-mockup">
+      <div class="m-header">
+        <div class="m-dot" style="background:#ff5f57;"></div>
+        <div class="m-dot" style="background:#ffbd2e;"></div>
+        <div class="m-dot" style="background:#28ca41;"></div>
+        <span class="m-title">Dashboard — Perfil Sensorial</span>
+      </div>
+      <div class="m-patient">
+        <div class="m-avatar">MS</div>
+        <div>
+          <div class="m-name">Maria S., 7 anos</div>
+          <div class="m-sub">Terapeuta: Dra. Ana Clara</div>
+        </div>
+        <div class="m-badge">
+          <i data-lucide="check-circle" style="width:10px;height:10px;"></i>
+          Concluído
+        </div>
+      </div>
+      <div class="m-lbl">Quadrantes Sensoriais</div>
+      <div class="m-bars">
+        <div class="m-bar" style="height:85%;background:linear-gradient(180deg,#39abcb,#0c3c7b);animation-delay:.1s;"></div>
+        <div class="m-bar" style="height:60%;background:linear-gradient(180deg,#6accdc,#39abcb);animation-delay:.2s;"></div>
+        <div class="m-bar" style="height:92%;background:linear-gradient(180deg,#1a5a9a,#0c3c7b);animation-delay:.3s;"></div>
+        <div class="m-bar" style="height:44%;background:linear-gradient(180deg,#85cde2,#39abcb);animation-delay:.4s;"></div>
+      </div>
+      <div class="m-bars-l">
+        <span>Exploração</span><span>Esquiva</span><span>Sensib.</span><span>Observ.</span>
+      </div>
+      <div class="m-scores">
+        <div class="m-score"><span class="m-score-l">Proc. Auditivo</span><span class="m-score-v" style="color:#6ee7b7;">Típico</span></div>
+        <div class="m-score"><span class="m-score-l">Proc. Visual</span><span class="m-score-v" style="color:#fbbf24;">Mais</span></div>
+        <div class="m-score"><span class="m-score-l">Tato</span><span class="m-score-v" style="color:#f87171;">Muito +</span></div>
+        <div class="m-score"><span class="m-score-l">Total Geral</span><span class="m-score-v">142 pts</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- WAVE -->
-<div class="wave">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 70" preserveAspectRatio="none" style="height:70px;width:100%;">
-    <path fill="#ffffff" d="M0,40 C360,80 1080,0 1440,40 L1440,70 L0,70 Z"/>
-    <path fill="#ffffff" opacity="0.5" d="M0,55 C480,20 960,70 1440,35 L1440,70 L0,70 Z"/>
-  </svg>
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-inner">
+    <div class="trust-item"><i data-lucide="shield-check" style="width:14px;height:14px;color:var(--blue);"></i> Dados seguros</div>
+    <div class="trust-item"><i data-lucide="cloud" style="width:14px;height:14px;color:var(--blue);"></i> 100% online</div>
+    <div class="trust-item"><i data-lucide="file-text" style="width:14px;height:14px;color:var(--blue);"></i> Exporta em PDF</div>
+    <div class="trust-item"><i data-lucide="send" style="width:14px;height:14px;color:var(--blue);"></i> Resultados por e-mail</div>
+    <div class="trust-item"><i data-lucide="bar-chart-2" style="width:14px;height:14px;color:var(--blue);"></i> Evolução comparativa</div>
+    <div class="trust-item"><i data-lucide="smartphone" style="width:14px;height:14px;color:var(--blue);"></i> Funciona no celular</div>
+  </div>
 </div>
 
-<!-- DISCIPLINAS -->
-<section class="disciplines" id="disciplinas">
-  <div class="section-header">
-    <div class="section-label">— Especialidades</div>
-    <h2 class="section-title">Feito para toda a equipe</h2>
-    <p class="section-sub">Instrumentos validados e amplamente utilizados, organizados por área clínica.</p>
-  </div>
-  <div class="disciplines-grid">
+<!-- ════════════════ ESPECIALIDADES ════════════════ -->
+<section class="specs" id="especialidades">
+  <div class="sec-lbl on-light">Especialidades</div>
+  <h2 class="sec-h2 dark">Feito para toda a equipe</h2>
+  <p class="sec-p dark" style="margin-top:.6rem;">Instrumentos validados e amplamente utilizados, organizados por área clínica.</p>
+  <div class="specs-grid">
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="activity" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="activity" style="width:24px;height:24px;color:white;"></i></div>
       <h3>Terapia Ocupacional</h3>
       <p>Avaliações sensoriais, motoras e funcionais para identificar perfis de processamento e necessidades de integração sensorial.</p>
-      <div class="disc-tools">
-        <span class="tag">Perfil Sensorial</span>
-        <span class="tag">SPM</span>
-        <span class="tag">MABC-2</span>
-        <span class="tag">Beery VMI</span>
-        <span class="tag">PEDI</span>
-        <span class="tag">Vineland-3</span>
-        <span class="tag">Portage</span>
-        <span class="tag">EDM</span>
+      <div class="spec-tags">
+        <span class="spec-tag">Perfil Sensorial</span><span class="spec-tag">SPM</span>
+        <span class="spec-tag">MABC-2</span><span class="spec-tag">Beery VMI</span>
+        <span class="spec-tag">PEDI</span><span class="spec-tag">Vineland-3</span>
+        <span class="spec-tag">Portage</span><span class="spec-tag">EDM</span>
       </div>
     </div>
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="brain" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="brain" style="width:24px;height:24px;color:white;"></i></div>
       <h3>Psicologia</h3>
-      <p>Mais de 40 instrumentos para crianças e adultos — TDAH, autismo, ansiedade, humor, personalidade, TEPT e rastreio de risco, com versões para pais, professores e autoaplicação.</p>
-      <div class="disc-tools">
-        <span class="tag">SNAP-IV / Conners-3</span>
-        <span class="tag">M-CHAT-R / CARS-2</span>
-        <span class="tag">SDQ / SCARED / MASC</span>
-        <span class="tag">BDI / BAI / DASS-21</span>
-        <span class="tag">PHQ-9 / GAD-7</span>
-        <span class="tag">K-10 / GHQ-12</span>
-        <span class="tag">PCL-5 (PTSD)</span>
-        <span class="tag">LSAS / HAM-A</span>
-        <span class="tag">AUDIT / BIS-11</span>
-        <span class="tag">Risco de Suicídio</span>
-        <span class="tag">Rosenberg / UCLA</span>
-        <span class="tag">CDI / IAR / PAS</span>
-        <span class="tag">BSL-23 / BPQ / MSI-BPD</span>
-        <span class="tag">EPDS (pós-parto)</span>
-        <span class="tag">GDS-15 (idosos)</span>
+      <p>Mais de 40 instrumentos — TDAH, autismo, ansiedade, humor, personalidade, TEPT e rastreio de risco, com versões para pais, professores e autoaplicação.</p>
+      <div class="spec-tags">
+        <span class="spec-tag">SNAP-IV / Conners-3</span><span class="spec-tag">M-CHAT-R / CARS-2</span>
+        <span class="spec-tag">BDI / BAI / DASS-21</span><span class="spec-tag">PHQ-9 / GAD-7</span>
+        <span class="spec-tag">PCL-5 (PTSD)</span><span class="spec-tag">EPDS</span>
+        <span class="spec-tag">GDS-15</span><span class="spec-tag">Risco de Suicídio</span>
       </div>
     </div>
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="mic" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="mic" style="width:24px;height:24px;color:white;"></i></div>
       <h3>Fonoaudiologia</h3>
       <p>Triagens de linguagem, voz, alimentação e processamento auditivo em protocolos padronizados e digitais.</p>
-      <div class="disc-tools">
-        <span class="tag">Linguagem</span>
-        <span class="tag">pVHI</span>
-        <span class="tag">IDV-10</span>
-        <span class="tag">Hábitos Orais</span>
-        <span class="tag">Proc. Auditivo</span>
-        <span class="tag">Alimentação</span>
+      <div class="spec-tags">
+        <span class="spec-tag">Linguagem</span><span class="spec-tag">pVHI</span>
+        <span class="spec-tag">IDV-10</span><span class="spec-tag">Hábitos Orais</span>
+        <span class="spec-tag">Proc. Auditivo</span><span class="spec-tag">Alimentação</span>
       </div>
     </div>
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="heart-pulse" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="heart-pulse" style="width:24px;height:24px;color:white;"></i></div>
       <h3>Pediatria &amp; Neuro</h3>
-      <p>Acompanhamento de marcos de desenvolvimento e avaliação do sono para suporte à neuropediatria e pediatria geral.</p>
-      <div class="disc-tools">
-        <span class="tag">Marcos de Desenvolvimento</span>
-        <span class="tag">Sono Infantil</span>
-        <span class="tag">Denver II</span>
-        <span class="tag">QMPI</span>
+      <p>Acompanhamento de marcos de desenvolvimento e avaliação do sono para neuropediatria e pediatria geral.</p>
+      <div class="spec-tags">
+        <span class="spec-tag">Marcos de Desenvolvimento</span>
+        <span class="spec-tag">Sono Infantil</span>
+        <span class="spec-tag">Denver II</span><span class="spec-tag">QMPI</span>
       </div>
     </div>
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="bar-chart-2" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="bar-chart-2" style="width:24px;height:24px;color:white;"></i></div>
       <h3>ABA &amp; Neuropsicologia</h3>
       <p>Ferramentas para análise do comportamento e rastreio cognitivo integradas ao histórico do paciente.</p>
-      <div class="disc-tools">
-        <span class="tag">Habilidades Adaptativas</span>
-        <span class="tag">Comportamento Funcional</span>
-        <span class="tag">Rastreio Cognitivo</span>
+      <div class="spec-tags">
+        <span class="spec-tag">Habilidades Adaptativas</span>
+        <span class="spec-tag">Comportamento Funcional</span>
+        <span class="spec-tag">Rastreio Cognitivo</span>
       </div>
     </div>
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="book-open" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="book-open" style="width:24px;height:24px;color:white;"></i></div>
       <h3>Psicopedagogia</h3>
       <p>Avaliação psicopedagógica estruturada para identificar dificuldades de aprendizagem e traçar planos de intervenção.</p>
-      <div class="disc-tools">
-        <span class="tag">Avaliação Psicopedagógica</span>
-        <span class="tag">Histórico Escolar</span>
-        <span class="tag">Rastreio de Dislexia</span>
-        <span class="tag">Checklist Dislexia</span>
-        <span class="tag">Protocolo Dislexia</span>
+      <div class="spec-tags">
+        <span class="spec-tag">Avaliação Psicopedagógica</span>
+        <span class="spec-tag">Rastreio de Dislexia</span>
+        <span class="spec-tag">Protocolo Dislexia</span>
       </div>
     </div>
 
-    <div class="disc-card">
-      <div class="disc-icon"><i data-lucide="apple" style="width:22px;height:22px;color:white;"></i></div>
+    <div class="spec-card reveal">
+      <div class="spec-icon"><i data-lucide="apple" style="width:24px;height:24px;color:white;"></i></div>
       <h3>Nutrição</h3>
-      <p>Avaliação completa para terapia alimentar — recordatório de 3 dias, inventário alimentar, anamnese e perfil sensorial da alimentação, com link para os pais preencherem em casa.</p>
-      <div class="disc-tools">
-        <span class="tag">Recordatório Alimentar</span>
-        <span class="tag">Inventário Alimentar</span>
-        <span class="tag">Anamnese Alimentar</span>
-        <span class="tag">Frequência Sensorial</span>
-        <span class="tag">Triagem Alimentação Seletiva</span>
+      <p>Avaliação completa para terapia alimentar — recordatório, inventário, anamnese e perfil sensorial com link para pais preencherem em casa.</p>
+      <div class="spec-tags">
+        <span class="spec-tag">Recordatório Alimentar</span>
+        <span class="spec-tag">Inventário Alimentar</span>
+        <span class="spec-tag">Anamnese Alimentar</span>
+        <span class="spec-tag">Triagem Alimentação Seletiva</span>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- FUNCIONALIDADES -->
-<section class="features" id="funcionalidades">
-  <div class="section-header">
-    <div class="section-label">— Funcionalidades</div>
-    <h2 class="section-title">Tudo que você precisa,<br/>já integrado</h2>
-    <p class="section-sub">Do cadastro à interpretação clínica, sem planilhas ou papéis.</p>
+<!-- ════════════════ FUNCIONALIDADES ════════════════ -->
+<section class="feats" id="funcionalidades">
+  <div class="feats-hd">
+    <div class="sec-lbl on-dark">Funcionalidades</div>
+    <h2 class="sec-h2 light">Tudo integrado,<br><span class="g-text">sem complicação</span></h2>
+    <p class="sec-p light" style="margin-top:.6rem;">Do cadastro ao relatório clínico — sem planilhas, sem papéis.</p>
   </div>
-  <div class="features-grid">
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="users" style="width:24px;height:24px;color:white;"></i></div>
-      <h3>Cadastro de Pacientes</h3>
-      <p>Dados completos do paciente, responsável e terapeuta. Histórico de atendimento centralizado e seguro.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="zap" style="width:24px;height:24px;color:white;"></i></div>
+  <div class="bento">
+
+    <div class="bc s2 reveal">
+      <div class="b-icon"><i data-lucide="zap" style="width:22px;height:22px;color:#39abcb;"></i></div>
       <h3>Pontuação Automática</h3>
-      <p>Correção instantânea de todos os questionários. Sem cálculos manuais, sem risco de erro humano.</p>
+      <p>Todos os questionários corrigidos instantaneamente, sem cálculos manuais. Resultado disponível no segundo que o responsável finaliza.</p>
+      <div class="b-num">100%</div>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="trending-up" style="width:24px;height:24px;color:white;"></i></div>
+
+    <div class="bc reveal">
+      <div class="b-icon"><i data-lucide="users" style="width:22px;height:22px;color:#39abcb;"></i></div>
+      <h3>Cadastro de Pacientes</h3>
+      <p>Dados completos do paciente, responsável e terapeuta. Histórico centralizado e seguro.</p>
+    </div>
+
+    <div class="bc reveal">
+      <div class="b-icon"><i data-lucide="trending-up" style="width:22px;height:22px;color:#39abcb;"></i></div>
       <h3>Dashboard Visual</h3>
-      <p>Gráficos radar, barras comparativas e classificações por faixa gerados automaticamente ao finalizar.</p>
+      <p>Gráficos radar, barras comparativas e classificações geradas automaticamente ao finalizar.</p>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="clock" style="width:24px;height:24px;color:white;"></i></div>
+
+    <div class="bc reveal">
+      <div class="b-icon"><i data-lucide="clock" style="width:22px;height:22px;color:#39abcb;"></i></div>
       <h3>Histórico de Avaliações</h3>
-      <p>Acompanhe a evolução do paciente ao longo do tempo com múltiplas avaliações registradas.</p>
+      <p>Acompanhe a evolução do paciente ao longo do tempo com múltiplas avaliações.</p>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="shield-check" style="width:24px;height:24px;color:white;"></i></div>
+
+    <div class="bc reveal">
+      <div class="b-icon"><i data-lucide="shield-check" style="width:22px;height:22px;color:#39abcb;"></i></div>
       <h3>Dados Seguros</h3>
-      <p>Acesso controlado por terapeuta. Cada profissional visualiza apenas seus próprios pacientes.</p>
+      <p>Acesso controlado por terapeuta. Cada profissional vê apenas seus próprios pacientes.</p>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="smartphone" style="width:24px;height:24px;color:white;"></i></div>
-      <h3>Responsivo</h3>
-      <p>Funciona em qualquer dispositivo — computador, tablet ou celular — sem instalação.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="library" style="width:24px;height:24px;color:white;"></i></div>
+
+    <div class="bc s2 reveal">
+      <div class="b-icon"><i data-lucide="library" style="width:22px;height:22px;color:#39abcb;"></i></div>
       <h3>Biblioteca de Documentos</h3>
-      <p>400+ arquivos organizados — laudos, contratos, recursos terapêuticos e materiais clínicos para download imediato.</p>
+      <p>400+ arquivos prontos — laudos, contratos, recursos e materiais clínicos. Atualizados regularmente com novos conteúdos.</p>
+      <div class="b-num">400+</div>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon"><i data-lucide="clipboard" style="width:24px;height:24px;color:white;"></i></div>
-      <h3>Documentos Clínicos Digitais</h3>
-      <p>Gere anamneses, fichas de triagem, relatórios, cartas de encaminhamento e atestados pré-preenchidos com os dados do paciente — pronto para imprimir.</p>
+
+    <div class="bc reveal">
+      <div class="b-icon"><i data-lucide="clipboard" style="width:22px;height:22px;color:#39abcb;"></i></div>
+      <h3>Documentos Clínicos</h3>
+      <p>Anamneses, fichas, relatórios e atestados pré-preenchidos com dados do paciente.</p>
     </div>
+
+    <div class="bc reveal">
+      <div class="b-icon"><i data-lucide="smartphone" style="width:22px;height:22px;color:#39abcb;"></i></div>
+      <h3>100% Responsivo</h3>
+      <p>Funciona em qualquer dispositivo — computador, tablet ou celular — sem instalar nada.</p>
+    </div>
+
   </div>
 </section>
 
-<!-- COMO FUNCIONA -->
+<!-- ════════════════ COMO FUNCIONA ════════════════ -->
 <section class="how" id="como-funciona">
-  <div class="how-layout">
+  <div class="how-inner">
     <div>
-      <div class="section-label">— Como funciona</div>
-      <h2 class="section-title">De 0 a relatório<br/>em minutos</h2>
-      <p class="section-sub" style="margin-bottom:2.5rem;">Processo simples, resultado profissional.</p>
+      <div class="sec-lbl on-light">Como funciona</div>
+      <h2 class="sec-h2 dark">De 0 a relatório<br/>em minutos</h2>
+      <p class="sec-p dark" style="margin:1rem 0 2.5rem;">Processo simples, resultado profissional.</p>
       <div class="steps">
-        <div class="step">
+        <div class="step-item reveal">
           <div class="step-num">1</div>
-          <div class="step-content">
+          <div class="step-text">
             <h4>Gere o link da avaliação</h4>
-            <p>Escolha o instrumento, vincule ao paciente e gere um link em segundos — direto do seu painel, sem nenhuma configuração extra.</p>
+            <p>Escolha o instrumento, vincule ao paciente e gere um link em segundos — direto do seu painel, sem configuração extra.</p>
           </div>
         </div>
-        <div class="step">
+        <div class="step-item reveal">
           <div class="step-num">2</div>
-          <div class="step-content">
+          <div class="step-text">
             <h4>O responsável preenche</h4>
-            <p>Envie o link por e-mail ou WhatsApp. O pai ou responsável acessa pelo celular ou computador e responde o questionário — sem precisar criar conta.</p>
+            <p>Envie por e-mail ou WhatsApp. O pai ou responsável acessa pelo celular e responde — sem precisar criar conta.</p>
           </div>
         </div>
-        <div class="step">
+        <div class="step-item reveal">
           <div class="step-num">3</div>
-          <div class="step-content">
+          <div class="step-text">
             <h4>Resultado no seu painel</h4>
-            <p>Assim que o responsável finalizar, pontuação, gráficos e classificação clínica ficam disponíveis automaticamente para você.</p>
+            <p>Ao finalizar, pontuação, gráficos e classificação clínica ficam disponíveis automaticamente para você.</p>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="mockup-card">
-      <div class="mockup-bar">
-        <div class="mockup-dot" style="background:#FF5F57;"></div>
-        <div class="mockup-dot" style="background:#FFBD2E;"></div>
-        <div class="mockup-dot" style="background:#28CA41;"></div>
-        <span style="font-size:0.73rem;color:#4a7a9b;margin-left:0.5rem;font-weight:600;">Dashboard — Perfil Sensorial</span>
+    <div class="how-mockup">
+      <div class="hw-bar">
+        <div class="hw-dot" style="background:#ff5f57;"></div>
+        <div class="hw-dot" style="background:#ffbd2e;"></div>
+        <div class="hw-dot" style="background:#28ca41;"></div>
+        <span style="font-size:.7rem;color:#4a7a9b;margin-left:.35rem;font-weight:600;">Dashboard — Perfil Sensorial</span>
       </div>
-      <div style="font-size:0.78rem;color:#4a7a9b;margin-bottom:0.65rem;font-weight:600;">Quadrantes Sensoriais</div>
-      <div class="mockup-chart">
-        <div class="bar-item" style="height:85%;background:linear-gradient(180deg,#39abcb,#0c3c7b);"></div>
-        <div class="bar-item" style="height:60%;background:linear-gradient(180deg,#6accdc,#39abcb);"></div>
-        <div class="bar-item" style="height:92%;background:linear-gradient(180deg,#0c3c7b,#1a5a9a);"></div>
-        <div class="bar-item" style="height:44%;background:linear-gradient(180deg,#85cde2,#39abcb);"></div>
+      <div style="font-size:.74rem;color:#4a7a9b;margin-bottom:.6rem;font-weight:600;">Quadrantes Sensoriais</div>
+      <div class="hw-chart">
+        <div class="hw-bi" style="height:85%;background:linear-gradient(180deg,#39abcb,#0c3c7b);"></div>
+        <div class="hw-bi" style="height:60%;background:linear-gradient(180deg,#6accdc,#39abcb);"></div>
+        <div class="hw-bi" style="height:92%;background:linear-gradient(180deg,#0c3c7b,#1a5a9a);"></div>
+        <div class="hw-bi" style="height:44%;background:linear-gradient(180deg,#85cde2,#39abcb);"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#4a7a9b;margin-bottom:1.25rem;font-weight:600;">
-        <span>EX<br/>Exploração</span>
-        <span>EV<br/>Esquiva</span>
-        <span>SN<br/>Sensib.</span>
-        <span>OB<br/>Observ.</span>
+      <div class="hw-ll">
+        <span>EX Exploração</span><span>EV Esquiva</span><span>SN Sensib.</span><span>OB Observ.</span>
       </div>
-      <div style="font-size:0.78rem;color:#4a7a9b;margin-bottom:0.65rem;font-weight:600;">Classificação por Seção</div>
-      <div class="mockup-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#39abcb;"></div><span>Proc. Auditivo — <strong style="color:#0c3c7b;">Típico</strong></span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#0c3c7b;"></div><span>Proc. Visual — <strong style="color:#0c3c7b;">Mais</strong></span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#6accdc;"></div><span>Tato — <strong style="color:#0c3c7b;">Muito mais</strong></span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#85cde2;"></div><span>Movimento — <strong style="color:#0c3c7b;">Menos</strong></span></div>
+      <div style="font-size:.74rem;color:#4a7a9b;margin-bottom:.6rem;font-weight:600;">Classificação por Seção</div>
+      <div class="hw-lg">
+        <div class="lg-row"><div class="lg-dot" style="background:#39abcb;"></div><span>Proc. Auditivo — <strong style="color:#0c3c7b;">Típico</strong></span></div>
+        <div class="lg-row"><div class="lg-dot" style="background:#0c3c7b;"></div><span>Proc. Visual — <strong style="color:#0c3c7b;">Mais</strong></span></div>
+        <div class="lg-row"><div class="lg-dot" style="background:#6accdc;"></div><span>Tato — <strong style="color:#0c3c7b;">Muito mais</strong></span></div>
+        <div class="lg-row"><div class="lg-dot" style="background:#85cde2;"></div><span>Movimento — <strong style="color:#0c3c7b;">Menos</strong></span></div>
       </div>
-      <div style="margin-top:1.25rem;padding:0.9rem;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
-        <div style="font-size:0.7rem;color:#4a7a9b;font-weight:600;margin-bottom:0.2rem;">TOTAL GERAL</div>
-        <div style="font-size:1.35rem;font-weight:900;color:var(--primary-dark);">142 <span style="font-size:0.82rem;font-weight:500;color:var(--primary);">pontos</span></div>
-        <div style="font-size:0.78rem;color:var(--primary);font-weight:600;margin-top:0.2rem;">↑ Perfil: Mais que os outros</div>
+      <div class="hw-total">
+        <div class="hw-total-l">Total Geral</div>
+        <div class="hw-total-v">142 <span style="font-size:.8rem;font-weight:500;color:var(--blue);">pontos</span></div>
+        <div class="hw-total-s"><i data-lucide="trending-up" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:3px;"></i> Perfil: Mais que os outros</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
-<section id="depoimentos" style="padding:5rem 6vw;background:#f0f9ff;">
-  <div style="text-align:center;margin-bottom:2.8rem;">
-    <div class="section-label" style="justify-content:center;">— Depoimentos</div>
-    <h2 class="section-title">O que dizem os profissionais</h2>
-    <p class="section-sub" style="margin:0 auto;">Quem já usa o IntegraMente no dia a dia clínico.</p>
+<!-- ════════════════ DEPOIMENTOS ════════════════ -->
+<section class="depos" id="depoimentos">
+  <div style="text-align:center;">
+    <div class="sec-lbl on-dark" style="justify-content:center;">Depoimentos</div>
+    <h2 class="sec-h2 light">O que dizem os profissionais</h2>
+    <p class="sec-p light" style="margin:.6rem auto 0;">Quem já usa o IntegraMente no dia a dia clínico.</p>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.5rem;max-width:1100px;margin:0 auto;">
+  <div class="depos-grid">
 
-    <div style="background:#fff;border-radius:16px;padding:1.8rem;box-shadow:0 4px 20px rgba(12,60,123,0.07);border:1px solid #e0f2fe;display:flex;flex-direction:column;gap:1rem;">
-      <div style="display:flex;gap:2px;">
-        {% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}
-      </div>
-      <p style="color:#374151;font-size:.93rem;line-height:1.7;flex:1;">"Antes eu passava horas somando pontos na mão. Agora aplico o Perfil Sensorial e o resultado sai na hora. Meus laudos ficaram muito mais completos e rápidos."</p>
-      <div style="display:flex;align-items:center;gap:.8rem;border-top:1px solid #f0f9ff;padding-top:.9rem;">
-        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#39abcb,#0c3c7b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.9rem;flex-shrink:0;">AC</div>
-        <div>
-          <div style="font-weight:700;color:#0c3c7b;font-size:.88rem;">Ana Clara Ribeiro</div>
-          <div style="font-size:.78rem;color:#39abcb;">Terapeuta Ocupacional · São Paulo, SP</div>
-        </div>
+    <div class="depo-card reveal">
+      <div class="depo-stars">{% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}</div>
+      <p class="depo-text">"Antes eu passava horas somando pontos na mão. Agora aplico o Perfil Sensorial e o resultado sai na hora. Meus laudos ficaram muito mais completos e rápidos."</p>
+      <div class="depo-footer">
+        <div class="depo-av" style="background:linear-gradient(135deg,#39abcb,#0c3c7b);">AC</div>
+        <div><div class="depo-name">Ana Clara Ribeiro</div><div class="depo-role">Terapeuta Ocupacional · São Paulo, SP</div></div>
       </div>
     </div>
 
-    <div style="background:#fff;border-radius:16px;padding:1.8rem;box-shadow:0 4px 20px rgba(12,60,123,0.07);border:1px solid #e0f2fe;display:flex;flex-direction:column;gap:1rem;">
-      <div style="display:flex;gap:2px;">
-        {% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}
-      </div>
-      <p style="color:#374151;font-size:.93rem;line-height:1.7;flex:1;">"Uso o SPM e a Vineland toda semana. A pontuação automática e o histórico por paciente fazem toda a diferença. Não consigo mais imaginar minha clínica sem o sistema."</p>
-      <div style="display:flex;align-items:center;gap:.8rem;border-top:1px solid #f0f9ff;padding-top:.9rem;">
-        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6accdc,#39abcb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.9rem;flex-shrink:0;">FM</div>
-        <div>
-          <div style="font-weight:700;color:#0c3c7b;font-size:.88rem;">Felipe Martins</div>
-          <div style="font-size:.78rem;color:#39abcb;">Psicólogo · Belo Horizonte, MG</div>
-        </div>
+    <div class="depo-card reveal">
+      <div class="depo-stars">{% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}</div>
+      <p class="depo-text">"Uso o SPM e a Vineland toda semana. A pontuação automática e o histórico por paciente fazem toda a diferença. Não consigo mais imaginar minha clínica sem o sistema."</p>
+      <div class="depo-footer">
+        <div class="depo-av" style="background:linear-gradient(135deg,#6accdc,#39abcb);">FM</div>
+        <div><div class="depo-name">Felipe Martins</div><div class="depo-role">Psicólogo · Belo Horizonte, MG</div></div>
       </div>
     </div>
 
-    <div style="background:#fff;border-radius:16px;padding:1.8rem;box-shadow:0 4px 20px rgba(12,60,123,0.07);border:1px solid #e0f2fe;display:flex;flex-direction:column;gap:1rem;">
-      <div style="display:flex;gap:2px;">
-        {% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}
-      </div>
-      <p style="color:#374151;font-size:.93rem;line-height:1.7;flex:1;">"Atendo crianças com TEA e a integração do M-CHAT com a Vineland num só lugar é incrível. O link para os pais preencherem em casa também facilitou muito o meu fluxo."</p>
-      <div style="display:flex;align-items:center;gap:.8rem;border-top:1px solid #f0f9ff;padding-top:.9rem;">
-        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0c3c7b,#39abcb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.9rem;flex-shrink:0;">JS</div>
-        <div>
-          <div style="font-weight:700;color:#0c3c7b;font-size:.88rem;">Juliana Santos</div>
-          <div style="font-size:.78rem;color:#39abcb;">Fonoaudióloga · Curitiba, PR</div>
-        </div>
+    <div class="depo-card reveal">
+      <div class="depo-stars">{% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}</div>
+      <p class="depo-text">"Atendo crianças com TEA e a integração do M-CHAT com a Vineland num só lugar é incrível. O link para os pais preencherem em casa também facilitou muito o meu fluxo."</p>
+      <div class="depo-footer">
+        <div class="depo-av" style="background:linear-gradient(135deg,#0c3c7b,#39abcb);">JS</div>
+        <div><div class="depo-name">Juliana Santos</div><div class="depo-role">Fonoaudióloga · Curitiba, PR</div></div>
       </div>
     </div>
 
-    <div style="background:#fff;border-radius:16px;padding:1.8rem;box-shadow:0 4px 20px rgba(12,60,123,0.07);border:1px solid #e0f2fe;display:flex;flex-direction:column;gap:1rem;">
-      <div style="display:flex;gap:2px;">
-        {% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}
-      </div>
-      <p style="color:#374151;font-size:.93rem;line-height:1.7;flex:1;">"Testei vários sistemas e o IntegraMente é o único que tem os instrumentos que realmente uso no consultório. A pontuação automática economiza pelo menos 2 horas por semana."</p>
-      <div style="display:flex;align-items:center;gap:.8rem;border-top:1px solid #f0f9ff;padding-top:.9rem;">
-        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#39abcb,#6accdc);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.9rem;flex-shrink:0;">RC</div>
-        <div>
-          <div style="font-weight:700;color:#0c3c7b;font-size:.88rem;">Rodrigo Costa</div>
-          <div style="font-size:.78rem;color:#39abcb;">Neuropsicólogo · Porto Alegre, RS</div>
-        </div>
+    <div class="depo-card reveal">
+      <div class="depo-stars">{% for i in "12345" %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}</div>
+      <p class="depo-text">"Testei vários sistemas e o IntegraMente é o único com os instrumentos que realmente uso. A pontuação automática economiza pelo menos 2 horas por semana."</p>
+      <div class="depo-footer">
+        <div class="depo-av" style="background:linear-gradient(135deg,#39abcb,#6accdc);">RC</div>
+        <div><div class="depo-name">Rodrigo Costa</div><div class="depo-role">Neuropsicólogo · Porto Alegre, RS</div></div>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- PRICING -->
-<section class="pricing" id="preco">
-  <div class="section-header" style="text-align:center;margin-bottom:2.5rem;">
-    <div class="section-label" style="justify-content:center;">— Planos</div>
-    <h2 class="section-title">Escolha o plano ideal para você</h2>
-    <p class="section-sub" style="margin:0 auto;">Sem taxas ocultas. Cancele quando quiser.</p>
-    <p style="font-size:.82rem;color:#4a7a9b;margin-top:.6rem;font-style:italic;">Os módulos liberados variam conforme a especialidade cadastrada.</p>
+<!-- ════════════════ PRICING ════════════════ -->
+<section class="pricing" id="planos">
+  <div class="pricing-hd">
+    <div class="sec-lbl on-light" style="justify-content:center;">Planos</div>
+    <h2 class="sec-h2 dark">Escolha o plano ideal</h2>
+    <p class="sec-p dark" style="margin:.6rem auto 0;">Sem taxas ocultas. Cancele quando quiser.</p>
+    <p style="font-size:.78rem;color:#8aabb8;margin-top:.45rem;font-style:italic;">Os módulos liberados variam conforme a especialidade cadastrada.</p>
   </div>
-
   <div class="pricing-grid">
 
     <!-- START -->
-    <div class="pricing-card">
-      <div class="plan-header">
-        <div class="plan-icon"><i data-lucide="rocket" style="width:20px;height:20px;"></i></div>
-        <span class="plan-name">START</span>
+    <div class="pc pc-base reveal">
+      <div class="pc-ph">
+        <div class="pc-icon"><i data-lucide="rocket" style="width:17px;height:17px;"></i></div>
+        <span class="pc-name">START</span>
       </div>
-      <div class="plan-price">
-        <span class="plan-currency">R$</span>
-        <span class="plan-amount">39</span>
-        <span class="plan-cents">,90</span>
+      <div class="pc-price"><span class="pc-cur">R$</span><span class="pc-val">39</span><span class="pc-cts">,90</span></div>
+      <div class="pc-period">/mês</div>
+      <p class="pc-desc">Ideal para profissionais iniciantes ou atendimento individual.</p>
+      <div class="pc-hl">
+        <div class="pc-hl-i"><i data-lucide="clipboard-list" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Até 30 avaliações/mês</div>
+        <div class="pc-hl-i"><i data-lucide="user" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
       </div>
-      <div class="plan-period">/mês</div>
-      <p class="plan-desc">Ideal para profissionais iniciantes ou atendimento individual.</p>
-
-      <div class="plan-highlights">
-        <div class="plan-highlight"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Até 30 avaliações/mês</div>
-        <div class="plan-highlight"><i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
-      </div>
-
-      <div class="plan-divider"></div>
-      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos essenciais por especialidade:</div>
-      <ul class="plan-modules">
+      <div class="pc-div"></div>
+      <div class="pc-sec">Módulos essenciais por especialidade:</div>
+      <ul class="pc-mods">
         <li><strong>TO:</strong> Perfil Sensorial, Bebê, Escolar, SPM</li>
         <li><strong>Psicologia:</strong> PHQ-9, GAD-7, SDQ, M-CHAT</li>
         <li><strong>Fonoaudiologia:</strong> Linguagem, Alimentação Seletiva</li>
         <li><strong>Nutrição:</strong> Anamnese Alimentar</li>
         <li><strong>Pediatria / ABA / Psicopedagogia</strong> e mais</li>
       </ul>
-      <div style="font-size:0.75rem;color:#4a7a9b;font-style:italic;">Módulos selecionados conforme sua especialidade.</div>
-
-      <div class="plan-divider"></div>
-      <ul class="plan-features">
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Dashboard completo</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Histórico do paciente</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Resultados automáticos com classificação</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Link compartilhável para preenchimento</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Exportação em PDF</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
+      <div style="font-size:.7rem;color:#8aabb8;font-style:italic;margin-bottom:1rem;">Módulos selecionados conforme sua especialidade.</div>
+      <div class="pc-div"></div>
+      <ul class="pc-feats">
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Dashboard completo</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Histórico do paciente</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Resultados automáticos com classificação</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Link compartilhável para preenchimento</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Exportação em PDF</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Envio de resultados por e-mail</li>
       </ul>
-      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-lg" style="width:100%;justify-content:center;background:#10B981;color:#fff;margin-bottom:.5rem;">
-        <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Testar Grátis 7 dias
+      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-lg" style="width:100%;justify-content:center;background:#10B981;color:#fff;margin-bottom:.5rem;font-weight:700;">
+        <i data-lucide="gift" style="width:13px;height:13px;"></i> Testar Grátis 7 dias
       </a>
-      <a href="{% url 'registrar' %}?plano=start" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;">
+      <a href="{% url 'registrar' %}?plano=start" class="btn btn-lg" style="width:100%;justify-content:center;background:var(--navy);color:#fff;font-weight:700;">
         Começar com START
       </a>
     </div>
 
     <!-- PLUS -->
-    <div class="pricing-card popular">
-      <div class="popular-badge"><i data-lucide="star" style="width:11px;height:11px;display:inline-block;vertical-align:middle;margin-right:3px;"></i> Mais Popular</div>
-      <div class="plan-header" style="margin-top:1.2rem;">
-        <div class="plan-icon"><i data-lucide="star" style="width:20px;height:20px;"></i></div>
-        <span class="plan-name">PLUS</span>
+    <div class="pc pc-pop reveal">
+      <div class="pc-pop-badge"><i data-lucide="star" style="width:9px;height:9px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Mais Popular</div>
+      <div class="pc-ph" style="margin-top:1.2rem;">
+        <div class="pc-icon"><i data-lucide="star" style="width:17px;height:17px;"></i></div>
+        <span class="pc-name">PLUS</span>
       </div>
-      <div class="plan-price">
-        <span class="plan-currency">R$</span>
-        <span class="plan-amount">79</span>
-        <span class="plan-cents">,90</span>
+      <div class="pc-price"><span class="pc-cur">R$</span><span class="pc-val">79</span><span class="pc-cts">,90</span></div>
+      <div class="pc-period">/mês</div>
+      <p class="pc-desc">Nosso plano mais popular para profissionais com maior demanda.</p>
+      <div class="pc-hl">
+        <div class="pc-hl-i"><i data-lucide="clipboard-list" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Até 60 avaliações/mês</div>
+        <div class="pc-hl-i"><i data-lucide="user" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
       </div>
-      <div class="plan-period">/mês</div>
-      <p class="plan-desc">Nosso plano mais popular para profissionais com maior demanda.</p>
-
-      <div class="plan-highlights">
-        <div class="plan-highlight"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Até 60 avaliações/mês</div>
-        <div class="plan-highlight"><i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
-      </div>
-
-      <div class="plan-divider"></div>
-      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Módulos ampliados por especialidade:</div>
-      <ul class="plan-modules">
+      <div class="pc-div"></div>
+      <div class="pc-sec">Módulos ampliados por especialidade:</div>
+      <ul class="pc-mods">
         <li>Todos os módulos do START</li>
         <li><strong>TO:</strong> + Vineland, PEDI, Portage, EDM, MABC-2, Beery</li>
-        <li><strong>Psicologia:</strong> + Conners, ETDAH, BDI, BAI, DASS-21, EPDS e 20+ escalas</li>
+        <li><strong>Psicologia:</strong> + Conners, BDI, BAI, DASS-21 e 20+ escalas</li>
         <li><strong>Fonoaudiologia:</strong> todos os 6 módulos</li>
-        <li><strong>Neuropsicologia:</strong> + QMPI, Conners, escalas de humor</li>
-        <li><strong>Psicopedagogia:</strong> + Conners, ETDAH, Protocolo Dislexia</li>
+        <li><strong>Neuropsicologia + Psicopedagogia:</strong> completos</li>
         <li><strong>Pediatria / ABA / Nutrição</strong> completos</li>
       </ul>
-
-      <div class="plan-divider"></div>
-      <ul class="plan-features">
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Dashboard completo</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Histórico e evolução do paciente</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Resultados automáticos com classificação</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Exportação em PDF</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Suporte prioritário</li>
+      <div class="pc-div"></div>
+      <ul class="pc-feats">
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Dashboard completo</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Histórico e evolução do paciente</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Resultados automáticos com classificação</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Exportação em PDF</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Envio de resultados por e-mail</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Suporte prioritário</li>
       </ul>
-      <a href="{% url 'registrar' %}?plano=plus" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-bottom:.5rem;">
+      <a href="{% url 'registrar' %}?plano=plus" class="btn btn-lg" style="width:100%;justify-content:center;background:linear-gradient(135deg,#39abcb,#6accdc);color:#040d1e;font-weight:800;margin-bottom:.5rem;box-shadow:0 4px 20px rgba(57,171,203,.4);">
         Começar com PLUS
       </a>
-      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;background:#fff;">
-        <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Começar com teste grátis
+      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-lg" style="width:100%;justify-content:center;background:transparent;color:var(--navy);border:2px solid var(--navy);font-weight:700;">
+        <i data-lucide="gift" style="width:13px;height:13px;"></i> Teste grátis 7 dias
       </a>
     </div>
 
     <!-- ELITE -->
-    <div class="pricing-card elite">
-      <div class="plan-header">
-        <div class="plan-icon"><i data-lucide="gem" style="width:20px;height:20px;"></i></div>
-        <span class="plan-name">ELITE</span>
+    <div class="pc pc-dark reveal">
+      <div class="pc-ph">
+        <div class="pc-icon"><i data-lucide="gem" style="width:17px;height:17px;"></i></div>
+        <span class="pc-name">ELITE</span>
       </div>
-      <div class="plan-price">
-        <span class="plan-currency">R$</span>
-        <span class="plan-amount">149</span>
-        <span class="plan-cents">,90</span>
+      <div class="pc-price"><span class="pc-cur">R$</span><span class="pc-val">149</span><span class="pc-cts">,90</span></div>
+      <div class="pc-period">/mês</div>
+      <p class="pc-desc">Acesso completo para profissionais que precisam de todos os recursos.</p>
+      <div class="pc-hl">
+        <div class="pc-hl-i"><i data-lucide="clipboard-list" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Avaliações ilimitadas</div>
+        <div class="pc-hl-i"><i data-lucide="user" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
       </div>
-      <div class="plan-period">/mês</div>
-      <p class="plan-desc">Acesso completo para profissionais que precisam de todos os recursos.</p>
-
-      <div class="plan-highlights">
-        <div class="plan-highlight"><i data-lucide="clipboard-list" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Avaliações ilimitadas</div>
-        <div class="plan-highlight"><i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> 1 profissional</div>
-      </div>
-
-      <div class="plan-divider"></div>
-      <div class="plan-section-title"><i data-lucide="layers" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Acesso completo por especialidade:</div>
-      <ul class="plan-modules">
+      <div class="pc-div"></div>
+      <div class="pc-sec">Acesso completo por especialidade:</div>
+      <ul class="pc-mods">
         <li>Todos os módulos do PLUS</li>
         <li><strong>TO:</strong> + Vineland-3 (versão atualizada)</li>
         <li><strong>Psicologia:</strong> + PCL-5, BPQ, BSL-23, Dep. Emocional</li>
-        <li><strong>Neuropsicologia:</strong> + BSL-23, BPQ, PCL-5</li>
         <li><strong>Psicopedagogia:</strong> + Inventário de Sinais Disléxicos</li>
         <li>Anamneses digitais + Documentos IA</li>
         <li>Acesso antecipado a novos módulos</li>
       </ul>
-
-      <div class="plan-divider"></div>
-      <ul class="plan-features">
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Dashboard completo</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Histórico e comparação da evolução do paciente</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Relatórios profissionais em PDF</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Link compartilhável para preenchimento</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Envio de resultados por e-mail</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Suporte prioritário</li>
-        <li><span class="check"><i data-lucide="check" style="width:10px;height:10px;"></i></span> Acesso antecipado a novos módulos</li>
+      <div class="pc-div"></div>
+      <ul class="pc-feats">
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Dashboard completo</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Histórico e comparação da evolução</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Relatórios profissionais em PDF</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Link compartilhável</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Suporte prioritário</li>
+        <li><span class="pc-chk"><i data-lucide="check" style="width:9px;height:9px;"></i></span> Acesso antecipado a novos módulos</li>
       </ul>
-      <a href="{% url 'registrar' %}?plano=elite" class="btn btn-lg" style="width:100%;justify-content:center;background:linear-gradient(135deg,#39abcb,#6accdc);color:#fff;box-shadow:0 4px 20px rgba(57,171,203,0.4);margin-bottom:.5rem;">
+      <a href="{% url 'registrar' %}?plano=elite" class="btn btn-lg" style="width:100%;justify-content:center;background:linear-gradient(135deg,#39abcb,#6accdc);color:#040d1e;font-weight:800;margin-bottom:.5rem;">
         Começar com ELITE
       </a>
-      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;background:#fff;">
-        <i data-lucide="gift" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Começar com teste grátis
+      <a href="{% url 'registrar' %}?plano=trial" class="btn btn-lg" style="width:100%;justify-content:center;background:transparent;color:#fff;border:2px solid rgba(255,255,255,.35);font-weight:700;">
+        <i data-lucide="gift" style="width:13px;height:13px;"></i> Teste grátis 7 dias
       </a>
     </div>
 
   </div>
-
-  <!-- Trust badges -->
-  <div class="trust-badges" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border);">
-    <div class="trust-badge"><i data-lucide="shield" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Seguro e confiável</div>
-    <span class="trust-sep"></span>
-    <div class="trust-badge"><i data-lucide="cloud" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Acesso 100% online</div>
-    <span class="trust-sep"></span>
-    <div class="trust-badge"><i data-lucide="lock" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Proteção de dados</div>
-    <span class="trust-sep"></span>
-    <div class="trust-badge"><i data-lucide="bar-chart-2" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Evolução e comparativos</div>
-    <span class="trust-sep"></span>
-    <div class="trust-badge"><i data-lucide="send" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Resultados por e-mail</div>
-    <span class="trust-sep"></span>
-    <div class="trust-badge"><i data-lucide="file-text" style="width:15px;height:15px;color:var(--primary);flex-shrink:0;"></i> Exportação em PDF</div>
-  </div>
 </section>
 
-<!-- CONTACT -->
-<section id="contato" style="padding:5.5rem 6vw;background:#fff;">
-  <div class="contact-grid" style="max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;">
-
+<!-- ════════════════ CONTATO ════════════════ -->
+<section class="contact" id="contato">
+  <div class="contact-inner">
     <div>
-      <div class="section-label">— Contato</div>
-      <h2 class="section-title">Fale com a gente</h2>
-      <p class="section-sub" style="margin-bottom:2rem;">Dúvidas sobre planos, instrumentos ou suporte técnico? Mande uma mensagem e respondemos em até 24h.</p>
-
-      <div style="display:flex;flex-direction:column;gap:1.2rem;">
-        <div style="display:flex;align-items:center;gap:.9rem;">
-          <div style="width:44px;height:44px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i data-lucide="mail" style="width:20px;height:20px;color:var(--primary);"></i>
-          </div>
-          <div>
-            <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">E-mail</div>
-            <a href="mailto:integramente.pro@gmail.com" style="color:var(--primary-dark);font-weight:600;font-size:.95rem;text-decoration:none;">integramente.pro@gmail.com</a>
-          </div>
+      <div class="sec-lbl on-dark">Contato</div>
+      <h2 class="sec-h2 light">Fale com a gente</h2>
+      <p class="sec-p light" style="margin-top:.6rem;">Dúvidas sobre planos, instrumentos ou suporte? Respondemos em até 24h.</p>
+      <div class="ci-item">
+        <div class="ci-icon"><i data-lucide="mail" style="width:19px;height:19px;color:var(--blue);"></i></div>
+        <div>
+          <div class="ci-lbl">E-mail</div>
+          <a href="mailto:integramente.pro@gmail.com" class="ci-val">integramente.pro@gmail.com</a>
         </div>
-        <div style="display:flex;align-items:center;gap:.9rem;">
-          <div style="width:44px;height:44px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-          </div>
-          <div>
-            <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Instagram</div>
-            <a href="https://www.instagram.com/integramente.pro/" target="_blank" rel="noopener" style="color:var(--primary-dark);font-weight:600;font-size:.95rem;text-decoration:none;">@integramente.pro</a>
-          </div>
+      </div>
+      <div class="ci-item">
+        <div class="ci-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </div>
+        <div>
+          <div class="ci-lbl">Instagram</div>
+          <a href="https://www.instagram.com/integramente.pro/" target="_blank" rel="noopener" class="ci-val">@integramente.pro</a>
         </div>
       </div>
     </div>
 
     <div>
       {% if contato_enviado %}
-      <div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:1.5rem 1.5rem;text-align:center;">
+      <div class="c-success">
         <i data-lucide="circle-check-big" style="width:36px;height:36px;color:#10B981;display:block;margin:0 auto .8rem;"></i>
-        <div style="font-weight:700;color:#065F46;font-size:1rem;">Mensagem enviada!</div>
-        <p style="color:#047857;font-size:.88rem;margin-top:.4rem;">Responderemos em até 24 horas no e-mail informado.</p>
+        <div style="font-weight:700;color:#6ee7b7;font-size:1rem;">Mensagem enviada!</div>
+        <p style="color:rgba(110,231,183,.75);font-size:.86rem;margin-top:.4rem;">Responderemos em até 24 horas no e-mail informado.</p>
       </div>
       {% else %}
-      {% if contato_erro %}<div style="background:#FEE2E2;border-left:4px solid #EF4444;border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.85rem;color:#991B1B;">{{ contato_erro }}</div>{% endif %}
-      <form method="post" action="{% url 'contato' %}#contato" style="display:flex;flex-direction:column;gap:.9rem;">
+      {% if contato_erro %}<div class="c-error">{{ contato_erro }}</div>{% endif %}
+      <form method="post" action="{% url 'contato' %}#contato" class="c-form">
         {% csrf_token %}
-        <div>
-          <label style="display:block;font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:.3rem;">Nome</label>
-          <input type="text" name="nome" required placeholder="Seu nome" style="width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.92rem;color:var(--text);font-family:inherit;">
-        </div>
-        <div>
-          <label style="display:block;font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:.3rem;">E-mail</label>
-          <input type="email" name="email" required placeholder="seu@email.com" style="width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.92rem;color:var(--text);font-family:inherit;">
-        </div>
-        <div>
-          <label style="display:block;font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:.3rem;">Mensagem</label>
-          <textarea name="mensagem" required rows="4" placeholder="Como podemos ajudar?" style="width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.92rem;color:var(--text);font-family:inherit;resize:vertical;"></textarea>
-        </div>
-        <button type="submit" style="padding:.75rem;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;font-family:inherit;">
-          <i data-lucide="send" style="width:16px;height:16px;"></i> Enviar mensagem
+        <div class="fg"><label>Nome</label><input type="text" name="nome" required placeholder="Seu nome" /></div>
+        <div class="fg"><label>E-mail</label><input type="email" name="email" required placeholder="seu@email.com" /></div>
+        <div class="fg"><label>Mensagem</label><textarea name="mensagem" required rows="4" placeholder="Como podemos ajudar?"></textarea></div>
+        <button type="submit" class="c-submit">
+          <i data-lucide="send" style="width:15px;height:15px;"></i> Enviar mensagem
         </button>
       </form>
       {% endif %}
     </div>
-
   </div>
 </section>
 
-<!-- CTA -->
-<section class="cta-section">
-  <h2>Comece hoje mesmo<br />Sem complicação</h2>
-  <p>Gere o link, envie para o responsável e tenha o resultado no seu painel — tudo em poucos minutos.</p>
-  <div class="cta-actions">
-    <a href="{% url 'registrar' %}" class="btn btn-xl btn-hero-primary">Criar minha conta</a>
-    <a href="{% url 'login' %}" class="btn btn-xl" style="background:var(--white);color:var(--primary-dark);font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'">Entrar na plataforma</a>
+<!-- ════════════════ CTA ════════════════ -->
+<section class="cta">
+  <div class="cta-inner">
+    <h2>Comece hoje mesmo.<br/>Sem complicação.</h2>
+    <p>Gere o link, envie para o responsável e tenha o resultado no painel — tudo em poucos minutos.</p>
+    <div class="cta-btns">
+      <a href="{% url 'registrar' %}" class="btn btn-xl btn-cta">Criar minha conta</a>
+      <a href="{% url 'login' %}" class="btn btn-xl btn-outline-dk">Entrar na plataforma</a>
+    </div>
   </div>
 </section>
 
-<!-- SECTION NAV BUTTON -->
-<button id="sectionNav" aria-label="Navegar entre seções">
-  <i data-lucide="chevron-down" id="iconDown"></i>
-  <i data-lucide="chevron-up"   id="iconUp" style="display:none"></i>
+<!-- SCROLL BUTTON -->
+<button id="scrollBtn" aria-label="Próxima seção">
+  <i data-lucide="chevron-down" id="iconDown" style="width:20px;height:20px;"></i>
+  <i data-lucide="chevron-up"   id="iconUp"   style="width:20px;height:20px;display:none;"></i>
 </button>
 
-<!-- FOOTER -->
+<!-- ════════════════ FOOTER ════════════════ -->
 <footer>
   <div class="footer-inner">
     <ul class="footer-links">
       <li><a href="{% url 'politica_privacidade' %}">Privacidade</a></li>
       <li><a href="{% url 'login' %}">Entrar</a></li>
       <li><a href="{% url 'registrar' %}">Cadastro</a></li>
-      <li><a href="https://www.instagram.com/integramente.pro/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> Instagram</a></li>
+      <li><a href="https://www.instagram.com/integramente.pro/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> Instagram</a></li>
     </ul>
     <p class="footer-copy">© 2026 IntegraMente · Todos os direitos reservados</p>
   </div>
@@ -1468,48 +980,17 @@
 <script>
   lucide.createIcons();
 
-  function toggleMenu() {
-    const btn = document.getElementById('hamburger');
-    const menu = document.getElementById('mobileMenu');
-    btn.classList.toggle('open');
-    menu.classList.toggle('open');
-  }
+  // Nav scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 30);
+  }, { passive: true });
 
-  function closeMenu() {
-    document.getElementById('hamburger').classList.remove('open');
-    document.getElementById('mobileMenu').classList.remove('open');
-  }
-
-  // Fecha ao clicar fora
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('mobileMenu');
-    const btn = document.getElementById('hamburger');
-    if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
-      closeMenu();
-    }
-  });
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.08 });
-
-  document.querySelectorAll('.disc-card, .feat-card, .step').forEach((el, i) => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = `opacity 0.45s ease ${i * 0.05}s, transform 0.45s ease ${i * 0.05}s`;
-    observer.observe(el);
-  });
-
-  // ── Section navigator ──
-  const SECTIONS  = Array.from(document.querySelectorAll('.hero, section'));
-  const navBtn    = document.getElementById('sectionNav');
-  const iconDown  = document.getElementById('iconDown');
-  const iconUp    = document.getElementById('iconUp');
+  // Section navigator
+  const SECTIONS = Array.from(document.querySelectorAll('section, .hero'));
+  const navBtn   = document.getElementById('scrollBtn');
+  const iconDown = document.getElementById('iconDown');
+  const iconUp   = document.getElementById('iconUp');
 
   function getNextSection() {
     const threshold = window.scrollY + window.innerHeight * 0.8;
@@ -1520,40 +1001,131 @@
   }
 
   function updateNav() {
-    const atTop = window.scrollY < 60;
-    const nextIdx = getNextSection();
-
-    if (atTop) {
-      navBtn.classList.remove('visible');
-      return;
-    }
-
+    if (window.scrollY < 60) { navBtn.classList.remove('visible'); return; }
     navBtn.classList.add('visible');
-
-    if (nextIdx === -1) {
-      iconDown.style.display = 'none';
-      iconUp.style.display   = '';
-      navBtn.title = 'Voltar ao topo';
-    } else {
-      iconDown.style.display = '';
-      iconUp.style.display   = 'none';
-      navBtn.title = 'Próxima seção';
-    }
+    const next = getNextSection();
+    iconDown.style.display = next === -1 ? 'none' : '';
+    iconUp.style.display   = next === -1 ? ''     : 'none';
+    navBtn.title = next === -1 ? 'Voltar ao topo' : 'Próxima seção';
   }
 
   navBtn.addEventListener('click', () => {
-    const nextIdx = getNextSection();
-
-    if (nextIdx === -1) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      SECTIONS[nextIdx].scrollIntoView({ behavior: 'smooth' });
-    }
+    const next = getNextSection();
+    if (next === -1) window.scrollTo({ top: 0, behavior: 'smooth' });
+    else SECTIONS[next].scrollIntoView({ behavior: 'smooth' });
   });
 
   window.addEventListener('scroll', updateNav, { passive: true });
   updateNav();
-</script>
 
+  // Mobile menu
+  function toggleMenu() {
+    document.getElementById('hamburger').classList.toggle('open');
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('hamburger').classList.remove('open');
+    document.getElementById('mobileMenu').classList.remove('open');
+  }
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('mobileMenu');
+    const btn  = document.getElementById('hamburger');
+    if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) closeMenu();
+  });
+
+  // Reveal on scroll
+  const revObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const d = parseInt(e.target.dataset.delay || 0);
+      setTimeout(() => e.target.classList.add('visible'), d);
+      revObs.unobserve(e.target);
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach((el, i) => {
+    el.dataset.delay = (i % 5) * 75;
+    revObs.observe(el);
+  });
+
+  // Stats counter
+  ;(function() {
+    const map = { '80+': [80,'+'], '9': [9,''], '400+': [400,'+'], '100%': [100,'%'] };
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target, key = el.dataset.raw;
+        if (!key || !map[key]) return;
+        const [target, sfx] = map[key];
+        const t0 = performance.now();
+        const run = now => {
+          const p = Math.min((now - t0) / 1400, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(ease * target) + sfx;
+          if (p < 1) requestAnimationFrame(run);
+        };
+        requestAnimationFrame(run);
+        obs.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-raw]').forEach(el => obs.observe(el));
+  })();
+
+  // Hero parallax — blobs follow mouse
+  ;(function() {
+    if (window.matchMedia('(hover:none)').matches) return;
+    const hero  = document.querySelector('.hero');
+    const blobs = hero ? hero.querySelectorAll('.blob') : [];
+    const left  = hero ? hero.querySelector('.hero-left') : null;
+    if (!hero) return;
+    hero.addEventListener('mousemove', e => {
+      const r  = hero.getBoundingClientRect();
+      const cx = (e.clientX - r.left) / r.width  - 0.5;
+      const cy = (e.clientY - r.top)  / r.height - 0.5;
+      blobs.forEach((b, i) => { b.style.transform = `translate(${cx*(i+1)*22}px,${cy*(i+1)*16}px)`; });
+      if (left) left.style.transform = `translate(${cx*4}px,${cy*3}px)`;
+    });
+    hero.addEventListener('mouseleave', () => {
+      blobs.forEach(b => b.style.transform = '');
+      if (left) left.style.transform = '';
+    });
+  })();
+
+  // 3D card tilt
+  ;(function() {
+    if (window.matchMedia('(hover:none)').matches) return;
+    function tilt(sel, intensity) {
+      document.querySelectorAll(sel).forEach(card => {
+        const shine = document.createElement('div');
+        shine.className = 'tilt-shine';
+        card.style.overflow = 'hidden';
+        card.style.position = 'relative';
+        card.appendChild(shine);
+        let timer;
+        card.addEventListener('mouseenter', () => clearTimeout(timer));
+        card.addEventListener('mousemove', e => {
+          clearTimeout(timer);
+          const rect = card.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width  - 0.5;
+          const y = (e.clientY - rect.top)  / rect.height - 0.5;
+          card.style.transition = 'transform .08s ease,box-shadow .3s ease';
+          card.style.transform  = `perspective(900px) rotateX(${-y*intensity}deg) rotateY(${x*intensity}deg) translateZ(12px) scale(1.025)`;
+          shine.style.opacity   = '1';
+          shine.style.setProperty('--sx', `${(x+.5)*100}%`);
+          shine.style.setProperty('--sy', `${(y+.5)*100}%`);
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transition = 'transform .55s cubic-bezier(.23,1,.32,1),box-shadow .4s ease';
+          card.style.transform  = 'perspective(900px) rotateX(0) rotateY(0) translateZ(0) scale(1)';
+          shine.style.opacity   = '0';
+          timer = setTimeout(() => { card.style.transform = ''; card.style.transition = ''; }, 560);
+        });
+      });
+    }
+    tilt('.spec-card',  10);
+    tilt('.bc',          8);
+    tilt('.pc',          7);
+    tilt('.depo-card',   8);
+  })();
+</script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -10,6 +11,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoMCHAT, RespostaMCHAT
 from ..data.data_mchat import MCHAT_ITENS, MCHAT_RISCO
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 
 def _calcular_mchat(avaliacao):
@@ -173,7 +176,6 @@ def salvar_observacoes_mchat(request, avaliacao_id):
 
 @login_required
 def enviar_email_mchat(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoMCHAT, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -191,10 +193,9 @@ def enviar_email_mchat(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("mchat_publico", kwargs={"token": avaliacao.token}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="M-CHAT-R — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário M-CHAT-R no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

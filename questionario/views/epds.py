@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,6 +10,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoEPDS, RespostaEPDS
 from ..data.data_epds import EPDS_ITENS, EPDS_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 _COR    = "#C0392B"
 _TITULO = "EPDS — Escala de Depressão Pós-Parto de Edinburgh"
@@ -218,7 +221,6 @@ def epds_publico(request, token, pagina):
 
 @login_required
 def enviar_email_epds(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.template.loader import render_to_string
     av = get_object_or_404(AvaliacaoEPDS, uuid=avaliacao_id, paciente__medico=request.user)
@@ -236,8 +238,8 @@ def enviar_email_epds(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("epds_publico", kwargs={"token": av.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="EPDS — IntegraMente", message=f"Responda o questionário em: {link}",
-                  from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="EPDS — IntegraMente", message=f"Responda o questionário em: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})

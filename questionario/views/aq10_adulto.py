@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -10,6 +11,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoAQ10Adulto, RespostaAQ10Adulto
 from ..data.data_aq10_adulto import AQ10_ADULTO_ITENS, AQ10_ADULTO_SUBESCALAS, AQ10_ADULTO_OPCOES, AQ10_ADULTO_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 AQ10_ADULTO_PAGINAS = [{"key": "total", "nome": "AQ-10 Adulto", "cor": "#1A5276", "campo": "pont_total"}]
 TOTAL_PAGINAS = 1
@@ -188,7 +191,6 @@ def salvar_observacoes_aq10_adulto(request, avaliacao_id):
 
 @login_required
 def enviar_email_aq10_adulto(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoAQ10Adulto, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -206,7 +208,8 @@ def enviar_email_aq10_adulto(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("aq10_adulto_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(subject="AQ-10 Adulto — IntegraMente", message=f"Link: {link}", from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False)
+        enviar_email.delay(subject="AQ-10 Adulto — IntegraMente", message=f"Link: {link}",
+            recipient_list=[email_dest], html_message=html, fail_silently=False)
     except Exception as exc:
         if is_ajax:
             return JsonResponse({"ok": False, "message": f"Falha: {exc}"})

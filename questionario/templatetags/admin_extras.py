@@ -122,7 +122,30 @@ def _tipos_avaliacoes_por_paciente(pacientes):
 
 @register.simple_tag
 def logo_url():
-    return f"{django_settings.SITE_URL}{django_settings.STATIC_URL}logonav.png"
+    override = getattr(django_settings, 'EMAIL_LOGO_URL', None)
+    if override:
+        return override
+    return f"{django_settings.SITE_URL.rstrip('/')}{django_settings.STATIC_URL}logonav.png"
+
+
+import base64 as _base64
+import os as _os
+
+def _logo_data_uri():
+    path = _os.path.join(django_settings.BASE_DIR, "questionario", "static", "logonav.png")
+    with open(path, "rb") as f:
+        data = _base64.b64encode(f.read()).decode()
+    return f"data:image/png;base64,{data}"
+
+# Cache para não re-ler o arquivo a cada e-mail
+_LOGO_DATA_URI = None
+
+@register.simple_tag
+def logo_base64():
+    global _LOGO_DATA_URI
+    if _LOGO_DATA_URI is None:
+        _LOGO_DATA_URI = _logo_data_uri()
+    return _LOGO_DATA_URI
 
 
 @register.simple_tag

@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -12,6 +13,8 @@ from ..data.vineland_data import (
     calcular_pontuacao_vineland, classificar_qs, grupos_para_idade,
 )
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 
 def _calc_idade_meses(data_ref, data_nascimento):
@@ -385,7 +388,6 @@ def vineland_publico_view(request, token, pagina):
 
 @login_required
 def enviar_email_link_vineland(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     from django.http import JsonResponse
     avaliacao = get_object_or_404(AvaliacaoVineland, uuid=avaliacao_id, paciente__medico=request.user)
@@ -401,10 +403,9 @@ def enviar_email_link_vineland(request, avaliacao_id):
     link = request.build_absolute_uri(f"/vineland/publico/{avaliacao.token}/1/")
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="Escala Vineland — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda a Escala Vineland no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

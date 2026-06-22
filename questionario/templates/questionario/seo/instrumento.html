@@ -54,7 +54,7 @@
     {% for o in outros %}
     <a href="{% url 'instrumento_detalhe' o.slug %}">{{ o.nome_curto }}</a>
     {% endfor %}
-    <a href="{% url 'instrumentos_lista' %}">Ver todos →</a>
+    <a href="{% url 'instrumentos_lista' %}">Ver todos <i data-lucide="chevrons-right" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i></a>
   </div>
 </div>
 {% endif %}

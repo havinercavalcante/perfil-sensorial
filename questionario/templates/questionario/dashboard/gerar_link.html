@@ -620,6 +620,34 @@
         <span class="tc-desc">Depressão infantil · remoto</span>
       </button>
       {% endif %}
+      {% if 'ebai' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('ebai', this)">
+        <span class="tc-icon"><i data-lucide="utensils" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">EBAI</span>
+        <span class="tc-desc">Alimentação infantil · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'seps' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('seps', this)">
+        <span class="tc-icon"><i data-lucide="alert-circle" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">SEPS</span>
+        <span class="tc-desc">Problemas sensoriais · alimentação · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'eca' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('eca', this)">
+        <span class="tc-icon"><i data-lucide="clipboard-list" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">ECA</span>
+        <span class="tc-desc">Comportamento alimentar · remoto</span>
+      </button>
+      {% endif %}
+      {% if 'tod' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('tod', this)">
+        <span class="tc-icon"><i data-lucide="zap" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">TOD</span>
+        <span class="tc-desc">Comportamentos disruptivos · remoto</span>
+      </button>
+      {% endif %}
       {% if not modulos_liberados %}
       <div style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">
         <i data-lucide="lock" style="width:2rem;height:2rem; margin-bottom:.5rem;"></i>

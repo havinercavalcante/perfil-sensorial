@@ -1,3 +1,4 @@
+from django.conf import settings
 import uuid
 import logging
 
@@ -33,8 +34,11 @@ from ..models import (
     AvaliacaoK10, AvaliacaoUCLA, AvaliacaoMSI_BPD, AvaliacaoGDS15, AvaliacaoRosenberg,
     AvaliacaoAUDIT, AvaliacaoBIS11, AvaliacaoIAR, AvaliacaoPAS, AvaliacaoCDI,
     AvaliacaoHAMA, AvaliacaoLSAS, AvaliacaoRiscoSuicidio, AvaliacaoAgorafobia, AvaliacaoPanico,
+    # Escalas de Alimentação Infantil
+    AvaliacaoEBAI, AvaliacaoSEPS, AvaliacaoECA, AvaliacaoTOD,
 )
 from ..services import build_lista_com_link, build_lista_sem_pagina
+from ..tasks import enviar_email
 from django.urls import reverse
 
 
@@ -53,17 +57,15 @@ def _build_pedi_lista(queryset, request):
 
 
 def contato_view(request):
-    from django.core.mail import send_mail
     if request.method == "POST":
         nome = request.POST.get("nome", "").strip()
         email = request.POST.get("email", "").strip()
         mensagem = request.POST.get("mensagem", "").strip()
         if not nome or not email or not mensagem:
             return render(request, "questionario/landing.html", {"contato_erro": "Preencha todos os campos."})
-        send_mail(
+        enviar_email.delay(
             subject=f"[IntegraMente] Contato de {nome}",
             message=f"Nome: {nome}\nE-mail: {email}\n\n{mensagem}",
-            from_email=None,
             recipient_list=["integramente.pro@gmail.com"],
             fail_silently=True,
         )
@@ -474,6 +476,11 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_checklist_dislexia": build_lista_com_link(paciente.avaliacoes_checklist_dislexia.all(), request, "checklist_dislexia_publico"),
         "avaliacoes_prot_dislexia_prof": build_lista_com_link(paciente.avaliacoes_prot_dislexia_prof.all(), request, "prot_dislexia_prof_publico"),
         "avaliacoes_inventario_dislexia": paciente.avaliacoes_inventario_dislexia.all(),
+        # Escalas de Alimentação Infantil
+        "avaliacoes_ebai": build_lista_com_link(paciente.avaliacoes_ebai.all(), request, "ebai_publico"),
+        "avaliacoes_seps": build_lista_com_link(paciente.avaliacoes_seps.all(), request, "seps_publico"),
+        "avaliacoes_eca":  build_lista_com_link(paciente.avaliacoes_eca.all(),  request, "eca_publico"),
+        "avaliacoes_tod":  build_lista_com_link(paciente.avaliacoes_tod.all(),  request, "tod_publico"),
     })
 
 
@@ -551,7 +558,6 @@ def evolucao_paciente(request, paciente_id):
 
 @login_required
 def enviar_email_modulo(request, modulo, avaliacao_id):
-    from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
 
@@ -586,13 +592,13 @@ def enviar_email_modulo(request, modulo, avaliacao_id):
         return redirect("detalhe_paciente", paciente_id=paciente.uuid)
 
     from django.template.loader import render_to_string
+    from django.templatetags.static import static
     link = request.build_absolute_uri(reverse(url_name, kwargs={"token": avaliacao.token}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject=f"{label} — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

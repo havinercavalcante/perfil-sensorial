@@ -3,11 +3,11 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
 from django.shortcuts import redirect, render, get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from ..tasks import enviar_email
 from ..models import (
     Indicacao,
     ModuloAvaliacao,
@@ -199,10 +199,9 @@ def _notificar_admin_nova_solicitacao(sol: SolicitacaoPlano, request):
             "nome_user": nome_user,
             "painel_url": painel_url,
         })
-        send_mail(
+        enviar_email.delay(
             subject=f"[IntegraMente] Nova solicitação de plano — {nome_user} → {sol.get_plano_display()}",
             message=f"{nome_user} solicitou o plano {sol.get_plano_display()}.\nAcesse: {painel_url}",
-            from_email=None,
             recipient_list=[settings.ADMIN_NOTIFY_EMAIL],
             html_message=html,
             fail_silently=True,
@@ -222,10 +221,9 @@ def _notificar_usuario_aprovado(sol: SolicitacaoPlano, expiracao=None):
             "nome": nome,
             "expiracao": expiracao,
         })
-        send_mail(
+        enviar_email.delay(
             subject=f"IntegraMente — Seu plano {sol.get_plano_display()} foi ativado! 🎉",
             message=f"Olá {nome}! Seu plano {sol.get_plano_display()} foi ativado. Acesse https://integramente.pro/",
-            from_email=None,
             recipient_list=[sol.user.email],
             html_message=html,
             fail_silently=True,
@@ -244,10 +242,9 @@ def _notificar_usuario_rejeitado(sol: SolicitacaoPlano):
             "sol": sol,
             "nome": nome,
         })
-        send_mail(
+        enviar_email.delay(
             subject="IntegraMente — Sobre sua solicitação de plano",
             message=f"Olá {nome}! Sua solicitação foi rejeitada. Motivo: {sol.nota_admin}",
-            from_email=None,
             recipient_list=[sol.user.email],
             html_message=html,
             fail_silently=True,

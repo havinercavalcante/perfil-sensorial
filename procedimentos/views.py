@@ -5,7 +5,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from questionario.models import Paciente
+from questionario.models import (
+    Paciente,
+    AvaliacaoEBAI, AvaliacaoSEPS, AvaliacaoECA, AvaliacaoTOD,
+)
 from .models import ProcedimentoDocumento
 
 TIPO_LABELS = dict(ProcedimentoDocumento.TIPO_CHOICES)
@@ -17,6 +20,7 @@ TEMPLATE_MAP = {
     "anamnese_tea":      "procedimentos/anamnese_tea.html",
     "anamnese_tdah":     "procedimentos/anamnese_tdah.html",
     "anamnese_casal":    "procedimentos/anamnese_casal.html",
+    "anamnese_seletividade_alimentar": "procedimentos/anamnese_seletividade_alimentar.html",
     "ficha_triagem":        "procedimentos/ficha_triagem.html",
     "carta_encaminhamento": "procedimentos/carta_encaminhamento.html",
     "atestado":             "procedimentos/atestado.html",
@@ -71,16 +75,74 @@ def lista_procedimentos(request, paciente_id, tipo):
 
 # ── Novo documento — só renderiza, não salva ainda ───────────────────────────
 
+def _escalas_ctx_seletividade(paciente):
+    ebai = paciente.avaliacoes_ebai.filter(status="concluida").first()
+    seps = paciente.avaliacoes_seps.filter(status="concluida").first()
+    eca  = paciente.avaliacoes_eca.filter(status="concluida").first()
+    tod  = paciente.avaliacoes_tod.filter(status="concluida").first()
+
+    def class_ebai(t):
+        if t is None: return "não disponível"
+        if t >= 71: return "Dificuldades severas"
+        if t >= 66: return "Dificuldades moderadas"
+        if t >= 61: return "Dificuldades leves"
+        return "Sem dificuldades significativas"
+
+    def top_seps(av):
+        if not av: return "não disponível"
+        subs = {
+            "Aversão ao toque": av.pont_aversao_toque or 0,
+            "Foco numa única comida": av.pont_foco_unica or 0,
+            "Vômito": av.pont_vomito or 0,
+            "Sensibilidade à temperatura": av.pont_sensib_temp or 0,
+            "Expulsão": av.pont_expulsao or 0,
+            "Encher demasiado": av.pont_encher or 0,
+        }
+        top = sorted(subs, key=subs.get, reverse=True)[:2]
+        return ", ".join(top)
+
+    def top_eca(av):
+        if not av: return "não disponível"
+        subs = {
+            "Motricidade na Mastigação": av.pont_mastigacao or 0,
+            "Seletividade Alimentar": av.pont_seletividade or 0,
+            "Aspectos Comportamentais": av.pont_comportamental or 0,
+            "Sintomas Gastrointestinais": av.pont_gi or 0,
+            "Sensibilidade Sensorial": av.pont_sensorial or 0,
+            "Habilidades nas Refeições": av.pont_habilidades or 0,
+        }
+        top = sorted(subs, key=subs.get, reverse=True)[:2]
+        return ", ".join(top)
+
+    return {
+        "ebai_resumo": (
+            f"Escore T = {ebai.escore_t} ({class_ebai(ebai.escore_t)}), "
+            f"Pontuação Bruta = {ebai.pont_bruto}/98"
+        ) if ebai else "Aguardando resposta do responsável.",
+        "seps_resumo": (
+            f"Subescalas com maior pontuação: {top_seps(seps)}"
+        ) if seps else "Aguardando resposta do responsável.",
+        "eca_resumo": (
+            f"Subescalas com maior pontuação: {top_eca(eca)}"
+        ) if eca else "Aguardando resposta do responsável.",
+        "tod_resumo": (
+            f"{tod.itens_corte_positivos or 0} itens ★ com valor ≥ 2 — "
+            f"{'Positivo para TOD' if (tod.itens_corte_positivos or 0) >= 4 else 'Negativo para TOD'}"
+        ) if tod else "Aguardando resposta do responsável.",
+    }
+
+
 @login_required
 def novo_procedimento(request, paciente_id, tipo):
     if tipo not in TEMPLATE_MAP:
         from django.http import Http404
         raise Http404
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
-    # doc=None sinaliza para o template que ainda não foi salvo
     ctx = _doc_ctx(request, paciente, None)
-    ctx["tipo"]  = tipo
+    ctx["tipo"]      = tipo
     ctx["criar_url"] = f"/pacientes/{paciente_id}/procedimentos/{tipo}/criar/"
+    if tipo == "anamnese_seletividade_alimentar":
+        ctx.update(_escalas_ctx_seletividade(paciente))
     return render(request, TEMPLATE_MAP[tipo], ctx)
 
 

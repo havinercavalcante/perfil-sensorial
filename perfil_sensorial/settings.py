@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
 ]
 MIDDLEWARE = [
     'questionario.middleware.CustomErrorMiddleware',
@@ -99,13 +100,24 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Configuração de envio de e-mail SMTP
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+if DEBUG:
+    # Em desenvolvimento: Mailpit captura os emails localmente (http://localhost:8025)
+    EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST          = 'localhost'
+    EMAIL_PORT          = 1025
+    EMAIL_USE_TLS       = False
+    EMAIL_USE_SSL       = False
+    EMAIL_HOST_USER     = ''
+    EMAIL_HOST_PASSWORD = ''
+    DEFAULT_FROM_EMAIL  = 'IntegraMente <noreply@integramente.pro>'
+else:
+    EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST          = 'smtp.gmail.com'
+    EMAIL_PORT          = 587
+    EMAIL_USE_TLS       = True
+    EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL  = os.environ.get('EMAIL_HOST_USER', '')
 
 # ── Configurações de pagamento manual (PIX) ────────────────────────────────────
 PIX_KEY          = os.environ.get('PIX_KEY', '06164397332')
@@ -113,10 +125,12 @@ PIX_BENEFICIARIO = os.environ.get('PIX_BENEFICIARIO', 'Haviner Cavalcante Nunes 
 PIX_BANCO        = os.environ.get('PIX_BANCO', 'Nubank')
 # E-mail do admin que recebe notificação de nova solicitação de plano
 ADMIN_NOTIFY_EMAIL = os.environ.get('ADMIN_NOTIFY_EMAIL', EMAIL_HOST_USER)
+EMAIL_LOGO_URL     = os.environ.get('EMAIL_LOGO_URL', '')
 
 # ── Celery ────────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']

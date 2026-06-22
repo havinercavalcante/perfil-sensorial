@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -19,6 +20,8 @@ from ..data.data_spm import (
     classificar_tscore_spm,
 )
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 
 def _spm_dados(faixa):
@@ -281,7 +284,6 @@ def salvar_observacoes_spm(request, avaliacao_id):
 
 @login_required
 def enviar_email_spm(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoSPM, uuid=avaliacao_id, paciente__medico=request.user)
@@ -298,10 +300,9 @@ def enviar_email_spm(request, avaliacao_id):
     nome_instrumento = avaliacao.get_faixa_display()
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject=f"{nome_instrumento} — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

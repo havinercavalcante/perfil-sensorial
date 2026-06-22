@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,6 +9,8 @@ from ..models import Paciente, Avaliacao, Resposta
 from ..data.data import (SECOES, PERGUNTAS, OPCOES, QUADRANTE, QUADRANTES_CONFIG, SECOES_CONFIG,
                     calcular_pontuacao, classificar)
 from ..services import notificar_terapeuta, classe_css
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 TOTAL_PAGINAS = len(SECOES)
 
@@ -537,7 +540,6 @@ def laudo_sensorial(request, avaliacao_id):
 
 @login_required
 def enviar_email_link(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.template.loader import render_to_string
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(Avaliacao, uuid=avaliacao_id, paciente__medico=request.user)
@@ -555,10 +557,9 @@ def enviar_email_link(request, avaliacao_id):
         "paciente": paciente, "link": link,
     })
     try:
-        send_mail(
+        enviar_email.delay(
             subject="Questionário IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

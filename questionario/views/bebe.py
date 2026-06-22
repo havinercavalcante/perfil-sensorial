@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -16,6 +17,8 @@ from ..data.data_bebe import (
     classificar_bebe,
 )
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 
 @login_required
@@ -248,7 +251,6 @@ def salvar_observacoes_bebe(request, avaliacao_id):
 
 @login_required
 def enviar_email_bebe(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.http import JsonResponse
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoBebe, uuid=avaliacao_id, paciente__medico=request.user)
@@ -264,10 +266,9 @@ def enviar_email_bebe(request, avaliacao_id):
     link = request.build_absolute_uri(f"/bebe/publico/{avaliacao.token}/1/")
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="Perfil Sensorial Bebê — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário no link: {link}",
-            from_email=None,
             recipient_list=[email_dest],
             html_message=html,
             fail_silently=False,

@@ -23,6 +23,8 @@
 
   /* ── Cards de escolha de questionário ── */
   .escolha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: stretch; }
+  /* ── Grid do modal Nova Anamnese ── */
+  .anamnese-tipo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-bottom: .5rem; }
   .escolha-card {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     gap: .45rem; text-align: center;
@@ -145,6 +147,12 @@
     .td-faixa + td { flex: 1 1 auto; text-align: center; }
     .table-scores td:not(:nth-child(1)):not(.acoes-td) { display: none; }
     .btn-wa, .btn-email, .btn-copy, .btn-resultado, .btn-ver-respostas { padding: .32rem .55rem; }
+    /* dropdown de documentos: evita overflow lateral */
+    .dropdown-proc-menu { right: auto; left: 0; width: max-content; max-width: calc(100vw - 1.5rem); min-width: unset; }
+    /* modal Nova Anamnese: coluna única */
+    .anamnese-tipo-grid { grid-template-columns: 1fr; }
+    .anamnese-tipo-grid a { grid-column: auto !important; }
+    #modalNovoAnamnese .modal-box { padding: 1.25rem; }
   }
 
   /* ── Highlight de avaliação vinda de âncora ── */
@@ -2010,6 +2018,158 @@
 </div>
 {% endif %}
 
+{% if avaliacoes_ebai %}
+<div class="card">
+  <div class="card-title" style="color:#E67E22;"><i data-lucide="utensils" style="width:18px;height:18px;"></i> EBAI — Escala Brasileira de Alimentação Infantil</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Escore Bruto</th><th>Escore T</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_ebai %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_bruto is not None %}{{ av.obj.pont_bruto }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.escore_t is not None %}{{ av.obj.escore_t }}{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'ebai_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'ebai_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_ebai' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'EBAI')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'ebai_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_seps %}
+<div class="card">
+  <div class="card-title" style="color:#8E44AD;"><i data-lucide="utensils" style="width:18px;height:18px;"></i> SEPS — Escala de Problemas Sensoriais na Alimentação</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_seps %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'seps_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'seps_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_seps' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'SEPS')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'seps_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_eca %}
+<div class="card">
+  <div class="card-title" style="color:#27AE60;"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> ECA — Escala de Avaliação do Comportamento Alimentar</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_eca %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'eca_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'eca_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_eca' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'ECA')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'eca_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacoes_tod %}
+<div class="card">
+  <div class="card-title" style="color:#C0392B;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> TOD — Escala de Comportamentos Disruptivos</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Total</th><th>Itens corte+</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_tod %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}{% else %}—{% endif %}</td>
+      <td>{% if av.obj.itens_corte_positivos is not None %}{{ av.obj.itens_corte_positivos }}/8{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída
+        {% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'tod_resultado' av.obj.uuid %}" class="btn-resultado"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span></a>
+        <a href="{% url 'tod_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem;background:#39abcb;"><i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span></a>
+        {% else %}
+        {% if av.link_publico %}
+        <button type="button" class="btn-copy" onclick="copiarLink(this, '{{ av.link_publico }}')"><i data-lucide="copy" style="width:14px;height:14px;"></i><span class="btn-txt"> Copiar link</span></button>
+        {% if paciente.email_responsavel %}
+        <button type="button" class="btn-email" style="margin-left:.3rem;" onclick="enviarEmail('{% url 'enviar_email_tod' av.obj.uuid %}', this)"><i data-lucide="mail" style="width:14px;height:14px;"></i><span class="btn-txt"> E-mail</span></button>
+        {% endif %}
+        {% if paciente.telefone %}
+        <button type="button" class="btn-wa" style="margin-left:.3rem;" onclick="abrirWhatsApp('{{ paciente.telefone }}', '{{ av.link_publico }}', 'TOD')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg><span class="btn-txt">WhatsApp</span></button>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;" onclick="abrirModalDeletarGenerico('{% url 'tod_deletar' av.obj.uuid %}', this)"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
 {% if avaliacoes_epds %}
 <div class="card">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="heart" style="width:18px;height:18px;"></i> EPDS — Depressão Pós-Parto de Edinburgh</div>
@@ -3561,6 +3721,35 @@
         <span class="ec-desc">Avaliação escolar pelo professor</span>
       </button>
       {% endif %}
+      {# ── Alimentação Infantil ──────────────────────────────────── #}
+      {% if "ebai" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('ebai')">
+        <span class="ec-icon"><i data-lucide="utensils" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">EBAI — Alimentação Infantil</span>
+        <span class="ec-desc">Escala Brasileira, 14 itens</span>
+      </button>
+      {% endif %}
+      {% if "seps" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('seps')">
+        <span class="ec-icon"><i data-lucide="utensils" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SEPS — Problemas Sensoriais</span>
+        <span class="ec-desc">Alimentação sensorial, 22 itens</span>
+      </button>
+      {% endif %}
+      {% if "eca" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('eca')">
+        <span class="ec-icon"><i data-lucide="clipboard-list" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">ECA — Comportamento Alimentar</span>
+        <span class="ec-desc">Avaliação comportamento, 51 itens</span>
+      </button>
+      {% endif %}
+      {% if "tod" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('tod')">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">TOD — Comportamentos Disruptivos</span>
+        <span class="ec-desc">Escala disruptiva, 45 itens</span>
+      </button>
+      {% endif %}
       {% if not modulos_liberados %}
       <p style="grid-column:1/-1;color:var(--text-muted);font-size:.88rem;text-align:center;padding:1rem 0;">
         Nenhum módulo disponível no seu plano. Entre em contato para liberar acesso.
@@ -3648,7 +3837,7 @@
   <div class="modal-box" style="max-width:520px;">
     <h3 style="margin:0 0 .3rem;">Nova Anamnese</h3>
     <p class="modal-sub">Escolha o modelo mais adequado para este paciente:</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.5rem;">
+    <div class="anamnese-tipo-grid">
       <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_adulto' %}" style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
         <span style="width:32px;height:32px;border-radius:8px;background:#e0edff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="user" style="width:16px;height:16px;color:#3E73D1;"></i></span>
         <span><span style="display:block;line-height:1.2;">Adulto</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Geral · saúde mental</span></span>
@@ -3665,9 +3854,13 @@
         <span style="width:32px;height:32px;border-radius:8px;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="zap" style="width:16px;height:16px;color:#dc2626;"></i></span>
         <span><span style="display:block;line-height:1.2;">TDAH</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Atenção · hiperatividade</span></span>
       </a>
-      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_casal' %}" style="grid-column:1/-1;display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_casal' %}" style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
         <span style="width:32px;height:32px;border-radius:8px;background:#fce7f3;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="heart" style="width:16px;height:16px;color:#db2777;"></i></span>
         <span><span style="display:block;line-height:1.2;">Casal</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">Relacionamento · comunicação · conflito</span></span>
+      </a>
+      <a href="{% url 'novo_procedimento' paciente.uuid 'anamnese_seletividade_alimentar' %}" style="grid-column:1/-1;display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;border:1.5px solid var(--border);text-decoration:none;color:var(--text);font-weight:600;font-size:.85rem;transition:border-color .2s,background .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='#f0f5ff';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='';this.style.color='var(--text)'">
+        <span style="width:32px;height:32px;border-radius:8px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i data-lucide="utensils" style="width:16px;height:16px;color:#059669;"></i></span>
+        <span><span style="display:block;line-height:1.2;">Seletividade Alimentar</span><span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">EBAI · SEPS · comportamento alimentar</span></span>
       </a>
     </div>
     <div style="display:flex;justify-content:flex-end;">
@@ -3778,6 +3971,10 @@
   const urlChecklistDislexia    = "{% url 'nova_avaliacao_checklist_dislexia' paciente.uuid %}";
   const urlProtDislexiaProf     = "{% url 'nova_avaliacao_prot_dislexia_prof' paciente.uuid %}";
   const urlInventarioDislexia   = "{% url 'nova_avaliacao_inventario_dislexia' paciente.uuid %}";
+  const urlEBAI                 = "{% url 'nova_avaliacao_ebai' paciente.uuid %}";
+  const urlSEPS                 = "{% url 'nova_avaliacao_seps' paciente.uuid %}";
+  const urlECA                  = "{% url 'nova_avaliacao_eca' paciente.uuid %}";
+  const urlTOD                  = "{% url 'nova_avaliacao_tod' paciente.uuid %}";
 
   function avisarEmBreve(nome) {
     fecharModalEscolha();
@@ -3858,6 +4055,10 @@
     else if (tipo === 'checklist_dislexia')   { url = urlChecklistDislexia;  label = 'Checklist Dislexia'; }
     else if (tipo === 'prot_dislexia_prof')   { url = urlProtDislexiaProf;   label = 'Protocolo Dislexia'; }
     else if (tipo === 'inventario_dislexia')  { url = urlInventarioDislexia; label = 'Inventário Disléxicos'; }
+    else if (tipo === 'ebai')                 { url = urlEBAI;               label = 'EBAI'; }
+    else if (tipo === 'seps')                 { url = urlSEPS;               label = 'SEPS'; }
+    else if (tipo === 'eca')                  { url = urlECA;                label = 'ECA'; }
+    else if (tipo === 'tod')                  { url = urlTOD;                label = 'TOD'; }
     else return;
     fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
       .then(r => r.json())

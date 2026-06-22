@@ -1,3 +1,4 @@
+from django.conf import settings
 import uuid
 
 from django.shortcuts import render, redirect
@@ -7,16 +8,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.tokens import default_token_generator
+from django.templatetags.static import static
 from django.utils import timezone
 
 from ..models import PerfilMedico, Especialidade, HistoricoLogin, ModuloAvaliacao, Indicacao, _parse_dispositivo, MODULOS_POR_ESPECIALIDADE, get_modulos_para_plano
+from ..tasks import enviar_email
 
 
 def _get_ip(request):
@@ -44,7 +43,7 @@ def login_view(request):
 
             login(request, user)
 
-            perfil.session_key = request.session.session_key
+            perfil.session_key = request.session.session_key or ""
             perfil.save(update_fields=["session_key"])
 
             HistoricoLogin.objects.create(
@@ -143,10 +142,12 @@ def registrar_view(request):
             first_name=partes[0], last_name=partes[1] if len(partes) > 1 else "",
             is_active=False,
         )
+        token_confirmacao = uuid.uuid4()
         perfil = PerfilMedico.objects.create(
             user=user,
             plano=plano,
             trial_inicio=timezone.now() if plano == "trial" else None,
+            token_confirmacao=token_confirmacao,
         )
         modulos_trial = ModuloAvaliacao.objects.filter(codigo__in=PerfilMedico.MODULOS_TRIAL)
         perfil.modulos_liberados.set(modulos_trial)
@@ -164,24 +165,26 @@ def registrar_view(request):
                 if indicador_perfil:
                     Indicacao.objects.create(indicador=indicador_perfil.user, indicado=user)
 
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        link = request.build_absolute_uri(f"/confirmar-email/{uid}/{token}/")
+        link = request.build_absolute_uri(f"/confirmar-email/{token_confirmacao}/")
         html = render_to_string("questionario/emails/email_confirmacao_conta.html", {
             "nome": user.first_name,
             "link": link,
         })
-        send_mail(
+        enviar_email.delay(
             subject="IntegraMente — Confirme seu e-mail",
             message=f"Olá, {user.first_name}!\n\nConfirme seu e-mail acessando: {link}",
-            from_email=None,
             recipient_list=[email],
             html_message=html,
             fail_silently=True,
         )
+        request.session["confirmacao_email_destino"] = email
+        return redirect("/registrar/?confirmacao=enviada")
+
+    if request.GET.get("confirmacao") == "enviada":
+        email_destino = request.session.pop("confirmacao_email_destino", "")
         return render(request, "questionario/auth/registrar.html", {
             "aguardando_confirmacao": True,
-            "email_destino": email,
+            "email_destino": email_destino,
         })
 
     plano_inicial = request.GET.get("plano", "trial").strip()
@@ -193,28 +196,19 @@ def registrar_view(request):
     })
 
 
-def confirmar_email_view(request, uidb64, token):
+def confirmar_email_view(request, token):
     try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+        perfil = PerfilMedico.objects.select_related("user").get(token_confirmacao=token)
+    except PerfilMedico.DoesNotExist:
+        return render(request, "questionario/auth/registrar.html", {"link_invalido": True})
 
-    if user and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-        perfil, _ = PerfilMedico.objects.get_or_create(user=user)
-        if perfil.session_key:
-            Session.objects.filter(session_key=perfil.session_key).delete()
-        login(request, user)
-        request.session.save()
-        perfil.session_key = request.session.session_key or ""
-        perfil.save(update_fields=["session_key"])
-        return redirect("/completar-cadastro/?novo=1")
+    user = perfil.user
+    user.is_active = True
+    user.save(update_fields=["is_active"])
 
-    return render(request, "questionario/auth/registrar.html", {
-        "link_invalido": True,
-    })
+    # Guarda o ID do usuário na sessão para o completar_cadastro fazer o login
+    request.session["novo_usuario_id"] = user.pk
+    return redirect("completar_cadastro")
 
 
 @login_required
@@ -264,14 +258,13 @@ def enviar_indicacao_email(request):
         "nome_indicador": nome_indicador,
         "link": link_indicacao,
     })
-    send_mail(
+    enviar_email.delay(
         subject=f"{nome_indicador} te convidou para experimentar o IntegraMente",
         message=(
             f"{nome_indicador} usa o IntegraMente para aplicar avaliações clínicas "
             f"com pontuação automática e quer te apresentar a plataforma.\n\n"
             f"Teste grátis por 7 dias: {link_indicacao}"
         ),
-        from_email=None,
         recipient_list=[destino],
         html_message=html,
         fail_silently=True,
@@ -332,9 +325,21 @@ def meu_perfil(request):
     })
 
 
-@login_required
 def completar_cadastro(request):
-    perfil, _ = PerfilMedico.objects.get_or_create(user=request.user)
+    novo_usuario_id = request.session.get("novo_usuario_id")
+
+    if not request.user.is_authenticated and not novo_usuario_id:
+        return redirect("login")
+
+    if novo_usuario_id:
+        try:
+            usuario = User.objects.get(pk=novo_usuario_id, is_active=True)
+        except User.DoesNotExist:
+            return redirect("login")
+    else:
+        usuario = request.user
+
+    perfil, _ = PerfilMedico.objects.get_or_create(user=usuario)
     especialidades = Especialidade.objects.all().order_by("nome")
 
     if request.method == "POST":
@@ -360,12 +365,12 @@ def completar_cadastro(request):
 
         perfil.registro_profissional = registro_profissional
         perfil.telefone = telefone
-        perfil.save(update_fields=["registro_profissional", "telefone"])
+        perfil.token_confirmacao = None
+        perfil.save(update_fields=["registro_profissional", "telefone", "token_confirmacao"])
 
         especialidades_objs = Especialidade.objects.filter(id__in=especialidades_ids)
         perfil.especialidades.set(especialidades_objs)
 
-        # Trial: atualiza módulos conforme a(s) especialidade(s) escolhida(s)
         if perfil.plano == "trial":
             codigos = get_modulos_para_plano(
                 [esp.codigo for esp in especialidades_objs], "trial"
@@ -373,7 +378,14 @@ def completar_cadastro(request):
             if codigos:
                 perfil.modulos_liberados.set(ModuloAvaliacao.objects.filter(codigo__in=codigos))
 
-        return redirect("index")
+        request.session.pop("novo_usuario_id", None)
+        if not request.user.is_authenticated or request.user.pk != usuario.pk:
+            from django.contrib.auth import logout as _logout
+            _logout(request)
+            login(request, usuario, backend="django.contrib.auth.backends.ModelBackend")
+
+        from questionario.views.pacientes import index as _index_view
+        return _index_view(request)
 
     especialidades_selecionadas = list(perfil.especialidades.values_list("id", flat=True))
     return render(request, "questionario/auth/completar_cadastro.html", {

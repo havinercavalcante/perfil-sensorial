@@ -1,0 +1,208 @@
+{% extends "questionario/base.html" %}
+{% block title %}EBAI — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --mod: #E67E22; --mod-dark: #C0581A; }
+
+  .progress-info { display:flex; justify-content:space-between; font-size:.82rem; color:var(--text-muted); margin-bottom:.4rem; }
+  .steps-bar { display:flex; gap:3px; margin-top:.6rem; }
+  .step-dot { height:6px; flex:1; border-radius:3px; background:var(--border); }
+  .step-dot.done   { background:var(--mod); }
+  .step-dot.active { background:color-mix(in srgb, var(--mod) 50%, #fff); }
+
+  .secao-header {
+    background:linear-gradient(135deg,var(--mod-dark),var(--mod));
+    color:#fff; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.2rem;
+  }
+  .secao-header h2 { font-size:1.05rem; font-weight:700; margin-bottom:.2rem; }
+  .secao-header p  { font-size:.82rem; opacity:.8; margin:0; }
+
+  .instrucoes {
+    background:#FFF7ED; border:1px solid #FDBA74;
+    border-radius:10px; padding:.75rem 1rem; margin-bottom:1.2rem;
+    font-size:.83rem; color:#7c2d12;
+  }
+
+  .pergunta-card {
+    border:1.5px solid var(--border); border-radius:12px;
+    padding:1rem 1.2rem 1rem; margin-bottom:.85rem; background:#fff;
+    transition:border-color .2s, background .2s;
+  }
+  .pergunta-card.respondida { border-color:var(--mod); background:color-mix(in srgb,var(--mod) 4%,#fff); }
+  .pergunta-card.faltando   { border-color:#EF4444; background:#FFF5F5; }
+  .pergunta-num  { font-size:.72rem; font-weight:700; color:var(--text-muted); margin-bottom:.3rem; }
+  .pergunta-texto { font-size:.91rem; color:var(--text); line-height:1.55; margin-bottom:.9rem; }
+
+  /* Escala diferencial semântica 1-7 */
+  .escala-wrapper { display:flex; flex-direction:column; gap:.4rem; }
+  .escala-anchors {
+    display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem;
+  }
+  .anchor-esq, .anchor-dir {
+    font-size:.72rem; color:var(--text-muted); line-height:1.35;
+    max-width:45%; word-break:break-word;
+  }
+  .anchor-esq { text-align:left; }
+  .anchor-dir { text-align:right; }
+  .escala-circulos {
+    display:flex; justify-content:space-between; gap:.2rem;
+  }
+  .escala-col { display:flex; flex-direction:column; align-items:center; flex:1; }
+  .escala-col label {
+    width:36px; height:36px; border-radius:50%;
+    border:1.5px solid var(--border); background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:.8rem; font-weight:700; color:var(--text-muted);
+    transition:all .15s; user-select:none;
+  }
+  .escala-col label:hover { border-color:var(--mod); background:color-mix(in srgb,var(--mod) 12%,#fff); color:var(--mod); }
+  .escala-col label.selected { border-color:var(--mod); background:var(--mod); color:#fff; }
+  .escala-col input { display:none; }
+
+  .alerta-incompleto {
+    display:none; background:#FEF2F2; border:1.5px solid #FECACA;
+    border-radius:10px; padding:.85rem 1rem; margin-bottom:1rem; font-size:.85rem; color:#7f1d1d;
+  }
+  .alerta-incompleto.visivel { display:block; }
+  .readonly-badge {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px;
+    padding:.4rem .85rem; font-size:.8rem; color:#166534; margin-bottom:1rem;
+  }
+  .nav-footer {
+    display:flex; justify-content:flex-end; align-items:center;
+    margin-top:1.5rem; flex-wrap:wrap; gap:.5rem;
+  }
+
+  @media (max-width:480px) {
+    .pergunta-card { padding:.85rem .75rem; }
+    .pergunta-texto { font-size:.87rem; }
+    .escala-col label { width:32px; height:32px; font-size:.75rem; }
+    .anchor-esq, .anchor-dir { font-size:.68rem; }
+  }
+  @media (max-width:360px) {
+    .escala-col label { width:28px; height:28px; font-size:.7rem; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+{% if not publico %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:1.2rem;">
+  <div class="progress-info">
+    <span>EBAI — 14 itens</span>
+    <span>{% if readonly %}Visualização{% else %}Responda todos os itens{% endif %}</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%; background:var(--mod);"></div>
+  </div>
+</div>
+
+<div class="secao-header">
+  <h2>EBAI — Escala Brasileira de Alimentação Infantil</h2>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; Responda os 14 itens abaixo</p>
+</div>
+
+<div class="instrucoes">
+  <strong>Como responder:</strong> Para cada pergunta, escolha um número de <strong>1 a 7</strong> que melhor descreve a situação da sua criança. O número 1 representa o extremo indicado à esquerda e o 7 representa o extremo indicado à direita.
+</div>
+
+{% if readonly %}
+<div class="readonly-badge"><i data-lucide="eye" style="width:14px;height:14px;"></i> Visualização — respostas salvas</div>
+{% endif %}
+
+<div class="alerta-incompleto {% if itens_faltando %}visivel{% endif %}" id="alerta-incompleto">
+  <strong>Atenção:</strong> {{ itens_faltando|length }} item(ns) sem resposta. Você pode voltar e preencher, ou continuar assim mesmo.<br><br>
+  <button type="button" class="btn btn-secondary" style="font-size:.8rem;padding:.3rem .75rem;" onclick="confirmarIncompleto()">Continuar mesmo assim</button>
+</div>
+
+<form method="post" id="form-avaliacao">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar_incompleto" id="confirmar-incompleto" value="0">
+
+  {% for item in itens %}
+  <div class="pergunta-card {% if item.resposta_salva is not None %}respondida{% endif %} {% if item.numero in itens_faltando %}faltando{% endif %}"
+       id="card-{{ item.numero }}">
+    <div class="pergunta-num">Item {{ item.numero }}</div>
+    <div class="pergunta-texto">{{ item.texto }}</div>
+
+    <div class="escala-wrapper">
+      <div class="escala-anchors">
+        <span class="anchor-esq">{{ item.polo_esq }}</span>
+        <span class="anchor-dir">{{ item.polo_dir }}</span>
+      </div>
+      <div class="escala-circulos">
+        {% for v in ebai_escala %}
+        <div class="escala-col">
+          <label id="label-{{ item.numero }}-{{ v }}"
+                 class="{% if item.resposta_salva == v %}selected{% endif %}">
+            <input type="radio" name="item_{{ item.numero }}" value="{{ v }}"
+                   {% if item.resposta_salva == v %}checked{% endif %}
+                   {% if readonly %}disabled{% endif %}
+                   onchange="marcarRespondida({{ item.numero }}, this, {{ v }})">
+            {{ v }}
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div></div>
+    <div style="display:flex;gap:.6rem;">
+      {% if not readonly %}
+        {% if not publico %}
+        <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+        {% endif %}
+        <button type="submit" class="btn btn-primary" style="background:var(--mod);border-color:var(--mod);">
+          <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação
+        </button>
+      {% else %}
+        <a href="{% url 'ebai_resultado' avaliacao.uuid %}" class="btn btn-primary" style="background:var(--mod);border-color:var(--mod);">
+          <i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Ver Resultado
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function marcarRespondida(numero, input, val) {
+  const card = document.getElementById('card-' + numero);
+  card.classList.add('respondida');
+  card.classList.remove('faltando');
+  card.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+  document.getElementById('label-' + numero + '-' + val).classList.add('selected');
+}
+
+function confirmarIncompleto() {
+  document.getElementById('confirmar-incompleto').value = '1';
+  document.getElementById('form-avaliacao').submit();
+}
+
+// Restaurar estado visual dos radio já marcados ao carregar
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => {
+    const label = r.closest('label');
+    if (label) label.classList.add('selected');
+  });
+  {% if itens_faltando %}
+  var primeiro = document.querySelector('.faltando');
+  if (primeiro) primeiro.scrollIntoView({ behavior:'smooth', block:'center' });
+  {% endif %}
+});
+</script>
+{% endblock %}

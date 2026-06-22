@@ -1,3 +1,4 @@
+from django.conf import settings
 import json
 import uuid
 
@@ -10,6 +11,8 @@ from django.urls import reverse
 from ..models import Paciente, AvaliacaoBDI, RespostaBDI
 from ..data.data_bdi import BDI_ITENS, BDI_SUBESCALAS, BDI_CORTE
 from ..services import notificar_terapeuta
+from ..tasks import enviar_email
+from django.templatetags.static import static
 
 # O BDI tem 1 "página" — todos os 21 itens de uma vez (com opções por item)
 BDI_PAGINAS = [
@@ -231,7 +234,6 @@ def salvar_observacoes_bdi(request, avaliacao_id):
 
 @login_required
 def enviar_email_bdi(request, avaliacao_id):
-    from django.core.mail import send_mail
     from django.utils import timezone as tz
     avaliacao = get_object_or_404(AvaliacaoBDI, uuid=avaliacao_id, paciente__medico=request.user)
     paciente = avaliacao.paciente
@@ -249,10 +251,10 @@ def enviar_email_bdi(request, avaliacao_id):
     link = request.build_absolute_uri(reverse("bdi_publico", kwargs={"token": avaliacao.token, "pagina": 1}))
     html = render_to_string("questionario/emails/email_link_avaliacao.html", {"paciente": paciente, "link": link})
     try:
-        send_mail(
+        enviar_email.delay(
             subject="BDI — IntegraMente",
             message=f"Olá, {paciente.responsavel}!\n\nResponda o questionário BDI no link: {link}",
-            from_email=None, recipient_list=[email_dest], html_message=html, fail_silently=False,
+            recipient_list=[email_dest], html_message=html, fail_silently=False,
         )
     except Exception as exc:
         if is_ajax:
