@@ -89,6 +89,10 @@ _EVAL_NOMES = {
     'avaliacoes_risco_suicidio':         'Risco Suicídio',
     'avaliacoes_agorafobia':             'Agorafobia',
     'avaliacoes_panico':                 'Pânico',
+    'avaliacoes_ebai':                   'EBAI',
+    'avaliacoes_seps':                   'SEPS',
+    'avaliacoes_eca':                    'ECA',
+    'avaliacoes_tod':                    'TOD',
     'avaliacoes_recordatorio':           'Recordatório',
     'avaliacoes_anamnese':               'Anamnese',
 }
