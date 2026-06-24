@@ -17,7 +17,7 @@ from ..models import (
     AvaliacaoHabitosOrais, AvaliacaoVozInfantil, AvaliacaoProcessamentoAuditivo,
     AvaliacaoIDV10, AvaliacaoDesenvolvimento, AvaliacaoSono,
     AvaliacaoHabilidadesAdaptativas, AvaliacaoComportamentoFuncional,
-    AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica,
+    AvaliacaoRastreioCognitivo, AvaliacaoPsicopedagogica, AvaliacaoProade,
     # Lote 2 — Psicologia
     AvaliacaoBDI, AvaliacaoBAI, AvaliacaoDASS21, AvaliacaoHAD, AvaliacaoBSL23,
     AvaliacaoAQ10Adulto, AvaliacaoAQ10Child, AvaliacaoDepEmocional, AvaliacaoSCQ,
@@ -410,6 +410,20 @@ def _config_psicopedagogica(av):
     return "Avaliação Psicopedagógica", "Rastreio psicopedagógico — Psicopedagogia", secoes
 
 
+def _config_proade(av):
+    campos = [
+        ("pont_linguagem_oral", "Linguagem Oral",         12),
+        ("pont_leitura",        "Leitura",                12),
+        ("pont_escrita",        "Escrita",                12),
+        ("pont_matematica",     "Matemática",             12),
+        ("pont_psicossocial",   "Aspectos Psicossociais", 12),
+        ("pont_total",          "Total Geral",            60),
+    ]
+    secoes = _extrair_secoes(av, campos)
+    ano = av.get_ano_escolar_display()
+    return f"PROADE — Avaliação do Desempenho Escolar ({ano})", "Baseado nos descritores da BNCC", secoes
+
+
 # ─── Lote 2: Psicologia ───────────────────────────────────────────────────────
 
 def _config_k10(av):
@@ -686,6 +700,7 @@ LAUDO_MAP = {
     "comportamento":(AvaliacaoComportamentoFuncional, _config_comportamento,  "comportamento_resultado"),
     "cognitivo":    (AvaliacaoRastreioCognitivo,      _config_cognitivo,      "cognitivo_resultado"),
     "psicopedagogica":(AvaliacaoPsicopedagogica,      _config_psicopedagogica,"psicopedagogica_resultado"),
+    "proade":         (AvaliacaoProade,               _config_proade,         "proade_resultado"),
     # Lote 2 — Psicologia
     "k10": (AvaliacaoK10, _config_k10, "k10_resultado"),
     "ucla": (AvaliacaoUCLA, _config_ucla, "ucla_resultado"),

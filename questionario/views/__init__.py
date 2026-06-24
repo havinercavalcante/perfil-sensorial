@@ -30,6 +30,7 @@ from .habilidades_adaptativas import *
 from .comportamento_funcional import *
 from .cognitivo import *
 from .psicopedagogica import *
+from .proade import *
 # ── Módulos de Psicologia ──────────────────────────────────────────────────
 from .k10 import *
 from .ucla import *

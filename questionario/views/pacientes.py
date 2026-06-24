@@ -332,8 +332,12 @@ def novo_paciente(request):
         responsavel = request.POST.get("responsavel", "").strip()
         email = request.POST.get("email_responsavel", "").strip()
         telefone = request.POST.get("telefone", "").strip()
+        tipo_paciente = request.POST.get("tipo_paciente", "crianca")
 
-        if not nome or not data_nascimento or not responsavel:
+        if tipo_paciente == "adulto" and not responsavel:
+            responsavel = nome
+
+        if not nome or not data_nascimento or (tipo_paciente != "adulto" and not responsavel):
             messages.error(request, "Preencha os campos obrigatórios.")
             return render(request, "questionario/pacientes/novo_paciente.html", {"post": request.POST})
 
@@ -428,6 +432,7 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_comportamento": build_lista_com_link(paciente.avaliacoes_comportamento_funcional.all(), request, "comportamento_publico"),
         "avaliacoes_cognitivo": build_lista_com_link(paciente.avaliacoes_cognitivo.all(), request, "cognitivo_publico"),
         "avaliacoes_psicopedagogica": build_lista_com_link(paciente.avaliacoes_psicopedagogica.all(), request, "psicopedagogica_publico"),
+        "avaliacoes_proade": [{"obj": av} for av in paciente.avaliacoes_proade.all()],
         # Novas escalas
         "avaliacoes_k10": build_lista_com_link(paciente.avaliacoes_k10.all(), request, "k10_publico"),
         "avaliacoes_ucla": build_lista_com_link(paciente.avaliacoes_ucla.all(), request, "ucla_publico"),

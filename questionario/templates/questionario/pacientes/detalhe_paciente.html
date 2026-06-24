@@ -1491,6 +1491,44 @@
 </div>
 {% endif %}
 
+{% if avaliacoes_proade %}
+<div class="card">
+  <div class="card-title" style="color:#1E3F7A;"><i data-lucide="graduation-cap" style="width:18px;height:18px;"></i> PROADE — Avaliação do Desempenho Escolar</div>
+  <div class="table-responsive"><table class="avaliacoes-table">
+    <thead><tr><th>Data</th><th>Ano</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for av in avaliacoes_proade %}
+    <tr id="avaliacao-{{ av.obj.uuid }}">
+      <td>{{ av.obj.data|date:"d/m/Y" }}</td>
+      <td>{{ av.obj.get_ano_escolar_display }}</td>
+      <td>{% if av.obj.pont_total is not None %}{{ av.obj.pont_total }}/60{% else %}—{% endif %}</td>
+      <td><span class="badge badge-{{ av.obj.status|cut:'_'|lower }}">
+        {% if av.obj.status == "concluida" %}<i data-lucide="check-circle" style="width:13px;height:13px;vertical-align:middle;"></i> Concluída{% else %}<i data-lucide="clock" style="width:13px;height:13px;vertical-align:middle;"></i> Em andamento{% endif %}
+      </span></td>
+      <td class="acoes-td">
+        {% if av.obj.status == "concluida" %}
+        <a href="{% url 'proade_resultado' av.obj.uuid %}" class="btn-resultado">
+          <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i><span class="btn-txt"> Resultado</span>
+        </a>
+        <a href="{% url 'proade_visualizar' av.obj.uuid 1 %}" class="btn-resultado btn-ver-respostas" style="margin-left:.3rem; background:#39abcb;">
+          <i data-lucide="eye" style="width:14px;height:14px;"></i><span class="btn-txt"> Ver respostas</span>
+        </a>
+        {% else %}
+        <a href="{% url 'proade_form' av.obj.uuid av.obj.pagina_atual %}" class="btn-resultado btn-ver-respostas" style="background:#39abcb;">
+          <i data-lucide="pencil" style="width:14px;height:14px;"></i><span class="btn-txt"> Continuar</span>
+        </a>
+        {% endif %}
+        <button type="button" class="btn-del" style="margin-left:.3rem;"
+                onclick="abrirModalDeletarGenerico('{% url 'proade_deletar' av.obj.uuid %}', this)">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
 
 {% if avaliacoes_k10 %}
 <div class="card">
@@ -3422,6 +3460,13 @@
         <span class="ec-desc">Avaliação de aprendizagem, 5 domínios</span>
       </button>
       {% endif %}
+      {% if "proade" in modulos_liberados %}
+      <button type="button" class="escolha-card psicopedagogica" onclick="criarAvaliacao('proade')">
+        <span class="ec-icon"><i data-lucide="graduation-cap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PROADE</span>
+        <span class="ec-desc">Desempenho escolar, 5 áreas, 1º–5º ano</span>
+      </button>
+      {% endif %}
       {# ── Psicologia — novos módulos (link remoto) ─────────────────── #}
       {% if "conners_pais" in modulos_liberados %}
       <button type="button" class="escolha-card sdq" onclick="criarAvaliacao('conners_pais')">
@@ -3928,6 +3973,7 @@
   const urlSono             = "{% url 'nova_avaliacao_sono' paciente.uuid %}";
   const urlCognitivo        = "{% url 'nova_avaliacao_cognitivo' paciente.uuid %}";
   const urlPsicopedagogica  = "{% url 'nova_avaliacao_psicopedagogica' paciente.uuid %}";
+  const urlProade           = "{% url 'nova_avaliacao_proade' paciente.uuid %}";
   const urlK10             = "{% url 'nova_avaliacao_k10' paciente.uuid %}";
   const urlUcla             = "{% url 'nova_avaliacao_ucla' paciente.uuid %}";
   const urlMsibpd             = "{% url 'nova_avaliacao_msi_bpd' paciente.uuid %}";
@@ -4012,6 +4058,7 @@
     else if (tipo === 'sono')            { url = urlSono;            label = 'Sono Infantil'; }
     else if (tipo === 'cognitivo')       { url = urlCognitivo;       label = 'Rastreio Cognitivo'; }
     else if (tipo === 'psicopedagogica') { url = urlPsicopedagogica; label = 'Psicopedagógica'; }
+    else if (tipo === 'proade')          { url = urlProade;          label = 'PROADE'; }
     else if (tipo === 'k10') { url = urlK10; label = 'K-10 — Kessler'; }
     else if (tipo === 'ucla') { url = urlUcla; label = 'UCLA — Solidão'; }
     else if (tipo === 'msi_bpd') { url = urlMsibpd; label = 'MSI-BPD'; }

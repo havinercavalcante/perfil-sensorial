@@ -105,6 +105,7 @@ def registrar_view(request):
     if request.method == "POST":
         nome = request.POST.get("nome", "").strip()
         email = request.POST.get("email", "").strip()
+        telefone = request.POST.get("telefone", "").strip()
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
@@ -114,7 +115,7 @@ def registrar_view(request):
             plano = "trial"
 
         erros = []
-        if not nome or not email or not username or not password:
+        if not nome or not email or not telefone or not username or not password:
             erros.append("Preencha todos os campos obrigatórios.")
         if password != password2:
             erros.append("As senhas não coincidem.")
@@ -148,6 +149,7 @@ def registrar_view(request):
             plano=plano,
             trial_inicio=timezone.now() if plano == "trial" else None,
             token_confirmacao=token_confirmacao,
+            telefone=telefone,
         )
         modulos_trial = ModuloAvaliacao.objects.filter(codigo__in=PerfilMedico.MODULOS_TRIAL)
         perfil.modulos_liberados.set(modulos_trial)
@@ -206,7 +208,6 @@ def confirmar_email_view(request, token):
     user.is_active = True
     user.save(update_fields=["is_active"])
 
-    # Guarda o ID do usuário na sessão para o completar_cadastro fazer o login
     request.session["novo_usuario_id"] = user.pk
     return redirect("completar_cadastro")
 
@@ -343,30 +344,20 @@ def completar_cadastro(request):
     especialidades = Especialidade.objects.all().order_by("nome")
 
     if request.method == "POST":
-        telefone = request.POST.get("telefone", "").strip()
         registro_profissional = request.POST.get("registro_profissional", "").strip()
         especialidades_ids = request.POST.getlist("especialidades")
 
-        erros = {}
-        if not telefone:
-            erros["telefone"] = True
         if not especialidades_ids:
-            erros["especialidade"] = True
-
-        if erros:
             return render(request, "questionario/auth/completar_cadastro.html", {
                 "perfil": perfil,
                 "especialidades": especialidades,
                 "especialidades_selecionadas": especialidades_ids,
-                "erro_telefone": erros.get("telefone"),
-                "erro_especialidade": erros.get("especialidade"),
-                "post": request.POST,
+                "erro_especialidade": True,
             })
 
         perfil.registro_profissional = registro_profissional
-        perfil.telefone = telefone
         perfil.token_confirmacao = None
-        perfil.save(update_fields=["registro_profissional", "telefone", "token_confirmacao"])
+        perfil.save(update_fields=["registro_profissional", "token_confirmacao"])
 
         especialidades_objs = Especialidade.objects.filter(id__in=especialidades_ids)
         perfil.especialidades.set(especialidades_objs)

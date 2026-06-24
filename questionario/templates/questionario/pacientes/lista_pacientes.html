@@ -43,7 +43,10 @@
     <i data-lucide="users" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>
     {% if filtro == "andamento" %}Avaliações em Andamento{% else %}Pacientes Cadastrados{% endif %}
   </h2>
-  <a href="{% url 'gerar_link' %}" class="btn btn-primary">+ Nova Avaliação</a>
+  <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+    <a href="{% url 'novo_paciente' %}" class="btn btn-secondary">+ Novo Paciente</a>
+    <a href="{% url 'gerar_link' %}" class="btn btn-primary">+ Nova Avaliação</a>
+  </div>
 </div>
 
 {% if filtro == "andamento" %}

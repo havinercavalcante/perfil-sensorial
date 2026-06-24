@@ -80,6 +80,7 @@ class ModuloAvaliacao(models.Model):
         ("audit", "AUDIT — Uso de Álcool"),
         ("bis11", "BIS-11 — Impulsividade de Barratt"),
         ("iar", "IAR — Ansiedade Infantil"),
+        ("proade", "PROADE — Avaliação do Desempenho Escolar"),
         ("pas", "PAS — Ansiedade Pré-Escolar"),
         ("cdi", "CDI — Depressão Infantil"),
         ("hama", "HAM-A — Ansiedade de Hamilton"),
@@ -207,10 +208,11 @@ MODULOS_POR_ESPECIALIDADE = {
         "iar", "pas", "cdi",
     ],
     "psicopedagogo": [
-        "psicopedagogica", "sdq", "snap_iv",
+        "psicopedagogica", "proade", "sdq", "snap_iv",
         "conners_pais", "conners_prof", "etdah_pais", "etdah_prof",
         "quest_dislexia", "checklist_dislexia",
         "prot_dislexia_prof", "inventario_dislexia",
+        "iar",
     ],
     "pediatra": [
         "desenvolvimento", "sono_infantil", "mchat", "snap_iv",
@@ -1061,6 +1063,7 @@ class LinkConvite(models.Model):
         ("qmpi",                    "QMPI — Memória Prospectiva Infantil"),
         # ── Psicopedagogia ───────────────────────────────────────────────
         ("psicopedagogica",         "Avaliação Psicopedagógica"),
+        ("proade",                  "PROADE — Avaliação do Desempenho Escolar"),
         ("quest_dislexia",          "Questionário de Dislexia (Pais)"),
         ("checklist_dislexia",      "Checklist de Dislexia"),
         ("prot_dislexia_prof",      "Protocolo Dislexia — Avaliação Escolar"),
@@ -1934,6 +1937,53 @@ class RespostaPsicopedagogica(models.Model):
     class Meta:
         unique_together = ("avaliacao", "dominio", "numero_item")
         ordering = ["dominio", "numero_item"]
+
+
+# ── PROADE — Protocolo de Avaliação do Desempenho Escolar ────────────────────
+
+class AvaliacaoProade(models.Model):
+    """PROADE — Protocolo de Avaliação do Desempenho Escolar.
+    Checklist observacional aplicado pelo profissional.
+    5 áreas × 6 itens (Sim/Parcialmente/Não) por ano escolar (1º–5º).
+    """
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    ANO_CHOICES = [(i, f"{i}º ano") for i in range(1, 6)]
+
+    uuid             = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente         = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_proade")
+    data             = models.DateField(default=timezone.now)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    ano_escolar      = models.IntegerField("Ano escolar", choices=ANO_CHOICES, default=1)
+    pagina_atual     = models.IntegerField(default=1)
+
+    pont_linguagem_oral = models.IntegerField("Linguagem Oral",         null=True, blank=True)
+    pont_leitura        = models.IntegerField("Leitura",                null=True, blank=True)
+    pont_escrita        = models.IntegerField("Escrita",                null=True, blank=True)
+    pont_matematica     = models.IntegerField("Matemática",             null=True, blank=True)
+    pont_psicossocial   = models.IntegerField("Aspectos Psicossociais", null=True, blank=True)
+    pont_total          = models.IntegerField("Total",                  null=True, blank=True)
+
+    observacoes      = models.TextField(blank=True, default="")
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "PROADE — Avaliação do Desempenho Escolar"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"PROADE — {self.paciente.nome} — {self.get_ano_escolar_display()} — {self.data}"
+
+
+class RespostaProade(models.Model):
+    avaliacao    = models.ForeignKey(AvaliacaoProade, on_delete=models.CASCADE, related_name="respostas")
+    area         = models.CharField(max_length=30)
+    numero_item  = models.IntegerField()
+    valor        = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering = ["area", "numero_item"]
 
 
 class HistoricoLogin(models.Model):
@@ -2896,9 +2946,9 @@ MODULOS_POR_PLANO_POR_ESPECIALIDADE = {
         "start": ["quest_dislexia", "checklist_dislexia", "sdq",
                   "psicopedagogica", "snap_iv"],
         "plus":  ["quest_dislexia", "checklist_dislexia", "sdq",
-                  "psicopedagogica", "snap_iv",
+                  "psicopedagogica", "proade", "snap_iv",
                   "conners_pais", "conners_prof", "etdah_pais", "etdah_prof",
-                  "prot_dislexia_prof"],
+                  "prot_dislexia_prof", "iar"],
         "elite": list(dict.fromkeys(MODULOS_POR_ESPECIALIDADE["psicopedagogo"])),
     },
     "pediatra": {

@@ -1,0 +1,191 @@
+{% extends "questionario/base.html" %}
+{% block title %}PROADE — Resultado — {{ paciente.nome }}{% endblock %}
+{% block extra_css %}
+<style>
+  :root { --mod: #3E73D1; }
+  .resultado-header { background: linear-gradient(135deg, #1E3F7A, #3E73D1); color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .resultado-header h1 { font-size:1.2rem; margin-bottom:.3rem; }
+  .area-card { border-radius:10px; padding:1rem 1.2rem; margin-bottom:1rem; border:1.5px solid var(--border); }
+  .area-titulo { font-size:.88rem; font-weight:700; display:flex; align-items:center; gap:.5rem; margin-bottom:.6rem; }
+  .score-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem; }
+  .score-num { font-size:1.5rem; font-weight:800; }
+  .score-max { font-size:.85rem; font-weight:400; opacity:.7; }
+  .class-badge { padding:.2rem .65rem; border-radius:6px; font-size:.75rem; font-weight:700; background:rgba(0,0,0,.08); }
+  .progress-bar-wrap { background:#E5E7EB; border-radius:6px; height:10px; overflow:hidden; }
+  .progress-bar-fill { height:100%; border-radius:6px; transition:width .4s; }
+  .itens-detalhes { margin-top:.75rem; background:#fff; border-radius:8px; padding:.5rem .75rem; border:1px solid rgba(0,0,0,.08); }
+  .item-detalhe { display:flex; justify-content:space-between; align-items:flex-start; gap:.75rem; padding:.5rem 0; border-bottom:1px solid #F3F4F6; font-size:.83rem; color:#1F2937; line-height:1.4; }
+  .item-detalhe:last-child { border-bottom:none; }
+  .item-num-det { min-width:1.4rem; font-weight:700; color:#6B7280; flex-shrink:0; font-size:.78rem; padding-top:.05rem; }
+  .item-texto-det { flex:1; }
+  .item-resp { flex-shrink:0; font-weight:700; padding:.2rem .55rem; border-radius:5px; font-size:.75rem; white-space:nowrap; }
+  .resp-sim     { background:#D1FAE5; color:#065F46; }
+  .resp-parcial { background:#FEF3C7; color:#78350F; }
+  .resp-nao     { background:#FEE2E2; color:#991B1B; }
+  details[open] summary { background:rgba(0,0,0,.1); }
+  details summary::-webkit-details-marker { display:none; }
+  .obs-form textarea { width:100%; min-height:100px; border:1.5px solid var(--border); border-radius:8px; padding:.6rem; font-size:.88rem; resize:vertical; }
+  .total-box { border-radius:12px; padding:1.2rem 1.4rem; margin-bottom:1rem; background:#EFF6FF; border:1.5px solid #BFDBFE; }
+  .legenda-row { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
+  @media print { * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } nav,.btn-back,.no-print { display:none !important; } body { background:#fff; } }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="resultado-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="graduation-cap" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>PROADE — Avaliação do Desempenho Escolar</h1>
+      <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ avaliacao.get_ano_escolar_display }} &nbsp;·&nbsp; {{ avaliacao.data|date:"d \d\e F \d\e Y" }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;" class="no-print">
+      <a href="{% url 'proade_laudo' avaliacao.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <i data-lucide="file-text" style="width:15px;height:15px;"></i> Gerar Laudo
+      </a>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
+        <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Voltar
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Pontuação Total -->
+<div class="total-box">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
+    <div>
+      <div style="font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; opacity:.65; margin-bottom:.2rem;">Pontuação Total</div>
+      <div class="score-num">{{ total }} <span class="score-max">/ {{ max_total }}</span></div>
+    </div>
+    <span class="class-badge" style="font-size:.82rem; padding:.35rem 1rem; background:#BFDBFE; color:#1E3F7A;">{{ classificacao_total }}</span>
+  </div>
+  <div class="progress-bar-wrap" style="margin-top:.75rem;">
+    <div class="progress-bar-fill" style="width:{% widthratio total max_total 100 %}%; background:#3E73D1;"></div>
+  </div>
+</div>
+
+<!-- Legenda -->
+<div class="card" style="margin-bottom:1rem;">
+  <div class="card-title" style="margin-bottom:.4rem;"><i data-lucide="info" style="width:15px;height:15px;"></i> Classificação por área</div>
+  <div class="legenda-row">
+    {% for label, mn, mx in corte %}
+    <span class="class-badge" style="background:#F3F4F6; color:#374151;">{{ label }}: {{ mn }}–{{ mx }} pts</span>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Resultado por área -->
+{% for area in areas %}
+<div class="area-card" style="background:{{ area.cor_fundo }}; border-color:{{ area.cor }}33;">
+  <div class="area-titulo" style="color:{{ area.cor }};">
+    <i data-lucide="{{ area.icone }}" style="width:16px;height:16px;flex-shrink:0;"></i>
+    {{ area.nome }}
+  </div>
+  <div class="score-row">
+    <div class="score-num" style="color:{{ area.cor }};">{{ area.pontos }} <span class="score-max" style="color:inherit;">/ {{ area.max }}</span></div>
+    <span class="class-badge">{{ area.classificacao }}</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ area.pct }}%; background:{{ area.cor }};"></div>
+  </div>
+
+  <!-- Detalhamento dos itens -->
+  <details style="margin-top:.7rem;" class="no-print">
+    <summary style="font-size:.82rem; font-weight:700; cursor:pointer; color:#1F2937; background:rgba(0,0,0,.07); border-radius:6px; padding:.3rem .6rem; display:inline-block; list-style:none;">▶ Ver itens respondidos</summary>
+    <div class="itens-detalhes">
+      {% for num, texto, valor in area.itens %}
+      <div class="item-detalhe">
+        <span class="item-num-det">{{ forloop.counter }}.</span>
+        <span class="item-texto-det">{{ texto }}</span>
+        {% if valor == 2 %}<span class="item-resp resp-sim">Sim</span>
+        {% elif valor == 1 %}<span class="item-resp resp-parcial">Parcialmente</span>
+        {% else %}<span class="item-resp resp-nao">Não</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+
+  <!-- Para impressão: itens sempre visíveis -->
+  <div class="itens-detalhes" style="display:none;" id="print-area-{{ area.id }}">
+    {% for num, texto, valor in area.itens %}
+    <div class="item-detalhe">
+      <span class="item-num-det">{{ forloop.counter }}.</span>
+      <span class="item-texto-det">{{ texto }}</span>
+      {% if valor == 2 %}<span class="item-resp resp-sim">Sim</span>
+      {% elif valor == 1 %}<span class="item-resp resp-parcial">Parcialmente</span>
+      {% else %}<span class="item-resp resp-nao">Não</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+{% if tem_comparativo %}
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução Temporal por Área</div>
+  <canvas id="chartComp" height="120"></canvas>
+</div>
+{% endif %}
+
+<!-- Observações -->
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="file-text" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form class="obs-form" method="post" action="{% url 'salvar_observacoes_proade' avaliacao.uuid %}">
+    {% csrf_token %}
+    <textarea name="observacoes" placeholder="Adicione observações clínicas, hipóteses e recomendações…">{{ avaliacao.observacoes }}</textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:.5rem;">Salvar</button>
+  </form>
+</div>
+
+{% if outras_avaliacoes %}
+<div class="card no-print">
+  <div class="card-title"><i data-lucide="list" style="width:18px;height:18px;"></i> Outras Aplicações</div>
+  <table style="width:100%; font-size:.85rem; border-collapse:collapse;">
+    <thead><tr style="background:var(--bg-secondary);">
+      <th style="padding:.4rem .6rem; text-align:left;">Data</th>
+      <th style="padding:.4rem .6rem; text-align:left;">Ano</th>
+      <th style="padding:.4rem .6rem; text-align:left;">Total</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:.4rem .6rem;">{{ av.data|date:"d/m/Y" }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.get_ano_escolar_display }}</td>
+      <td style="padding:.4rem .6rem;">{{ av.pont_total }}</td>
+      <td style="padding:.4rem .6rem;"><a href="{% url 'proade_resultado' av.uuid %}" class="btn btn-sm btn-secondary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  @media print {
+    details > .itens-detalhes { display: none !important; }
+    [id^="print-area-"] { display: block !important; }
+  }
+</style>
+{% if tem_comparativo %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('chartComp').getContext('2d'), {
+  type:'line',
+  data:{ labels:{{ comparativo_labels|safe }}, datasets:{{ comparativo_datasets|safe }} },
+  options:{ responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true, max:12 } } }
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -44,9 +44,20 @@
     {% endif %}
     <form method="post" id="tour-np-form">
       {% csrf_token %}
+      <input type="hidden" name="tipo_paciente" id="tipo_paciente" value="{{ post.tipo_paciente|default:'crianca' }}">
+
+      <div style="display:flex; background:var(--bg); border-radius:10px; padding:4px; gap:4px; margin-bottom:1.5rem;">
+        <button type="button" id="btn-crianca" onclick="setTipo('crianca')" style="flex:1; border:none; border-radius:7px; padding:.55rem 1rem; font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all .2s;">
+          <i data-lucide="baby" style="width:14px;height:14px;"></i> Criança
+        </button>
+        <button type="button" id="btn-adulto" onclick="setTipo('adulto')" style="flex:1; border:none; border-radius:7px; padding:.55rem 1rem; font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all .2s;">
+          <i data-lucide="user" style="width:14px;height:14px;"></i> Adulto
+        </button>
+      </div>
+
       <div class="form-group">
-        <label>Nome completo da criança *</label>
-        <input type="text" name="nome" value="{{ post.nome|default:'' }}" required placeholder="Nome da criança">
+        <label id="label-nome">Nome completo da criança *</label>
+        <input type="text" name="nome" id="input-nome" value="{{ post.nome|default:'' }}" required placeholder="Nome da criança">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -58,19 +69,43 @@
           <input type="tel" name="telefone" value="{{ post.telefone|default:'' }}" placeholder="(00) 00000-0000">
         </div>
       </div>
-      <div class="form-group">
-        <label>Nome do responsável *</label>
-        <input type="text" name="responsavel" value="{{ post.responsavel|default:'' }}" required placeholder="Nome do pai/mãe/responsável">
-      </div>
-      <div class="form-group">
-        <label>E-mail do responsável</label>
-        <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:'' }}" placeholder="email@exemplo.com">
+      <div id="bloco-responsavel">
+        <div class="form-group">
+          <label id="label-responsavel">Nome do responsável *</label>
+          <input type="text" name="responsavel" id="input-responsavel" value="{{ post.responsavel|default:'' }}" placeholder="Nome do pai/mãe/responsável">
+        </div>
+        <div class="form-group">
+          <label id="label-email">E-mail do responsável</label>
+          <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:'' }}" placeholder="email@exemplo.com">
+        </div>
       </div>
       <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
         <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Iniciar Questionário <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+        <button type="submit" class="btn btn-primary">Cadastrar Paciente <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg></button>
       </div>
     </form>
+    <script>
+      function setTipo(tipo) {
+        document.getElementById('tipo_paciente').value = tipo;
+        var isCrianca = tipo === 'crianca';
+        var activeStyle  = 'background:#fff; color:var(--primary-dark); box-shadow:0 1px 4px rgba(0,0,0,.15);';
+        var inactiveStyle = 'background:transparent; color:var(--text-muted); box-shadow:none;';
+        document.getElementById('btn-crianca').style.cssText = (isCrianca  ? activeStyle : inactiveStyle) + 'flex:1; border:none; border-radius:7px; padding:.55rem 1rem; font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all .2s;';
+        document.getElementById('btn-adulto').style.cssText  = (!isCrianca ? activeStyle : inactiveStyle) + 'flex:1; border:none; border-radius:7px; padding:.55rem 1rem; font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all .2s;';
+        document.getElementById('label-nome').textContent = isCrianca ? 'Nome completo da criança *' : 'Nome completo *';
+        document.getElementById('input-nome').placeholder = isCrianca ? 'Nome da criança' : 'Nome do paciente';
+        if (isCrianca) {
+          document.getElementById('bloco-responsavel').style.display = '';
+          document.getElementById('label-responsavel').textContent = 'Nome do responsável *';
+          document.getElementById('label-email').textContent = 'E-mail do responsável';
+          document.getElementById('input-responsavel').placeholder = 'Nome do pai/mãe/responsável';
+        } else {
+          document.getElementById('bloco-responsavel').style.display = 'none';
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+      setTipo('{{ post.tipo_paciente|default:"crianca" }}');
+    </script>
   </div>
 </div>
 

@@ -59,21 +59,11 @@
     {% csrf_token %}
 
     <div class="section-label">Dados Profissionais</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="registro_profissional">Registro Profissional</label>
-        <input type="text" name="registro_profissional" id="registro_profissional"
-               value="{{ perfil.registro_profissional }}"
-               placeholder="CREFITO, CRP, CRFa… 00000/UF">
-      </div>
-      <div class="form-group">
-        <label for="telefone">Telefone <span style="color:#DC2626;">*</span></label>
-        <input type="tel" name="telefone" id="telefone"
-               value="{{ post.telefone|default:perfil.telefone }}"
-               placeholder="(00) 00000-0000" maxlength="15" required
-               style="{% if erro_telefone %}border-color:#EF4444;{% endif %}">
-        {% if erro_telefone %}<small style="color:#DC2626;font-size:.8rem;">Informe o telefone.</small>{% endif %}
-      </div>
+    <div class="form-group">
+      <label for="registro_profissional">Registro Profissional</label>
+      <input type="text" name="registro_profissional" id="registro_profissional"
+             value="{{ perfil.registro_profissional }}"
+             placeholder="CREFITO, CRP, CRFa… 00000/UF">
     </div>
 
     <div class="section-label">
@@ -102,15 +92,6 @@
 </div>
 
 <script>
-  document.getElementById('telefone').addEventListener('input', function (e) {
-    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
-    if (v.length > 10)     v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-    else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
-    else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
-    else                   v = v.replace(/^(\d{0,2})$/, '($1');
-    e.target.value = v;
-  });
-
   document.querySelectorAll('.esp-item input[type=checkbox]').forEach(chk => {
     chk.addEventListener('change', () => {
       chk.closest('.esp-item').classList.toggle('checked', chk.checked);

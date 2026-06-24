@@ -1,0 +1,59 @@
+{% extends "questionario/base.html" %}
+{% block title %}PROADE — Selecionar Ano Escolar — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --mod: #3E73D1; }
+  .form-header { background: linear-gradient(135deg, #1E3F7A, #3E73D1); color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .form-header h1 { font-size:1.2rem; margin-bottom:.3rem; }
+  .ano-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:.75rem; margin:1.2rem 0; }
+  .ano-btn { padding:1rem; border-radius:10px; border:2px solid var(--border); background:#fff; cursor:pointer; font-size:.95rem; font-weight:700; text-align:center; transition:all .15s; color:var(--text); }
+  .ano-btn:hover, .ano-btn.sel { border-color:#3E73D1; background:#EFF6FF; color:#3E73D1; }
+  .ano-btn input { display:none; }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-header">
+  <h1><i data-lucide="graduation-cap" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>PROADE — Avaliação do Desempenho Escolar</h1>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; Selecione o ano escolar atual da criança</p>
+</div>
+
+<div class="card">
+  <div class="card-title"><i data-lucide="book" style="width:16px;height:16px;"></i> Ano Escolar</div>
+  <p style="font-size:.85rem; color:var(--text-muted); margin-top:.3rem;">Os itens avaliados serão adaptados ao ano selecionado.</p>
+
+  <form method="post" action="{% url 'nova_avaliacao_proade' paciente.uuid %}">
+    {% csrf_token %}
+    <div class="ano-grid">
+      {% for num, label in anos %}
+      <label class="ano-btn" id="label_ano_{{ num }}">
+        <input type="radio" name="ano_escolar" value="{{ num }}" {% if num == 1 %}checked{% endif %}>
+        {{ label }}
+      </label>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:.5rem;">
+      <i data-lucide="play" style="width:14px;height:14px;"></i> Iniciar Avaliação
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.ano-btn input').forEach(function(r) {
+  if (r.checked) r.closest('label').classList.add('sel');
+  r.addEventListener('change', function() {
+    document.querySelectorAll('.ano-btn').forEach(function(l) { l.classList.remove('sel'); });
+    r.closest('label').classList.add('sel');
+  });
+});
+</script>
+{% endblock %}

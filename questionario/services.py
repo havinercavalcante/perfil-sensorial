@@ -142,4 +142,5 @@ TIPO_INFO = {
     "iar":               ("IAR — Ansiedade Infantil",          '<i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "pas":               ("PAS — Ansiedade Pré-Escolar",       '<i data-lucide="baby" style="width:18px;height:18px;vertical-align:middle;"></i>'),
     "cdi":               ("CDI — Depressão Infantil",          '<i data-lucide="cloud-rain" style="width:18px;height:18px;vertical-align:middle;"></i>'),
+    "proade":            ("PROADE — Desempenho Escolar",        '<i data-lucide="graduation-cap" style="width:18px;height:18px;vertical-align:middle;"></i>'),
 }

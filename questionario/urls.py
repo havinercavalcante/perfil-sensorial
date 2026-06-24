@@ -266,6 +266,14 @@ urlpatterns = [
     path("psicopedagogica/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_psicopedagogica, name="salvar_observacoes_psicopedagogica"),
     path("psicopedagogica/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.psicopedagogica_visualizar, name="psicopedagogica_visualizar"),
     path("psicopedagogica/publico/<str:token>/<int:pagina>/", views.psicopedagogica_publico, name="psicopedagogica_publico"),
+    # ── PROADE ───────────────────────────────────────────────────────────────
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-proade/",     views.nova_avaliacao_proade,          name="nova_avaliacao_proade"),
+    path("proade/<uuid:avaliacao_id>/pagina/<int:pagina>/",         views.proade_form,                    name="proade_form"),
+    path("proade/<uuid:avaliacao_id>/resultado/",                   views.proade_resultado,               name="proade_resultado"),
+    path("proade/<uuid:avaliacao_id>/deletar/",                     views.proade_deletar,                 name="proade_deletar"),
+    path("proade/<uuid:avaliacao_id>/observacoes/",                 views.salvar_observacoes_proade,      name="salvar_observacoes_proade"),
+    path("proade/<uuid:avaliacao_id>/visualizar/<int:pagina>/",     views.proade_visualizar,              name="proade_visualizar"),
+    path("proade/<uuid:avaliacao_id>/laudo/",                       views.laudo_generico, {"tipo": "proade"}, name="proade_laudo"),
     # ── Módulos de Psicologia ─────────────────────────────────────────────────
     # BDI — Inventário de Depressão de Beck
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-bdi/",       views.nova_avaliacao_bdi,           name="nova_avaliacao_bdi"),
