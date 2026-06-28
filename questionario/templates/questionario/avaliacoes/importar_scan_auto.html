@@ -1,0 +1,314 @@
+{% extends "questionario/base.html" %}
+{% block title %}Importar Formulário — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --imp: #2E7D6B; --imp-dark: #0F3D30; }
+
+  .page-header {
+    background: linear-gradient(135deg, var(--imp-dark), var(--imp));
+    color: #fff; border-radius: 14px; padding: 1.4rem 1.6rem; margin-bottom: 1.5rem;
+  }
+  .page-header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: .25rem; }
+  .page-header p  { font-size: .83rem; opacity: .85; }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 2px dashed var(--imp); border-radius: 14px;
+    padding: 3rem 1.5rem; text-align: center; cursor: pointer;
+    background: #f0fff8; transition: background .15s, border-color .15s;
+  }
+  .drop-zone.dragover { background: rgba(46,125,107,.12); border-color: var(--imp-dark); }
+  .drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .drop-zone p    { font-size: .95rem; font-weight: 600; color: var(--imp-dark); margin-bottom: .3rem; }
+  .drop-zone small { font-size: .78rem; color: var(--text-muted); }
+
+  .file-list { margin-top: 1rem; display: flex; flex-direction: column; gap: .4rem; }
+  .file-item {
+    display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem;
+    border-radius: 8px; background: #f0fff8; border: 1px solid var(--imp);
+    font-size: .82rem; color: var(--imp-dark);
+  }
+  .file-item .file-name { flex: 1; }
+  .file-remove { cursor: pointer; color: var(--imp); font-weight: 700; background: none; border: none; font-size: 1rem; }
+
+  /* Resultado da detecção */
+  .deteccao-box {
+    display: none; border-radius: 12px; padding: 1.25rem 1.5rem;
+    border: 2px solid var(--imp); background: #fff; margin-top: 1.25rem;
+  }
+  .deteccao-box.visivel { display: block; }
+  .deteccao-titulo { font-size: .82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .6rem; }
+  .deteccao-instrumento {
+    font-size: 1.15rem; font-weight: 800; color: var(--imp-dark);
+    display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem;
+  }
+  .deteccao-badge {
+    font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 20px;
+  }
+  .badge-alta  { background: #D1FAE5; color: #065F46; }
+  .badge-baixa { background: #FEF9C3; color: #92400E; }
+  .deteccao-linhas { font-size: .8rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .tipo-select-wrap { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tipo-select-wrap label { font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+  .tipo-select-wrap select { font-size: .88rem; padding: .4rem .65rem; border-radius: 8px; border: 1.5px solid var(--border); }
+
+  .btn-confirmar {
+    background: linear-gradient(135deg, var(--imp-dark), var(--imp));
+    color: #fff; border: none; border-radius: 10px;
+    padding: .8rem 2rem; font-size: .95rem; font-weight: 700;
+    cursor: pointer; display: inline-flex; align-items: center; gap: .5rem;
+    transition: opacity .15s;
+  }
+  .btn-confirmar:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-detectar {
+    background: linear-gradient(135deg, var(--imp-dark), var(--imp));
+    color: #fff; border: none; border-radius: 10px;
+    padding: .85rem 2rem; font-size: .95rem; font-weight: 700;
+    cursor: pointer; width: 100%; display: flex; align-items: center;
+    justify-content: center; gap: .5rem; transition: opacity .15s; margin-top: 1.25rem;
+  }
+  .btn-detectar:disabled { opacity: .5; cursor: not-allowed; }
+
+  .dica-box {
+    background: #FFF8E7; border: 1px solid #F5D87A; border-radius: 10px;
+    padding: .85rem 1rem; font-size: .82rem; color: #7A5700; margin-top: 1.25rem;
+  }
+  .dica-box b { display: block; margin-bottom: .3rem; }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,61,48,.75); z-index: 999;
+    flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner { width: 52px; height: 52px; border: 5px solid rgba(255,255,255,.3);
+    border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { color: #fff; font-size: 1rem; font-weight: 600; }
+  .loading-sub { color: rgba(255,255,255,.75); font-size: .83rem; }
+</style>
+{% endblock %}
+
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
+{% block content %}
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loading-msg">Detectando instrumento...</div>
+  <div class="loading-sub" id="loading-sub">Analisando as imagens do formulário</div>
+</div>
+
+<div style="max-width:600px; margin:0 auto; padding:1rem;">
+  <div class="page-header">
+    <h1><i data-lucide="scan-text" style="width:18px;height:18px;vertical-align:middle;margin-right:.4rem;"></i>Importar formulário do papel</h1>
+    <p>{{ paciente.nome }} · O sistema identifica automaticamente qual instrumento foi preenchido</p>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;color:#7F1D1D;font-size:.85rem;">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ZONA DE UPLOAD -->
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="drop-icon">📄</div>
+    <p>Clique ou arraste as páginas do formulário aqui</p>
+    <small>JPG · PNG · WebP · PDF &nbsp;·&nbsp; Máximo 10 arquivos &nbsp;·&nbsp; Pode misturar páginas de diferentes formulários</small>
+  </div>
+  <input type="file" id="file-input" multiple accept="image/*,.pdf" style="display:none">
+  <div class="file-list" id="file-list"></div>
+
+  <!-- RESULTADO DA DETECÇÃO -->
+  <div class="deteccao-box" id="deteccao-box">
+    <div class="deteccao-titulo">Instrumento detectado</div>
+    <div class="deteccao-instrumento">
+      <i data-lucide="check-circle" style="width:22px;height:22px;color:var(--imp);"></i>
+      <span id="det-label">—</span>
+      <span class="deteccao-badge" id="det-badge">—</span>
+    </div>
+    <div class="deteccao-linhas" id="det-linhas"></div>
+
+    <div class="tipo-select-wrap">
+      <label>Não é esse? Corrigir:</label>
+      <select id="tipo-select">
+        <option value="spm_p">SPM-P Casa (2–5 anos)</option>
+        <option value="spm_casa">SPM Casa (5–12 anos)</option>
+        <option value="ps2_bebe_wd">PS2 Bebê (0–6 meses)</option>
+        <option value="ps2_cp_wd">PS2 Criança Pequena (7–35 meses)</option>
+        <option value="sensorial">PS2 Criança (3–14 anos)</option>
+        <option value="adulto_sensorial">Perfil Sensorial Adulto</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn-confirmar" id="btn-confirmar" onclick="confirmarImport()">
+      <i data-lucide="zap" style="width:16px;height:16px;"></i>
+      Confirmar e extrair respostas
+    </button>
+  </div>
+
+  <!-- BOTÃO DETECTAR -->
+  <button type="button" class="btn-detectar" id="btn-detectar" disabled onclick="detectar()">
+    <i data-lucide="search" style="width:18px;height:18px;"></i>
+    Identificar instrumento
+  </button>
+
+  <div class="dica-box">
+    <b>Como funciona:</b>
+    Envie as fotos ou PDF do formulário preenchido → o sistema detecta qual instrumento é →
+    você confirma (ou corrige) → as respostas são extraídas automaticamente →
+    tela de revisão para confirmar cada item.
+  </div>
+</div>
+
+<!-- FORM OCULTO PARA SUBMIT FINAL -->
+<form id="form-importar" method="post" enctype="multipart/form-data" action="{% url 'importar_scan_auto' paciente.uuid %}" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="step" value="importar">
+  <input type="hidden" name="tipo" id="form-tipo" value="">
+  <div id="form-files-container"></div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+const URL_DETECTAR = '{% url "importar_scan_auto" paciente.uuid %}';
+
+const dropZone    = document.getElementById('drop-zone');
+const fileInput   = document.getElementById('file-input');
+const fileList    = document.getElementById('file-list');
+const btnDetectar = document.getElementById('btn-detectar');
+const deteccaoBox = document.getElementById('deteccao-box');
+const loading     = document.getElementById('loading');
+let arquivosSel   = new DataTransfer();
+
+// ── Gerenciamento de arquivos ─────────────────────────────────────────────────
+function atualizarLista() {
+  fileList.innerHTML = '';
+  const files = arquivosSel.files;
+  for (let i = 0; i < files.length; i++) {
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    div.innerHTML = `<span>📎</span><span class="file-name">${files[i].name}</span>
+      <button type="button" class="file-remove" data-idx="${i}">✕</button>`;
+    fileList.appendChild(div);
+  }
+  btnDetectar.disabled = files.length === 0;
+  fileInput.files = arquivosSel.files;
+  deteccaoBox.classList.remove('visivel');  // reset ao trocar arquivos
+}
+
+fileInput.addEventListener('change', () => {
+  for (const f of fileInput.files) arquivosSel.items.add(f);
+  atualizarLista();
+});
+fileList.addEventListener('click', e => {
+  if (e.target.classList.contains('file-remove')) {
+    const idx = parseInt(e.target.dataset.idx);
+    const novo = new DataTransfer();
+    const files = arquivosSel.files;
+    for (let i = 0; i < files.length; i++) { if (i !== idx) novo.items.add(files[i]); }
+    arquivosSel = novo;
+    atualizarLista();
+  }
+});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  for (const f of e.dataTransfer.files) arquivosSel.items.add(f);
+  atualizarLista();
+});
+
+// ── Detecção ─────────────────────────────────────────────────────────────────
+async function detectar() {
+  if (arquivosSel.files.length === 0) return;
+
+  document.getElementById('loading-msg').textContent = 'Detectando instrumento...';
+  document.getElementById('loading-sub').textContent = 'Analisando as colunas de resposta';
+  loading.classList.add('active');
+  btnDetectar.disabled = true;
+
+  const fd = new FormData();
+  fd.append('step', 'detectar');
+  for (const f of arquivosSel.files) fd.append('imagens', f);
+
+  try {
+    const resp = await fetch(URL_DETECTAR, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+      body: fd,
+    });
+    const data = await resp.json();
+
+    if (!data.ok) {
+      alert('Erro: ' + data.erro);
+      return;
+    }
+
+    // Mostra resultado
+    document.getElementById('det-label').textContent = data.label;
+    const badge = document.getElementById('det-badge');
+    if (data.confianca === 'alta') {
+      badge.textContent = 'Alta confiança';
+      badge.className = 'deteccao-badge badge-alta';
+    } else {
+      badge.textContent = 'Baixa confiança — verifique';
+      badge.className = 'deteccao-badge badge-baixa';
+    }
+    document.getElementById('det-linhas').textContent =
+      `${data.total_linhas} linhas detectadas · colunas na ${data.coluna_lado}`;
+
+    // Seleciona o tipo no dropdown
+    const sel = document.getElementById('tipo-select');
+    let tipoFinal = data.tipo;
+    if (tipoFinal === 'spm') tipoFinal = 'spm_p';  // default SPM-P
+    for (const opt of sel.options) {
+      if (opt.value === tipoFinal) { sel.value = tipoFinal; break; }
+    }
+
+    deteccaoBox.classList.add('visivel');
+    lucide.createIcons({ rootElement: deteccaoBox });
+  } catch (e) {
+    alert('Erro de comunicação: ' + e.message);
+  } finally {
+    loading.classList.remove('active');
+    btnDetectar.disabled = false;
+  }
+}
+
+// ── Import final ─────────────────────────────────────────────────────────────
+function confirmarImport() {
+  const tipo = document.getElementById('tipo-select').value;
+  if (!tipo) { alert('Selecione o tipo de instrumento.'); return; }
+
+  document.getElementById('loading-msg').textContent = 'Extraindo respostas...';
+  document.getElementById('loading-sub').textContent = 'Isso pode levar alguns segundos';
+  loading.classList.add('active');
+  document.getElementById('btn-confirmar').disabled = true;
+
+  // Preenche form oculto com os arquivos e submete
+  document.getElementById('form-tipo').value = tipo;
+  const container = document.getElementById('form-files-container');
+  container.innerHTML = '';
+  for (const f of arquivosSel.files) {
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.name = 'imagens';
+    inp.files = dt.files;
+    inp.style.display = 'none';
+    container.appendChild(inp);
+  }
+  document.getElementById('form-importar').submit();
+}
+
+lucide.createIcons();
+</script>
+{% endblock %}

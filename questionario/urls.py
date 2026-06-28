@@ -84,6 +84,36 @@ urlpatterns = [
     path("spm/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_spm, name="salvar_observacoes_spm"),
     path("spm/publico/<str:token>/<int:pagina>/", views.spm_publico_view, name="spm_publico"),
     path("spm/<uuid:avaliacao_id>/enviar-link/", views.enviar_email_spm, name="enviar_email_spm"),
+    path("pacientes/<uuid:paciente_id>/importar-scan-spm/", views.importar_scan_spm_upload, name="importar_scan_spm_upload"),
+    path("spm/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_spm_revisao, name="importar_scan_spm_revisao"),
+    # Import automático (detecção automática do instrumento)
+    path("pacientes/<uuid:paciente_id>/importar/", views.importar_scan_auto, name="importar_scan_auto"),
+    # Import PS2 Criança (3–14 anos)
+    path("pacientes/<uuid:paciente_id>/importar-ps2-crianca/", views.importar_scan_ps2_crianca_upload, name="importar_scan_ps2_crianca_upload"),
+    path("sensorial/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_ps2_crianca_revisao, name="importar_scan_ps2_crianca_revisao"),
+    # Import PS2 Bebê / Criança Pequena (Winnie Dunn)
+    path("pacientes/<uuid:paciente_id>/importar-ps2-bebe/<str:faixa>/", views.importar_scan_ps2_bebe_upload, name="importar_scan_ps2_bebe_upload"),
+    path("ps2bebe/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_ps2_bebe_revisao, name="importar_scan_ps2_bebe_revisao"),
+    # Import Perfil Sensorial Adulto
+    path("pacientes/<uuid:paciente_id>/importar-adulto-sensorial/", views.importar_scan_adulto_upload, name="importar_scan_adulto_upload"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_adulto_revisao, name="importar_scan_adulto_revisao"),
+    # Resultados, visualizar e observações — PS2 WD / Adulto Sensorial
+    path("ps2bebe/<uuid:avaliacao_id>/resultado/", views.ps2_bebe_wd_resultado, name="ps2_bebe_wd_resultado"),
+    path("ps2bebe/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.ps2_bebe_wd_visualizar, name="ps2_bebe_wd_visualizar"),
+    path("ps2bebe/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_ps2_bebe, name="salvar_observacoes_ps2_bebe"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/resultado/", views.adulto_sensorial_resultado, name="adulto_sensorial_resultado"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.adulto_sensorial_visualizar, name="adulto_sensorial_visualizar"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_adulto_sensorial, name="adulto_sensorial_observacoes"),
+    # Nova avaliação PS2 WD / Adulto Sensorial (via modal)
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-ps2-bebe-wd/", views.nova_avaliacao_ps2_bebe_wd, name="nova_avaliacao_ps2_bebe_wd"),
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-ps2-cp-wd/", views.nova_avaliacao_ps2_cp_wd, name="nova_avaliacao_ps2_cp_wd"),
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-adulto-sensorial/", views.nova_avaliacao_adulto_sensorial, name="nova_avaliacao_adulto_sensorial"),
+    # Delete PS2 Bebê/CP e Adulto Sensorial
+    path("ps2bebe/<uuid:avaliacao_id>/deletar/", views.ps2_bebe_deletar, name="ps2_bebe_deletar"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/deletar/", views.adulto_sensorial_deletar, name="adulto_sensorial_deletar"),
+    # Formulários públicos PS2 WD e Adulto Sensorial
+    path("ps2-wd/publico/<str:token>/<int:pagina>/", views.ps2_bebe_wd_publico_view, name="ps2_bebe_wd_publico"),
+    path("adulto-sensorial/publico/<str:token>/<int:pagina>/", views.adulto_sensorial_publico_view, name="adulto_sensorial_publico"),
     # EDM
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-edm/", views.nova_avaliacao_edm, name="nova_avaliacao_edm"),
     path("edm/<uuid:avaliacao_id>/", views.edm_form, name="edm_form"),

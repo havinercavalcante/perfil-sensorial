@@ -164,6 +164,7 @@ ESPECIALIDADE_CHOICES = [
 MODULOS_POR_ESPECIALIDADE = {
     "terapeuta_ocupacional": [
         "sensorial", "vineland", "escolar", "bebe", "spm",
+        "ps2_bebe_wd", "ps2_cp_wd", "adulto_sensorial",
         "edm", "mabc2", "beery", "pedi", "vineland3", "portage",
         "ebai", "seps", "eca", "tod",
     ],
@@ -1014,6 +1015,9 @@ class LinkConvite(models.Model):
         ("crianca_pequena",         "Criança Pequena (7–36 meses)"),
         ("spm_p",                   "SPM-P Casa (2–5 anos)"),
         ("spm_casa",                "SPM Casa (5–12 anos)"),
+        ("ps2_bebe_wd",             "PS2 Bebê — Perfil Sensorial 2 (0–6 meses)"),
+        ("ps2_cp_wd",               "PS2 Criança Pequena — Perfil Sensorial 2 (7–35 meses)"),
+        ("adulto_sensorial",        "Perfil Sensorial do Adulto/Adolescente"),
         ("edm",                     "EDM Figueiredo"),
         ("mabc2",                   "MABC-2"),
         ("beery",                   "Beery VMI"),
@@ -3874,3 +3878,94 @@ class StatusIncident(models.Model):
     @property
     def ativo(self):
         return self.status not in ("resolved", "completed")
+
+
+# ── PS2 Bebê / Criança Pequena — Winnie Dunn ─────────────────────────────────
+
+class AvaliacaoPS2Bebe(models.Model):
+    FAIXA_CHOICES = [
+        ("bebe", "PS2 Bebê (0–6 meses)"),
+        ("cp",   "PS2 Criança Pequena (7–35 meses)"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid        = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente    = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_ps2_bebe")
+    faixa       = models.CharField(max_length=5, choices=FAIXA_CHOICES)
+    token       = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    pagina_atual = models.IntegerField(default=1)
+    data        = models.DateField("Data da avaliação", default=timezone.now)
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    observacoes = models.TextField("Observações", blank=True, default="")
+    criado_em   = models.DateTimeField(auto_now_add=True)
+
+    # Pontuação por seção
+    pont_geral          = models.IntegerField(null=True, blank=True)
+    pont_auditivo       = models.IntegerField(null=True, blank=True)
+    pont_visual         = models.IntegerField(null=True, blank=True)
+    pont_tato           = models.IntegerField(null=True, blank=True)
+    pont_movimentos     = models.IntegerField(null=True, blank=True)
+    pont_oral           = models.IntegerField(null=True, blank=True)
+    pont_comportamental = models.IntegerField(null=True, blank=True)
+    # Pontuação por quadrante
+    pont_ex = models.IntegerField(null=True, blank=True)
+    pont_ev = models.IntegerField(null=True, blank=True)
+    pont_sn = models.IntegerField(null=True, blank=True)
+    pont_ob = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        verbose_name        = "PS2 Bebê/Criança Pequena (Winnie Dunn)"
+        verbose_name_plural = "PS2 Bebê/Criança Pequena (Winnie Dunn)"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"PS2 {self.get_faixa_display()} — {self.paciente.nome} — {self.data}"
+
+
+class RespostaPS2Bebe(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPS2Bebe, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering        = ["numero_item"]
+
+
+# ── Perfil Sensorial do Adulto / Adolescente ──────────────────────────────────
+
+class AvaliacaoAdultoSensorial(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid         = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_adulto_sensorial")
+    token        = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    pagina_atual = models.IntegerField(default=1)
+    data         = models.DateField("Data da avaliação", default=timezone.now)
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    observacoes  = models.TextField("Observações", blank=True, default="")
+    criado_em    = models.DateTimeField(auto_now_add=True)
+
+    # Pontuação por quadrante
+    pont_baixo_registro   = models.IntegerField("Baixo Registro",       null=True, blank=True)
+    pont_procura_sensacao = models.IntegerField("Procura Sensação",      null=True, blank=True)
+    pont_sensitividade    = models.IntegerField("Sensitividade Sensorial", null=True, blank=True)
+    pont_evita_sensacao   = models.IntegerField("Evita Sensação",        null=True, blank=True)
+
+    class Meta:
+        verbose_name        = "Perfil Sensorial do Adulto"
+        verbose_name_plural = "Perfis Sensoriais do Adulto"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"Perf. Adulto — {self.paciente.nome} — {self.data}"
+
+
+class RespostaAdultoSensorial(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoAdultoSensorial, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering        = ["numero_item"]

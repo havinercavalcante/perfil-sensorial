@@ -11,6 +11,7 @@ logger = logging.getLogger("auditoria")
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe,
     AvaliacaoSPM, AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI,
+    AvaliacaoPS2Bebe, AvaliacaoAdultoSensorial,
     AvaliacaoVineland3, AvaliacaoPortage,
     AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT, AvaliacaoCARS,
     AvaliacaoLinguagem, AvaliacaoAlimentacao,
@@ -148,6 +149,7 @@ def index(request):
 
 _MODELS_WITH_STATUS = [
     Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe, AvaliacaoSPM,
+    AvaliacaoPS2Bebe, AvaliacaoAdultoSensorial,
     AvaliacaoVineland3, AvaliacaoPortage, AvaliacaoSDQ, AvaliacaoSNAPIV,
     AvaliacaoMCHAT, AvaliacaoCARS, AvaliacaoLinguagem, AvaliacaoAlimentacao,
     AvaliacaoHabitosOrais, AvaliacaoVozInfantil, AvaliacaoProcessamentoAuditivo,
@@ -231,6 +233,8 @@ MODELOS_AVALIACAO = [
     (AvaliacaoEscolar,              "Sensorial Escolar",            "escolar"),
     (AvaliacaoBebe,                 "Bebê / Criança Pequena",       "bebe"),
     (AvaliacaoSPM,                  "SPM",                          "spm"),
+    (AvaliacaoPS2Bebe,              "PS2 Bebê/CP (Winnie Dunn)",    "ps2_bebe"),
+    (AvaliacaoAdultoSensorial,      "Perf. Sensorial Adulto",       "adulto_sensorial"),
     (AvaliacaoVineland3,            "Vineland-3",                   "vineland3"),
     (AvaliacaoPortage,              "Guia Portage",                 "portage"),
     (AvaliacaoSDQ,                  "SDQ",                          "sdq"),
@@ -486,6 +490,9 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_seps": build_lista_com_link(paciente.avaliacoes_seps.all(), request, "seps_publico"),
         "avaliacoes_eca":  build_lista_com_link(paciente.avaliacoes_eca.all(),  request, "eca_publico"),
         "avaliacoes_tod":  build_lista_com_link(paciente.avaliacoes_tod.all(),  request, "tod_publico"),
+        # PS2 Bebê/CP e Adulto Sensorial
+        "avaliacoes_ps2_bebe": build_lista_com_link(paciente.avaliacoes_ps2_bebe.all().order_by("-data"), request, "ps2_bebe_wd_publico"),
+        "avaliacoes_adulto_sensorial": build_lista_com_link(paciente.avaliacoes_adulto_sensorial.all().order_by("-data"), request, "adulto_sensorial_publico"),
     })
 
 

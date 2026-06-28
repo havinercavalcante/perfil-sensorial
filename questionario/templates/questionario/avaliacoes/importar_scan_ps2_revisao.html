@@ -1,0 +1,149 @@
+{% extends "questionario/base.html" %}
+{% block title %}Revisar {{ titulo }} — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --ps2: #3D9B6B; --ps2-dark: #1A4A32; }
+
+  .page-header { background:linear-gradient(135deg, var(--ps2-dark), var(--ps2)); color:#fff; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.25rem; }
+  .page-header h1 { font-size:1.1rem; font-weight:700; margin-bottom:.2rem; }
+  .page-header p  { font-size:.82rem; opacity:.85; }
+
+  .chips { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .chip { display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .75rem; border-radius:20px; font-size:.8rem; font-weight:600; }
+  .chip-warn  { background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; }
+  .chip-error { background:#FEE2E2; color:#7F1D1D; border:1px solid #FCA5A5; }
+  .chip-ok    { background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7; }
+
+  .secao-nav { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .secao-nav a { padding:.3rem .7rem; border-radius:8px; font-size:.78rem; font-weight:600; text-decoration:none; background:var(--bg); border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; }
+  .secao-nav a:hover { border-color:var(--ps2); color:var(--ps2); }
+
+  .secao-card { background:#fff; border-radius:14px; border:1.5px solid var(--border); margin-bottom:1.25rem; overflow:hidden; }
+  .secao-header { padding:.75rem 1.1rem; background:var(--bg); border-bottom:1.5px solid var(--border); }
+  .secao-header h2 { font-size:.9rem; font-weight:700; color:var(--ps2-dark); margin:0; }
+
+  .item-row {
+    display:grid; grid-template-columns: 2rem 1fr auto;
+    align-items:center; gap:.6rem;
+    padding:.55rem 1.1rem; border-bottom:1px solid var(--border);
+    transition:background .1s;
+  }
+  .item-row:last-child { border-bottom:none; }
+  .item-row.conf-low     { background:#FFFBEB; }
+  .item-row.conf-missing { background:#FFF1F1; }
+
+  .item-num { font-size:.78rem; font-weight:700; color:var(--text-muted); text-align:center; }
+  .item-texto { font-size:.82rem; color:var(--text); line-height:1.4; }
+  .item-sel { min-width:140px; }
+  .item-sel select {
+    width:100%; padding:.35rem .5rem; border-radius:8px; font-size:.8rem;
+    border:1.5px solid var(--border); background:#fff; cursor:pointer;
+  }
+  .item-row.conf-low     .item-sel select { border-color:#F59E0B; }
+  .item-row.conf-missing .item-sel select { border-color:#EF4444; }
+  .item-sel select:required:invalid { color:var(--text-muted); }
+
+  .conf-badge { font-size:.65rem; font-weight:700; padding:.15rem .4rem; border-radius:4px; white-space:nowrap; }
+  .badge-high    { background:#D1FAE5; color:#065F46; }
+  .badge-low     { background:#FEF3C7; color:#92400E; }
+  .badge-missing { background:#FEE2E2; color:#7F1D1D; }
+
+  .sticky-bar {
+    position:sticky; bottom:0; background:#fff; border-top:2px solid var(--border);
+    padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between;
+    gap:.75rem; z-index:10; flex-wrap:wrap;
+  }
+  .btn-confirm {
+    background:linear-gradient(135deg, var(--ps2-dark), var(--ps2));
+    color:#fff; border:none; border-radius:10px; padding:.75rem 2rem;
+    font-size:.9rem; font-weight:700; cursor:pointer; display:flex;
+    align-items:center; gap:.4rem; transition:opacity .15s;
+  }
+  .btn-confirm:hover { opacity:.9; }
+
+  @media (max-width:600px) {
+    .item-row { grid-template-columns: 1.5rem 1fr; }
+    .item-sel  { grid-column: 1 / -1; }
+    .item-row { gap:.4rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+{% csrf_token %}
+
+<div class="page-header">
+  <h1>Revisar {{ titulo }}</h1>
+  <p>{{ paciente.nome }} · Confirme cada resposta antes de salvar</p>
+</div>
+
+{% if messages %}
+  {% for msg in messages %}
+    <div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;color:#7F1D1D;font-size:.85rem;">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="chips">
+  {% if n_ausente > 0 %}
+    <span class="chip chip-error"><i data-lucide="alert-circle" style="width:13px;height:13px;"></i> {{ n_ausente }} não detectado(s)</span>
+  {% endif %}
+  {% if n_baixa > 0 %}
+    <span class="chip chip-warn"><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> {{ n_baixa }} com baixa confiança</span>
+  {% endif %}
+  {% if n_ausente == 0 and n_baixa == 0 %}
+    <span class="chip chip-ok"><i data-lucide="check-circle" style="width:13px;height:13px;"></i> Todas as respostas foram detectadas</span>
+  {% endif %}
+  <span class="chip" style="background:var(--bg);border:1px solid var(--border);color:var(--text-muted);">
+    <span style="width:10px;height:10px;border-radius:2px;background:#FEF3C7;border:1px solid #F59E0B;display:inline-block;"></span> Baixa confiança
+    <span style="width:10px;height:10px;border-radius:2px;background:#FEE2E2;border:1px solid #EF4444;display:inline-block;margin-left:.4rem;"></span> Não detectado
+  </span>
+</div>
+
+<nav class="secao-nav">
+  {% for secao in secoes %}
+    <a href="#sec-{{ secao.id }}">{{ secao.nome|truncatechars:25 }}</a>
+  {% endfor %}
+</nav>
+
+{% for secao in secoes %}
+<div class="secao-card" id="sec-{{ secao.id }}">
+  <div class="secao-header">
+    <h2>{{ secao.nome }}</h2>
+  </div>
+  {% for item in secao.itens %}
+    <div class="item-row {% if item.confianca == 'low' %}conf-low{% elif item.confianca == 'missing' or item.valor is None %}conf-missing{% endif %}">
+      <div class="item-num">{{ item.numero }}</div>
+      <div class="item-texto">{{ item.texto }}</div>
+      <div class="item-sel">
+        <select name="item_{{ item.numero }}" required>
+          <option value="" {% if not item.valor %}selected{% endif %} disabled>— selecione —</option>
+          {% for val, label in opcoes %}
+            <option value="{{ val }}" {% if item.valor == val %}selected{% endif %}>{{ val }} — {{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+<div class="sticky-bar">
+  <div style="font-size:.82rem;color:var(--text-muted);">
+    Verifique os itens em destaque antes de confirmar.
+  </div>
+  <button type="submit" class="btn-confirm">
+    <i data-lucide="check" style="width:16px;height:16px;"></i>
+    Confirmar e salvar
+  </button>
+</div>
+
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}

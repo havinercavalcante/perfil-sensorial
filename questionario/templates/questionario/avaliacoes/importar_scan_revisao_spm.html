@@ -1,0 +1,238 @@
+{% extends "questionario/base.html" %}
+{% block title %}Revisar respostas — SPM{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --spm: #3E73D1; --spm-dark: #0F274F; }
+
+  .page-header {
+    background: linear-gradient(135deg, var(--spm-dark), var(--spm));
+    color: #fff; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.2rem;
+  }
+  .page-header h1 { font-size: 1.1rem; font-weight: 700; }
+  .page-header p  { font-size: .82rem; opacity: .85; margin-top: .2rem; }
+
+  .resumo-bar {
+    display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+  }
+  .resumo-chip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .4rem .85rem; border-radius: 20px; font-size: .8rem; font-weight: 600;
+  }
+  .chip-ok     { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+  .chip-baixa  { background: #FEF9C3; color: #713F12; border: 1px solid #FDE047; }
+  .chip-ausente{ background: #FEE2E2; color: #7F1D1D; border: 1px solid #FCA5A5; }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--spm-dark), var(--spm));
+    color: #fff; border-radius: 10px; padding: .75rem 1rem;
+    font-size: .88rem; font-weight: 700; margin: 1.2rem 0 .6rem;
+  }
+
+  .item-card {
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: .85rem 1rem; margin-bottom: .55rem; background: #fff;
+    display: flex; gap: .75rem; align-items: flex-start;
+  }
+  .item-card.conf-low    { border-color: #FDE047; background: #FFFBEB; }
+  .item-card.conf-missing{ border-color: #FCA5A5; background: #FFF5F5; }
+
+  .item-num {
+    min-width: 28px; height: 28px; border-radius: 50%;
+    background: var(--spm); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 800; flex-shrink: 0; margin-top: 2px;
+  }
+  .item-num.conf-low    { background: #CA8A04; }
+  .item-num.conf-missing{ background: #DC2626; }
+
+  .item-body { flex: 1; }
+  .item-texto { font-size: .85rem; color: var(--text); line-height: 1.5; margin-bottom: .5rem; }
+  .item-conf-tag {
+    display: inline-block; font-size: .7rem; font-weight: 700;
+    padding: .1rem .5rem; border-radius: 20px; margin-bottom: .4rem;
+  }
+  .tag-high    { background: #D1FAE5; color: #065F46; }
+  .tag-low     { background: #FEF9C3; color: #713F12; }
+  .tag-missing { background: #FEE2E2; color: #7F1D1D; }
+
+  .opcoes-select {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: .45rem .6rem; font-size: .85rem; color: var(--text);
+    background: #fff; cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2339abcb' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right .6rem center;
+    padding-right: 2rem;
+  }
+  .opcoes-select:focus { outline: none; border-color: var(--spm); }
+  .item-card.conf-low    .opcoes-select { border-color: #CA8A04; }
+  .item-card.conf-missing .opcoes-select { border-color: #DC2626; }
+
+  .btn-confirmar {
+    background: linear-gradient(135deg, #065F46, #059669);
+    color: #fff; border: none; border-radius: 10px;
+    padding: .9rem 2rem; font-size: .95rem; font-weight: 700;
+    cursor: pointer; width: 100%; display: flex;
+    align-items: center; justify-content: center; gap: .5rem;
+    margin-top: 1.5rem;
+  }
+  .btn-confirmar:hover { opacity: .92; }
+
+  .sticky-resumo {
+    position: sticky; top: 68px; z-index: 50;
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: .6rem 0; margin-bottom: .5rem;
+  }
+
+  .nav-secoes {
+    display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem;
+  }
+  .nav-secao-btn {
+    padding: .3rem .75rem; border-radius: 20px; font-size: .75rem;
+    font-weight: 600; border: 1.5px solid var(--spm);
+    background: #fff; color: var(--spm); cursor: pointer;
+    text-decoration: none; transition: all .15s;
+  }
+  .nav-secao-btn:hover { background: var(--spm); color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:700px; margin:0 auto; padding:1rem;">
+
+  <div class="page-header">
+    <h1>Revise as respostas extraídas</h1>
+    <p>{{ paciente.nome }} · {{ avaliacao.get_faixa_display }}</p>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;color:#7F1D1D;font-size:.85rem;">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="resumo-bar">
+    {% with total_itens=75 conf_ok=total_itens|add:"-"|add:n_baixa|add:"-"|add:n_ausente %}
+    <span class="resumo-chip chip-ok">✓ Extraídos com confiança</span>
+    {% endwith %}
+    {% if n_baixa > 0 %}
+    <span class="resumo-chip chip-baixa">⚠ {{ n_baixa }} marcação(ões) ambígua(s) — verifique</span>
+    {% endif %}
+    {% if n_ausente > 0 %}
+    <span class="resumo-chip chip-ausente">✗ {{ n_ausente }} item(ns) sem resposta — preencha</span>
+    {% endif %}
+  </div>
+
+  {% if n_baixa > 0 or n_ausente > 0 %}
+  <div style="background:#FFF8E7;border:1px solid #F5D87A;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.2rem;font-size:.82rem;color:#7A5700;">
+    <b>Atenção:</b> Itens marcados em <span style="color:#CA8A04;">amarelo</span> foram lidos com baixa confiança.
+    Itens em <span style="color:#DC2626;">vermelho</span> não tiveram marcação detectada.
+    Confirme ou corrija antes de salvar.
+  </div>
+  {% endif %}
+
+  <div class="nav-secoes">
+    {% for secao in secoes %}
+    <a class="nav-secao-btn" href="#secao-{{ secao.id }}">{{ secao.nome }}</a>
+    {% endfor %}
+  </div>
+
+  <form method="post" id="revisao-form">
+    {% csrf_token %}
+
+    {% for secao in secoes %}
+    <div id="secao-{{ secao.id }}">
+      <div class="secao-header">{{ secao.nome }}</div>
+
+      {% for item in secao.itens %}
+      {% if item.confianca == "low" %}
+        {% with card_class="item-card conf-low" num_class="item-num conf-low" tag_class="tag-low" tag_label="⚠ Verificar" %}
+        <div class="{{ card_class }}">
+          <div class="{{ num_class }}">{{ item.numero }}</div>
+          <div class="item-body">
+            <span class="item-conf-tag {{ tag_class }}">{{ tag_label }}</span>
+            <div class="item-texto">{{ item.texto }}</div>
+            <select name="item_{{ item.numero }}" class="opcoes-select" required>
+              <option value="">— selecione —</option>
+              {% for val, label in opcoes %}
+              <option value="{{ val }}" {% if item.valor == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endwith %}
+      {% elif item.confianca == "missing" or item.valor is None %}
+        {% with card_class="item-card conf-missing" num_class="item-num conf-missing" tag_class="tag-missing" tag_label="✗ Não detectado" %}
+        <div class="{{ card_class }}">
+          <div class="{{ num_class }}">{{ item.numero }}</div>
+          <div class="item-body">
+            <span class="item-conf-tag {{ tag_class }}">{{ tag_label }}</span>
+            <div class="item-texto">{{ item.texto }}</div>
+            <select name="item_{{ item.numero }}" class="opcoes-select" required>
+              <option value="">— selecione —</option>
+              {% for val, label in opcoes %}
+              <option value="{{ val }}" {% if item.valor == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endwith %}
+      {% else %}
+        <div class="item-card">
+          <div class="item-num">{{ item.numero }}</div>
+          <div class="item-body">
+            <div class="item-texto">{{ item.texto }}</div>
+            <select name="item_{{ item.numero }}" class="opcoes-select" required>
+              <option value="">— selecione —</option>
+              {% for val, label in opcoes %}
+              <option value="{{ val }}" {% if item.valor == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn-confirmar">
+      <i data-lucide="check-circle"></i>
+      Confirmar e calcular resultado
+    </button>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Destaca selects sem resposta ao tentar submeter
+  document.getElementById('revisao-form').addEventListener('submit', function(e) {
+    let faltando = 0;
+    this.querySelectorAll('select').forEach(sel => {
+      if (!sel.value) {
+        sel.style.borderColor = '#DC2626';
+        faltando++;
+      } else {
+        sel.style.borderColor = '';
+      }
+    });
+    if (faltando > 0) {
+      e.preventDefault();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+  });
+
+  // Remove borda vermelha ao selecionar
+  document.querySelectorAll('.opcoes-select').forEach(sel => {
+    sel.addEventListener('change', function() {
+      this.style.borderColor = '';
+    });
+  });
+
+  lucide.createIcons();
+</script>
+{% endblock %}

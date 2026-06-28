@@ -11,6 +11,19 @@ from .mabc2 import *
 from .beery import *
 from .pedi import *
 from .spm import *
+from .importar_scan import importar_scan_spm_upload, importar_scan_spm_revisao
+from .ps2_wd_publico import ps2_bebe_wd_publico_view, adulto_sensorial_publico_view
+from .importar_scan_ps2 import (
+    importar_scan_auto,
+    importar_scan_ps2_crianca_upload, importar_scan_ps2_crianca_revisao,
+    importar_scan_ps2_bebe_upload, importar_scan_ps2_bebe_revisao,
+    importar_scan_adulto_upload, importar_scan_adulto_revisao,
+    ps2_bebe_deletar, adulto_sensorial_deletar,
+    nova_avaliacao_ps2_bebe_wd, nova_avaliacao_ps2_cp_wd, nova_avaliacao_adulto_sensorial,
+    ps2_bebe_wd_resultado, adulto_sensorial_resultado,
+    ps2_bebe_wd_visualizar, adulto_sensorial_visualizar,
+    salvar_observacoes_ps2_bebe, salvar_observacoes_adulto_sensorial,
+)
 from .convite import *
 from .vineland3 import *
 from .portage import *
