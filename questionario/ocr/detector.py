@@ -92,10 +92,72 @@ def detectar_instrumento(paginas_bytes: list) -> dict:
 
     confianca = 'alta' if total_linhas >= 8 else 'baixa'
 
+    # ── Passo 4: tentar extrair dados do cabeçalho (requer tesseract) ─────────
+    dados_cabecalho = _extrair_cabecalho(paginas_bytes[0])
+
     return {
         'tipo':         tipo,
         'label':        label,
         'confianca':    confianca,
         'total_linhas': total_linhas,
         'coluna_lado':  coluna_lado,
+        **dados_cabecalho,
     }
+
+
+def _extrair_cabecalho(pg_bytes: bytes) -> dict:
+    """
+    Tenta extrair nome e data de nascimento do cabeçalho do formulário.
+    Retorna campos vazios se tesseract não estiver instalado.
+    """
+    resultado = {'nome_detectado': '', 'nasc_detectado': '', 'resp_detectado': ''}
+    try:
+        import pytesseract
+        import re
+        from PIL import Image
+        import io as _io
+
+        img = Image.open(_io.BytesIO(pg_bytes)).convert('RGB')
+        w, h = img.size
+        # Região do cabeçalho: topo 35% da página
+        cabecalho = img.crop((0, 0, w, int(h * 0.35)))
+        cabecalho = cabecalho.resize((cabecalho.width * 2, cabecalho.height * 2), Image.LANCZOS)
+
+        texto = pytesseract.image_to_string(cabecalho, lang='por', config='--psm 6')
+
+        # Nome da criança — procura padrões como "Primeiro nome: Xxx" ou "Nome: Xxx"
+        for padrao in [
+            r'(?:rimeiro\s+nome|Nome\s+da\s+crian)[^\n:]*[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+)*)',
+            r'Nome[^\n:]*:\s*([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+(?:\s+[A-Z][a-záéíóúâ]+)*)',
+        ]:
+            m = re.search(padrao, texto, re.IGNORECASE)
+            if m:
+                resultado['nome_detectado'] = m.group(1).strip()
+                break
+
+        # Sobrenome (PS2 tem campo separado)
+        m_sobre = re.search(r'Sobrenome[^\n:]*:\s*([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ ]+)', texto, re.IGNORECASE)
+        if m_sobre and resultado['nome_detectado']:
+            resultado['nome_detectado'] = resultado['nome_detectado'] + ' ' + m_sobre.group(1).strip()
+
+        # Data de nascimento — padrão dd/mm/aaaa ou dd/mm/aa
+        m_nasc = re.search(r'(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{2,4})', texto)
+        if m_nasc:
+            d, mes, a = m_nasc.group(1), m_nasc.group(2), m_nasc.group(3)
+            if len(a) == 2:
+                a = '20' + a if int(a) <= 30 else '19' + a
+            resultado['nasc_detectado'] = f'{a}-{mes.zfill(2)}-{d.zfill(2)}'
+
+        # Responsável/cuidador
+        for padrao in [
+            r'(?:cuidador|respons[aá]vel|preenchi)[^\n:]*:\s*([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+(?:\s+[A-Z][a-záéíóú]+)*)',
+        ]:
+            m = re.search(padrao, texto, re.IGNORECASE)
+            if m:
+                resultado['resp_detectado'] = m.group(1).strip()
+                break
+
+    except Exception:
+        pass  # tesseract não disponível ou erro — campos ficam vazios
+
+    return resultado

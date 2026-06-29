@@ -88,6 +88,7 @@ urlpatterns = [
     path("spm/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_spm_revisao, name="importar_scan_spm_revisao"),
     # Import automático (detecção automática do instrumento)
     path("pacientes/<uuid:paciente_id>/importar/", views.importar_scan_auto, name="importar_scan_auto"),
+    path("importar/", views.importar_scan_auto_novo_paciente, name="importar_scan_auto_novo_paciente"),
     # Import PS2 Criança (3–14 anos)
     path("pacientes/<uuid:paciente_id>/importar-ps2-crianca/", views.importar_scan_ps2_crianca_upload, name="importar_scan_ps2_crianca_upload"),
     path("sensorial/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_ps2_crianca_revisao, name="importar_scan_ps2_crianca_revisao"),

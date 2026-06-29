@@ -521,20 +521,23 @@ def importar_scan_auto_novo_paciente(request):
         return _detectar_json(paginas)
 
     if step == 'importar':
-        # Cria o paciente com os dados do formulário
-        nome         = request.POST.get('nome', '').strip()
-        responsavel  = request.POST.get('responsavel', '').strip()
-        data_nasc    = request.POST.get('data_nascimento', '').strip()
-        tipo         = request.POST.get('tipo', '')
+        nome        = request.POST.get('nome', '').strip()
+        responsavel = request.POST.get('responsavel', '').strip()
+        data_nasc   = request.POST.get('data_nascimento', '').strip()
+        telefone    = request.POST.get('telefone', '').strip()
+        email       = request.POST.get('email_responsavel', '').strip()
+        tipo        = request.POST.get('tipo', '')
 
-        if not nome or not data_nasc:
-            return JsonResponse({'ok': False, 'erro': 'Nome e data de nascimento são obrigatórios.'})
+        if not nome or not data_nasc or not responsavel:
+            return JsonResponse({'ok': False, 'erro': 'Nome, data de nascimento e responsável são obrigatórios.'})
 
         paciente = Paciente.objects.create(
             medico=request.user,
             nome=nome,
-            responsavel=responsavel or nome,
+            responsavel=responsavel,
             data_nascimento=data_nasc,
+            telefone=telefone,
+            email_responsavel=email,
         )
         return _executar_import(request, paciente, tipo, paginas)
 

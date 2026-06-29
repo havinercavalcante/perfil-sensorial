@@ -14,7 +14,7 @@ from .spm import *
 from .importar_scan import importar_scan_spm_upload, importar_scan_spm_revisao
 from .ps2_wd_publico import ps2_bebe_wd_publico_view, adulto_sensorial_publico_view
 from .importar_scan_ps2 import (
-    importar_scan_auto,
+    importar_scan_auto, importar_scan_auto_novo_paciente,
     importar_scan_ps2_crianca_upload, importar_scan_ps2_crianca_revisao,
     importar_scan_ps2_bebe_upload, importar_scan_ps2_bebe_revisao,
     importar_scan_adulto_upload, importar_scan_adulto_revisao,
