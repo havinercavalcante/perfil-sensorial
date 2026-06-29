@@ -2,8 +2,10 @@
 Detecção automática do tipo de instrumento a partir das imagens do formulário.
 
 Lógica:
-  1. Verifica se as colunas de resposta estão na ESQUERDA (SPM) ou DIREITA (PS2/Adulto)
-  2. Conta o total de linhas com conteúdo em todas as páginas
+  1. Compara o "contraste de colunas" (CV = desvio/média do perfil horizontal)
+     no lado esquerdo vs direito. Colunas de resposta criam picos nítidos (alto CV);
+     texto contínuo cria platô uniforme (baixo CV).
+  2. Conta o total de linhas com conteúdo no lado vencedor em todas as páginas
   3. Mapeia a contagem para o instrumento mais provável
 """
 
@@ -12,14 +14,25 @@ from .spm_reader import (
     _load_and_normalize, _to_binary, _find_content_rows, ROW_MIN_DENSITY
 )
 
-# Limites para classificação pelo total de linhas detectadas
+# Limites para classificação pelo total de linhas detectadas.
+# Usado apenas quando is_spm=False (colunas na direita = PS2/Adulto).
+# 'spm' NÃO consta aqui: quando is_spm=True o tipo já é definido diretamente.
 FAIXAS = [
-    (0,  35,  'ps2_bebe_wd',    'PS2 Bebê (0–6 meses)'),
-    (35, 60,  'ps2_cp_wd',      'PS2 Criança Pequena (7–35 meses)'),
-    (60, 72,  'adulto_sensorial','Perfil Sensorial Adulto/Adolescente'),
-    (72, 82,  'spm',            'SPM — Sensory Processing Measure'),
-    (82, 999, 'sensorial',      'Perfil Sensorial 2 — Criança (3–14 anos)'),
+    (0,   35,  'ps2_bebe_wd',    'PS2 Bebê (0–6 meses)'),
+    (35,  82,  'ps2_cp_wd',      'PS2 Criança Pequena (7–35 meses)'),
+    (82,  110, 'adulto_sensorial','Perfil Sensorial Adulto/Adolescente'),
+    (110, 999, 'sensorial',      'Perfil Sensorial 2 — Criança (3–14 anos)'),
 ]
+
+
+def _column_cv(binary: np.ndarray, x1: int, x2: int) -> float:
+    """Coeficiente de variação (desvio/média) do perfil de densidade horizontal.
+    Alto CV → colunas nítidas de marcas (resposta); baixo CV → texto contínuo."""
+    proj = binary[:, x1:x2].mean(axis=0)
+    mean_v = float(proj.mean())
+    if mean_v < 0.002:
+        return 0.0
+    return float(np.std(proj)) / mean_v
 
 
 def detectar_instrumento(paginas_bytes: list) -> dict:
@@ -39,17 +52,20 @@ def detectar_instrumento(paginas_bytes: list) -> dict:
         return {'tipo': None, 'label': 'Não detectado', 'confianca': 'baixa',
                 'total_linhas': 0, 'coluna_lado': None}
 
-    # ── Passo 1: determinar lado das colunas usando a 1ª página ──────────────
-    img0, (W0, H0) = _load_and_normalize(paginas_bytes[0])
-    binary0 = _to_binary(img0)
+    # ── Passo 1: determinar lado das colunas usando contraste de perfil ────────
+    # Acumula o CV de cada página para ambos os lados.
+    # Colunas de resposta: marcas concentradas em posições fixas → alto CV.
+    # Texto contínuo: densidade uniforme → baixo CV.
+    left_cv_sum  = 0.0
+    right_cv_sum = 0.0
 
-    left_area  = binary0[:, int(0.02 * W0): int(0.25 * W0)]
-    right_area = binary0[:, int(0.60 * W0): int(0.97 * W0)]
+    for pg_bytes in paginas_bytes:
+        img, (W, H) = _load_and_normalize(pg_bytes)
+        binary = _to_binary(img)
+        left_cv_sum  += _column_cv(binary, int(0.09 * W), int(0.40 * W))
+        right_cv_sum += _column_cv(binary, int(0.62 * W), int(0.97 * W))
 
-    left_d  = float(left_area.mean())
-    right_d = float(right_area.mean())
-
-    is_spm = left_d > right_d * 1.2   # colunas na esquerda → SPM
+    is_spm      = left_cv_sum > right_cv_sum
     coluna_lado = 'esquerda' if is_spm else 'direita'
 
     # ── Passo 2: contar linhas com conteúdo em todas as páginas ─────────────
@@ -59,10 +75,10 @@ def detectar_instrumento(paginas_bytes: list) -> dict:
         binary = _to_binary(img)
 
         if is_spm:
-            ax1, ax2 = int(0.02 * W), int(0.25 * W)
+            ax1, ax2 = int(0.03 * W), int(0.24 * W)
             n_cols = 4
         else:
-            ax1, ax2 = int(0.60 * W), int(0.97 * W)
+            ax1, ax2 = int(0.62 * W), int(0.97 * W)
             n_cols = 5
 
         rows = _find_content_rows(binary, ax1, ax2)
@@ -73,7 +89,6 @@ def detectar_instrumento(paginas_bytes: list) -> dict:
                 float(binary[y1:y2, ax1 + i * col_w: ax1 + (i+1) * col_w].mean())
                 for i in range(n_cols)
             ]
-            # Só conta linhas que têm pelo menos uma marca real
             if max(densidades) >= ROW_MIN_DENSITY * 1.5:
                 total_linhas += 1
 
@@ -128,7 +143,7 @@ def _extrair_cabecalho(pg_bytes: bytes) -> dict:
         # Nome da criança — procura padrões como "Primeiro nome: Xxx" ou "Nome: Xxx"
         for padrao in [
             r'(?:rimeiro\s+nome|Nome\s+da\s+crian)[^\n:]*[:\s]+([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+(?:\s+[A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+)*)',
-            r'Nome[^\n:]*:\s*([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+(?:\s+[A-Z][a-záéíóúâ]+)*)',
+            r'Nome[^\n:]*:\s*([A-ZÁÉÍÓÚÂÊÎÔÛÀÈÌÒÙÃÕ][a-záéíóúâêîôûàèìòùãõ]+(?:\s+[A-Z][a-záéíóú]+)*)',
         ]:
             m = re.search(padrao, texto, re.IGNORECASE)
             if m:

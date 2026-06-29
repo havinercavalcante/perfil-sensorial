@@ -19,13 +19,13 @@ from PIL import Image, ImageFilter
 
 # Posição das colunas de resposta como fração da largura da imagem
 # Calibrado para o formulário SPM-P e SPM Casa (layout padrão)
-ANSWER_X1 = 0.02   # início da área de resposta
-ANSWER_X2 = 0.24   # fim da área de resposta (4 colunas de N, O, F, S)
+ANSWER_X1 = 0.09   # início da área de resposta (coluna N começa ~9% da largura)
+ANSWER_X2 = 0.40   # fim da área de resposta (coluna S termina ~39% da largura)
 
 COL_LABELS = ['N', 'O', 'F', 'S']
 
 # Limiar mínimo de densidade para considerar que existe alguma marca na linha
-ROW_MIN_DENSITY = 0.025
+ROW_MIN_DENSITY = 0.020
 
 # Razão entre a célula mais marcada e a segunda para classificar confiança
 HIGH_CONF_RATIO = 2.2
@@ -60,9 +60,16 @@ def _find_content_rows(binary: np.ndarray, ax1: int, ax2: int,
                        min_height: int = 12, merge_gap: int = 5) -> list:
     """
     Encontra intervalos verticais (y1, y2) com conteúdo na área de resposta.
-    Usa projeção horizontal — soma de pixels escuros por linha.
+    Usa o MÁXIMO entre as 4 colunas por linha — evita diluição do sinal quando
+    a marca está apenas na coluna N (mais estreita, lado esquerdo).
+    mean() dilui 4× o sinal; max() usa diretamente a densidade da coluna marcada.
     """
-    proj = binary[:, ax1:ax2].mean(axis=1)
+    col_w = (ax2 - ax1) // 4
+    col_projs = [
+        binary[:, ax1 + i * col_w: ax1 + (i + 1) * col_w].mean(axis=1)
+        for i in range(4)
+    ]
+    proj = np.maximum.reduce(col_projs)
     has_content = proj > ROW_MIN_DENSITY
 
     rows = []
@@ -173,10 +180,17 @@ def processar_paginas_spm(paginas_bytes: list, total_items: int = 75) -> dict:
 
             label, confidence = _classify_row(densities)
 
-            # Linhas classificadas como 'missing' com densidade muito baixa são cabeçalhos
-            # — pula sem incrementar o contador de itens
-            if confidence == 'missing' and max(densities) < ROW_MIN_DENSITY * 1.5:
-                continue
+            # Pula linhas que são cabeçalhos de seção ou estão vazias, sem incrementar o contador.
+            # Cabeçalho: texto em todas as colunas → densidades próximas entre si
+            #   (≥3 colunas com densidade > 50% do máximo).
+            # Item real: uma coluna domina fortemente; as outras estão muito abaixo do máximo.
+            if confidence == 'missing':
+                max_d = max(densities)
+                if max_d < ROW_MIN_DENSITY:
+                    continue  # linha vazia / muito fraca
+                n_cols_significativas = sum(1 for d in densities if d > max_d * 0.5)
+                if n_cols_significativas >= 3:
+                    continue  # distribuição uniforme → cabeçalho de seção
 
             resultados[item_counter] = {'value': label, 'confidence': confidence}
             item_counter += 1
