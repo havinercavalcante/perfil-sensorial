@@ -1,5 +1,6 @@
 from django.conf import settings
 import uuid
+import json
 import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,6 +16,7 @@ from ..tasks import enviar_email
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar,
     AvaliacaoBebe, AvaliacaoSPM, AvaliacaoVineland3, AvaliacaoPEDI, AvaliacaoPortage, LinkConvite,
+    AvaliacaoPS2Bebe, AvaliacaoAdultoSensorial,
     AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT,
     AvaliacaoLinguagem, AvaliacaoAlimentacao,
     AvaliacaoHabitosOrais, AvaliacaoVozInfantil, AvaliacaoProcessamentoAuditivo, AvaliacaoIDV10,
@@ -46,6 +48,10 @@ TIPOS_ADULTO = {
     # novas escalas adulto
     "k10", "ucla", "msi_bpd", "gds15", "rosenberg", "audit", "bis11",
     "hama", "lsas", "risco_suicidio", "agorafobia", "panico",
+    # perfil sensorial adulto
+    "adulto_sensorial",
+    # anamnese
+    "anamnese_adulto",
 }
 
 
@@ -63,6 +69,9 @@ def gerar_link(request):
         "crianca_pequena": "bebe",
         "spm_p": "spm",
         "spm_casa": "spm",
+        "ps2_bebe_wd": "ps2_bebe_wd",
+        "ps2_cp_wd": "ps2_cp_wd",
+        "adulto_sensorial": "adulto_sensorial",
         "edm": "edm",
         "mabc2": "mabc2",
         "beery": "beery",
@@ -165,8 +174,10 @@ def gerar_link(request):
             "nome_medico": nome_medico,
         })
 
+    pacientes = Paciente.objects.filter(medico=request.user).order_by("nome").values("uuid", "nome")
     return render(request, "questionario/dashboard/gerar_link.html", {
         "modulos_liberados": modulos_liberados,
+        "pacientes_json": json.dumps([{"uuid": str(p["uuid"]), "nome": p["nome"]} for p in pacientes]),
     })
 
 
@@ -242,14 +253,23 @@ def iniciar_avaliacao(request, token):
                 "is_adulto": is_adulto,
             })
 
-        paciente = Paciente.objects.create(
-            medico=convite.medico,
-            nome=nome,
-            data_nascimento=data_nascimento,
-            responsavel=responsavel,
-            email_responsavel=email,
-            telefone=telefone,
-        )
+        if convite.tipo in LinkConvite.TIPOS_ANAMNESE:
+            # Anamnese: evita duplicar o paciente se o responsável reenviar o
+            # formulário (ou se já existir um cadastro com o mesmo nome/data
+            # de nascimento para este profissional).
+            paciente = Paciente.objects.find_or_create_anamnese(
+                medico=convite.medico, nome=nome, data_nascimento=data_nascimento,
+                responsavel=responsavel, email_responsavel=email, telefone=telefone,
+            )
+        else:
+            paciente = Paciente.objects.create(
+                medico=convite.medico,
+                nome=nome,
+                data_nascimento=data_nascimento,
+                responsavel=responsavel,
+                email_responsavel=email,
+                telefone=telefone,
+            )
         logger.info(
             "CONSENTIMENTO_OBTIDO paciente_uuid=%s responsavel=%s ip=%s tipo=%s",
             paciente.uuid, responsavel,
@@ -262,7 +282,13 @@ def iniciar_avaliacao(request, token):
         t = str(uuid.uuid4())
         tipo = convite.tipo
 
-        if tipo == "sensorial":
+        if tipo in LinkConvite.TIPOS_ANAMNESE:
+            from procedimentos.models import ProcedimentoDocumento
+            doc = ProcedimentoDocumento.objects.create(
+                paciente=paciente, tipo=tipo, token_publico=uuid.uuid4(),
+            )
+            return redirect("anamnese_publica_form", token=doc.token_publico)
+        elif tipo == "sensorial":
             Avaliacao.objects.create(paciente=paciente, token=t)
             return redirect("questionario_publico", token=t, pagina=1)
         elif tipo == "vineland":
@@ -280,6 +306,15 @@ def iniciar_avaliacao(request, token):
         elif tipo in ("spm_p", "spm_casa"):
             AvaliacaoSPM.objects.create(paciente=paciente, token=t, faixa=tipo)
             return redirect("spm_publico", token=t, pagina=1)
+        elif tipo == "ps2_bebe_wd":
+            AvaliacaoPS2Bebe.objects.create(paciente=paciente, token=t, faixa="bebe")
+            return redirect("ps2_bebe_wd_publico", token=t, pagina=1)
+        elif tipo == "ps2_cp_wd":
+            AvaliacaoPS2Bebe.objects.create(paciente=paciente, token=t, faixa="cp")
+            return redirect("ps2_bebe_wd_publico", token=t, pagina=1)
+        elif tipo == "adulto_sensorial":
+            AvaliacaoAdultoSensorial.objects.create(paciente=paciente, token=t)
+            return redirect("adulto_sensorial_publico", token=t, pagina=1)
         elif tipo == "vineland3":
             AvaliacaoVineland3.objects.create(paciente=paciente, token=t)
             return redirect("vineland3_publico", token=t, pagina=1)

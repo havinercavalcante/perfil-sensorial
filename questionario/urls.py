@@ -32,6 +32,7 @@ urlpatterns = [
     path("pacientes/novo/", views.novo_paciente, name="novo_paciente"),
     path("pacientes/<uuid:paciente_id>/", views.detalhe_paciente, name="detalhe_paciente"),
     path("pacientes/<uuid:paciente_id>/evolucao/", views.evolucao_paciente, name="evolucao_paciente"),
+    path("pacientes/<uuid:paciente_id>/prontuario/resumo/", views.prontuario_resumo, name="prontuario_resumo"),
     path("pacientes/<uuid:paciente_id>/nova-avaliacao/", views.nova_avaliacao, name="nova_avaliacao"),
     path("avaliacao/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.questionario_view, name="questionario"),
     path("questionario/publico/<str:token>/<int:pagina>/", views.questionario_publico_view, name="questionario_publico"),
@@ -84,6 +85,37 @@ urlpatterns = [
     path("spm/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_spm, name="salvar_observacoes_spm"),
     path("spm/publico/<str:token>/<int:pagina>/", views.spm_publico_view, name="spm_publico"),
     path("spm/<uuid:avaliacao_id>/enviar-link/", views.enviar_email_spm, name="enviar_email_spm"),
+    path("pacientes/<uuid:paciente_id>/importar-scan-spm/", views.importar_scan_spm_upload, name="importar_scan_spm_upload"),
+    path("spm/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_spm_revisao, name="importar_scan_spm_revisao"),
+    # Import automático (detecção automática do instrumento)
+    path("pacientes/<uuid:paciente_id>/importar/", views.importar_scan_auto, name="importar_scan_auto"),
+    path("importar/", views.importar_scan_auto_novo_paciente, name="importar_scan_auto_novo_paciente"),
+    # Import PS2 Criança (3–14 anos)
+    path("pacientes/<uuid:paciente_id>/importar-ps2-crianca/", views.importar_scan_ps2_crianca_upload, name="importar_scan_ps2_crianca_upload"),
+    path("sensorial/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_ps2_crianca_revisao, name="importar_scan_ps2_crianca_revisao"),
+    # Import PS2 Bebê / Criança Pequena (Winnie Dunn)
+    path("pacientes/<uuid:paciente_id>/importar-ps2-bebe/<str:faixa>/", views.importar_scan_ps2_bebe_upload, name="importar_scan_ps2_bebe_upload"),
+    path("ps2bebe/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_ps2_bebe_revisao, name="importar_scan_ps2_bebe_revisao"),
+    # Import Perfil Sensorial Adulto
+    path("pacientes/<uuid:paciente_id>/importar-adulto-sensorial/", views.importar_scan_adulto_upload, name="importar_scan_adulto_upload"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/revisar-scan/", views.importar_scan_adulto_revisao, name="importar_scan_adulto_revisao"),
+    # Resultados, visualizar e observações — PS2 WD / Adulto Sensorial
+    path("ps2bebe/<uuid:avaliacao_id>/resultado/", views.ps2_bebe_wd_resultado, name="ps2_bebe_wd_resultado"),
+    path("ps2bebe/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.ps2_bebe_wd_visualizar, name="ps2_bebe_wd_visualizar"),
+    path("ps2bebe/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_ps2_bebe, name="salvar_observacoes_ps2_bebe"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/resultado/", views.adulto_sensorial_resultado, name="adulto_sensorial_resultado"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.adulto_sensorial_visualizar, name="adulto_sensorial_visualizar"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/observacoes/", views.salvar_observacoes_adulto_sensorial, name="adulto_sensorial_observacoes"),
+    # Nova avaliação PS2 WD / Adulto Sensorial (via modal)
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-ps2-bebe-wd/", views.nova_avaliacao_ps2_bebe_wd, name="nova_avaliacao_ps2_bebe_wd"),
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-ps2-cp-wd/", views.nova_avaliacao_ps2_cp_wd, name="nova_avaliacao_ps2_cp_wd"),
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-adulto-sensorial/", views.nova_avaliacao_adulto_sensorial, name="nova_avaliacao_adulto_sensorial"),
+    # Delete PS2 Bebê/CP e Adulto Sensorial
+    path("ps2bebe/<uuid:avaliacao_id>/deletar/", views.ps2_bebe_deletar, name="ps2_bebe_deletar"),
+    path("adulto-sensorial/<uuid:avaliacao_id>/deletar/", views.adulto_sensorial_deletar, name="adulto_sensorial_deletar"),
+    # Formulários públicos PS2 WD e Adulto Sensorial
+    path("ps2-wd/publico/<str:token>/<int:pagina>/", views.ps2_bebe_wd_publico_view, name="ps2_bebe_wd_publico"),
+    path("adulto-sensorial/publico/<str:token>/<int:pagina>/", views.adulto_sensorial_publico_view, name="adulto_sensorial_publico"),
     # EDM
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-edm/", views.nova_avaliacao_edm, name="nova_avaliacao_edm"),
     path("edm/<uuid:avaliacao_id>/", views.edm_form, name="edm_form"),
@@ -132,6 +164,28 @@ urlpatterns = [
     path("portage/<uuid:avaliacao_id>/deletar/", views.portage_deletar, name="portage_deletar"),
     path("portage/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.portage_visualizar, name="portage_visualizar"),
     path("portage/publico/<str:token>/<int:pagina>/", views.portage_publico_view, name="portage_publico"),
+    # VB-MAPP — Avaliação de Marcos (presencial, sem link público)
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp/", views.nova_avaliacao_vbmapp, name="nova_avaliacao_vbmapp"),
+    path("vbmapp/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.vbmapp_form, name="vbmapp_form"),
+    path("vbmapp/<uuid:avaliacao_id>/concluir/", views.vbmapp_concluir, name="vbmapp_concluir"),
+    path("vbmapp/<uuid:avaliacao_id>/resultado/", views.vbmapp_resultado, name="vbmapp_resultado"),
+    path("vbmapp/<uuid:avaliacao_id>/deletar/", views.vbmapp_deletar, name="vbmapp_deletar"),
+    path("vbmapp/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.vbmapp_visualizar, name="vbmapp_visualizar"),
+    # VB-MAPP — Avaliação de Barreiras Linguísticas
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp-barreiras/", views.nova_avaliacao_vbmapp_barreiras, name="nova_avaliacao_vbmapp_barreiras"),
+    path("vbmapp-barreiras/<uuid:avaliacao_id>/", views.vbmapp_barreiras_form, name="vbmapp_barreiras_form"),
+    path("vbmapp-barreiras/<uuid:avaliacao_id>/resultado/", views.vbmapp_barreiras_resultado, name="vbmapp_barreiras_resultado"),
+    path("vbmapp-barreiras/<uuid:avaliacao_id>/deletar/", views.vbmapp_barreiras_deletar, name="vbmapp_barreiras_deletar"),
+    # VB-MAPP — Transition Assessment
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp-transicao/", views.nova_avaliacao_vbmapp_transicao, name="nova_avaliacao_vbmapp_transicao"),
+    path("vbmapp-transicao/<uuid:avaliacao_id>/", views.vbmapp_transicao_form, name="vbmapp_transicao_form"),
+    path("vbmapp-transicao/<uuid:avaliacao_id>/resultado/", views.vbmapp_transicao_resultado, name="vbmapp_transicao_resultado"),
+    path("vbmapp-transicao/<uuid:avaliacao_id>/deletar/", views.vbmapp_transicao_deletar, name="vbmapp_transicao_deletar"),
+    # VB-MAPP — Task Analysis Skills Tracking
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp-task-analysis/<int:nivel>/", views.nova_avaliacao_vbmapp_task_analysis, name="nova_avaliacao_vbmapp_task_analysis"),
+    path("vbmapp-task-analysis/<uuid:avaliacao_id>/", views.vbmapp_task_analysis_form, name="vbmapp_task_analysis_form"),
+    path("vbmapp-task-analysis/<uuid:avaliacao_id>/resultado/", views.vbmapp_task_analysis_resultado, name="vbmapp_task_analysis_resultado"),
+    path("vbmapp-task-analysis/<uuid:avaliacao_id>/deletar/", views.vbmapp_task_analysis_deletar, name="vbmapp_task_analysis_deletar"),
     # SDQ
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-sdq/", views.nova_avaliacao_sdq, name="nova_avaliacao_sdq"),
     path("sdq/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.sdq_form, name="sdq_form"),

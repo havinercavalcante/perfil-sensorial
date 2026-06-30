@@ -1,0 +1,390 @@
+{% extends "questionario/base.html" %}
+{% block title %}Importar Formulário{% if paciente %} — {{ paciente.nome }}{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --imp: #2E7D6B; --imp-dark: #0F3D30; }
+  .page-header {
+    background: linear-gradient(135deg, var(--imp-dark), var(--imp));
+    color: #fff; border-radius: 14px; padding: 1.4rem 1.6rem; margin-bottom: 1.5rem;
+  }
+  .page-header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: .25rem; }
+  .page-header p  { font-size: .83rem; opacity: .85; }
+
+  .step { display: none; }
+  .step.ativo { display: block; }
+
+  .drop-zone {
+    border: 2px dashed var(--imp); border-radius: 14px;
+    padding: 3rem 1.5rem; text-align: center; cursor: pointer;
+    background: #f0fff8; transition: background .15s;
+  }
+  .drop-zone.dragover { background: rgba(46,125,107,.12); }
+  .drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .drop-zone p    { font-size: .95rem; font-weight: 600; color: var(--imp-dark); margin-bottom: .3rem; }
+  .drop-zone small { font-size: .78rem; color: var(--text-muted); }
+  .file-list { margin-top: 1rem; display: flex; flex-direction: column; gap: .4rem; }
+  .file-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-radius: 8px; background: #f0fff8; border: 1px solid var(--imp); font-size: .82rem; color: var(--imp-dark); }
+  .file-item .file-name { flex: 1; }
+  .file-remove { cursor: pointer; color: var(--imp); font-weight: 700; background: none; border: none; font-size: 1rem; }
+
+  /* Resultado detecção */
+  .det-card { border-radius: 12px; border: 2px solid var(--imp); background: #fff; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+  .det-titulo { font-size: .78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .5rem; }
+  .det-instrumento { font-size: 1.1rem; font-weight: 800; color: var(--imp-dark); display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; }
+  .det-badge { font-size: .7rem; font-weight: 700; padding: .2rem .6rem; border-radius: 20px; }
+  .badge-alta  { background: #D1FAE5; color: #065F46; }
+  .badge-baixa { background: #FEF9C3; color: #92400E; }
+  .det-sub { font-size: .8rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .tipo-corr { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .tipo-corr label { font-size: .84rem; font-weight: 600; color: var(--text-muted); }
+  .tipo-corr select { font-size: .88rem; padding: .4rem .65rem; border-radius: 8px; border: 1.5px solid var(--border); }
+
+  /* Formulário paciente */
+  .pac-form { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; margin-bottom: 1.25rem; }
+  .pac-form .full { grid-column: 1 / -1; }
+  .pac-form label { font-size: .82rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: .25rem; }
+  .pac-form input, .pac-form select { width: 100%; padding: .45rem .65rem; border-radius: 8px; border: 1.5px solid var(--border); font-size: .88rem; }
+  .pac-form input:focus, .pac-form select:focus { border-color: var(--imp); outline: none; }
+
+  .btn-imp {
+    background: linear-gradient(135deg, var(--imp-dark), var(--imp));
+    color: #fff; border: none; border-radius: 10px; padding: .85rem 2rem;
+    font-size: .95rem; font-weight: 700; cursor: pointer; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    transition: opacity .15s; margin-top: .5rem;
+  }
+  .btn-imp:disabled { opacity: .5; cursor: not-allowed; }
+
+  .dica-box { background: #FFF8E7; border: 1px solid #F5D87A; border-radius: 10px; padding: .85rem 1rem; font-size: .82rem; color: #7A5700; margin-top: 1.25rem; }
+  .dica-box b { display: block; margin-bottom: .3rem; }
+
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(15,61,48,.75); z-index: 999; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+  .loading-overlay.active { display: flex; }
+  .spinner { width: 52px; height: 52px; border: 5px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { color: #fff; font-size: 1rem; font-weight: 600; }
+  .loading-sub { color: rgba(255,255,255,.75); font-size: .83rem; }
+
+  @media(max-width:500px){ .pac-form { grid-template-columns: 1fr; } .pac-form .full { grid-column: 1; } }
+</style>
+{% endblock %}
+
+{% block back_button %}
+{% if paciente %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>
+{% else %}
+<a href="{% url 'gerar_link' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Gerar Link</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loading-msg">Detectando instrumento...</div>
+  <div class="loading-sub" id="loading-sub">Analisando as imagens do formulário</div>
+</div>
+
+<div style="max-width:600px; margin:0 auto; padding:1rem;">
+
+  <div class="page-header">
+    <h1><i data-lucide="scan-text" style="width:18px;height:18px;vertical-align:middle;margin-right:.4rem;"></i>Importar formulário do papel</h1>
+    <p>
+      {% if paciente %}{{ paciente.nome }} · O{% else %}O{% endif %}
+      sistema identifica automaticamente qual instrumento foi preenchido
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;color:#7F1D1D;font-size:.85rem;">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- PASSO 1: UPLOAD -->
+  <div class="step ativo" id="step1">
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="drop-icon">📄</div>
+      <p>Clique ou arraste as páginas do formulário aqui</p>
+      <small>JPG · PNG · WebP · PDF &nbsp;·&nbsp; Máximo 10 arquivos</small>
+    </div>
+    <input type="file" id="file-input" multiple accept="image/*,.pdf" style="display:none">
+    <div class="file-list" id="file-list"></div>
+
+    <button type="button" class="btn-imp" id="btn-detectar" disabled onclick="detectar()">
+      <i data-lucide="search" style="width:18px;height:18px;"></i>
+      Identificar instrumento
+    </button>
+
+    <div class="dica-box">
+      <b>Como funciona:</b>
+      Envie as fotos ou PDF → sistema detecta o instrumento → {% if not paciente %}você informa os dados do paciente → {% endif %}respostas são extraídas → tela de revisão para confirmar.
+    </div>
+  </div>
+
+  <!-- PASSO 2: CONFIRMAÇÃO + DADOS DO PACIENTE -->
+  <div class="step" id="step2">
+
+    <div class="det-card">
+      <div class="det-titulo">Instrumento detectado</div>
+      <div class="det-instrumento">
+        <i data-lucide="check-circle" style="width:20px;height:20px;color:var(--imp);"></i>
+        <span id="det-label">—</span>
+        <span class="det-badge" id="det-badge"></span>
+      </div>
+      <div class="det-sub" id="det-sub"></div>
+
+      <div class="tipo-corr">
+        <label>Não é esse? Corrigir:</label>
+        <select id="tipo-select">
+          <option value="spm_p">SPM-P Casa (2–5 anos)</option>
+          <option value="spm_casa">SPM Casa (5–12 anos)</option>
+          <option value="ps2_bebe_wd">PS2 Bebê (0–6 meses)</option>
+          <option value="ps2_cp_wd">PS2 Criança Pequena (7–35 meses)</option>
+          <option value="sensorial">PS2 Criança (3–14 anos)</option>
+          <option value="adulto_sensorial">Perfil Sensorial Adulto</option>
+        </select>
+      </div>
+    </div>
+
+    {% if not paciente %}
+    <!-- Dados do paciente (modo gerar-link) -->
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-title"><i data-lucide="user" style="width:16px;height:16px;"></i> Dados do paciente</div>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;" id="pac-hint">
+        Preencha com os dados que estão no cabeçalho do formulário.
+      </p>
+      <div class="pac-form">
+        <div class="full">
+          <label id="lbl-nome">Nome completo da criança *</label>
+          <input type="text" id="pac-nome" placeholder="Nome" required>
+        </div>
+        <div>
+          <label>Data de nascimento *</label>
+          <input type="date" id="pac-nasc" required>
+        </div>
+        <div>
+          <label>Telefone</label>
+          <input type="tel" id="pac-tel" placeholder="(00) 00000-0000">
+        </div>
+        <div class="full" id="wrap-resp">
+          <label>Nome do responsável *</label>
+          <input type="text" id="pac-resp" placeholder="Nome do pai/mãe/responsável">
+        </div>
+        <div class="full" id="wrap-email">
+          <label id="lbl-email">E-mail do responsável</label>
+          <input type="email" id="pac-email" placeholder="email@exemplo.com">
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <button type="button" class="btn-imp" id="btn-importar" onclick="importar()">
+      <i data-lucide="zap" style="width:16px;height:16px;"></i>
+      Confirmar e extrair respostas
+    </button>
+
+    <button type="button" onclick="voltarStep1()" style="width:100%;margin-top:.75rem;padding:.6rem;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:.85rem;color:var(--text-muted);">
+      ← Trocar arquivos
+    </button>
+  </div>
+
+</div>
+
+<!-- Form oculto para submit final -->
+<form id="form-importar" method="post"
+      action="{% if paciente %}{% url 'importar_scan_auto' paciente.uuid %}{% else %}{% url 'importar_scan_auto_novo_paciente' %}{% endif %}"
+      enctype="multipart/form-data" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="step" value="importar">
+  <input type="hidden" name="tipo" id="form-tipo">
+  {% if not paciente %}
+  <input type="hidden" name="nome" id="form-nome">
+  <input type="hidden" name="data_nascimento" id="form-nasc">
+  <input type="hidden" name="responsavel" id="form-resp">
+  <input type="hidden" name="telefone" id="form-tel">
+  <input type="hidden" name="email_responsavel" id="form-email">
+  {% endif %}
+  <div id="form-files"></div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF      = '{{ csrf_token }}';
+const URL_POST  = document.getElementById('form-importar').action;
+const MODO      = '{{ modo }}';
+
+const dropZone    = document.getElementById('drop-zone');
+const fileInput   = document.getElementById('file-input');
+const fileList    = document.getElementById('file-list');
+const btnDetectar = document.getElementById('btn-detectar');
+const loading     = document.getElementById('loading');
+let arquivosSel   = new DataTransfer();
+
+/* ── Arquivos ──────────────────────────────────────────────────────────────── */
+function atualizarLista() {
+  fileList.innerHTML = '';
+  const files = arquivosSel.files;
+  for (let i = 0; i < files.length; i++) {
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    div.innerHTML = `<span>📎</span><span class="file-name">${files[i].name}</span>
+      <button type="button" class="file-remove" data-idx="${i}">✕</button>`;
+    fileList.appendChild(div);
+  }
+  btnDetectar.disabled = files.length === 0;
+}
+fileInput.addEventListener('change', () => {
+  for (const f of fileInput.files) arquivosSel.items.add(f);
+  atualizarLista();
+});
+fileList.addEventListener('click', e => {
+  if (!e.target.classList.contains('file-remove')) return;
+  const idx = parseInt(e.target.dataset.idx);
+  const novo = new DataTransfer();
+  for (let i = 0; i < arquivosSel.files.length; i++) {
+    if (i !== idx) novo.items.add(arquivosSel.files[i]);
+  }
+  arquivosSel = novo;
+  atualizarLista();
+});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  for (const f of e.dataTransfer.files) arquivosSel.items.add(f);
+  atualizarLista();
+});
+
+/* ── Adapta formulário por tipo ─────────────────────────────────────────────── */
+function adaptarFormulario(tipo) {
+  if (MODO !== 'novo_paciente') return;
+  const isAdulto = tipo === 'adulto_sensorial';
+  document.getElementById('lbl-nome').textContent  = isAdulto ? 'Nome completo *' : 'Nome completo da criança *';
+  document.getElementById('wrap-resp').style.display  = isAdulto ? 'none' : '';
+  document.getElementById('wrap-email').style.display = isAdulto ? 'none' : '';
+  document.getElementById('pac-resp').required = !isAdulto;
+}
+document.getElementById('tipo-select')?.addEventListener('change', e => adaptarFormulario(e.target.value));
+
+/* ── Detecção ──────────────────────────────────────────────────────────────── */
+async function detectar() {
+  document.getElementById('loading-msg').textContent = 'Detectando instrumento...';
+  document.getElementById('loading-sub').textContent = 'Analisando as colunas de resposta';
+  loading.classList.add('active');
+  btnDetectar.disabled = true;
+
+  const fd = new FormData();
+  fd.append('step', 'detectar');
+  for (const f of arquivosSel.files) fd.append('imagens', f);
+
+  try {
+    const resp = await fetch(URL_POST, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+      body: fd,
+    });
+    const data = await resp.json();
+    if (!data.ok) { alert('Erro: ' + data.erro); return; }
+
+    // Preenche resultado
+    document.getElementById('det-label').textContent = data.label;
+    const badge = document.getElementById('det-badge');
+    if (data.confianca === 'alta') {
+      badge.textContent = 'Alta confiança';
+      badge.className = 'det-badge badge-alta';
+    } else {
+      badge.textContent = 'Verifique — baixa confiança';
+      badge.className = 'det-badge badge-baixa';
+    }
+    document.getElementById('det-sub').textContent =
+      `${data.total_linhas} itens lidos pela IA`;
+
+    // Seleciona tipo no dropdown e adapta formulário
+    const sel = document.getElementById('tipo-select');
+    let t = data.tipo === 'spm' ? 'spm_p' : data.tipo;
+    for (const opt of sel.options) { if (opt.value === t) { sel.value = t; break; } }
+    adaptarFormulario(t);
+
+    // Pré-preenche campos do paciente se detectados
+    if (MODO === 'novo_paciente') {
+      if (data.nome_detectado) {
+        document.getElementById('pac-nome').value = data.nome_detectado;
+      }
+      if (data.nasc_detectado) {
+        document.getElementById('pac-nasc').value = data.nasc_detectado;
+      }
+      if (data.resp_detectado) {
+        document.getElementById('pac-resp').value = data.resp_detectado;
+      }
+      if (data.nome_detectado || data.nasc_detectado) {
+        document.getElementById('pac-hint').innerHTML =
+          '<i data-lucide="check-circle" style="width:13px;height:13px;color:#3D9B6B;vertical-align:middle;margin-right:.3rem;"></i>' +
+          'Dados detectados automaticamente — verifique antes de confirmar.';
+      }
+    }
+
+    // Vai para passo 2
+    document.getElementById('step1').classList.remove('ativo');
+    document.getElementById('step2').classList.add('ativo');
+    lucide.createIcons({ rootElement: document.getElementById('step2') });
+  } catch(e) {
+    alert('Erro de comunicação: ' + e.message);
+  } finally {
+    loading.classList.remove('active');
+    btnDetectar.disabled = false;
+  }
+}
+
+function voltarStep1() {
+  document.getElementById('step2').classList.remove('ativo');
+  document.getElementById('step1').classList.add('ativo');
+}
+
+/* ── Import final ──────────────────────────────────────────────────────────── */
+function importar() {
+  const tipo = document.getElementById('tipo-select').value;
+
+  if (MODO === 'novo_paciente') {
+    const nome     = (document.getElementById('pac-nome')?.value || '').trim();
+    const nasc     = (document.getElementById('pac-nasc')?.value || '').trim();
+    const resp     = (document.getElementById('pac-resp')?.value || '').trim();
+    const isAdulto = tipo === 'adulto_sensorial';
+    if (!nome || !nasc || (!isAdulto && !resp)) {
+      alert(isAdulto
+        ? 'Preencha nome e data de nascimento.'
+        : 'Preencha nome da criança, data de nascimento e nome do responsável.');
+      return;
+    }
+    document.getElementById('form-nome').value  = nome;
+    document.getElementById('form-nasc').value  = nasc;
+    document.getElementById('form-resp').value  = isAdulto ? nome : resp;
+    document.getElementById('form-tel').value   = document.getElementById('pac-tel')?.value || '';
+    document.getElementById('form-email').value = document.getElementById('pac-email')?.value || '';
+  }
+
+  document.getElementById('loading-msg').textContent = 'Extraindo respostas...';
+  document.getElementById('loading-sub').textContent = 'Isso pode levar alguns segundos';
+  loading.classList.add('active');
+  document.getElementById('btn-importar').disabled = true;
+
+  document.getElementById('form-tipo').value = tipo;
+
+  const container = document.getElementById('form-files');
+  container.innerHTML = '';
+  for (const f of arquivosSel.files) {
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.name = 'imagens';
+    inp.files = dt.files; inp.style.display = 'none';
+    container.appendChild(inp);
+  }
+  document.getElementById('form-importar').submit();
+}
+
+lucide.createIcons();
+</script>
+{% endblock %}

@@ -127,6 +127,9 @@ PIX_BANCO        = os.environ.get('PIX_BANCO', 'Nubank')
 ADMIN_NOTIFY_EMAIL = os.environ.get('ADMIN_NOTIFY_EMAIL', EMAIL_HOST_USER)
 EMAIL_LOGO_URL     = os.environ.get('EMAIL_LOGO_URL', '')
 
+# ── IA — leitura de formulários escaneados (Gemini) ────────────────────────────
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
+
 # ── Celery ────────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'django-db'

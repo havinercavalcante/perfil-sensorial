@@ -1,0 +1,241 @@
+{% extends "questionario/base.html" %}
+{% block title %}VB-MAPP — {{ dominio.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --pc: {{ dominio.cor }};
+    --pc-dark: color-mix(in srgb, {{ dominio.cor }} 70%, #000);
+  }
+
+  .progress-info { display:flex; justify-content:space-between; font-size:.82rem; color:var(--text-muted); margin-bottom:.4rem; }
+  .steps-bar { display:flex; gap:3px; margin-top:.6rem; flex-wrap:wrap; }
+  .step-dot { height:6px; flex:1; min-width:10px; border-radius:3px; background:var(--border); }
+  .step-dot.done   { background:var(--pc); }
+  .step-dot.active { background:color-mix(in srgb, var(--pc) 50%, #fff); }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--pc-dark), var(--pc));
+    color:#fff; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.5rem;
+  }
+  .secao-header h2 { font-size:1.1rem; font-weight:700; margin-bottom:.2rem; }
+  .secao-header p  { font-size:.82rem; opacity:.8; }
+
+  .instrucoes {
+    background:#F0F9FF; border:1px solid #BAE6FD;
+    border-radius:10px; padding:.75rem 1rem; margin-bottom:1.2rem;
+  }
+  .instrucoes-titulo { display:block; font-weight:700; margin-bottom:.5rem; color:var(--pc-dark); font-size:.85rem; }
+  .instrucoes-chips { display:flex; flex-wrap:wrap; gap:.4rem; }
+  .instrucao-chip {
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.3rem .75rem; border-radius:20px;
+    font-size:.78rem; font-weight:600;
+    background:linear-gradient(135deg, var(--pc-dark), var(--pc)); color:#fff;
+  }
+
+  .nivel-titulo {
+    font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--pc-dark); padding:.5rem .75rem; background:color-mix(in srgb, var(--pc) 10%, #fff);
+    border-radius:8px; margin:1.2rem 0 .6rem; border-left:4px solid var(--pc);
+  }
+
+  .pergunta-card {
+    border:1.5px solid var(--border); border-radius:12px;
+    padding:1.1rem 1.2rem; margin-bottom:.9rem; background:#fff;
+    transition:border-color .2s, background .2s;
+  }
+  .pergunta-card.respondida {
+    border-color:var(--pc);
+    background:color-mix(in srgb, var(--pc) 4%, #fff);
+  }
+  .pergunta-card.faltando {
+    border-color:#EF4444 !important;
+    background:#FFF5F5 !important;
+  }
+  .pergunta-num  { font-size:.72rem; font-weight:700; color:var(--text-muted); margin-bottom:.3rem; }
+  .pergunta-texto { font-size:.91rem; color:var(--text); line-height:1.55; margin-bottom:1rem; }
+
+  .opcoes-grid { display:flex; flex-direction:column; gap:.4rem; }
+  .opcao-label {
+    display:flex; align-items:center; gap:.7rem;
+    cursor:pointer; padding:.6rem .9rem; border-radius:9px;
+    border:1.5px solid var(--border); background:#fff;
+    transition:all .15s; font-size:.86rem; text-align:left; line-height:1.3;
+    user-select:none;
+  }
+  .opcao-label:hover { border-color:var(--pc); background:color-mix(in srgb, var(--pc) 10%, #fff); }
+  .opcao-label input { display:none; }
+  .opcao-label.selected { border-color:var(--pc); background:var(--pc); color:#fff; font-weight:700; }
+  .opcao-num {
+    flex-shrink:0; width:2rem; height:2rem; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; background:color-mix(in srgb, var(--pc) 12%, #fff); font-weight:800;
+  }
+  .opcao-label.selected .opcao-num { background:rgba(255,255,255,.25); }
+
+  .readonly-badge {
+    display:inline-flex; align-items:center; gap:.35rem;
+    background:#f0f0f0; border:1px solid #ccc; border-radius:6px;
+    padding:.3rem .75rem; font-size:.78rem; color:#666; margin-bottom:1rem;
+  }
+
+  .alerta-incompleto {
+    background:#FEF3C7; border:1px solid #FCD34D; border-radius:10px;
+    padding:.85rem 1rem; margin-bottom:1rem; font-size:.84rem; color:#92400E;
+    display:none;
+  }
+  .alerta-incompleto.visivel { display:block; }
+
+  .nav-footer {
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:.75rem; margin-top:1.75rem;
+    padding-top:1rem; border-top:1px solid var(--border);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:1.2rem;">
+  <div class="progress-info">
+    <span>Domínio {{ pagina }} de {{ total }}</span>
+    <span>{{ progresso }}% concluído</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ progresso }}%; background:var(--pc);"></div>
+  </div>
+  <div class="steps-bar">
+    {% for d in paginas_dominios %}
+    <div class="step-dot {{ d.status }}" title="{{ d.nome }}" style="cursor:default;"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="secao-header">
+  <h2>{{ dominio.nome }}</h2>
+  <p>{{ avaliacao.paciente.nome }} &nbsp;·&nbsp; {{ todos_itens|length }} itens &nbsp;·&nbsp; níveis {{ dominio.niveis|join:", " }}</p>
+</div>
+
+
+{% if readonly %}
+<div class="readonly-badge"><i data-lucide="eye" style="width:14px;height:14px;"></i> Visualização — respostas salvas</div>
+{% endif %}
+
+<div class="alerta-incompleto {% if itens_faltando %}visivel{% endif %}" id="alerta-incompleto">
+  <strong>Atenção:</strong> {{ itens_faltando|length }} item(ns) sem resposta. Preencha todos os itens para continuar.
+</div>
+
+<form method="post" id="form-vbmapp">
+  {% csrf_token %}
+
+  {% for grupo in grupos %}
+  <div class="nivel-titulo">Nível {{ grupo.nivel }}</div>
+  {% for p in grupo.itens %}
+  <div class="pergunta-card{% if p.resposta_salva is not None %} respondida{% endif %}{% if p.numero in itens_faltando %} faltando{% endif %}"
+       id="card-{{ p.numero }}">
+    <div class="pergunta-num">Item {{ p.numero }}</div>
+    <div class="pergunta-texto">{{ p.texto }}</div>
+    <div class="opcoes-grid">
+      {% for val, label in opcoes %}
+      <label class="opcao-label {% if p.resposta_salva|stringformat:'s' == val|stringformat:'s' %}selected{% endif %}"
+             id="label-{{ p.numero }}-{{ val }}">
+        <input type="radio" name="item_{{ p.numero }}" value="{{ val }}"
+               {% if p.resposta_salva|stringformat:'s' == val|stringformat:'s' %}checked{% endif %}
+               {% if readonly %}disabled{% endif %}
+               onchange="marcarRespondida({{ p.numero }}, this)">
+        <span class="opcao-num">{% if val == "0.5" %}½{% else %}{{ val }}{% endif %}</span>
+        <span>{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endfor %}
+
+  <div class="nav-footer">
+    <div>
+      {% if pagina_anterior %}
+      {% if readonly %}
+      <a href="{% url 'vbmapp_visualizar' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
+      </a>
+      {% else %}
+      <a href="{% url 'vbmapp_form' avaliacao.uuid pagina_anterior %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Anterior
+      </a>
+      {% endif %}
+      {% else %}
+      <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg> Paciente
+      </a>
+      {% endif %}
+    </div>
+
+    {% if readonly %}
+    {% if pagina == total %}
+    <a href="{% url 'detalhe_paciente' avaliacao.paciente.uuid %}" class="btn btn-secondary">Fechar</a>
+    {% else %}
+    <a href="{% url 'vbmapp_visualizar' avaliacao.uuid pagina|add:1 %}" class="btn btn-secondary">
+      Próximo Domínio <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 5 5-5 5"/><path d="m6 7 5 5-5 5"/></svg>
+    </a>
+    {% endif %}
+    {% else %}
+    <button type="submit" class="btn btn-primary" style="background:var(--pc); border-color:var(--pc);">
+      {% if pagina == total %}
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Concluir Avaliação
+      {% else %}
+      Próximo Domínio <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 7 5 5-5 5"/><path d="m6 7 5 5-5 5"/></svg>
+      {% endif %}
+    </button>
+    {% endif %}
+  </div>
+</form>
+
+<script>
+const READONLY = {% if readonly %}true{% else %}false{% endif %};
+
+function marcarRespondida(num, input) {
+  if (READONLY) return;
+  const card = document.getElementById('card-' + num);
+  if (!card) return;
+  card.classList.add('respondida');
+  card.classList.remove('faltando');
+  card.querySelectorAll('.opcao-label').forEach(l => l.classList.remove('selected'));
+  input.closest('.opcao-label').classList.add('selected');
+}
+
+if (READONLY) {
+  document.querySelectorAll('#form-vbmapp input[type="radio"]').forEach(el => el.disabled = true);
+}
+
+document.getElementById('form-vbmapp').addEventListener('submit', function(e) {
+  const itens = [{% for n in todos_itens %}{{ n }},{% endfor %}];
+  const faltando = itens.filter(n => !document.querySelector(`input[name="item_${n}"]:checked`));
+
+  if (faltando.length > 0) {
+    e.preventDefault();
+    faltando.forEach(n => {
+      const card = document.getElementById('card-' + n);
+      if (card) card.classList.add('faltando');
+    });
+    const alerta = document.getElementById('alerta-incompleto');
+    alerta.innerHTML = `<strong>Atenção:</strong> ${faltando.length} item(ns) sem resposta. Preencha todos os itens para continuar.`;
+    alerta.classList.add('visivel');
+    const primeiro = document.getElementById('card-' + faltando[0]);
+    if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+{% if itens_faltando %}
+window.addEventListener('DOMContentLoaded', function() {
+  const faltando = {{ itens_faltando }};
+  if (faltando.length > 0) {
+    const alerta = document.getElementById('alerta-incompleto');
+    alerta.classList.add('visivel');
+    const primeiro = document.getElementById('card-' + faltando[0]);
+    if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+{% endif %}
+</script>
+{% endblock %}

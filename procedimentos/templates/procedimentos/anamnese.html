@@ -64,9 +64,11 @@
 {% endblock %}
 
 {% block back_button %}
+{% if not is_public %}
 <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
   <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
 </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -78,11 +80,16 @@
   </div>
   <div class="laudo-toolbar-actions">
     <span id="savedLabel" style="font-size:.75rem;opacity:.75;"></span>
+    {% if is_public %}
+    <button id="btnSalvar" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="salvarProcedimento()">
+      <i data-lucide="send" style="width:15px;height:15px;"></i> Enviar
+    </button>
+    {% else %}
     <button id="btnSalvar" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="salvarProcedimento()">
       <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar
     </button>
     <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;" onclick="window.print()">
-      <i data-lucide="printer" style="width:15px;height:15px;"></i> lvar PDF
+      <i data-lucide="printer" style="width:15px;height:15px;"></i> Salvar PDF
     </button>
     <a href="{% url 'lista_procedimentos' paciente.uuid tipo %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
       <i data-lucide="list" style="width:14px;height:14px;"></i> Ver todos
@@ -93,6 +100,7 @@
     <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5);color:#fff;">
       <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Paciente
     </a>
+    {% endif %}
   </div>
 </div>
 

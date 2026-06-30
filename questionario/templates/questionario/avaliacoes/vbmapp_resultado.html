@@ -1,0 +1,264 @@
+{% extends "questionario/base.html" %}
+{% block title %}Resultado VB-MAPP — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --vt: #7C3AED; --vt-dark: #5B21B6; }
+
+  .dashboard-header { background:linear-gradient(135deg, var(--vt-dark), var(--vt)); color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .dashboard-header h1 { font-size:1.4rem; margin-bottom:.3rem; }
+  .dashboard-header p { opacity:.85; font-size:.9rem; }
+
+  .dom-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem; }
+  .dom-card { border-radius:12px; padding:1.2rem 1rem; color:#fff; text-align:center; background:var(--dc, var(--vt)); min-width:0; }
+  .dom-card .dom-nome { font-size:.78rem; font-weight:700; text-transform:uppercase; opacity:.85; margin-bottom:.5rem; min-height:2.2em; overflow-wrap:break-word; word-break:break-word; }
+  .dom-card .dom-valor { font-size:2rem; font-weight:800; line-height:1; }
+  .dom-card .dom-max { font-size:.78rem; opacity:.7; }
+  .dom-card .dom-class { font-size:.8rem; font-weight:600; background:rgba(255,255,255,.2); border-radius:20px; padding:2px 10px; margin-top:.5rem; display:inline-block; }
+
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+  canvas { max-width:100%; }
+
+  .modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.45); z-index:1000;
+    align-items:flex-start; justify-content:center;
+    overflow-y:auto; padding:1.5rem 0;
+  }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:#fff; border-radius:14px; padding:2rem; max-width:520px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,.2); margin:auto; }
+  .modal-box h3 { margin:0 0 .3rem; font-size:1.1rem; color:var(--primary-dark); }
+  .modal-box .modal-sub { color:var(--text-muted); font-size:.88rem; margin-bottom:1.2rem; }
+  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; }
+
+  @media(max-width:700px) { .dom-grid{grid-template-columns:1fr 1fr;} .charts-row{grid-template-columns:1fr;} }
+  @media(max-width:420px) { .dom-grid{grid-template-columns:1fr;} }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print-hide { display:none !important; }
+    body { background:#fff; }
+    main { max-width:100%; padding:1rem; }
+    .card { box-shadow:none; border:1px solid #ccc; page-break-inside:avoid; }
+    .dashboard-header { background:var(--vt-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .dom-card { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="bar-chart-3" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>{{ paciente.nome }}</h1>
+      <p>VB-MAPP — Avaliação de Marcos &nbsp;·&nbsp; aplicado em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div class="no-print-hide" style="display:flex; gap:.8rem; flex-wrap:wrap;">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;"
+              onclick="abrirModalDeletarGenerico('{% url 'vbmapp_deletar' avaliacao.uuid %}')">
+        <i data-lucide="trash-2" style="width:15px;height:15px;"></i> Excluir
+      </button>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- DOMÍNIOS -->
+<div class="dom-grid">
+  {% for dom in dominios %}
+  <div class="dom-card" style="--dc: {{ dom.cor }};">
+    <div class="dom-nome">{{ dom.nome }}</div>
+    <div class="dom-valor">{{ dom.valor }}</div>
+    <div class="dom-max">de {{ dom.maximo }}</div>
+    <div class="dom-class">{{ dom.pct }}%</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- GRÁFICOS -->
+<div class="charts-row">
+  <div class="card">
+    <div class="card-title">🕸 Perfil por Domínio</div>
+    <canvas id="radarChart" height="280"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Comparativo por Domínio</div>
+    <canvas id="barChart" height="280"></canvas>
+  </div>
+</div>
+
+{% if tem_comparativo %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Evolução entre Aplicações</div>
+  <div style="position:relative; height:300px;">
+    <canvas id="comparativoChart"></canvas>
+  </div>
+</div>
+{% endif %}
+
+{% if outras_avaliacoes %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="calendar" style="width:18px;height:18px;"></i> Outras Aplicações do Paciente</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Data</th><th>Mando</th><th>Tato</th><th>Ouvinte</th><th></th></tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td>{{ av.pont_mando|default:"—" }}</td>
+      <td>{{ av.pont_tato|default:"—" }}</td>
+      <td>{{ av.pont_ouvinte|default:"—" }}</td>
+      <td><a href="{% url 'vbmapp_resultado' av.uuid %}" class="btn btn-sm btn-secondary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+<!-- OBSERVAÇÕES CLÍNICAS -->
+<div class="card">
+  <div class="card-title"><i data-lucide="file-pen-line" style="width:18px;height:18px;"></i> Observações Clínicas</div>
+  <form id="formObs" method="post">
+    {% csrf_token %}
+    <div class="form-group" style="margin-bottom:.75rem;">
+      <textarea name="observacoes" id="obsTextarea" rows="5"
+        placeholder="Registre observações, conclusões ou recomendações..." style="resize:vertical;">{{ avaliacao.observacoes }}</textarea>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;" class="no-print-hide">
+      <button type="button" class="btn btn-primary btn-sm" onclick="salvarObs()">
+        <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Observações
+      </button>
+      <span id="obs-status" style="font-size:.82rem; color:var(--text-muted);"></span>
+    </div>
+  </form>
+</div>
+
+<!-- Modal: Excluir -->
+<div class="modal-overlay" id="modalDeletarGenerico">
+  <div class="modal-box">
+    <h3>Excluir avaliação</h3>
+    <p class="modal-sub">Tem certeza que deseja excluir esta avaliação VB-MAPP? Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalDeletarGenerico').classList.remove('active')">Cancelar</button>
+      <button type="button" class="btn btn-danger" onclick="confirmarDeletarGenerico()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const dominiosData = {{ dominios_chart_json|safe }};
+
+// Radar chart — perfil por domínio
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: dominiosData.map(d => d.nome),
+    datasets: [{
+      label: 'Pontuação (%)',
+      data: dominiosData.map(d => d.pct),
+      backgroundColor: 'rgba(124,58,237,.2)',
+      borderColor: '#7C3AED',
+      pointBackgroundColor: '#7C3AED',
+      borderWidth: 2,
+      pointRadius: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font: { size: 9 } }, pointLabels: { font: { size: 9 } } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Bar chart — comparativo por domínio
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: dominiosData.map(d => d.nome),
+    datasets: [{
+      label: 'Pontuação (%)',
+      data: dominiosData.map(d => d.pct),
+      backgroundColor: dominiosData.map(d => d.cor + 'CC'),
+      borderColor: dominiosData.map(d => d.cor),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { afterLabel: ctx => { const d = dominiosData[ctx.dataIndex]; return `${d.valor} de ${d.maximo} pontos`; } } }
+    },
+    scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, x: { ticks: { font: { size: 9 } } } }
+  }
+});
+
+{% if tem_comparativo %}
+const compLabels = {{ comparativo_labels|safe }};
+const compDatasets = {{ comparativo_datasets|safe }};
+new Chart(document.getElementById('comparativoChart'), {
+  type: 'line',
+  data: { labels: compLabels, datasets: compDatasets },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } } },
+    scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, title: { display: true, text: 'Pontuação (%)' } } }
+  }
+});
+{% endif %}
+
+function salvarObs() {
+  const form = document.getElementById('formObs');
+  const status = document.getElementById('obs-status');
+  const data = new FormData(form);
+  fetch(window.location.href, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+    body: data,
+  }).then(r => r.json()).then(d => {
+    status.textContent = d.ok ? '✓ Salvo com sucesso' : 'Erro ao salvar';
+    status.style.color = d.ok ? '#065F46' : '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  }).catch(() => {
+    status.textContent = 'Erro ao salvar';
+    status.style.color = '#991B1B';
+    setTimeout(() => status.textContent = '', 3000);
+  });
+}
+
+let _deletarGenUrl = null;
+function abrirModalDeletarGenerico(url) {
+  _deletarGenUrl = url;
+  document.getElementById('modalDeletarGenerico').classList.add('active');
+}
+function confirmarDeletarGenerico() {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = _deletarGenUrl;
+  const csrf = document.createElement('input');
+  csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = '{{ csrf_token }}';
+  form.appendChild(csrf);
+  document.body.appendChild(form);
+  form.submit();
+}
+document.getElementById('modalDeletarGenerico').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
+});
+</script>
+{% endblock %}

@@ -11,6 +11,7 @@ logger = logging.getLogger("auditoria")
 from ..models import (
     Paciente, Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe,
     AvaliacaoSPM, AvaliacaoEDM, AvaliacaoMABC2, AvaliacaoBeery, AvaliacaoPEDI,
+    AvaliacaoPS2Bebe, AvaliacaoAdultoSensorial,
     AvaliacaoVineland3, AvaliacaoPortage,
     AvaliacaoSDQ, AvaliacaoSNAPIV, AvaliacaoMCHAT, AvaliacaoCARS,
     AvaliacaoLinguagem, AvaliacaoAlimentacao,
@@ -36,6 +37,8 @@ from ..models import (
     AvaliacaoHAMA, AvaliacaoLSAS, AvaliacaoRiscoSuicidio, AvaliacaoAgorafobia, AvaliacaoPanico,
     # Escalas de Alimentação Infantil
     AvaliacaoEBAI, AvaliacaoSEPS, AvaliacaoECA, AvaliacaoTOD,
+    # VB-MAPP
+    AvaliacaoVBMAPP, AvaliacaoVBMAPPBarreiras, AvaliacaoVBMAPPTransicao, AvaliacaoVBMAPPTaskAnalysis,
 )
 from ..services import build_lista_com_link, build_lista_sem_pagina
 from ..tasks import enviar_email
@@ -148,6 +151,7 @@ def index(request):
 
 _MODELS_WITH_STATUS = [
     Avaliacao, AvaliacaoVineland, AvaliacaoEscolar, AvaliacaoBebe, AvaliacaoSPM,
+    AvaliacaoPS2Bebe, AvaliacaoAdultoSensorial,
     AvaliacaoVineland3, AvaliacaoPortage, AvaliacaoSDQ, AvaliacaoSNAPIV,
     AvaliacaoMCHAT, AvaliacaoCARS, AvaliacaoLinguagem, AvaliacaoAlimentacao,
     AvaliacaoHabitosOrais, AvaliacaoVozInfantil, AvaliacaoProcessamentoAuditivo,
@@ -195,6 +199,7 @@ def _compute_patient_totals(patient_ids):
 
 @login_required
 def lista_pacientes(request):
+    import json
     from django.core.paginator import Paginator
     from django.db.models import Exists, OuterRef
     q = request.GET.get("q", "").strip()
@@ -219,7 +224,17 @@ def lista_pacientes(request):
         for p in page.object_list:
             p.total_avals = totals.get(p.pk, 0)
             p.total_concs = concluded.get(p.pk, 0)
-    return render(request, "questionario/pacientes/lista_pacientes.html", {"pacientes": page, "q": q, "filtro": filtro, "paginator": paginator})
+    todos_pacientes = Paciente.objects.filter(medico=request.user).order_by("nome").values("uuid", "nome")
+    pacientes_json = json.dumps([{"uuid": str(p["uuid"]), "nome": p["nome"]} for p in todos_pacientes])
+    modulos_liberados = set()
+    if hasattr(request.user, 'perfil'):
+        modulos_liberados = set(
+            request.user.perfil.modulos_liberados.values_list("codigo", flat=True)
+        )
+    return render(request, "questionario/pacientes/lista_pacientes.html", {
+        "pacientes": page, "q": q, "filtro": filtro, "paginator": paginator,
+        "pacientes_json": pacientes_json, "modulos_liberados": modulos_liberados,
+    })
 
 
 # Modelos de avaliação com campo `status` (EDM, MABC2, Beery e PEDI não têm status).
@@ -231,6 +246,8 @@ MODELOS_AVALIACAO = [
     (AvaliacaoEscolar,              "Sensorial Escolar",            "escolar"),
     (AvaliacaoBebe,                 "Bebê / Criança Pequena",       "bebe"),
     (AvaliacaoSPM,                  "SPM",                          "spm"),
+    (AvaliacaoPS2Bebe,              "PS2 Bebê/CP (Winnie Dunn)",    "ps2_bebe"),
+    (AvaliacaoAdultoSensorial,      "Perf. Sensorial Adulto",       "adulto_sensorial"),
     (AvaliacaoVineland3,            "Vineland-3",                   "vineland3"),
     (AvaliacaoPortage,              "Guia Portage",                 "portage"),
     (AvaliacaoSDQ,                  "SDQ",                          "sdq"),
@@ -273,6 +290,10 @@ MODELOS_AVALIACAO = [
     (AvaliacaoChecklistDislexia,    "Checklist Dislexia",           "checklist_dislexia"),
     (AvaliacaoProtDislexiaProf,     "Prot. Dislexia Prof.",         "prot_dislexia_prof"),
     (AvaliacaoInventarioDislexia,   "Inventário Dislexia",          "inventario_dislexia"),
+    (AvaliacaoVBMAPP,               "VB-MAPP — Marcos",             "vbmapp"),
+    (AvaliacaoVBMAPPBarreiras,      "VB-MAPP — Barreiras",          "vbmapp_barreiras"),
+    (AvaliacaoVBMAPPTransicao,      "VB-MAPP — Transição",          "vbmapp_transicao"),
+    (AvaliacaoVBMAPPTaskAnalysis,   "VB-MAPP — Task Analysis",      "vbmapp_task_analysis"),
 ]
 
 
@@ -348,7 +369,13 @@ def novo_paciente(request):
         )
         logger.info("PACIENTE_CRIADO user=%s paciente_uuid=%s", request.user.username, paciente.uuid)
         messages.success(request, "Paciente cadastrado com sucesso.")
-        return redirect("detalhe_paciente", paciente_id=paciente.uuid)
+        destino = reverse("detalhe_paciente", kwargs={"paciente_id": paciente.uuid})
+        abrir_tipo = request.GET.get("abrir_tipo")
+        if abrir_tipo:
+            destino += "?abrir_tipo=" + abrir_tipo
+        elif request.GET.get("nova_avaliacao") == "1":
+            destino += "?nova_avaliacao=1"
+        return redirect(destino)
 
     return render(request, "questionario/pacientes/novo_paciente.html")
 
@@ -486,7 +513,27 @@ def detalhe_paciente(request, paciente_id):
         "avaliacoes_seps": build_lista_com_link(paciente.avaliacoes_seps.all(), request, "seps_publico"),
         "avaliacoes_eca":  build_lista_com_link(paciente.avaliacoes_eca.all(),  request, "eca_publico"),
         "avaliacoes_tod":  build_lista_com_link(paciente.avaliacoes_tod.all(),  request, "tod_publico"),
+        # PS2 Bebê/CP e Adulto Sensorial
+        "avaliacoes_ps2_bebe": build_lista_com_link(paciente.avaliacoes_ps2_bebe.all().order_by("-data"), request, "ps2_bebe_wd_publico"),
+        "avaliacoes_adulto_sensorial": build_lista_com_link(paciente.avaliacoes_adulto_sensorial.all().order_by("-data"), request, "adulto_sensorial_publico"),
+        # Documentos do prontuário (anamnese, evoluções, fichas escolares, atestados, etc.)
+        # — um grupo por tipo de documento, só os tipos com pelo menos um registro.
+        "procedimentos_por_tipo": _procedimentos_por_tipo(paciente),
+        "avaliacoes_vbmapp": paciente.avaliacoes_vbmapp.all(),
+        "avaliacoes_vbmapp_barreiras": paciente.avaliacoes_vbmapp_barreiras.all(),
+        "avaliacoes_vbmapp_transicao": paciente.avaliacoes_vbmapp_transicao.all(),
+        "avaliacoes_vbmapp_task_analysis": paciente.avaliacoes_vbmapp_task_analysis.all(),
     })
+
+
+def _procedimentos_por_tipo(paciente):
+    from procedimentos.models import ProcedimentoDocumento
+    grupos = []
+    for tipo, label in ProcedimentoDocumento.TIPO_CHOICES:
+        docs = paciente.procedimentos.filter(tipo=tipo)
+        if docs.exists():
+            grupos.append({"tipo": tipo, "label": label, "documentos": docs})
+    return grupos
 
 
 # Exceções ao padrão "<slug>_resultado" usado pela maioria dos instrumentos
@@ -513,21 +560,48 @@ def _resultado_url(slug, av):
         return None
 
 
+# Tipos de ProcedimentoDocumento que compõem o prontuário longitudinal (fora dos
+# instrumentos avaliativos já cobertos por MODELOS_AVALIACAO): anamnese — ponto de
+# entrada do cadastro —, evoluções de atendimento e fichas de visita escolar.
+REGISTROS_PRONTUARIO = [
+    ("anamnese",          "Anamnese",               "anamnese"),
+    ("anamnese_adulto",   "Anamnese (Adulto)",      "anamnese"),
+    ("anamnese_infantil", "Anamnese (Infantil)",    "anamnese"),
+    ("anamnese_tea",      "Anamnese (TEA)",         "anamnese"),
+    ("anamnese_tdah",     "Anamnese (TDAH)",        "anamnese"),
+    ("anamnese_casal",    "Anamnese (Casal)",       "anamnese"),
+    ("evolucao_semanal",     "Evolução de Atendimento", "evolucao"),
+    ("ficha_visita_escolar", "Ficha de Visita Escolar", "ficha_escolar"),
+]
+
+
 @login_required
 def evolucao_paciente(request, paciente_id):
     import json
     from ..data.data import QUADRANTES_CONFIG, SECOES_CONFIG
+    from procedimentos.models import ProcedimentoDocumento
 
     paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
 
-    # Linha do tempo: todas as avaliações concluídas do paciente, de qualquer instrumento,
-    # em ordem cronológica decrescente — link direto para o resultado de cada uma.
+    # Linha do tempo: todas as avaliações concluídas, anamneses, evoluções de
+    # atendimento e fichas de visita escolar do paciente, em ordem cronológica
+    # decrescente — link direto para o registro de cada uma.
     eventos = []
     for Model, label, slug in MODELOS_AVALIACAO:
         for av in Model.objects.filter(paciente=paciente, status="concluida").order_by("-data"):
             eventos.append({
-                "tipo": label, "tipo_slug": slug, "data": av.data,
-                "link": _resultado_url(slug, av),
+                "tipo": label, "tipo_slug": slug, "categoria": "avaliacao", "data": av.data,
+                "uuid": av.uuid, "link": _resultado_url(slug, av),
+            })
+    for tipo, label, categoria in REGISTROS_PRONTUARIO:
+        for doc in ProcedimentoDocumento.objects.filter(paciente=paciente, tipo=tipo).order_by("-data"):
+            eventos.append({
+                "tipo": doc.titulo_display if doc.titulo else label,
+                "tipo_slug": tipo, "categoria": categoria, "data": doc.data,
+                "uuid": doc.uuid,
+                "link": reverse("abrir_procedimento", kwargs={
+                    "paciente_id": paciente.uuid, "tipo": tipo, "doc_id": doc.uuid,
+                }),
             })
     eventos.sort(key=lambda x: x["data"], reverse=True)
 
@@ -558,6 +632,63 @@ def evolucao_paciente(request, paciente_id):
         "evolucao_labels": evolucao_labels,
         "quad_datasets": json.dumps(_datasets(QUADRANTES_CONFIG, cores)),
         "secao_datasets": json.dumps(_datasets(SECOES_CONFIG, cores)),
+    })
+
+
+@login_required
+def prontuario_resumo(request, paciente_id):
+    """Reúne, numa única página de impressão, os registros do prontuário
+    selecionados na timeline (avaliações, anamnese, evoluções, fichas escolares)."""
+    from django.utils import timezone as tz
+    from procedimentos.models import ProcedimentoDocumento
+
+    paciente = get_object_or_404(Paciente, uuid=paciente_id, medico=request.user)
+
+    modelos_por_slug = {slug: Model for Model, _, slug in MODELOS_AVALIACAO}
+    labels_avaliacao = {slug: label for _, label, slug in MODELOS_AVALIACAO}
+    labels_procedimento = {tipo: label for tipo, label, _ in REGISTROS_PRONTUARIO}
+
+    registros = []
+    for token in request.GET.get("registros", "").split(","):
+        partes = token.split(":", 2)
+        if len(partes) != 3:
+            continue
+        categoria, slug, reg_uuid = partes
+
+        if categoria == "avaliacao":
+            Model = modelos_por_slug.get(slug)
+            if not Model:
+                continue
+            av = Model.objects.filter(uuid=reg_uuid, paciente=paciente).first()
+            if not av:
+                continue
+            campos = []
+            for f in av._meta.get_fields():
+                nome = getattr(f, "name", "")
+                if nome.startswith(("pont_", "escore", "score", "media_")) or nome == "classificacao":
+                    valor = getattr(av, nome, None)
+                    if valor not in (None, ""):
+                        campos.append((getattr(f, "verbose_name", nome), valor))
+            registros.append({
+                "titulo": labels_avaliacao.get(slug, slug), "data": av.data, "categoria": "avaliacao",
+                "campos": campos, "observacoes": getattr(av, "observacoes", ""),
+            })
+        else:
+            doc = ProcedimentoDocumento.objects.filter(uuid=reg_uuid, paciente=paciente, tipo=slug).first()
+            if not doc:
+                continue
+            registros.append({
+                "titulo": doc.titulo_display or labels_procedimento.get(slug, slug),
+                "data": doc.data, "categoria": categoria,
+                "conteudo_html": "".join(v for v in doc.conteudo.values() if isinstance(v, str)),
+            })
+
+    registros.sort(key=lambda r: r["data"], reverse=True)
+
+    return render(request, "questionario/pacientes/prontuario_resumo.html", {
+        "paciente": paciente,
+        "registros": registros,
+        "data_hoje": tz.now().date(),
     })
 
 

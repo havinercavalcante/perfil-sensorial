@@ -1,0 +1,227 @@
+{% extends "questionario/base.html" %}
+{% block title %}Importar formulário SPM — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --spm: #3E73D1; --spm-dark: #0F274F; }
+
+  .page-header {
+    background: linear-gradient(135deg, var(--spm-dark), var(--spm));
+    color: #fff; border-radius: 14px; padding: 1.4rem 1.6rem; margin-bottom: 1.5rem;
+  }
+  .page-header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: .25rem; }
+  .page-header p  { font-size: .83rem; opacity: .85; }
+
+  .card {
+    background: #fff; border-radius: 14px; border: 1.5px solid var(--border);
+    padding: 1.5rem; margin-bottom: 1.2rem;
+  }
+  .card-title { font-size: .95rem; font-weight: 700; color: var(--spm-dark); margin-bottom: 1rem; }
+
+  .faixa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  .faixa-option input[type=radio] { display: none; }
+  .faixa-option label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .4rem; padding: 1.1rem .8rem; border-radius: 12px;
+    border: 2px solid var(--border); background: #fff; cursor: pointer;
+    font-size: .85rem; font-weight: 600; color: var(--text-muted);
+    transition: all .15s; text-align: center;
+  }
+  .faixa-option input:checked + label {
+    border-color: var(--spm); background: color-mix(in srgb, var(--spm) 8%, #fff);
+    color: var(--spm-dark);
+  }
+  .faixa-option label .faixa-age {
+    font-size: .72rem; font-weight: 400; opacity: .8;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--spm);
+    border-radius: 12px; padding: 2.5rem 1.5rem;
+    text-align: center; cursor: pointer; background: #F0F7FF;
+    transition: background .15s;
+  }
+  .drop-zone.dragover { background: color-mix(in srgb, var(--spm) 15%, #fff); }
+  .drop-zone .drop-icon { font-size: 2rem; margin-bottom: .6rem; }
+  .drop-zone p { font-size: .88rem; color: var(--text-muted); margin-bottom: .4rem; }
+  .drop-zone small { font-size: .75rem; color: var(--text-muted); }
+  #file-input { display: none; }
+
+  .file-list { margin-top: 1rem; display: flex; flex-direction: column; gap: .4rem; }
+  .file-item {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .5rem .75rem; border-radius: 8px;
+    background: #F0F7FF; border: 1px solid var(--spm);
+    font-size: .82rem; color: var(--spm-dark);
+  }
+  .file-item .file-name { flex: 1; }
+  .file-remove { cursor: pointer; color: var(--spm); font-weight: 700; background: none; border: none; font-size: 1rem; }
+
+  .dica-box {
+    background: #FFF8E7; border: 1px solid #F5D87A;
+    border-radius: 10px; padding: .85rem 1rem;
+    font-size: .82rem; color: #7A5700;
+  }
+  .dica-box b { display: block; margin-bottom: .3rem; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--spm-dark), var(--spm));
+    color: #fff; border: none; border-radius: 10px;
+    padding: .85rem 2rem; font-size: .95rem; font-weight: 700;
+    cursor: pointer; width: 100%; display: flex; align-items: center;
+    justify-content: center; gap: .5rem; transition: opacity .15s;
+  }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,39,79,.7); z-index: 999;
+    flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner {
+    width: 48px; height: 48px; border: 5px solid rgba(255,255,255,.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { color: #fff; font-size: 1rem; font-weight: 600; }
+  .loading-sub { color: rgba(255,255,255,.75); font-size: .83rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-msg">Analisando formulário...</div>
+  <div class="loading-sub">A IA está lendo as respostas. Isso leva alguns segundos.</div>
+</div>
+
+<div style="max-width:600px; margin:0 auto; padding:1rem;">
+
+  <div class="page-header">
+    <h1>Importar formulário do papel</h1>
+    <p>{{ paciente.nome }} · Tire foto ou faça scan de cada página e envie aqui</p>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;color:#7F1D1D;font-size:.85rem;">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="upload-form">
+    {% csrf_token %}
+
+    <div class="card">
+      <div class="card-title">1. Qual formulário é esse?</div>
+      <div class="faixa-grid">
+        <div class="faixa-option">
+          <input type="radio" name="faixa" id="f-spm-p" value="spm_p" checked>
+          <label for="f-spm-p">
+            SPM-P Casa
+            <span class="faixa-age">2 a 5 anos</span>
+          </label>
+        </div>
+        <div class="faixa-option">
+          <input type="radio" name="faixa" id="f-spm-casa" value="spm_casa">
+          <label for="f-spm-casa">
+            SPM Casa
+            <span class="faixa-age">5 a 12 anos</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">2. Envie as imagens do formulário</div>
+
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon">📄</div>
+        <p><b>Clique ou arraste as imagens aqui</b></p>
+        <small>JPG, PNG, PDF · Máximo 10 arquivos</small>
+      </div>
+      <input type="file" id="file-input" name="imagens" multiple accept="image/*,.pdf" style="display:none">
+
+      <div class="file-list" id="file-list"></div>
+    </div>
+
+    <div class="dica-box" style="margin-bottom:1.2rem;">
+      <b>Dicas para melhor resultado:</b>
+      Fotografe em boa iluminação · Enquadre o formulário inteiro na foto · Evite sombras sobre as marcações · Envie todas as páginas em ordem
+    </div>
+
+    <button type="submit" class="btn-primary" id="btn-enviar" disabled>
+      <i data-lucide="scan-text"></i>
+      Extrair respostas com IA
+    </button>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const dropZone   = document.getElementById('drop-zone');
+  const fileInput  = document.getElementById('file-input');
+  const fileList   = document.getElementById('file-list');
+  const btnEnviar  = document.getElementById('btn-enviar');
+  const uploadForm = document.getElementById('upload-form');
+  const loading    = document.getElementById('loading');
+
+  let arquivosSelecionados = new DataTransfer();
+
+  function atualizarLista() {
+    fileList.innerHTML = '';
+    const files = arquivosSelecionados.files;
+    for (let i = 0; i < files.length; i++) {
+      const div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = `
+        <span>📎</span>
+        <span class="file-name">${files[i].name}</span>
+        <button type="button" class="file-remove" data-idx="${i}">✕</button>
+      `;
+      fileList.appendChild(div);
+    }
+    btnEnviar.disabled = files.length === 0;
+    fileInput.files = arquivosSelecionados.files;
+  }
+
+  fileInput.addEventListener('change', () => {
+    for (const f of fileInput.files) arquivosSelecionados.items.add(f);
+    atualizarLista();
+  });
+
+  fileList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('file-remove')) {
+      const idx = parseInt(e.target.dataset.idx);
+      const novo = new DataTransfer();
+      const files = arquivosSelecionados.files;
+      for (let i = 0; i < files.length; i++) {
+        if (i !== idx) novo.items.add(files[i]);
+      }
+      arquivosSelecionados = novo;
+      atualizarLista();
+    }
+  });
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    for (const f of e.dataTransfer.files) arquivosSelecionados.items.add(f);
+    atualizarLista();
+  });
+
+  uploadForm.addEventListener('submit', () => {
+    loading.classList.add('active');
+    btnEnviar.disabled = true;
+  });
+
+  lucide.createIcons();
+</script>
+{% endblock %}

@@ -77,7 +77,12 @@
 {% block content %}
 <div style="max-width: 680px; margin: 0 auto;">
 
-  <h2 id="tour-gl-titulo" style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;"><i data-lucide="link" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Gerar Link de Questionário</h2>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.75rem; margin-bottom:.4rem;">
+    <h2 id="tour-gl-titulo" style="font-size:1.4rem; color:var(--primary-dark); margin:0;"><i data-lucide="link" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Gerar Link de Questionário</h2>
+    <a href="{% url 'importar_scan_auto_novo_paciente' %}" class="btn btn-secondary" style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;">
+      <i data-lucide="scan-text" style="width:15px;height:15px;"></i> Importar do papel
+    </a>
+  </div>
   <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:1.5rem;">
     Selecione o tipo de avaliação, copie o link e envie para o responsável.
   </p>
@@ -128,6 +133,27 @@
         <span class="tc-icon"><i data-lucide="house" style="width:1.8rem;height:1.8rem;"></i></span>
         <span class="tc-label">SPM Casa (5–12 anos)</span>
         <span class="tc-desc">75 itens · 8 domínios</span>
+      </button>
+      {% endif %}
+      {% if 'ps2_bebe_wd' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('ps2_bebe_wd', this)">
+        <span class="tc-icon"><i data-lucide="baby" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">PS2 Bebê (0–6 meses)</span>
+        <span class="tc-desc">25 itens · Perfil Sensorial 2</span>
+      </button>
+      {% endif %}
+      {% if 'ps2_cp_wd' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('ps2_cp_wd', this)">
+        <span class="tc-icon"><i data-lucide="user-round" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">PS2 Criança Pequena (7–35m)</span>
+        <span class="tc-desc">54 itens · Perfil Sensorial 2</span>
+      </button>
+      {% endif %}
+      {% if 'adulto_sensorial' in modulos_liberados %}
+      <button class="tipo-card" onclick="gerarLink('adulto_sensorial', this)">
+        <span class="tc-icon"><i data-lucide="user" style="width:1.8rem;height:1.8rem;"></i></span>
+        <span class="tc-label">Perf. Sensorial Adulto</span>
+        <span class="tc-desc">60 itens · auto-questionário</span>
       </button>
       {% endif %}
       {% if 'edm' in modulos_liberados %}
@@ -935,5 +961,78 @@ document.getElementById("modalEmail").addEventListener("click", function(e) {
     }
   });
 })();
+</script>
+
+<!-- Modal seleção de paciente para importar scan -->
+<div class="modal-overlay" id="modalImportar">
+  <div class="modal-box">
+    <div class="modal-title"><i data-lucide="scan-text" style="width:16px;height:16px;vertical-align:middle;margin-right:.35rem;"></i> Importar formulário do papel</div>
+    <div class="modal-desc">Selecione o paciente para associar o formulário importado.</div>
+    <input type="text" class="modal-input" id="importarBusca" placeholder="Buscar paciente pelo nome..." oninput="filtrarPacientes()">
+    <div id="importarLista" style="max-height:220px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;margin-bottom:1rem;"></div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="fecharImportar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const _pacientes = {{ pacientes_json|safe }};
+let _importarFaixa = '';
+
+function toggleImportarGL(e) {
+  e.stopPropagation();
+  const m = document.getElementById('importarGLMenu');
+  m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function() {
+  const m = document.getElementById('importarGLMenu');
+  if (m) m.style.display = 'none';
+});
+
+function abrirImportar(faixa) {
+  _importarFaixa = faixa;
+  document.getElementById('importarBusca').value = '';
+  filtrarPacientes();
+  document.getElementById('modalImportar').classList.add('ativo');
+  setTimeout(() => document.getElementById('importarBusca').focus(), 100);
+}
+
+function fecharImportar() {
+  document.getElementById('modalImportar').classList.remove('ativo');
+}
+
+function _importarUrl(uuid, tipo) {
+  if (tipo === 'auto')       return `/pacientes/${uuid}/importar/`;
+  if (tipo === 'spm_p')      return `/pacientes/${uuid}/importar-scan-spm/?faixa=spm_p`;
+  if (tipo === 'spm_casa')   return `/pacientes/${uuid}/importar-scan-spm/?faixa=spm_casa`;
+  if (tipo === 'ps2_crianca') return `/pacientes/${uuid}/importar-ps2-crianca/`;
+  if (tipo === 'adulto')     return `/pacientes/${uuid}/importar-adulto-sensorial/`;
+  if (tipo === 'ps2_bebe')   return `/pacientes/${uuid}/importar-ps2-bebe/bebe/`;
+  if (tipo === 'ps2_cp')     return `/pacientes/${uuid}/importar-ps2-bebe/cp/`;
+  return '#';
+}
+
+function filtrarPacientes() {
+  const q = document.getElementById('importarBusca').value.toLowerCase();
+  const lista = document.getElementById('importarLista');
+  const filtrados = _pacientes.filter(p => p.nome.toLowerCase().includes(q)).slice(0, 20);
+  if (!filtrados.length) {
+    lista.innerHTML = '<div style="padding:.75rem 1rem;font-size:.85rem;color:var(--text-muted);">Nenhum paciente encontrado.</div>';
+    return;
+  }
+  lista.innerHTML = filtrados.map(p => `
+    <a href="${_importarUrl(p.uuid, _importarFaixa)}"
+       style="display:flex;align-items:center;gap:.5rem;padding:.55rem 1rem;font-size:.88rem;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);transition:background .15s;"
+       onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+      ${p.nome}
+    </a>
+  `).join('');
+}
+
+document.getElementById('modalImportar').addEventListener('click', function(e) {
+  if (e.target === this) fecharImportar();
+});
 </script>
 {% endblock %}

@@ -51,6 +51,9 @@ class ModuloAvaliacao(models.Model):
         ("escolar",                "Questionário Sensorial Escolar"),
         ("bebe",                   "Perfil Sensorial Bebê/Criança Pequena"),
         ("spm",                    "SPM — Sensory Processing Measure"),
+        ("ps2_bebe_wd",            "PS2 Bebê — Perfil Sensorial 2 (0–6 meses)"),
+        ("ps2_cp_wd",              "PS2 Criança Pequena — Perfil Sensorial 2 (7–35 meses)"),
+        ("adulto_sensorial",       "Perfil Sensorial do Adulto/Adolescente"),
         ("edm",                    "EDM Figueiredo"),
         ("mabc2",                  "MABC-2"),
         ("beery",                  "Beery VMI"),
@@ -117,6 +120,7 @@ class ModuloAvaliacao(models.Model):
         # ── ABA / Análise do Comportamento ───────────────────────────────
         ("habilidades_adaptativas", "Habilidades Adaptativas (ABA)"),
         ("comportamento_funcional", "Comportamento Funcional (ABA)"),
+        ("vbmapp",                 "VB-MAPP — Marcos, Barreiras, Transição e Task Analysis"),
         # ── Neuropsicologia ──────────────────────────────────────────────
         ("rastreio_cognitivo",     "Rastreio Cognitivo"),
         ("qmpi",                   "QMPI — Memória Prospectiva Infantil"),
@@ -164,6 +168,7 @@ ESPECIALIDADE_CHOICES = [
 MODULOS_POR_ESPECIALIDADE = {
     "terapeuta_ocupacional": [
         "sensorial", "vineland", "escolar", "bebe", "spm",
+        "ps2_bebe_wd", "ps2_cp_wd", "adulto_sensorial",
         "edm", "mabc2", "beery", "pedi", "vineland3", "portage",
         "ebai", "seps", "eca", "tod",
     ],
@@ -224,7 +229,7 @@ MODULOS_POR_ESPECIALIDADE = {
         "snap_iv", "rastreio_cognitivo", "sensorial", "denver",
     ],
     "analista_aba": [
-        "habilidades_adaptativas", "comportamento_funcional",
+        "habilidades_adaptativas", "comportamento_funcional", "vbmapp",
         "mchat", "vineland3",
         "ebai", "seps", "eca", "tod",
     ],
@@ -365,6 +370,19 @@ class PerfilMedico(models.Model):
         return self.modulos_liberados.filter(codigo=codigo_modulo).exists()
 
 
+class PacienteManager(models.Manager):
+    def find_or_create_anamnese(self, medico, nome, data_nascimento, responsavel="", email_responsavel="", telefone=""):
+        """Reaproveita o cadastro existente (mesmo médico, nome e data de nascimento)
+        em vez de duplicar o paciente quando a anamnese é o ponto de entrada do cadastro."""
+        paciente = self.filter(medico=medico, nome__iexact=nome, data_nascimento=data_nascimento).first()
+        if paciente:
+            return paciente
+        return self.create(
+            medico=medico, nome=nome, data_nascimento=data_nascimento,
+            responsavel=responsavel, email_responsavel=email_responsavel, telefone=telefone,
+        )
+
+
 class Paciente(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     medico = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pacientes")
@@ -374,6 +392,8 @@ class Paciente(models.Model):
     email_responsavel = models.EmailField("E-mail do responsável", blank=True)
     telefone = models.CharField("Telefone", max_length=20, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+
+    objects = PacienteManager()
 
     class Meta:
         verbose_name = "Paciente"
@@ -1014,6 +1034,9 @@ class LinkConvite(models.Model):
         ("crianca_pequena",         "Criança Pequena (7–36 meses)"),
         ("spm_p",                   "SPM-P Casa (2–5 anos)"),
         ("spm_casa",                "SPM Casa (5–12 anos)"),
+        ("ps2_bebe_wd",             "PS2 Bebê — Perfil Sensorial 2 (0–6 meses)"),
+        ("ps2_cp_wd",               "PS2 Criança Pequena — Perfil Sensorial 2 (7–35 meses)"),
+        ("adulto_sensorial",        "Perfil Sensorial do Adulto/Adolescente"),
         ("edm",                     "EDM Figueiredo"),
         ("mabc2",                   "MABC-2"),
         ("beery",                   "Beery VMI"),
@@ -1098,7 +1121,20 @@ class LinkConvite(models.Model):
         ("seps",  "SEPS — Escala de Problemas Sensoriais na Alimentação"),
         ("eca",   "ECA — Avaliação do Comportamento Alimentar"),
         ("tod",   "TOD — Escala de Comportamentos Disruptivos"),
+        # ── Prontuário — Anamnese (cria o paciente automaticamente) ──────
+        ("anamnese",          "Anamnese Geral"),
+        ("anamnese_adulto",   "Anamnese — Adulto"),
+        ("anamnese_infantil", "Anamnese — Infantil / Adolescente"),
+        ("anamnese_tea",      "Anamnese — TEA / Autismo"),
+        ("anamnese_tdah",     "Anamnese — TDAH"),
+        ("anamnese_casal",    "Anamnese — Casal"),
     ]
+
+    TIPOS_ANAMNESE = [
+        "anamnese", "anamnese_adulto", "anamnese_infantil",
+        "anamnese_tea", "anamnese_tdah", "anamnese_casal",
+    ]
+
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
     medico = models.ForeignKey(User, on_delete=models.CASCADE, related_name="links_convite")
@@ -3874,3 +3910,259 @@ class StatusIncident(models.Model):
     @property
     def ativo(self):
         return self.status not in ("resolved", "completed")
+
+
+# ── PS2 Bebê / Criança Pequena — Winnie Dunn ─────────────────────────────────
+
+class AvaliacaoPS2Bebe(models.Model):
+    FAIXA_CHOICES = [
+        ("bebe", "PS2 Bebê (0–6 meses)"),
+        ("cp",   "PS2 Criança Pequena (7–35 meses)"),
+    ]
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid        = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente    = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_ps2_bebe")
+    faixa       = models.CharField(max_length=5, choices=FAIXA_CHOICES)
+    token       = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    pagina_atual = models.IntegerField(default=1)
+    data        = models.DateField("Data da avaliação", default=timezone.now)
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    observacoes = models.TextField("Observações", blank=True, default="")
+    criado_em   = models.DateTimeField(auto_now_add=True)
+
+    # Pontuação por seção
+    pont_geral          = models.IntegerField(null=True, blank=True)
+    pont_auditivo       = models.IntegerField(null=True, blank=True)
+    pont_visual         = models.IntegerField(null=True, blank=True)
+    pont_tato           = models.IntegerField(null=True, blank=True)
+    pont_movimentos     = models.IntegerField(null=True, blank=True)
+    pont_oral           = models.IntegerField(null=True, blank=True)
+    pont_comportamental = models.IntegerField(null=True, blank=True)
+    # Pontuação por quadrante
+    pont_ex = models.IntegerField(null=True, blank=True)
+    pont_ev = models.IntegerField(null=True, blank=True)
+    pont_sn = models.IntegerField(null=True, blank=True)
+    pont_ob = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        verbose_name        = "PS2 Bebê/Criança Pequena (Winnie Dunn)"
+        verbose_name_plural = "PS2 Bebê/Criança Pequena (Winnie Dunn)"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"PS2 {self.get_faixa_display()} — {self.paciente.nome} — {self.data}"
+
+
+class RespostaPS2Bebe(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoPS2Bebe, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering        = ["numero_item"]
+
+
+# ── Perfil Sensorial do Adulto / Adolescente ──────────────────────────────────
+
+class AvaliacaoAdultoSensorial(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid         = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_adulto_sensorial")
+    token        = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    pagina_atual = models.IntegerField(default=1)
+    data         = models.DateField("Data da avaliação", default=timezone.now)
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    observacoes  = models.TextField("Observações", blank=True, default="")
+    criado_em    = models.DateTimeField(auto_now_add=True)
+
+    # Pontuação por quadrante
+    pont_baixo_registro   = models.IntegerField("Baixo Registro",       null=True, blank=True)
+    pont_procura_sensacao = models.IntegerField("Procura Sensação",      null=True, blank=True)
+    pont_sensitividade    = models.IntegerField("Sensitividade Sensorial", null=True, blank=True)
+    pont_evita_sensacao   = models.IntegerField("Evita Sensação",        null=True, blank=True)
+
+    class Meta:
+        verbose_name        = "Perfil Sensorial do Adulto"
+        verbose_name_plural = "Perfis Sensoriais do Adulto"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"Perf. Adulto — {self.paciente.nome} — {self.data}"
+
+
+class RespostaAdultoSensorial(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoAdultoSensorial, on_delete=models.CASCADE, related_name="respostas")
+    numero_item = models.IntegerField()
+    valor       = models.IntegerField()
+
+    class Meta:
+        unique_together = ("avaliacao", "numero_item")
+        ordering        = ["numero_item"]
+
+
+# ── VB-MAPP — Verbal Behavior Milestones Assessment and Placement Program ─────
+# Aplicado presencialmente pela profissional (sem link público), em até 3
+# níveis de desenvolvimento. Marcos: ~16 domínios x até 15 itens, pontuados
+# 0/½/1 — segue o padrão de RespostaPortage (item-a-item + subtotal por
+# domínio calculado/salvo no modelo principal).
+
+class AvaliacaoVBMAPP(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid         = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vbmapp")
+    data         = models.DateField("Data da avaliação", default=timezone.now)
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    pagina_atual = models.IntegerField(default=1)
+
+    pont_mando       = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_tato        = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_ouvinte     = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_vpmts       = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_brincar     = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_social      = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_imitacao    = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_ecoico      = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_vocal       = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_lrffc       = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_intraverbal = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_grupo       = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_linguistica = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_leitura     = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_escrita     = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pont_matematica  = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+
+    observacoes   = models.TextField("Observações clínicas", blank=True, default="")
+    criado_em     = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name        = "VB-MAPP — Avaliação de Marcos"
+        verbose_name_plural = "VB-MAPP — Avaliações de Marcos"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"VB-MAPP Marcos — {self.paciente.nome} — {self.data}"
+
+
+class RespostaVBMAPP(models.Model):
+    avaliacao   = models.ForeignKey(AvaliacaoVBMAPP, on_delete=models.CASCADE, related_name="respostas")
+    dominio     = models.CharField(max_length=20)
+    numero_item = models.IntegerField()
+    valor       = models.DecimalField(max_digits=2, decimal_places=1)
+
+    class Meta:
+        unique_together = ("avaliacao", "dominio", "numero_item")
+        ordering        = ["dominio", "numero_item"]
+
+
+class AvaliacaoVBMAPPBarreiras(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vbmapp_barreiras")
+    data     = models.DateField("Data da avaliação", default=timezone.now)
+    status   = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+
+    comportamentos_negativos = models.IntegerField(null=True, blank=True)
+    controle_instrucional    = models.IntegerField(null=True, blank=True)
+    repertorio_mando         = models.IntegerField(null=True, blank=True)
+    repertorio_tato          = models.IntegerField(null=True, blank=True)
+    imitacao_motora          = models.IntegerField(null=True, blank=True)
+    repertorio_ecoico        = models.IntegerField(null=True, blank=True)
+    percepcao_visual         = models.IntegerField(null=True, blank=True)
+    repertorio_ouvinte       = models.IntegerField(null=True, blank=True)
+    repertorio_intraverbal   = models.IntegerField(null=True, blank=True)
+    habilidades_sociais      = models.IntegerField(null=True, blank=True)
+    dependencia_dica         = models.IntegerField(null=True, blank=True)
+    chuta_respostas          = models.IntegerField(null=True, blank=True)
+    examinar_estimulo        = models.IntegerField(null=True, blank=True)
+    fracasso_discriminacoes  = models.IntegerField(null=True, blank=True)
+    generalizar              = models.IntegerField(null=True, blank=True)
+    motivacoes               = models.IntegerField(null=True, blank=True)
+    exigencia_respostas      = models.IntegerField(null=True, blank=True)
+    dependencia_reforcamento = models.IntegerField(null=True, blank=True)
+    auto_estimulacao         = models.IntegerField(null=True, blank=True)
+    problemas_articulacao    = models.IntegerField(null=True, blank=True)
+    comportamento_obsessivo  = models.IntegerField(null=True, blank=True)
+    comportamento_hiperativo = models.IntegerField(null=True, blank=True)
+    contato_visual           = models.IntegerField(null=True, blank=True)
+    defensividade_sensorial  = models.IntegerField(null=True, blank=True)
+
+    observacoes   = models.TextField("Observações clínicas", blank=True, default="")
+    criado_em     = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name        = "VB-MAPP — Avaliação de Barreiras"
+        verbose_name_plural = "VB-MAPP — Avaliações de Barreiras"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"VB-MAPP Barreiras — {self.paciente.nome} — {self.data}"
+
+
+class AvaliacaoVBMAPPTransicao(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+
+    uuid     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vbmapp_transicao")
+    data     = models.DateField("Data da avaliação", default=timezone.now)
+    status   = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+
+    marcos_geral                 = models.IntegerField(null=True, blank=True)
+    barreiras_geral              = models.IntegerField(null=True, blank=True)
+    comp_negativo_controle       = models.IntegerField(null=True, blank=True)
+    rotina_grupo                 = models.IntegerField(null=True, blank=True)
+    comportamento_social         = models.IntegerField(null=True, blank=True)
+    trabalho_independente        = models.IntegerField(null=True, blank=True)
+    generalizacao_habilidades    = models.IntegerField(null=True, blank=True)
+    gama_reforcadores            = models.IntegerField(null=True, blank=True)
+    taxa_aquisicao               = models.IntegerField(null=True, blank=True)
+    retencao_habilidades         = models.IntegerField(null=True, blank=True)
+    aprendizagem_ambiente_natural= models.IntegerField(null=True, blank=True)
+    transferencia_operantes      = models.IntegerField(null=True, blank=True)
+    adaptacao_mudancas           = models.IntegerField(null=True, blank=True)
+    comportamento_espontaneo     = models.IntegerField(null=True, blank=True)
+    brincar_independente_lazer   = models.IntegerField(null=True, blank=True)
+    autocuidado_geral            = models.IntegerField(null=True, blank=True)
+    uso_banheiro                 = models.IntegerField(null=True, blank=True)
+    habilidades_comer            = models.IntegerField(null=True, blank=True)
+
+    observacoes   = models.TextField("Observações clínicas", blank=True, default="")
+    criado_em     = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name        = "VB-MAPP — Transition Assessment"
+        verbose_name_plural = "VB-MAPP — Transition Assessments"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"VB-MAPP Transição — {self.paciente.nome} — {self.data}"
+
+
+class AvaliacaoVBMAPPTaskAnalysis(models.Model):
+    STATUS_CHOICES = [("em_andamento", "Em andamento"), ("concluida", "Concluída")]
+    NIVEL_CHOICES = [(1, "Nível 1 (0–18 meses)"), (2, "Nível 2 (18–30 meses)"), (3, "Nível 3 (30–48 meses)")]
+
+    uuid     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="avaliacoes_vbmapp_task_analysis")
+    nivel    = models.IntegerField(choices=NIVEL_CHOICES)
+    data     = models.DateField("Data da avaliação", default=timezone.now)
+    status   = models.CharField(max_length=20, choices=STATUS_CHOICES, default="em_andamento")
+    conteudo = models.JSONField(default=dict)  # {"mando": ["1-a", "1-b", ...], "tato": [...]}
+
+    criado_em     = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name        = "VB-MAPP — Task Analysis"
+        verbose_name_plural = "VB-MAPP — Task Analysis"
+        ordering            = ["-data"]
+
+    def __str__(self):
+        return f"VB-MAPP Task Analysis Nível {self.nivel} — {self.paciente.nome} — {self.data}"
