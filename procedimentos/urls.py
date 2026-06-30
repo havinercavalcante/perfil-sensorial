@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Anamnese preenchida diretamente pelo profissional (cria o paciente ao salvar)
+    path("anamnese/nova/", views.nova_anamnese, name="nova_anamnese"),
+
     # Atalhos legados (redireciona para lista)
     path("pacientes/<uuid:paciente_id>/anamnese/",             views.anamnese,             name="anamnese"),
     path("pacientes/<uuid:paciente_id>/ficha-triagem/",        views.ficha_triagem,        name="ficha_triagem"),
@@ -27,4 +30,10 @@ urlpatterns = [
 
     path("pacientes/<uuid:paciente_id>/procedimentos/<str:tipo>/<uuid:doc_id>/excluir/",
          views.excluir_procedimento, name="excluir_procedimento"),
+
+    # Anamnese pública (sem login) — preenchida pelo responsável via link
+    path("anamnese/publico/<uuid:token>/",
+         views.anamnese_publica_form, name="anamnese_publica_form"),
+    path("anamnese/publico/<uuid:token>/salvar/",
+         views.anamnese_publica_salvar, name="anamnese_publica_salvar"),
 ]

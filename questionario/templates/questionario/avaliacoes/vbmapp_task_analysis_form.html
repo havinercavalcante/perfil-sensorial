@@ -1,0 +1,69 @@
+{% extends "questionario/base.html" %}
+{% block title %}Task Analysis Nível {{ avaliacao.nivel }} — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --vt: #7C3AED; --vt-dark: #5B21B6; }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--vt-dark), var(--vt));
+    color:#fff; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.5rem;
+  }
+  .secao-header h2 { font-size:1.1rem; font-weight:700; margin-bottom:.2rem; }
+  .secao-header p  { font-size:.82rem; opacity:.8; }
+
+  .dom-titulo {
+    font-size:.78rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--vt-dark); padding:.5rem .75rem; background:color-mix(in srgb, var(--vt) 10%, #fff);
+    border-radius:8px; margin:1.2rem 0 .6rem; border-left:4px solid var(--vt);
+  }
+  .item-check {
+    display:flex; align-items:flex-start; gap:.6rem;
+    border:1.5px solid var(--border); border-radius:10px;
+    padding:.75rem .9rem; margin-bottom:.5rem; background:#fff; cursor:pointer;
+  }
+  .item-check.marcado { border-color:var(--vt); background:color-mix(in srgb, var(--vt) 5%, #fff); }
+  .item-check input { margin-top:.2rem; }
+  .item-texto { font-size:.86rem; color:var(--text); line-height:1.5; }
+  .item-num { font-size:.72rem; font-weight:700; color:var(--text-muted); margin-right:.3rem; }
+
+  .nav-footer {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border);
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="secao-header">
+  <h2><i data-lucide="list-checks" style="width:18px;height:18px;vertical-align:middle;margin-right:.35rem;"></i>Task Analysis — Nível {{ avaliacao.nivel }}</h2>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; marque as habilidades já dominadas em cada domínio</p>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  {% for grupo in grupos %}
+  <div class="dom-titulo">{{ grupo.dominio.nome }}</div>
+  {% for item in grupo.itens %}
+  <label class="item-check {% if item.marcado %}marcado{% endif %}" onclick="this.classList.toggle('marcado')">
+    <input type="checkbox" name="dom_{{ grupo.dominio.key }}" value="{{ item.numero }}" {% if item.marcado %}checked{% endif %}>
+    <span class="item-texto"><span class="item-num">{{ item.numero }}.</span>{{ item.texto }}</span>
+  </label>
+  {% endfor %}
+  {% endfor %}
+
+  <div class="nav-footer">
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-primary" style="background:var(--vt); border-color:var(--vt);">
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Salvar
+    </button>
+  </div>
+</form>
+{% endblock %}

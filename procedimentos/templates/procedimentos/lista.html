@@ -102,6 +102,9 @@
       {{ doc.titulo_display }}
     </div>
     <div class="doc-card-meta">
+      {% if tipo == "evolucao_semanal" or tipo == "ficha_visita_escolar" %}
+      Data do registro: {{ doc.data|date:"d/m/Y" }}<br>
+      {% endif %}
       Criado em {{ doc.criado_em|date:"d/m/Y H:i" }}<br>
       Atualizado em {{ doc.atualizado_em|date:"d/m/Y H:i" }}
     </div>

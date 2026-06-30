@@ -1,0 +1,92 @@
+{% extends "questionario/base.html" %}
+{% block title %}{{ titulo }} — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --vt: #7C3AED; --vt-dark: #5B21B6; }
+
+  .secao-header {
+    background: linear-gradient(135deg, var(--vt-dark), var(--vt));
+    color:#fff; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.5rem;
+  }
+  .secao-header h2 { font-size:1.1rem; font-weight:700; margin-bottom:.2rem; }
+  .secao-header p  { font-size:.82rem; opacity:.8; }
+
+  .campo-row {
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem;
+    border:1.5px solid var(--border); border-radius:10px;
+    padding:.85rem 1rem; margin-bottom:.6rem; background:#fff;
+  }
+  .campo-label { font-size:.88rem; color:var(--text); font-weight:600; flex:1; min-width:220px; }
+  .escala-grid { display:flex; gap:.4rem; }
+  .escala-opcao {
+    display:flex; align-items:center; justify-content:center;
+    width:42px; height:42px; border-radius:9px; cursor:pointer;
+    border:1.5px solid var(--border); background:#fff; font-weight:800; font-size:.95rem;
+    transition:all .15s; user-select:none;
+  }
+  .escala-opcao input { display:none; }
+  .escala-opcao:hover { border-color:var(--vt); }
+  .escala-opcao.selected { border-color:var(--vt); background:var(--vt); color:#fff; }
+
+  .nav-footer {
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:.75rem; margin-top:1.5rem;
+    padding-top:1rem; border-top:1px solid var(--border);
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="secao-header">
+  <h2>{{ titulo }}</h2>
+  <p>{{ paciente.nome }} &nbsp;·&nbsp; {{ campos|length }} áreas &nbsp;·&nbsp; escala de {{ escala.0 }} a {{ escala|last }}</p>
+</div>
+
+<form method="post" id="form-vbmapp-simples">
+  {% csrf_token %}
+
+  {% for c in campos %}
+  <div class="campo-row">
+    <div class="campo-label">{{ c.label }}</div>
+    <div class="escala-grid">
+      {% for n in escala %}
+      <label class="escala-opcao {% if c.valor == n %}selected{% endif %}">
+        <input type="radio" name="{{ c.nome }}" value="{{ n }}" {% if c.valor == n %}checked{% endif %}
+               onchange="marcarSelecionado(this)">
+        {{ n }}
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="campo-row" style="flex-direction:column; align-items:stretch;">
+    <div class="campo-label" style="margin-bottom:.5rem;">Observações</div>
+    <textarea name="observacoes" rows="4" placeholder="Observações clínicas (opcional)..."
+      style="width:100%; resize:vertical; border-radius:8px; border:1.5px solid var(--border); padding:.6rem; font-size:.88rem; box-sizing:border-box;">{{ avaliacao.observacoes }}</textarea>
+  </div>
+
+  <div class="nav-footer">
+    <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-primary" style="background:var(--vt); border-color:var(--vt);">
+      <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Salvar e Concluir
+    </button>
+  </div>
+</form>
+
+<script>
+function marcarSelecionado(input) {
+  const row = input.closest('.campo-row');
+  row.querySelectorAll('.escala-opcao').forEach(l => l.classList.remove('selected'));
+  input.closest('.escala-opcao').classList.add('selected');
+}
+</script>
+{% endblock %}

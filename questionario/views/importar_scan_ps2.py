@@ -2,6 +2,7 @@
 Import por OCR de formulários PS2 (Criança 3-14, Criança Pequena, Bebê)
 e Perfil Sensorial do Adulto.
 """
+import hashlib
 import io
 import uuid as uuid_mod
 
@@ -31,7 +32,7 @@ from ..data.data_adulto_sensorial import (
     SECOES_ADULTO, PERGUNTAS_ADULTO, OPCOES_ADULTO,
     TOTAL_ITENS_ADULTO, calcular_pontuacao_adulto,
 )
-from ..ocr.ps2_reader import processar_paginas_ps2
+from ..ocr.gemini_reader import ler_formulario
 
 EXTENSOES_ACEITAS = {'.jpg', '.jpeg', '.png', '.webp', '.pdf'}
 
@@ -61,15 +62,15 @@ def _arquivos_para_bytes(arquivos):
             import pypdfium2 as pdfium
             doc = pdfium.PdfDocument(dados)
             for i in range(len(doc)):
-                bitmap = doc[i].render(scale=2.5)
+                bitmap = doc[i].render(scale=3.5)
                 buf = io.BytesIO()
-                bitmap.to_pil().save(buf, format='JPEG', quality=90)
+                bitmap.to_pil().save(buf, format='JPEG', quality=95)
                 paginas.append(buf.getvalue())
         else:
             from PIL import Image
             img = Image.open(io.BytesIO(dados)).convert('RGB')
             buf = io.BytesIO()
-            img.save(buf, format='JPEG', quality=90)
+            img.save(buf, format='JPEG', quality=95)
             paginas.append(buf.getvalue())
     return paginas
 
@@ -115,9 +116,8 @@ def importar_scan_ps2_crianca_upload(request, paciente_id):
 
     try:
         paginas = _arquivos_para_bytes(arquivos)
-        # PS2: colunas esq→dir = 5,4,3,2,1
-        items_extraidos = processar_paginas_ps2(paginas, total_items=86,
-                                                col_values=[5, 4, 3, 2, 1])
+        resultado = ler_formulario(paginas, forcar_tipo='sensorial')
+        items_extraidos = resultado['respostas']
     except Exception as exc:
         messages.error(request, f'Erro ao processar imagem: {exc}')
         return render(request, template, ctx)
@@ -133,8 +133,8 @@ def importar_scan_ps2_crianca_upload(request, paciente_id):
         val = info.get('value')
         conf = info.get('confidence', 'missing')
         confianca[str(num)] = conf
-        if val and 1 <= val <= 5:
-            Resposta.objects.create(avaliacao=av, numero_item=num, valor=val)
+        if val and val.isdigit() and 1 <= int(val) <= 5:
+            Resposta.objects.create(avaliacao=av, numero_item=num, valor=int(val))
 
     request.session[f'scan_conf_{av.uuid}'] = confianca
     return redirect('importar_scan_ps2_crianca_revisao', avaliacao_id=av.uuid)
@@ -238,11 +238,11 @@ def importar_scan_ps2_bebe_upload(request, paciente_id, faixa):
     if resp_erro:
         return resp_erro
 
-    total = TOTAL_ITENS_PS2_BEBE if faixa == 'bebe' else TOTAL_ITENS_PS2_CP
+    tipo_instrumento = 'ps2_bebe_wd' if faixa == 'bebe' else 'ps2_cp_wd'
     try:
         paginas = _arquivos_para_bytes(arquivos)
-        items_extraidos = processar_paginas_ps2(paginas, total_items=total,
-                                                col_values=[5, 4, 3, 2, 1])
+        resultado = ler_formulario(paginas, forcar_tipo=tipo_instrumento)
+        items_extraidos = resultado['respostas']
     except Exception as exc:
         messages.error(request, f'Erro ao processar imagem: {exc}')
         return render(request, template, ctx)
@@ -259,8 +259,8 @@ def importar_scan_ps2_bebe_upload(request, paciente_id, faixa):
         val = info.get('value')
         conf = info.get('confidence', 'missing')
         confianca[str(num)] = conf
-        if val and 1 <= val <= 5:
-            RespostaPS2Bebe.objects.create(avaliacao=av, numero_item=num, valor=val)
+        if val and val.isdigit() and 1 <= int(val) <= 5:
+            RespostaPS2Bebe.objects.create(avaliacao=av, numero_item=num, valor=int(val))
 
     request.session[f'scan_conf_{av.uuid}'] = confianca
     return redirect('importar_scan_ps2_bebe_revisao', avaliacao_id=av.uuid)
@@ -373,9 +373,8 @@ def importar_scan_adulto_upload(request, paciente_id):
 
     try:
         paginas = _arquivos_para_bytes(arquivos)
-        # Adulto: colunas esq→dir = 1,2,3,4,5 (QN, R, O, F, QS)
-        items_extraidos = processar_paginas_ps2(paginas, total_items=TOTAL_ITENS_ADULTO,
-                                                col_values=[1, 2, 3, 4, 5])
+        resultado = ler_formulario(paginas, forcar_tipo='adulto_sensorial')
+        items_extraidos = resultado['respostas']
     except Exception as exc:
         messages.error(request, f'Erro ao processar imagem: {exc}')
         return render(request, template, ctx)
@@ -390,8 +389,8 @@ def importar_scan_adulto_upload(request, paciente_id):
         val = info.get('value')
         conf = info.get('confidence', 'missing')
         confianca[str(num)] = conf
-        if val and 1 <= val <= 5:
-            RespostaAdultoSensorial.objects.create(avaliacao=av, numero_item=num, valor=val)
+        if val and val.isdigit() and 1 <= int(val) <= 5:
+            RespostaAdultoSensorial.objects.create(avaliacao=av, numero_item=num, valor=int(val))
 
     request.session[f'scan_conf_{av.uuid}'] = confianca
     return redirect('importar_scan_adulto_revisao', avaliacao_id=av.uuid)
@@ -489,7 +488,7 @@ def importar_scan_auto(request, paciente_id):
 
     step = request.POST.get('step', 'detectar')
     if step == 'detectar':
-        return _detectar_json(paginas)
+        return _detectar_json(request, paginas)
 
     tipo = request.POST.get('tipo', '')
     return _executar_import(request, paciente, tipo, paginas)
@@ -518,7 +517,7 @@ def importar_scan_auto_novo_paciente(request):
     step = request.POST.get('step', 'detectar')
 
     if step == 'detectar':
-        return _detectar_json(paginas)
+        return _detectar_json(request, paginas)
 
     if step == 'importar':
         nome        = request.POST.get('nome', '').strip()
@@ -556,87 +555,130 @@ def _validar_arquivos(arquivos):
     return None
 
 
-def _detectar_json(paginas):
-    from ..ocr.detector import detectar_instrumento
+def _hash_paginas(paginas):
+    h = hashlib.sha256()
+    for p in paginas:
+        h.update(p)
+    return h.hexdigest()
+
+
+def _detectar_json(request, paginas):
     try:
-        resultado = detectar_instrumento(paginas)
-        return JsonResponse({'ok': True, **resultado})
+        resultado = ler_formulario(paginas)
     except Exception as e:
-        return JsonResponse({'ok': False, 'erro': f'Erro na detecção: {e}'})
+        return JsonResponse({'ok': False, 'erro': f'Erro na leitura via IA: {e}'})
+
+    # Cacheia o resultado completo na sessão para reaproveitar no passo de
+    # importação, evitando uma segunda chamada à IA com as mesmas imagens.
+    request.session['gemini_scan_cache'] = {
+        'hash': _hash_paginas(paginas),
+        'tipo': resultado['tipo'],
+        'respostas': {str(k): v for k, v in resultado['respostas'].items()},
+        'nome_detectado': resultado['nome_detectado'],
+        'nasc_detectado': resultado['nasc_detectado'],
+        'resp_detectado': resultado['resp_detectado'],
+    }
+
+    return JsonResponse({
+        'ok': True,
+        'tipo': resultado['tipo'],
+        'label': resultado['label'],
+        'confianca': resultado['confianca'],
+        'total_linhas': len(resultado['respostas']),
+        'coluna_lado': None,
+        'nome_detectado': resultado['nome_detectado'],
+        'nasc_detectado': resultado['nasc_detectado'],
+        'resp_detectado': resultado['resp_detectado'],
+    })
+
+
+def _obter_respostas(request, paginas, tipo):
+    """
+    Reaproveita o resultado da IA cacheado na sessão (do passo 'detectar') se
+    as imagens forem as mesmas e o tipo não tiver sido corrigido pelo usuário.
+    Caso contrário, chama a IA de novo já forçando o tipo confirmado/corrigido.
+    """
+    cache = request.session.get('gemini_scan_cache')
+    if cache and cache.get('hash') == _hash_paginas(paginas) and cache.get('tipo') == tipo:
+        return {int(k): v for k, v in cache['respostas'].items()}
+
+    resultado = ler_formulario(paginas, forcar_tipo=tipo)
+    return resultado['respostas']
 
 
 def _executar_import(request, paciente, tipo, paginas):
-    """Roda OCR e cria a avaliação para o tipo detectado/confirmado."""
-    from ..ocr.spm_reader import processar_paginas_spm
-    from ..ocr.ps2_reader import processar_paginas_ps2
+    """Lê o formulário via IA e cria a avaliação para o tipo detectado/confirmado."""
     from ..models import AvaliacaoSPM, RespostaSPM
-    from ..data.data_spm import PERGUNTAS_SPM_P, PERGUNTAS_SPM_CASA
+
+    try:
+        respostas_raw = _obter_respostas(request, paginas, tipo)
+    except Exception as e:
+        messages.error(request, f'Erro ao processar: {e}')
+        return redirect('detalhe_paciente', paciente_id=paciente.uuid)
 
     try:
         if tipo in ('spm_p', 'spm_casa', 'spm'):
             faixa = tipo if tipo != 'spm' else 'spm_p'
-            items = processar_paginas_spm(paginas, total_items=75)
             av = AvaliacaoSPM.objects.create(
                 paciente=paciente, faixa=faixa, token=str(uuid_mod.uuid4()), status='em_andamento'
             )
             confianca = {}
-            for num, info in items.items():
+            label_to_value = {'N': 1, 'O': 2, 'F': 3, 'S': 4}
+            for num, info in respostas_raw.items():
                 val = info.get('value')
                 conf = info.get('confidence', 'missing')
                 confianca[str(num)] = conf
-                if val and val in {'N': 1, 'O': 2, 'F': 3, 'S': 4}:
+                if val in label_to_value:
                     RespostaSPM.objects.create(avaliacao=av, numero_item=num,
-                                               valor={'N':1,'O':2,'F':3,'S':4}[val])
+                                               valor=label_to_value[val])
             request.session[f'scan_conf_{av.uuid}'] = confianca
+            request.session.pop('gemini_scan_cache', None)
             return redirect('importar_scan_spm_revisao', avaliacao_id=av.uuid)
 
         elif tipo == 'sensorial':
-            items = processar_paginas_ps2(paginas, total_items=86, col_values=[5,4,3,2,1])
             av = Avaliacao.objects.create(
                 paciente=paciente, token=str(uuid_mod.uuid4()), status='em_andamento'
             )
             confianca = {}
-            for num, info in items.items():
+            for num, info in respostas_raw.items():
                 val = info.get('value')
                 conf = info.get('confidence', 'missing')
                 confianca[str(num)] = conf
-                if val and 1 <= val <= 5:
-                    Resposta.objects.create(avaliacao=av, numero_item=num, valor=val)
+                if val and val.isdigit() and 1 <= int(val) <= 5:
+                    Resposta.objects.create(avaliacao=av, numero_item=num, valor=int(val))
             request.session[f'scan_conf_{av.uuid}'] = confianca
+            request.session.pop('gemini_scan_cache', None)
             return redirect('importar_scan_ps2_crianca_revisao', avaliacao_id=av.uuid)
 
         elif tipo in ('ps2_bebe_wd', 'ps2_cp_wd'):
             faixa = 'bebe' if tipo == 'ps2_bebe_wd' else 'cp'
-            total = 25 if faixa == 'bebe' else 54
-            extras = [] if faixa == 'bebe' else ITENS_EXTRAS_PS2_CP
-            items = processar_paginas_ps2(paginas, total_items=total, col_values=[5,4,3,2,1])
             av = AvaliacaoPS2Bebe.objects.create(
                 paciente=paciente, faixa=faixa, token=str(uuid_mod.uuid4()), status='em_andamento'
             )
             confianca = {}
-            for num, info in items.items():
+            for num, info in respostas_raw.items():
                 val = info.get('value')
                 conf = info.get('confidence', 'missing')
                 confianca[str(num)] = conf
-                if val and 1 <= val <= 5:
-                    RespostaPS2Bebe.objects.create(avaliacao=av, numero_item=num, valor=val)
+                if val and val.isdigit() and 1 <= int(val) <= 5:
+                    RespostaPS2Bebe.objects.create(avaliacao=av, numero_item=num, valor=int(val))
             request.session[f'scan_conf_{av.uuid}'] = confianca
+            request.session.pop('gemini_scan_cache', None)
             return redirect('importar_scan_ps2_bebe_revisao', avaliacao_id=av.uuid)
 
         elif tipo == 'adulto_sensorial':
-            items = processar_paginas_ps2(paginas, total_items=60,
-                                          col_values=[1,2,3,4,5])
             av = AvaliacaoAdultoSensorial.objects.create(
                 paciente=paciente, token=str(uuid_mod.uuid4()), status='em_andamento'
             )
             confianca = {}
-            for num, info in items.items():
+            for num, info in respostas_raw.items():
                 val = info.get('value')
                 conf = info.get('confidence', 'missing')
                 confianca[str(num)] = conf
-                if val and 1 <= val <= 5:
-                    RespostaAdultoSensorial.objects.create(avaliacao=av, numero_item=num, valor=val)
+                if val and val.isdigit() and 1 <= int(val) <= 5:
+                    RespostaAdultoSensorial.objects.create(avaliacao=av, numero_item=num, valor=int(val))
             request.session[f'scan_conf_{av.uuid}'] = confianca
+            request.session.pop('gemini_scan_cache', None)
             return redirect('importar_scan_adulto_revisao', avaliacao_id=av.uuid)
 
     except Exception as e:

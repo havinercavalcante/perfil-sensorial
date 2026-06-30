@@ -155,6 +155,8 @@ from .tod import (
 )
 # ── Nutrição / Terapia Alimentar ───────────────────────────────────────────
 from .terapia_alimentar import *
+# ── ABA — VB-MAPP ────────────────────────────────────────────────────────
+from .vbmapp import *
 # ──────────────────────────────────────────────────────────────────────────
 from .laudos import laudo_generico
 from .pagamentos import solicitar_plano, painel_pagamentos, aprovar_solicitacao, rejeitar_solicitacao

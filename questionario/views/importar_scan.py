@@ -13,7 +13,7 @@ from ..data.data_spm import (
     SECOES_SPM_P,
     SECOES_SPM_CASA,
 )
-from ..ocr.spm_reader import processar_paginas_spm
+from ..ocr.gemini_reader import ler_formulario
 from .spm import _spm_salvar_pontuacao
 
 LABEL_TO_VALUE = {'N': 1, 'O': 2, 'F': 3, 'S': 4}
@@ -24,7 +24,9 @@ EXTENSOES_ACEITAS = {'.jpg', '.jpeg', '.png', '.webp', '.pdf'}
 def _arquivos_para_bytes(arquivos):
     """
     Converte UploadedFiles para lista de bytes prontos para o leitor OCR.
-    PDFs são convertidos em imagens JPEG (uma por página).
+    PDFs são convertidos em imagens JPEG (uma por página). PNG sem perda foi
+    testado mas gerava arquivos grandes demais (scans têm muito ruído/grão),
+    o que deixava o upload lento e estourava o timeout da API do Gemini.
     """
     paginas = []
     for arq in arquivos:
@@ -35,15 +37,15 @@ def _arquivos_para_bytes(arquivos):
             import pypdfium2 as pdfium
             doc = pdfium.PdfDocument(dados)
             for i in range(len(doc)):
-                bitmap = doc[i].render(scale=2.5)
+                bitmap = doc[i].render(scale=3.5)
                 buf = io.BytesIO()
-                bitmap.to_pil().save(buf, format='JPEG', quality=90)
+                bitmap.to_pil().save(buf, format='JPEG', quality=95)
                 paginas.append(buf.getvalue())
         else:
             from PIL import Image
             img = Image.open(io.BytesIO(dados)).convert('RGB')
             buf = io.BytesIO()
-            img.save(buf, format='JPEG', quality=90)
+            img.save(buf, format='JPEG', quality=95)
             paginas.append(buf.getvalue())
 
     return paginas
@@ -84,7 +86,8 @@ def importar_scan_spm_upload(request, paciente_id):
 
     try:
         paginas = _arquivos_para_bytes(arquivos)
-        items_extraidos = processar_paginas_spm(paginas, total_items=75)
+        resultado = ler_formulario(paginas, forcar_tipo=faixa)
+        items_extraidos = resultado['respostas']
     except Exception as exc:
         messages.error(request, f'Erro ao processar imagem: {exc}')
         return render(request, 'questionario/avaliacoes/importar_scan_upload.html', {'paciente': paciente})

@@ -1,0 +1,72 @@
+{% extends "questionario/base.html" %}
+{% block title %}Nova Anamnese{% endblock %}
+{% block extra_css %}
+<style>
+  @media (max-width: 600px) {
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; justify-content: center; }
+  }
+</style>
+{% endblock %}
+{% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Pacientes</a>{% endblock %}
+{% block content %}
+<div style="max-width:600px; margin:0 auto;">
+  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.5rem;"><i data-lucide="clipboard" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Nova Anamnese</h2>
+  <p style="color:var(--text-muted); font-size:.88rem; margin-bottom:1.5rem;">
+    Preencha os dados de identificação para começar. Se já existir um paciente com este nome e data de nascimento, ele será reaproveitado em vez de duplicado.
+  </p>
+  <div class="card">
+    {% if erro %}
+    <div class="alert alert-error" style="margin-bottom:1.2rem;">{{ erro }}</div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Tipo de anamnese *</label>
+        <select name="tipo" id="input-tipo" required onchange="onTipoChange()">
+          <option value="">Selecione...</option>
+          {% for valor, label in tipos %}
+          <option value="{{ valor }}" {% if post.tipo == valor %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="label-nome">Nome completo *</label>
+        <input type="text" name="nome" value="{{ post.nome|default:'' }}" required placeholder="Nome do paciente">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data de nascimento *</label>
+          <input type="date" name="data_nascimento" value="{{ post.data_nascimento|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="tel" name="telefone" value="{{ post.telefone|default:'' }}" placeholder="(00) 00000-0000">
+        </div>
+      </div>
+      <div id="bloco-responsavel">
+        <div class="form-group">
+          <label id="label-responsavel">Nome do responsável *</label>
+          <input type="text" name="responsavel" value="{{ post.responsavel|default:'' }}" placeholder="Nome do pai/mãe/responsável">
+        </div>
+        <div class="form-group">
+          <label>E-mail do responsável</label>
+          <input type="email" name="email_responsavel" value="{{ post.email_responsavel|default:'' }}" placeholder="email@exemplo.com">
+        </div>
+      </div>
+      <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+        <a href="{% url 'lista_pacientes' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Iniciar Anamnese <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  function onTipoChange() {
+    var isAdulto = document.getElementById('input-tipo').value === 'anamnese_adulto';
+    document.getElementById('bloco-responsavel').style.display = isAdulto ? 'none' : '';
+    document.getElementById('label-nome').textContent = isAdulto ? 'Nome completo *' : 'Nome completo da criança/adolescente *';
+  }
+  onTipoChange();
+</script>
+{% endblock %}

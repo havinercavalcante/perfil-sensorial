@@ -1,0 +1,607 @@
+<div class="modal-overlay" id="modalEscolha">
+  <div class="modal-box" style="max-width:640px;">
+    <h3>Nova Avaliação</h3>
+    <p class="modal-sub">Selecione o instrumento{% if paciente %} para <strong>{{ paciente.nome }}</strong>{% endif %}:</p>
+
+    <div class="escolha-grid">
+      {% if "sensorial" in modulos_liberados %}
+      <button type="button" class="escolha-card sensorial" onclick="onEscolherInstrumento('sensorial', this)">
+        <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Perfil Sensorial</span>
+        <span class="ec-desc">86 itens, 9 domínios sensoriais</span>
+      </button>
+      {% endif %}
+      {% if "vineland" in modulos_liberados %}
+      <button type="button" class="escolha-card vineland" onclick="onEscolherInstrumento('vineland', this)">
+        <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Escala Vineland</span>
+        <span class="ec-desc">Maturidade social, 116 itens</span>
+      </button>
+      {% endif %}
+      {% if "escolar" in modulos_liberados %}
+      <button type="button" class="escolha-card escolar" onclick="onEscolherInstrumento('escolar', this)">
+        <span class="ec-icon"><i data-lucide="school" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Sensorial Escolar</span>
+        <span class="ec-desc">35 itens, contexto escolar</span>
+      </button>
+      {% endif %}
+      {% if "bebe" in modulos_liberados %}
+      <button type="button" class="escolha-card bebe" onclick="onEscolherInstrumento('bebe_bebe', this)">
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Bebê (0–6 meses)</span>
+        <span class="ec-desc">Perfil Sensorial Bebê</span>
+      </button>
+      <button type="button" class="escolha-card bebe" onclick="onEscolherInstrumento('bebe_pequena', this)">
+        <span class="ec-icon"><i data-lucide="user-round" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Criança Pequena (7–36m)</span>
+        <span class="ec-desc">Perfil Sensorial Toddler</span>
+      </button>
+      {% endif %}
+      {% if "spm" in modulos_liberados %}
+      <button type="button" class="escolha-card spm" onclick="onEscolherInstrumento('spm_p', this)">
+        <span class="ec-icon"><i data-lucide="user-round" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SPM-P Casa (2–5 anos)</span>
+        <span class="ec-desc">75 itens, 8 domínios sensoriais</span>
+      </button>
+      <button type="button" class="escolha-card spm" onclick="onEscolherInstrumento('spm_casa', this)">
+        <span class="ec-icon"><i data-lucide="house" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SPM Casa (5–12 anos)</span>
+        <span class="ec-desc">75 itens, 8 domínios sensoriais</span>
+      </button>
+      {% endif %}
+      {% if "ps2_bebe_wd" in modulos_liberados %}
+      <button type="button" class="escolha-card bebe" onclick="onEscolherInstrumento('ps2_bebe_wd', this)">
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PS2 Bebê (0–6 meses)</span>
+        <span class="ec-desc">25 itens · Perfil Sensorial 2</span>
+      </button>
+      {% endif %}
+      {% if "ps2_cp_wd" in modulos_liberados %}
+      <button type="button" class="escolha-card bebe" onclick="onEscolherInstrumento('ps2_cp_wd', this)">
+        <span class="ec-icon"><i data-lucide="user-round" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PS2 Criança Pequena (7–35m)</span>
+        <span class="ec-desc">54 itens · Perfil Sensorial 2</span>
+      </button>
+      {% endif %}
+      {% if "adulto_sensorial" in modulos_liberados %}
+      <button type="button" class="escolha-card sensorial" onclick="onEscolherInstrumento('adulto_sensorial', this)">
+        <span class="ec-icon"><i data-lucide="user" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Perf. Sensorial Adulto</span>
+        <span class="ec-desc">60 itens · auto-questionário</span>
+      </button>
+      {% endif %}
+      {% if "edm" in modulos_liberados %}
+      <button type="button" class="escolha-card edm" onclick="onEscolherInstrumento('edm', this)">
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">EDM Figueiredo</span>
+        <span class="ec-desc">Desenvolvimento motor, 7 domínios</span>
+      </button>
+      {% endif %}
+      {% if "vbmapp" in modulos_liberados %}
+      <button type="button" class="escolha-card vbmapp" onclick="onEscolherInstrumento('vbmapp', this)">
+        <span class="ec-icon"><i data-lucide="bar-chart-3" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">VB-MAPP — Marcos</span>
+        <span class="ec-desc">Verbal Behavior Milestones, 16 domínios · 3 níveis</span>
+      </button>
+      <button type="button" class="escolha-card vbmapp" onclick="onEscolherInstrumento('vbmapp_barreiras', this)">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">VB-MAPP — Barreiras</span>
+        <span class="ec-desc">Avaliação de Barreiras Linguísticas, 24 áreas</span>
+      </button>
+      <button type="button" class="escolha-card vbmapp" onclick="onEscolherInstrumento('vbmapp_transicao', this)">
+        <span class="ec-icon"><i data-lucide="arrow-right-circle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">VB-MAPP — Transição</span>
+        <span class="ec-desc">Transition Assessment, 18 áreas</span>
+      </button>
+      <button type="button" class="escolha-card vbmapp" onclick="onEscolherInstrumento('vbmapp_task1', this)">
+        <span class="ec-icon"><i data-lucide="list-checks" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">VB-MAPP — Task Analysis N1</span>
+        <span class="ec-desc">Checklist de sub-habilidades, 0–18 meses</span>
+      </button>
+      <button type="button" class="escolha-card vbmapp" onclick="onEscolherInstrumento('vbmapp_task2', this)">
+        <span class="ec-icon"><i data-lucide="list-checks" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">VB-MAPP — Task Analysis N2</span>
+        <span class="ec-desc">Checklist de sub-habilidades, 18–30 meses</span>
+      </button>
+      <button type="button" class="escolha-card vbmapp" onclick="onEscolherInstrumento('vbmapp_task3', this)">
+        <span class="ec-icon"><i data-lucide="list-checks" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">VB-MAPP — Task Analysis N3</span>
+        <span class="ec-desc">Checklist de sub-habilidades, 30–48 meses</span>
+      </button>
+      {% endif %}
+      {% if "mabc2" in modulos_liberados %}
+      <button type="button" class="escolha-card mabc2" onclick="onEscolherInstrumento('mabc2', this)">
+        <span class="ec-icon"><i data-lucide="target" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">MABC-2</span>
+        <span class="ec-desc">Habilidades motoras, 3 componentes</span>
+      </button>
+      {% endif %}
+      {% if "beery" in modulos_liberados %}
+      <button type="button" class="escolha-card beery" onclick="onEscolherInstrumento('beery', this)">
+        <span class="ec-icon"><i data-lucide="pencil" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Beery VMI</span>
+        <span class="ec-desc">Integração visomotora, 3 subtestes</span>
+      </button>
+      {% endif %}
+      {% if "pedi" in modulos_liberados %}
+      <button type="button" class="escolha-card pedi" onclick="onEscolherInstrumento('pedi', this)">
+        <span class="ec-icon"><i data-lucide="accessibility" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PEDI</span>
+        <span class="ec-desc">Independência funcional, 3 domínios</span>
+      </button>
+      {% endif %}
+      {% if "vineland3" in modulos_liberados %}
+      <button type="button" class="escolha-card vineland3" onclick="onEscolherInstrumento('vineland3', this)">
+        <span class="ec-icon"><i data-lucide="puzzle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Vineland-3</span>
+        <span class="ec-desc">Comportamento adaptativo, 180 itens</span>
+      </button>
+      {% endif %}
+      {% if "portage" in modulos_liberados %}
+      <button type="button" class="escolha-card portage" onclick="onEscolherInstrumento('portage', this)">
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Guia Portage</span>
+        <span class="ec-desc">Avaliação pré-escolar, 535 itens</span>
+      </button>
+      {% endif %}
+      {% if "sdq" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('sdq', this)">
+        <span class="ec-icon"><i data-lucide="clipboard-list" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SDQ</span>
+        <span class="ec-desc">Capacidades e Dificuldades, 25 itens</span>
+      </button>
+      {% endif %}
+      {% if "snap_iv" in modulos_liberados %}
+      <button type="button" class="escolha-card snap-iv" onclick="onEscolherInstrumento('snap_iv', this)">
+        <span class="ec-icon"><i data-lucide="brain" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SNAP-IV</span>
+        <span class="ec-desc">Rastreio de TDAH, 26 itens</span>
+      </button>
+      {% endif %}
+      {% if "mchat" in modulos_liberados %}
+      <button type="button" class="escolha-card mchat" onclick="onEscolherInstrumento('mchat', this)">
+        <span class="ec-icon"><i data-lucide="search" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">M-CHAT-R</span>
+        <span class="ec-desc">Rastreio de autismo, 20 itens</span>
+      </button>
+      {% endif %}
+      {% if "cars" in modulos_liberados %}
+      <button type="button" class="escolha-card cars" onclick="onEscolherInstrumento('cars', this)">
+        <span class="ec-icon"><i data-lucide="alert-circle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">CARS-2</span>
+        <span class="ec-desc">Escala de autismo, 15 itens</span>
+      </button>
+      {% endif %}
+      {% if "linguagem" in modulos_liberados %}
+      <button type="button" class="escolha-card linguagem" onclick="onEscolherInstrumento('linguagem', this)">
+        <span class="ec-icon"><i data-lucide="message-circle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Linguagem</span>
+        <span class="ec-desc">Avaliação de linguagem, 4 domínios</span>
+      </button>
+      {% endif %}
+      {% if "alimentacao_seletiva" in modulos_liberados %}
+      <button type="button" class="escolha-card alimentacao" onclick="onEscolherInstrumento('alimentacao', this)">
+        <span class="ec-icon"><i data-lucide="utensils" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Alimentação</span>
+        <span class="ec-desc">Triagem seletiva, 5 domínios</span>
+      </button>
+      {% endif %}
+      {% if "habitos_orais" in modulos_liberados %}
+      <button type="button" class="escolha-card habitos-orais" onclick="onEscolherInstrumento('habitos_orais', this)">
+        <span class="ec-icon"><i data-lucide="smile" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Hábitos Orais</span>
+        <span class="ec-desc">Hábitos orais deletérios, 5 domínios</span>
+      </button>
+      {% endif %}
+      {% if "voz_infantil" in modulos_liberados %}
+      <button type="button" class="escolha-card voz-infantil" onclick="onEscolherInstrumento('voz_infantil', this)">
+        <span class="ec-icon"><i data-lucide="mic" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Voz Infantil</span>
+        <span class="ec-desc">Triagem de voz, 3 domínios</span>
+      </button>
+      {% endif %}
+      {% if "processamento_auditivo" in modulos_liberados %}
+      <button type="button" class="escolha-card auditivo" onclick="onEscolherInstrumento('processamento_auditivo', this)">
+        <span class="ec-icon"><i data-lucide="ear" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Processamento Auditivo</span>
+        <span class="ec-desc">Triagem auditiva, 5 domínios</span>
+      </button>
+      {% endif %}
+      {% if "idv10" in modulos_liberados %}
+      <button type="button" class="escolha-card idv10" onclick="onEscolherInstrumento('idv10', this)">
+        <span class="ec-icon"><i data-lucide="volume-2" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">IDV-10</span>
+        <span class="ec-desc">Desvantagem vocal, 2 domínios</span>
+      </button>
+      {% endif %}
+      {% if "marcos_desenvolvimento" in modulos_liberados %}
+      <button type="button" class="escolha-card desenvolvimento" onclick="onEscolherInstrumento('desenvolvimento', this)">
+        <span class="ec-icon"><i data-lucide="trending-up" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Desenvolvimento</span>
+        <span class="ec-desc">Marcos do desenvolvimento, 5 domínios</span>
+      </button>
+      {% endif %}
+      {% if "sono_infantil" in modulos_liberados %}
+      <button type="button" class="escolha-card sono" onclick="onEscolherInstrumento('sono', this)">
+        <span class="ec-icon"><i data-lucide="moon" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Sono</span>
+        <span class="ec-desc">Avaliação de sono, 6 domínios</span>
+      </button>
+      {% endif %}
+      {% if "habilidades_adaptativas" in modulos_liberados %}
+      <button type="button" class="escolha-card habilidades" onclick="onEscolherInstrumento('habilidades', this)">
+        <span class="ec-icon"><i data-lucide="check-square" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Habilidades Adaptativas</span>
+        <span class="ec-desc">Repertório funcional, 5 domínios</span>
+      </button>
+      {% endif %}
+      {% if "comportamento_funcional" in modulos_liberados %}
+      <button type="button" class="escolha-card comportamento" onclick="onEscolherInstrumento('comportamento', this)">
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Comportamento Funcional</span>
+        <span class="ec-desc">Análise comportamental, 6 domínios</span>
+      </button>
+      {% endif %}
+      {% if "rastreio_cognitivo" in modulos_liberados %}
+      <button type="button" class="escolha-card cognitivo" onclick="onEscolherInstrumento('cognitivo', this)">
+        <span class="ec-icon"><i data-lucide="cpu" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rastreio Cognitivo</span>
+        <span class="ec-desc">Funções executivas, 6 domínios</span>
+      </button>
+      {% endif %}
+      {% if "psicopedagogica" in modulos_liberados %}
+      <button type="button" class="escolha-card psicopedagogica" onclick="onEscolherInstrumento('psicopedagogica', this)">
+        <span class="ec-icon"><i data-lucide="book-open" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Psicopedagógica</span>
+        <span class="ec-desc">Avaliação de aprendizagem, 5 domínios</span>
+      </button>
+      {% endif %}
+      {% if "proade" in modulos_liberados %}
+      <button type="button" class="escolha-card psicopedagogica" onclick="onEscolherInstrumento('proade', this)">
+        <span class="ec-icon"><i data-lucide="graduation-cap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PROADE</span>
+        <span class="ec-desc">Desempenho escolar, 5 áreas, 1º–5º ano</span>
+      </button>
+      {% endif %}
+      {# ── Psicologia — novos módulos (link remoto) ─────────────────── #}
+      {% if "conners_pais" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('conners_pais', this)">
+        <span class="ec-icon"><i data-lucide="clipboard-check" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Conners-3 (Pais)</span>
+        <span class="ec-desc">Avaliação TDAH, 6 subescalas</span>
+      </button>
+      {% endif %}
+      {% if "etdah_pais" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('etdah_pais', this)">
+        <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">ETDAH (Pais)</span>
+        <span class="ec-desc">Avaliação TDAH, 3 subescalas</span>
+      </button>
+      {% endif %}
+      {% if "auqei" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('auqei', this)">
+        <span class="ec-icon"><i data-lucide="heart" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">AUQEI</span>
+        <span class="ec-desc">Qualidade de vida infantil</span>
+      </button>
+      {% endif %}
+      {% if "aq10_child" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('aq10_child', this)">
+        <span class="ec-icon"><i data-lucide="search" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">AQ-10 Criança</span>
+        <span class="ec-desc">Rastreio autismo, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "scared" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('scared', this)">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SCARED (Pais)</span>
+        <span class="ec-desc">Ansiedade infantil, 5 subescalas</span>
+      </button>
+      {% endif %}
+      {% if "masc" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('masc', this)">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">MASC</span>
+        <span class="ec-desc">Ansiedade multidimensional</span>
+      </button>
+      {% endif %}
+      {% if "scq" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('scq', this)">
+        <span class="ec-icon"><i data-lucide="message-circle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SCQ</span>
+        <span class="ec-desc">Comunicação Social, 40 itens</span>
+      </button>
+      {% endif %}
+      {% if "conners_prof" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('conners_prof', this)">
+        <span class="ec-icon"><i data-lucide="clipboard-check" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Conners-3 (Professor)</span>
+        <span class="ec-desc">Avaliação TDAH, 6 subescalas</span>
+      </button>
+      {% endif %}
+      {% if "etdah_prof" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('etdah_prof', this)">
+        <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">ETDAH (Professor)</span>
+        <span class="ec-desc">Avaliação TDAH, 3 subescalas</span>
+      </button>
+      {% endif %}
+      {# ── Novas Escalas ──────────────────────────────────────────────── #}
+      {% if "k10" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('k10', this)">
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">K-10 — Kessler</span>
+        <span class="ec-desc">Distress psicológico, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "ucla" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('ucla', this)">
+        <span class="ec-icon"><i data-lucide="heart-crack" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">UCLA — Solidão</span>
+        <span class="ec-desc">Escala de solidão, 20 itens</span>
+      </button>
+      {% endif %}
+      {% if "msi_bpd" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('msi_bpd', this)">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">MSI-BPD — Borderline</span>
+        <span class="ec-desc">Triagem de TPB, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "gds15" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('gds15', this)">
+        <span class="ec-icon"><i data-lucide="user" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">GDS-15 — Dep. Geriátrica</span>
+        <span class="ec-desc">Depressão em idosos, 15 itens</span>
+      </button>
+      {% endif %}
+      {% if "rosenberg" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('rosenberg', this)">
+        <span class="ec-icon"><i data-lucide="star" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rosenberg — Autoestima</span>
+        <span class="ec-desc">Escala de autoestima, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "audit" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('audit', this)">
+        <span class="ec-icon"><i data-lucide="wine" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">AUDIT — Uso de Álcool</span>
+        <span class="ec-desc">Triagem de álcool, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "bis11" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('bis11', this)">
+        <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">BIS-11 — Impulsividade</span>
+        <span class="ec-desc">Impulsividade de Barratt, 30 itens</span>
+      </button>
+      {% endif %}
+      {% if "iar" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('iar', this)">
+        <span class="ec-icon"><i data-lucide="baby" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">IAR — Ansiedade Infantil</span>
+        <span class="ec-desc">Inventário de ansiedade, 30 itens</span>
+      </button>
+      {% endif %}
+      {% if "pas" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('pas', this)">
+        <span class="ec-icon"><i data-lucide="smile" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PAS — Ansiedade Pré-Escolar</span>
+        <span class="ec-desc">Respondido pelos pais, 28 itens</span>
+      </button>
+      {% endif %}
+      {% if "cdi" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('cdi', this)">
+        <span class="ec-icon"><i data-lucide="cloud-rain" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">CDI — Dep. Infantil</span>
+        <span class="ec-desc">Depressão infantil, 27 itens</span>
+      </button>
+      {% endif %}
+      {% if "hama" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('hama', this)">
+        <span class="ec-icon"><i data-lucide="thermometer" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">HAM-A — Hamilton Ansiedade</span>
+        <span class="ec-desc">Escala clínica, 14 itens</span>
+      </button>
+      {% endif %}
+      {% if "lsas" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('lsas', this)">
+        <span class="ec-icon"><i data-lucide="users" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">LSAS — Ansiedade Social</span>
+        <span class="ec-desc">Liebowitz, 24 situações</span>
+      </button>
+      {% endif %}
+      {% if "risco_suicidio" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('risco_suicidio', this)">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Risco de Suicídio</span>
+        <span class="ec-desc">Triagem Columbia, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "agorafobia" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('agorafobia', this)">
+        <span class="ec-icon"><i data-lucide="map-pin-off" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rastreio de Agorafobia</span>
+        <span class="ec-desc">14 situações evitadas</span>
+      </button>
+      {% endif %}
+      {% if "panico" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('panico', this)">
+        <span class="ec-icon"><i data-lucide="wind" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Rastreio de Pânico</span>
+        <span class="ec-desc">Baseado no DSM-5, 13 itens</span>
+      </button>
+      {% endif %}
+      {# ── Triagem Geral ─────────────────────────────────────────────── #}
+      {% if "phq9" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('phq9', this)">
+        <span class="ec-icon"><i data-lucide="frown" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PHQ-9 — Depressão</span>
+        <span class="ec-desc">Questionário de saúde, 9 itens</span>
+      </button>
+      {% endif %}
+      {% if "gad7" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('gad7', this)">
+        <span class="ec-icon"><i data-lucide="zap" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">GAD-7 — Ansiedade</span>
+        <span class="ec-desc">Transtorno ansiedade geral., 7 itens</span>
+      </button>
+      {% endif %}
+      {% if "epds" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('epds', this)">
+        <span class="ec-icon"><i data-lucide="heart" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">EPDS — Depressão Pós-Parto</span>
+        <span class="ec-desc">Edinburgh, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "pcl5" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('pcl5', this)">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">PCL-5 — PTSD</span>
+        <span class="ec-desc">Lista verificação TEPT, 20 itens</span>
+      </button>
+      {% endif %}
+      {% if "ghq12" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('ghq12', this)">
+        <span class="ec-icon"><i data-lucide="activity" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">GHQ-12 — Saúde Geral</span>
+        <span class="ec-desc">Questionário saúde geral, 12 itens</span>
+      </button>
+      {% endif %}
+      {# ── Psicologia adulto ─────────────────────────────────────────── #}
+      {% if "bdi" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('bdi', this)">
+        <span class="ec-icon"><i data-lucide="cloud-rain" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">BDI — Depressão de Beck</span>
+        <span class="ec-desc">Inventário de depressão, 21 itens</span>
+      </button>
+      {% endif %}
+      {% if "bai" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('bai', this)">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">BAI — Ansiedade de Beck</span>
+        <span class="ec-desc">Inventário de ansiedade, 21 itens</span>
+      </button>
+      {% endif %}
+      {% if "dass21" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('dass21', this)">
+        <span class="ec-icon"><i data-lucide="thermometer" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">DASS-21</span>
+        <span class="ec-desc">Depressão, Ansiedade e Estresse</span>
+      </button>
+      {% endif %}
+      {% if "had" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('had', this)">
+        <span class="ec-icon"><i data-lucide="thermometer" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">HAD — Ansiedade e Depressão</span>
+        <span class="ec-desc">Escala Hospitalar, 14 itens</span>
+      </button>
+      {% endif %}
+      {% if "bsl23" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('bsl23', this)">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">BSL-23 — Sintomas Borderline</span>
+        <span class="ec-desc">Borderline Symptom List, 23 itens</span>
+      </button>
+      {% endif %}
+      {% if "aq10_adulto" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('aq10_adulto', this)">
+        <span class="ec-icon"><i data-lucide="search" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">AQ-10 Adulto</span>
+        <span class="ec-desc">Rastreio autismo adulto, 10 itens</span>
+      </button>
+      {% endif %}
+      {% if "dep_emocional" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('dep_emocional', this)">
+        <span class="ec-icon"><i data-lucide="heart-crack" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Dependência Emocional</span>
+        <span class="ec-desc">Questionário QDE, 66 itens</span>
+      </button>
+      {% endif %}
+      {% if "bpq" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('bpq', this)">
+        <span class="ec-icon"><i data-lucide="shield-alert" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">BPQ — Borderline</span>
+        <span class="ec-desc">Personalidade borderline, 80 itens</span>
+      </button>
+      {% endif %}
+      {# ── Pediatria / Neuropsicologia / Psicopedagogia ──────────────── #}
+      {% if "denver" in modulos_liberados %}
+      <button type="button" class="escolha-card desenvolvimento" onclick="onEscolherInstrumento('denver', this)">
+        <span class="ec-icon"><i data-lucide="trending-up" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Checklist Denver II</span>
+        <span class="ec-desc">Preenchido pelo profissional</span>
+      </button>
+      {% endif %}
+      {% if "qmpi" in modulos_liberados %}
+      <button type="button" class="escolha-card cognitivo" onclick="onEscolherInstrumento('qmpi', this)">
+        <span class="ec-icon"><i data-lucide="cpu" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">QMPI</span>
+        <span class="ec-desc">Memória Prospectiva Infantil</span>
+      </button>
+      {% endif %}
+      {% if "quest_dislexia" in modulos_liberados %}
+      <button type="button" class="escolha-card psicopedagogica" onclick="onEscolherInstrumento('quest_dislexia', this)">
+        <span class="ec-icon"><i data-lucide="book-open" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Quest. Dislexia (Pais)</span>
+        <span class="ec-desc">Questionário de dislexia para pais</span>
+      </button>
+      {% endif %}
+      {% if "checklist_dislexia" in modulos_liberados %}
+      <button type="button" class="escolha-card psicopedagogica" onclick="onEscolherInstrumento('checklist_dislexia', this)">
+        <span class="ec-icon"><i data-lucide="check-square" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Checklist Dislexia</span>
+        <span class="ec-desc">Sinais de dislexia</span>
+      </button>
+      {% endif %}
+      {% if "prot_dislexia_prof" in modulos_liberados %}
+      <button type="button" class="escolha-card psicopedagogica" onclick="onEscolherInstrumento('prot_dislexia_prof', this)">
+        <span class="ec-icon"><i data-lucide="book-open" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">Protocolo Dislexia (Prof.)</span>
+        <span class="ec-desc">Avaliação escolar pelo professor</span>
+      </button>
+      {% endif %}
+      {# ── Alimentação Infantil ──────────────────────────────────── #}
+      {% if "ebai" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('ebai', this)">
+        <span class="ec-icon"><i data-lucide="utensils" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">EBAI — Alimentação Infantil</span>
+        <span class="ec-desc">Escala Brasileira, 14 itens</span>
+      </button>
+      {% endif %}
+      {% if "seps" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('seps', this)">
+        <span class="ec-icon"><i data-lucide="utensils" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">SEPS — Problemas Sensoriais</span>
+        <span class="ec-desc">Alimentação sensorial, 22 itens</span>
+      </button>
+      {% endif %}
+      {% if "eca" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('eca', this)">
+        <span class="ec-icon"><i data-lucide="clipboard-list" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">ECA — Comportamento Alimentar</span>
+        <span class="ec-desc">Avaliação comportamento, 51 itens</span>
+      </button>
+      {% endif %}
+      {% if "tod" in modulos_liberados %}
+      <button type="button" class="escolha-card sdq" onclick="onEscolherInstrumento('tod', this)">
+        <span class="ec-icon"><i data-lucide="alert-triangle" style="width:2rem;height:2rem;"></i></span>
+        <span class="ec-titulo">TOD — Comportamentos Disruptivos</span>
+        <span class="ec-desc">Escala disruptiva, 45 itens</span>
+      </button>
+      {% endif %}
+      {% if not modulos_liberados %}
+      <p style="grid-column:1/-1;color:var(--text-muted);font-size:.88rem;text-align:center;padding:1rem 0;">
+        Nenhum módulo disponível no seu plano. Entre em contato para liberar acesso.
+      </p>
+      {% endif %}
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharModalEscolha()">
+        <i data-lucide="x" style="width:14px;height:14px;"></i> Cancelar
+      </button>
+    </div>
+  </div>
+</div>

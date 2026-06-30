@@ -50,6 +50,8 @@ TIPOS_ADULTO = {
     "hama", "lsas", "risco_suicidio", "agorafobia", "panico",
     # perfil sensorial adulto
     "adulto_sensorial",
+    # anamnese
+    "anamnese_adulto",
 }
 
 
@@ -251,14 +253,23 @@ def iniciar_avaliacao(request, token):
                 "is_adulto": is_adulto,
             })
 
-        paciente = Paciente.objects.create(
-            medico=convite.medico,
-            nome=nome,
-            data_nascimento=data_nascimento,
-            responsavel=responsavel,
-            email_responsavel=email,
-            telefone=telefone,
-        )
+        if convite.tipo in LinkConvite.TIPOS_ANAMNESE:
+            # Anamnese: evita duplicar o paciente se o responsável reenviar o
+            # formulário (ou se já existir um cadastro com o mesmo nome/data
+            # de nascimento para este profissional).
+            paciente = Paciente.objects.find_or_create_anamnese(
+                medico=convite.medico, nome=nome, data_nascimento=data_nascimento,
+                responsavel=responsavel, email_responsavel=email, telefone=telefone,
+            )
+        else:
+            paciente = Paciente.objects.create(
+                medico=convite.medico,
+                nome=nome,
+                data_nascimento=data_nascimento,
+                responsavel=responsavel,
+                email_responsavel=email,
+                telefone=telefone,
+            )
         logger.info(
             "CONSENTIMENTO_OBTIDO paciente_uuid=%s responsavel=%s ip=%s tipo=%s",
             paciente.uuid, responsavel,
@@ -271,7 +282,13 @@ def iniciar_avaliacao(request, token):
         t = str(uuid.uuid4())
         tipo = convite.tipo
 
-        if tipo == "sensorial":
+        if tipo in LinkConvite.TIPOS_ANAMNESE:
+            from procedimentos.models import ProcedimentoDocumento
+            doc = ProcedimentoDocumento.objects.create(
+                paciente=paciente, tipo=tipo, token_publico=uuid.uuid4(),
+            )
+            return redirect("anamnese_publica_form", token=doc.token_publico)
+        elif tipo == "sensorial":
             Avaliacao.objects.create(paciente=paciente, token=t)
             return redirect("questionario_publico", token=t, pagina=1)
         elif tipo == "vineland":

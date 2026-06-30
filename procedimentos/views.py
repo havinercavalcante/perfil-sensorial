@@ -1,8 +1,9 @@
 import json
 import datetime
+import uuid
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.views.decorators.http import require_POST
 
 from questionario.models import (
@@ -21,6 +22,8 @@ TEMPLATE_MAP = {
     "anamnese_tdah":     "procedimentos/anamnese_tdah.html",
     "anamnese_casal":    "procedimentos/anamnese_casal.html",
     "anamnese_seletividade_alimentar": "procedimentos/anamnese_seletividade_alimentar.html",
+    "evolucao_semanal":     "procedimentos/evolucao_semanal.html",
+    "ficha_visita_escolar": "procedimentos/ficha_visita_escolar.html",
     "ficha_triagem":        "procedimentos/ficha_triagem.html",
     "carta_encaminhamento": "procedimentos/carta_encaminhamento.html",
     "atestado":             "procedimentos/atestado.html",
@@ -41,19 +44,59 @@ def _idade_str(data_nasc):
     return f"{meses} meses"
 
 
-def _doc_ctx(request, paciente, doc, tipo=None):
+def _doc_ctx(request, paciente, doc, tipo=None, is_public=False):
     t = doc.tipo if doc else tipo
     return {
         "paciente":       paciente,
         "doc":            doc,
         "idade_str":      _idade_str(paciente.data_nascimento),
         "data_hoje":      datetime.date.today().strftime("%d/%m/%Y"),
+        "data_registro":  (doc.data if doc else datetime.date.today()).isoformat(),
         "conteudo_salvo": json.dumps(doc.conteudo if doc else {}),
         "atualizado_em":  doc.atualizado_em if doc else None,
         "tipo":           t,
         "tipo_label":     TIPO_LABELS.get(t, t),
         "criar_url":      None,
+        "is_public":      is_public,
     }
+
+
+# ── Nova anamnese preenchida diretamente pelo profissional ───────────────────
+# (sem precisar cadastrar o paciente antes — mesma lógica de find-or-create
+# usada no link público enviado ao responsável, só que iniciada pelo profissional).
+
+@login_required
+def nova_anamnese(request):
+    tipos = [(t, TIPO_LABELS[t]) for t in ProcedimentoDocumento.TIPOS_ANAMNESE]
+
+    if request.method == "POST":
+        tipo = request.POST.get("tipo", "")
+        nome = request.POST.get("nome", "").strip()
+        data_nascimento = request.POST.get("data_nascimento", "")
+        is_adulto = tipo == "anamnese_adulto"
+        responsavel = request.POST.get("responsavel", "").strip() if not is_adulto else nome
+        email = request.POST.get("email_responsavel", "").strip()
+        telefone = request.POST.get("telefone", "").strip()
+
+        erro = None
+        if tipo not in ProcedimentoDocumento.TIPOS_ANAMNESE:
+            erro = "Selecione o tipo de anamnese."
+        elif not nome or not data_nascimento or (not is_adulto and not responsavel):
+            erro = "Preencha os campos obrigatórios."
+
+        if erro:
+            return render(request, "procedimentos/nova_anamnese.html", {
+                "tipos": tipos, "post": request.POST, "erro": erro,
+            })
+
+        paciente = Paciente.objects.find_or_create_anamnese(
+            medico=request.user, nome=nome, data_nascimento=data_nascimento,
+            responsavel=responsavel, email_responsavel=email, telefone=telefone,
+        )
+        doc = ProcedimentoDocumento.objects.create(paciente=paciente, tipo=tipo)
+        return redirect("abrir_procedimento", paciente_id=paciente.uuid, tipo=tipo, doc_id=doc.uuid)
+
+    return render(request, "procedimentos/nova_anamnese.html", {"tipos": tipos})
 
 
 # ── Lista de documentos por tipo ─────────────────────────────────────────────
@@ -148,6 +191,17 @@ def novo_procedimento(request, paciente_id, tipo):
 
 # ── Criar documento no primeiro Save ─────────────────────────────────────────
 
+def _extrair_data_registro(conteudo):
+    """Retira a chave '_data' (se houver) do conteúdo e devolve (conteudo, data ou None)."""
+    valor = conteudo.pop("_data", None)
+    if not valor:
+        return conteudo, None
+    try:
+        return conteudo, datetime.date.fromisoformat(valor)
+    except ValueError:
+        return conteudo, None
+
+
 @login_required
 @require_POST
 def criar_procedimento(request, paciente_id, tipo):
@@ -159,10 +213,12 @@ def criar_procedimento(request, paciente_id, tipo):
     except (json.JSONDecodeError, ValueError):
         return JsonResponse({"ok": False, "error": "Dados inválidos."}, status=400)
 
+    data, data_registro = _extrair_data_registro(data)
     doc = ProcedimentoDocumento.objects.create(
         paciente=paciente,
         tipo=tipo,
         conteudo=data,
+        **({"data": data_registro} if data_registro else {}),
     )
     from django.urls import reverse
     return JsonResponse({
@@ -198,7 +254,11 @@ def salvar_procedimento(request, paciente_id, tipo, doc_id):
     except (json.JSONDecodeError, ValueError):
         return JsonResponse({"ok": False, "error": "Dados inválidos."}, status=400)
 
-    doc.conteudo = data.get("conteudo", data)
+    conteudo = data.get("conteudo", data)
+    conteudo, data_registro = _extrair_data_registro(conteudo)
+    doc.conteudo = conteudo
+    if data_registro:
+        doc.data = data_registro
     titulo = data.get("titulo", "").strip()
     if titulo:
         doc.titulo = titulo
@@ -219,6 +279,42 @@ def excluir_procedimento(request, paciente_id, tipo, doc_id):
     doc      = get_object_or_404(ProcedimentoDocumento, uuid=doc_id, paciente=paciente, tipo=tipo)
     doc.delete()
     return JsonResponse({"ok": True, "message": "Documento excluído com sucesso."})
+
+
+# ── Anamnese pública (sem login) — preenchida pelo responsável via link ───────
+
+def anamnese_publica_form(request, token):
+    doc = get_object_or_404(ProcedimentoDocumento, token_publico=token, tipo__in=ProcedimentoDocumento.TIPOS_ANAMNESE)
+    if doc.tipo not in TEMPLATE_MAP:
+        raise Http404
+    ctx = _doc_ctx(request, doc.paciente, doc, is_public=True)
+    return render(request, TEMPLATE_MAP[doc.tipo], ctx)
+
+
+@require_POST
+def anamnese_publica_salvar(request, token):
+    doc = get_object_or_404(ProcedimentoDocumento, token_publico=token, tipo__in=ProcedimentoDocumento.TIPOS_ANAMNESE)
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"ok": False, "error": "Dados inválidos."}, status=400)
+
+    finalizar = bool(data.pop("finalizar", False))
+    conteudo, data_registro = _extrair_data_registro(data)
+    doc.conteudo = conteudo
+    if data_registro:
+        doc.data = data_registro
+    doc.save()
+
+    if finalizar:
+        doc.token_publico = None
+        doc.save(update_fields=["token_publico"])
+        return JsonResponse({"ok": True, "finalizado": True})
+
+    return JsonResponse({
+        "ok": True,
+        "atualizado_em": doc.atualizado_em.strftime("%d/%m/%Y às %H:%M"),
+    })
 
 
 # ── Atalhos legados (redireciona para lista) ──────────────────────────────────

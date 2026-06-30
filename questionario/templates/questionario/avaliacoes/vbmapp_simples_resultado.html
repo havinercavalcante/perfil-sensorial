@@ -1,0 +1,165 @@
+{% extends "questionario/base.html" %}
+{% block title %}{{ titulo }} — {{ paciente.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --vt: #7C3AED; --vt-dark: #5B21B6; }
+
+  .dashboard-header { background:linear-gradient(135deg, var(--vt-dark), var(--vt)); color:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .dashboard-header h1 { font-size:1.4rem; margin-bottom:.3rem; }
+  .dashboard-header p { opacity:.85; font-size:.9rem; }
+
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+  canvas { max-width:100%; }
+
+  .campo-row {
+    display:flex; justify-content:space-between; align-items:center; gap:.75rem;
+    border-radius:8px; padding:.6rem .9rem; margin-bottom:.4rem;
+    background:var(--bg-subtle, #F8F9FA);
+  }
+  .campo-label { font-size:.86rem; color:var(--text); }
+  .campo-valor {
+    font-weight:800; font-size:.95rem; color:#fff;
+    background:var(--vt); border-radius:6px; padding:.15rem .6rem; min-width:2rem; text-align:center;
+  }
+
+  @media(max-width:700px) { .charts-row{grid-template-columns:1fr;} }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    nav, .btn-back, .no-print-hide { display:none !important; }
+    body { background:#fff; }
+    main { max-width:100%; padding:1rem; }
+    .card { box-shadow:none; border:1px solid #ccc; page-break-inside:avoid; }
+    .dashboard-header { background:var(--vt-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back">
+  <i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1><i data-lucide="bar-chart-3" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>{{ paciente.nome }}</h1>
+      <p>{{ titulo }} &nbsp;·&nbsp; aplicado em {{ avaliacao.data|date:"d \d\e F \d\e Y" }} &nbsp;·&nbsp; Responsável: {{ paciente.responsavel }}</p>
+      <p style="font-size:.8rem;opacity:.7;margin-top:.2rem;">{{ request.user.get_full_name|default:request.user.username }}{% if request.user.perfil.registro_profissional %} &nbsp;·&nbsp; {{ request.user.perfil.registro_profissional }}{% endif %}</p>
+    </div>
+    <div class="no-print-hide" style="display:flex; gap:.8rem; flex-wrap:wrap;">
+      <button class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;" onclick="window.print()">
+        <i data-lucide="printer" style="width:15px;height:15px;"></i> Exportar PDF
+      </button>
+      <form method="post" action="{% url url_deletar avaliacao.uuid %}" onsubmit="return confirm('Excluir esta avaliação?');" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i> Excluir
+        </button>
+      </form>
+      <a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn btn-secondary" style="border-color:rgba(255,255,255,.5); color:#fff;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg> Voltar
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- GRÁFICOS -->
+<div class="charts-row">
+  <div class="card">
+    <div class="card-title">🕸 Perfil por Área</div>
+    <canvas id="radarChart" height="280"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-title"><i data-lucide="bar-chart-2" style="width:18px;height:18px;"></i> Comparativo por Área</div>
+    <canvas id="barChart" height="280"></canvas>
+  </div>
+</div>
+
+<!-- DETALHAMENTO -->
+<div class="card">
+  <div class="card-title" style="color:var(--vt);"><i data-lucide="list-checks" style="width:16px;height:16px;"></i> Pontuação por Área</div>
+  {% for c in campos %}
+  <div class="campo-row">
+    <div class="campo-label">{{ c.label }}</div>
+    <div class="campo-valor">{{ c.valor|default:"—" }}{% if c.valor %}/{{ escala_max }}{% endif %}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if outras_avaliacoes %}
+<div class="card no-print-hide">
+  <div class="card-title"><i data-lucide="calendar" style="width:18px;height:18px;"></i> Outras Aplicações do Paciente</div>
+  <div class="table-responsive"><table>
+    <thead><tr><th>Data</th><th></th></tr></thead>
+    <tbody>
+    {% for av in outras_avaliacoes %}
+    <tr>
+      <td>{{ av.data|date:"d/m/Y" }}</td>
+      <td><a href="{% url url_resultado av.uuid %}" class="btn btn-sm btn-secondary">Ver</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if avaliacao.observacoes %}
+<div class="card">
+  <div class="card-title" style="color:var(--vt);"><i data-lucide="pencil" style="width:16px;height:16px;"></i> Observações</div>
+  <p style="white-space:pre-wrap; font-size:.9rem;">{{ avaliacao.observacoes }}</p>
+</div>
+{% endif %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const camposData = {{ campos_chart_json|safe }};
+
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: camposData.map(c => c.nome),
+    datasets: [{
+      label: 'Pontuação (%)',
+      data: camposData.map(c => c.pct),
+      backgroundColor: 'rgba(124,58,237,.2)',
+      borderColor: '#7C3AED',
+      pointBackgroundColor: '#7C3AED',
+      borderWidth: 2,
+      pointRadius: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font: { size: 9 } }, pointLabels: { font: { size: 8 } } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: camposData.map(c => c.nome),
+    datasets: [{
+      label: 'Pontuação (%)',
+      data: camposData.map(c => c.pct),
+      backgroundColor: camposData.map(c => c.cor + 'CC'),
+      borderColor: camposData.map(c => c.cor),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { afterLabel: ctx => `${camposData[ctx.dataIndex].valor} pontos` } }
+    },
+    scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, x: { ticks: { font: { size: 8 } } } }
+  }
+});
+</script>
+{% endblock %}

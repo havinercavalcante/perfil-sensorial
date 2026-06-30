@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils import timezone
 from questionario.models import Paciente
 
 
@@ -13,6 +14,9 @@ class ProcedimentoDocumento(models.Model):
         ("anamnese_tdah",     "Anamnese — TDAH"),
         ("anamnese_casal",    "Anamnese — Casal"),
         ("anamnese_seletividade_alimentar", "Anamnese — Seletividade Alimentar"),
+        # Prontuário longitudinal
+        ("evolucao_semanal",     "Evolução de Atendimento"),
+        ("ficha_visita_escolar", "Ficha de Visita Escolar"),
         # Outros procedimentos
         ("ficha_triagem",        "Ficha de Triagem"),
         ("carta_encaminhamento", "Carta de Encaminhamento"),
@@ -20,11 +24,18 @@ class ProcedimentoDocumento(models.Model):
         ("relatorio",            "Relatório"),
     ]
 
+    TIPOS_ANAMNESE = [
+        "anamnese", "anamnese_adulto", "anamnese_infantil",
+        "anamnese_tea", "anamnese_tdah", "anamnese_casal",
+    ]
+
     uuid         = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     paciente     = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="procedimentos")
     tipo         = models.CharField(max_length=40, choices=TIPO_CHOICES)
     titulo       = models.CharField("Título", max_length=200, blank=True)
     conteudo     = models.JSONField(default=dict)
+    data         = models.DateField("Data do registro", default=timezone.now)
+    token_publico = models.UUIDField(null=True, blank=True, unique=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     criado_em    = models.DateTimeField(auto_now_add=True)
 

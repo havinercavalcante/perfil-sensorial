@@ -32,6 +32,7 @@ urlpatterns = [
     path("pacientes/novo/", views.novo_paciente, name="novo_paciente"),
     path("pacientes/<uuid:paciente_id>/", views.detalhe_paciente, name="detalhe_paciente"),
     path("pacientes/<uuid:paciente_id>/evolucao/", views.evolucao_paciente, name="evolucao_paciente"),
+    path("pacientes/<uuid:paciente_id>/prontuario/resumo/", views.prontuario_resumo, name="prontuario_resumo"),
     path("pacientes/<uuid:paciente_id>/nova-avaliacao/", views.nova_avaliacao, name="nova_avaliacao"),
     path("avaliacao/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.questionario_view, name="questionario"),
     path("questionario/publico/<str:token>/<int:pagina>/", views.questionario_publico_view, name="questionario_publico"),
@@ -163,6 +164,28 @@ urlpatterns = [
     path("portage/<uuid:avaliacao_id>/deletar/", views.portage_deletar, name="portage_deletar"),
     path("portage/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.portage_visualizar, name="portage_visualizar"),
     path("portage/publico/<str:token>/<int:pagina>/", views.portage_publico_view, name="portage_publico"),
+    # VB-MAPP — Avaliação de Marcos (presencial, sem link público)
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp/", views.nova_avaliacao_vbmapp, name="nova_avaliacao_vbmapp"),
+    path("vbmapp/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.vbmapp_form, name="vbmapp_form"),
+    path("vbmapp/<uuid:avaliacao_id>/concluir/", views.vbmapp_concluir, name="vbmapp_concluir"),
+    path("vbmapp/<uuid:avaliacao_id>/resultado/", views.vbmapp_resultado, name="vbmapp_resultado"),
+    path("vbmapp/<uuid:avaliacao_id>/deletar/", views.vbmapp_deletar, name="vbmapp_deletar"),
+    path("vbmapp/<uuid:avaliacao_id>/visualizar/<int:pagina>/", views.vbmapp_visualizar, name="vbmapp_visualizar"),
+    # VB-MAPP — Avaliação de Barreiras Linguísticas
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp-barreiras/", views.nova_avaliacao_vbmapp_barreiras, name="nova_avaliacao_vbmapp_barreiras"),
+    path("vbmapp-barreiras/<uuid:avaliacao_id>/", views.vbmapp_barreiras_form, name="vbmapp_barreiras_form"),
+    path("vbmapp-barreiras/<uuid:avaliacao_id>/resultado/", views.vbmapp_barreiras_resultado, name="vbmapp_barreiras_resultado"),
+    path("vbmapp-barreiras/<uuid:avaliacao_id>/deletar/", views.vbmapp_barreiras_deletar, name="vbmapp_barreiras_deletar"),
+    # VB-MAPP — Transition Assessment
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp-transicao/", views.nova_avaliacao_vbmapp_transicao, name="nova_avaliacao_vbmapp_transicao"),
+    path("vbmapp-transicao/<uuid:avaliacao_id>/", views.vbmapp_transicao_form, name="vbmapp_transicao_form"),
+    path("vbmapp-transicao/<uuid:avaliacao_id>/resultado/", views.vbmapp_transicao_resultado, name="vbmapp_transicao_resultado"),
+    path("vbmapp-transicao/<uuid:avaliacao_id>/deletar/", views.vbmapp_transicao_deletar, name="vbmapp_transicao_deletar"),
+    # VB-MAPP — Task Analysis Skills Tracking
+    path("pacientes/<uuid:paciente_id>/nova-avaliacao-vbmapp-task-analysis/<int:nivel>/", views.nova_avaliacao_vbmapp_task_analysis, name="nova_avaliacao_vbmapp_task_analysis"),
+    path("vbmapp-task-analysis/<uuid:avaliacao_id>/", views.vbmapp_task_analysis_form, name="vbmapp_task_analysis_form"),
+    path("vbmapp-task-analysis/<uuid:avaliacao_id>/resultado/", views.vbmapp_task_analysis_resultado, name="vbmapp_task_analysis_resultado"),
+    path("vbmapp-task-analysis/<uuid:avaliacao_id>/deletar/", views.vbmapp_task_analysis_deletar, name="vbmapp_task_analysis_deletar"),
     # SDQ
     path("pacientes/<uuid:paciente_id>/nova-avaliacao-sdq/", views.nova_avaliacao_sdq, name="nova_avaliacao_sdq"),
     path("sdq/<uuid:avaliacao_id>/pagina/<int:pagina>/", views.sdq_form, name="sdq_form"),

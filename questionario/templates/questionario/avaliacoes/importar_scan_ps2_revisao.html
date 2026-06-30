@@ -1,6 +1,8 @@
 {% extends "questionario/base.html" %}
 {% block title %}Revisar {{ titulo }} — {{ paciente.nome }}{% endblock %}
 
+{% block back_button %}<a href="{% url 'detalhe_paciente' paciente.uuid %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> {{ paciente.nome }}</a>{% endblock %}
+
 {% block extra_css %}
 <style>
   :root { --ps2: #3D9B6B; --ps2-dark: #1A4A32; }
@@ -16,7 +18,7 @@
   .chip-ok    { background:#D1FAE5; color:#065F46; border:1px solid #6EE7B7; }
 
   .secao-nav { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1.25rem; }
-  .secao-nav a { padding:.3rem .7rem; border-radius:8px; font-size:.78rem; font-weight:600; text-decoration:none; background:var(--bg); border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; }
+  .secao-nav a { padding:.3rem .7rem; border-radius:8px; font-size:.78rem; font-weight:600; text-decoration:none; background:var(--bg); border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; white-space:nowrap; }
   .secao-nav a:hover { border-color:var(--ps2); color:var(--ps2); }
 
   .secao-card { background:#fff; border-radius:14px; border:1.5px solid var(--border); margin-bottom:1.25rem; overflow:hidden; }
@@ -101,11 +103,7 @@
   </span>
 </div>
 
-<nav class="secao-nav">
-  {% for secao in secoes %}
-    <a href="#sec-{{ secao.id }}">{{ secao.nome|truncatechars:25 }}</a>
-  {% endfor %}
-</nav>
+<nav class="secao-nav">{% for secao in secoes %}<a href="#sec-{{ secao.id }}">{{ secao.nome|cut:"Processamento de "|cut:"Processamento do "|cut:"Processamento " }}</a>{% endfor %}</nav>
 
 {% for secao in secoes %}
 <div class="secao-card" id="sec-{{ secao.id }}">
