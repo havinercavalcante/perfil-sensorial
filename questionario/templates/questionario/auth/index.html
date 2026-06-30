@@ -38,39 +38,191 @@
   .escolha-card .ec-desc { font-size:.75rem; color:var(--text-muted); line-height:1.35; }
   .escolha-card.sensorial { --qc:var(--primary); }
   .escolha-card.vineland  { --qc:#3E73D1; }
+
+  /* ── REVEAL ON SCROLL ── */
+  .reveal { opacity:0; transform:translateY(18px); transition:opacity .55s ease, transform .55s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+
+  /* ── HERO ── */
+  .dash-hero {
+    position:relative; overflow:hidden; border-radius:18px;
+    padding:1.9rem 1.75rem; margin-bottom:1.5rem; color:#fff;
+    background:linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 55%,#39abcb 100%);
+    box-shadow:0 18px 50px rgba(12,60,123,.28);
+  }
+  .dash-hero-bg { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .d-blob { position:absolute; border-radius:50%; filter:blur(60px); opacity:.55; animation:d-blob-drift ease-in-out infinite; }
+  .d-blob-1 { width:280px; height:280px; background:radial-gradient(circle,rgba(106,204,220,.55),transparent 70%); top:-90px; right:-60px; animation-duration:16s; }
+  .d-blob-2 { width:220px; height:220px; background:radial-gradient(circle,rgba(255,255,255,.25),transparent 70%); bottom:-80px; left:10%; animation-duration:20s; animation-delay:-6s; }
+  @keyframes d-blob-drift { 0%,100% { transform:translate(0,0); } 50% { transform:translate(-18px,16px); } }
+  .dash-hero-inner { position:relative; z-index:1; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem; }
+  .dash-chip { display:inline-flex; align-items:center; gap:.45rem; padding:.3rem .85rem; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:100px; font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.7rem; }
+  .dash-chip-dot { width:6px; height:6px; border-radius:50%; background:#6accdc; animation:dash-pulse 2s infinite; flex-shrink:0; }
+  @keyframes dash-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.55; transform:scale(1.4); } }
+  .dash-hero-text h1 { font-size:1.55rem; font-weight:800; letter-spacing:-.02em; margin-bottom:.3rem; }
+  .dash-hero-text p { font-size:.86rem; opacity:.78; }
+  .dash-hero-date { display:flex; align-items:center; gap:.4rem; font-size:.78rem; font-weight:600; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); padding:.45rem .8rem; border-radius:10px; white-space:nowrap; }
+  .dash-hero-date i { width:14px; height:14px; }
+
+  /* ── STAT CARDS ── */
+  .dash-stats { perspective:1000px; }
+  .stat-card { background:#fff; border:1px solid var(--border); border-radius:14px; padding:1.1rem 1rem; text-align:center; position:relative; overflow:hidden; will-change:transform; transition:box-shadow .3s; margin-bottom:0; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--sc,var(--primary)); }
+  .stat-card:hover { box-shadow:0 14px 32px rgba(12,60,123,.16); }
+  .stat-icon { width:34px; height:34px; border-radius:9px; background:color-mix(in srgb,var(--sc,var(--primary)) 14%,#fff); display:flex; align-items:center; justify-content:center; margin:0 auto .55rem; color:var(--sc,var(--primary)); }
+  .stat-icon i { width:17px; height:17px; }
+  .stat-value { font-size:1.8rem; font-weight:800; color:var(--sc,var(--primary)); line-height:1; }
+  .stat-label { font-size:.78rem; color:var(--text-muted); margin-top:.25rem; }
+
+  /* ── ACTION CARDS ── */
+  .dash-actions { perspective:1000px; }
+  .action-card { display:flex; align-items:center; gap:1rem; background:#fff; border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.4rem; text-decoration:none; position:relative; overflow:hidden; transition:box-shadow .3s,border-color .3s; will-change:transform; margin-bottom:0; }
+  .action-card:hover { border-color:var(--ac,var(--primary)); box-shadow:0 16px 36px rgba(12,60,123,.14); }
+  .action-icon { flex-shrink:0; width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,var(--ac,var(--primary)),var(--primary-dark)); display:flex; align-items:center; justify-content:center; color:#fff; box-shadow:0 6px 18px color-mix(in srgb,var(--ac,var(--primary)) 45%,transparent); }
+  .action-icon i { width:22px; height:22px; }
+  .action-body { flex:1; min-width:0; }
+  .action-body h3 { font-size:.96rem; font-weight:700; color:var(--primary-dark); margin-bottom:.25rem; display:flex; align-items:center; gap:.4rem; }
+  .action-body p { font-size:.8rem; color:var(--text-muted); line-height:1.45; }
+  .action-arrow { flex-shrink:0; color:var(--ac,var(--primary)); transition:transform .25s; }
+  .action-arrow i { width:18px; height:18px; }
+  .action-card:hover .action-arrow { transform:translateX(4px); }
+
+  .tilt-shine { position:absolute; inset:0; border-radius:inherit; background:radial-gradient(ellipse at var(--sx,50%) var(--sy,20%),rgba(255,255,255,.5),transparent 60%); pointer-events:none; opacity:0; transition:opacity .3s; z-index:2; }
+
+  @media (max-width:600px) {
+    .dash-hero { padding:1.5rem 1.25rem; border-radius:14px; }
+    .dash-hero-text h1 { font-size:1.25rem; }
+    .stat-value { font-size:1.25rem !important; }
+    .action-card { padding:1rem; gap:.75rem; }
+    .action-icon { width:40px; height:40px; }
+    .action-icon i { width:18px; height:18px; }
+  }
+
+  /* ── PACIENTES RECENTES — lista de cartões ── */
+  .patients-list { display:flex; flex-direction:column; gap:.55rem; }
+  .patient-row {
+    display:flex; align-items:center; gap:.9rem;
+    padding:.7rem .9rem; border-radius:13px;
+    border:1px solid var(--border); background:#fff;
+    text-decoration:none; position:relative; overflow:hidden;
+    transition:border-color .25s, box-shadow .25s, transform .2s;
+  }
+  .patient-row::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--pc,var(--primary)); transform:scaleY(0); transform-origin:center;
+    transition:transform .25s ease;
+  }
+  .patient-row:hover { border-color:var(--pc,var(--primary)); box-shadow:0 12px 28px rgba(12,60,123,.12); transform:translateX(3px); }
+  .patient-row:hover::before { transform:scaleY(1); }
+  .patient-avatar {
+    flex-shrink:0; width:42px; height:42px; border-radius:50%;
+    background:linear-gradient(135deg,var(--pc,var(--primary)),var(--primary-dark));
+    color:#fff; font-weight:800; font-size:.92rem;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px color-mix(in srgb,var(--pc,var(--primary)) 40%,transparent);
+  }
+  .patient-info { flex:1; min-width:0; }
+  .patient-name { font-weight:700; color:var(--primary-dark); font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .patient-resp { font-size:.76rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:.3rem; }
+  .patient-resp i { width:11px; height:11px; flex-shrink:0; opacity:.7; }
+  .patient-meta { display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+  .patient-count { display:flex; align-items:center; gap:.3rem; font-size:.74rem; font-weight:700; color:var(--pc,var(--primary)); background:color-mix(in srgb,var(--pc,var(--primary)) 10%,#fff); border:1px solid color-mix(in srgb,var(--pc,var(--primary)) 22%,#fff); border-radius:8px; padding:.28rem .55rem; white-space:nowrap; }
+  .patient-count i { width:11px; height:11px; }
+  .patient-date { font-size:.72rem; color:var(--text-muted); min-width:42px; text-align:right; white-space:nowrap; }
+  .patient-arrow { flex-shrink:0; color:var(--text-muted); transition:transform .25s,color .25s; }
+  .patient-arrow i { width:16px; height:16px; }
+  .patient-row:hover .patient-arrow { color:var(--pc,var(--primary)); transform:translateX(4px); }
+  @media (max-width:600px) {
+    .patient-row { padding:.6rem .7rem; gap:.65rem; }
+    .patient-avatar { width:36px; height:36px; font-size:.78rem; }
+    .patient-resp { display:none; }
+    .patient-date { display:none; }
+  }
+
+  /* ── ÚLTIMAS AVALIAÇÕES CONCLUÍDAS — lista com chips de quadrante ── */
+  .evals-list { display:flex; flex-direction:column; gap:.55rem; }
+  .eval-row {
+    display:flex; align-items:center; gap:.9rem;
+    padding:.7rem .9rem; border-radius:13px;
+    border:1px solid var(--border); background:#fff;
+    text-decoration:none; position:relative; overflow:hidden;
+    transition:border-color .25s, box-shadow .25s, transform .2s;
+  }
+  .eval-row:hover { border-color:#10B981; box-shadow:0 12px 28px rgba(16,185,129,.14); transform:translateX(3px); }
+  .eval-icon {
+    flex-shrink:0; width:42px; height:42px; border-radius:12px;
+    background:rgba(16,185,129,.12); color:#10B981;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .eval-icon i { width:20px; height:20px; }
+  .eval-info { flex:1; min-width:0; }
+  .eval-name { font-weight:700; color:var(--primary-dark); font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .eval-date { font-size:.76rem; color:var(--text-muted); display:flex; align-items:center; gap:.3rem; margin-top:.1rem; }
+  .eval-date i { width:11px; height:11px; flex-shrink:0; opacity:.7; }
+  .eval-scores { display:flex; gap:.32rem; flex-shrink:0; }
+  .eval-score { display:flex; flex-direction:column; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; color:#fff; line-height:1; }
+  .eval-score .es-label { font-size:.52rem; font-weight:800; text-transform:uppercase; letter-spacing:.02em; opacity:.9; }
+  .eval-score .es-value { font-size:.82rem; font-weight:800; margin-top:1px; }
+  .eval-arrow { flex-shrink:0; color:var(--text-muted); transition:transform .25s,color .25s; }
+  .eval-arrow i { width:16px; height:16px; }
+  .eval-row:hover .eval-arrow { color:#10B981; transform:translateX(4px); }
+  @media (max-width:600px) {
+    .eval-row { padding:.6rem .7rem; gap:.6rem; }
+    .eval-icon { width:36px; height:36px; }
+    .eval-icon i { width:17px; height:17px; }
+    .eval-date { display:none; }
+    .eval-score { width:30px; height:30px; border-radius:8px; }
+    .eval-score .es-label { font-size:.46rem; }
+    .eval-score .es-value { font-size:.7rem; }
+    .eval-scores { gap:.22rem; }
+  }
 </style>
 {% endblock %}
 {% block content %}
-<div style="margin-bottom:1.5rem;">
-  <h1 style="font-size:1.4rem; color:var(--primary-dark);">
-    Olá, {{ user.get_full_name|default:user.username }}
-  </h1>
-  <p style="color:var(--text-muted); font-size:.9rem;">
-    {% if user.perfil.especialidade %}{{ user.perfil.especialidade }}{% if user.perfil.registro_profissional %} · {{ user.perfil.registro_profissional }}{% endif %}{% endif %}
-  </p>
+
+<div class="dash-hero reveal">
+  <div class="dash-hero-bg">
+    <div class="d-blob d-blob-1"></div>
+    <div class="d-blob d-blob-2"></div>
+  </div>
+  <div class="dash-hero-inner">
+    <div class="dash-hero-text">
+      <div class="dash-chip"><span class="dash-chip-dot"></span> Painel do profissional</div>
+      <h1>Olá, {{ user.get_full_name|default:user.username }}</h1>
+      <p>{% if user.perfil.especialidade %}{{ user.perfil.especialidade }}{% if user.perfil.registro_profissional %} · {{ user.perfil.registro_profissional }}{% endif %}{% endif %}</p>
+    </div>
+    <div class="dash-hero-date">
+      <i data-lucide="calendar-days"></i>
+      <span>{% now "d \d\e F \d\e Y" %}</span>
+    </div>
+  </div>
 </div>
 
-<div id="tour-stats" class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
-  <div class="card" style="text-align:center; border-top:4px solid var(--primary); margin-bottom:0;">
-    <div style="font-size:2rem; font-weight:800; color:var(--primary);">{{ total_pacientes }}</div>
-    <div style="color:var(--text-muted); font-size:.85rem;">Pacientes</div>
+<div id="tour-stats" class="stats-grid dash-stats reveal" style="grid-template-columns:repeat(4,1fr);">
+  <div class="stat-card tilt" style="--sc:var(--primary);">
+    <div class="stat-icon"><i data-lucide="users"></i></div>
+    <div class="stat-value" data-target="{{ total_pacientes }}">0</div>
+    <div class="stat-label">Pacientes</div>
   </div>
-  <div class="card" style="text-align:center; border-top:4px solid var(--accent); margin-bottom:0;">
-    <div style="font-size:2rem; font-weight:800; color:var(--accent);">{{ total_avaliacoes }}</div>
-    <div style="color:var(--text-muted); font-size:.85rem;">Avaliações totais</div>
+  <div class="stat-card tilt" style="--sc:#3E73D1;">
+    <div class="stat-icon"><i data-lucide="clipboard-list"></i></div>
+    <div class="stat-value" data-target="{{ total_avaliacoes }}">0</div>
+    <div class="stat-label">Avaliações totais</div>
   </div>
-  <div class="card" style="text-align:center; border-top:4px solid #10B981; margin-bottom:0;">
-    <div style="font-size:2rem; font-weight:800; color:#10B981;">{{ concluidas }}</div>
-    <div style="color:var(--text-muted); font-size:.85rem;">Concluídas</div>
+  <div class="stat-card tilt" style="--sc:#10B981;">
+    <div class="stat-icon"><i data-lucide="circle-check-big"></i></div>
+    <div class="stat-value" data-target="{{ concluidas }}">0</div>
+    <div class="stat-label">Concluídas</div>
   </div>
-  <div class="card" style="text-align:center; border-top:4px solid #F59E0B; margin-bottom:0;">
-    <div style="font-size:2rem; font-weight:800; color:#F59E0B;">{{ novas_mes }}</div>
-    <div style="color:var(--text-muted); font-size:.85rem;">Novas este mês</div>
+  <div class="stat-card tilt" style="--sc:#F59E0B;">
+    <div class="stat-icon"><i data-lucide="sparkles"></i></div>
+    <div class="stat-value" data-target="{{ novas_mes }}">0</div>
+    <div class="stat-label">Novas este mês</div>
   </div>
 </div>
 
 {% if em_andamento > 0 %}
-<div class="alert alert-warning" style="margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap;">
+<div class="alert alert-warning reveal" style="margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap;">
   <span style="display:flex; align-items:center; gap:.45rem; flex:1; min-width:0;">
     <i data-lucide="clock" style="width:15px;height:15px; flex-shrink:0;"></i>
     <span>Você tem <strong>{{ em_andamento }}</strong> avalia{{ em_andamento|pluralize:"ção,ções" }} em andamento aguardando conclusão.</span>
@@ -79,52 +231,54 @@
 </div>
 {% endif %}
 
-<div class="actions-grid">
-  <a id="tour-card-gerar-link" href="{% url 'gerar_link' %}" class="card" style="text-decoration:none; border-left:4px solid var(--primary); display:block; margin-bottom:0;">
-    <div class="card-title"><i data-lucide="link" style="width:18px;height:18px;"></i> Gerar Link de Questionário</div>
-    <p style="color:var(--text-muted); font-size:.88rem;">Gere um link e envie pelo WhatsApp ou e-mail — o responsável preenche os dados.</p>
-    <br><span class="btn btn-primary btn-sm">Gerar link</span>
+<div class="actions-grid dash-actions reveal">
+  <a id="tour-card-gerar-link" href="{% url 'gerar_link' %}" class="action-card tilt" style="--ac:var(--primary);">
+    <div class="action-icon"><i data-lucide="link"></i></div>
+    <div class="action-body">
+      <h3>Gerar Link de Questionário</h3>
+      <p>Gere um link e envie pelo WhatsApp ou e-mail — o responsável preenche os dados.</p>
+    </div>
+    <div class="action-arrow"><i data-lucide="arrow-right"></i></div>
   </a>
-  <a id="tour-card-pacientes" href="{% url 'lista_pacientes' %}" class="card" style="text-decoration:none; border-left:4px solid var(--accent); display:block; margin-bottom:0;">
-    <div class="card-title"><i data-lucide="users" style="width:18px;height:18px;"></i> Meus Pacientes</div>
-    <p style="color:var(--text-muted); font-size:.88rem;">Veja o histórico e os dashboards de cada paciente.</p>
-    <br><span class="btn btn-secondary btn-sm">Ver pacientes</span>
+  <a id="tour-card-pacientes" href="{% url 'lista_pacientes' %}" class="action-card tilt" style="--ac:#3E73D1;">
+    <div class="action-icon"><i data-lucide="users"></i></div>
+    <div class="action-body">
+      <h3>Meus Pacientes</h3>
+      <p>Veja o histórico e os dashboards de cada paciente.</p>
+    </div>
+    <div class="action-arrow"><i data-lucide="arrow-right"></i></div>
   </a>
 </div>
 
 {% if pacientes %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> Pacientes Recentes</div>
-  <div class="table-responsive"><table>
-    <thead><tr><th>Paciente</th><th>Responsável</th><th>Avaliações</th><th>Última</th><th></th></tr></thead>
-    <tbody>
+  <div class="patients-list">
     {% for p in pacientes|slice:":6" %}
-    <tr>
-      <td><strong>{{ p.nome }}</strong></td>
-      <td>{{ p.responsavel }}</td>
-      <td style="text-align:center;">{{ p.total_avals }}</td>
-      <td>
-        {% with ul=p.avaliacoes.first %}
-          {% if ul %}
-            <span class="date-full">{{ ul.data|date:"d/m/Y" }}</span>
-            <span class="date-short">{{ ul.data|date:"d/m" }}</span>
-          {% else %}
-            {% with ulv=p.avaliacoes_vineland.first %}
-              {% if ulv %}
-                <span class="date-full">{{ ulv.data|date:"d/m/Y" }}</span>
-                <span class="date-short">{{ ulv.data|date:"d/m" }}</span>
-              {% else %}—{% endif %}
-            {% endwith %}
-          {% endif %}
-        {% endwith %}
-      </td>
-      <td>
-        <a href="{% url 'detalhe_paciente' p.uuid %}" class="btn btn-sm btn-primary">Detalhes</a>
-      </td>
-    </tr>
+    <a href="{% url 'detalhe_paciente' p.uuid %}" class="patient-row" style="--pc:{% cycle 'var(--primary)' '#3E73D1' '#10B981' '#F59E0B' '#9B59B6' '#16A085' %};">
+      <div class="patient-avatar">{{ p.nome|first|upper }}</div>
+      <div class="patient-info">
+        <div class="patient-name">{{ p.nome }}</div>
+        <div class="patient-resp"><i data-lucide="user"></i> {{ p.responsavel }}</div>
+      </div>
+      <div class="patient-meta">
+        <span class="patient-count"><i data-lucide="clipboard-list"></i> {{ p.total_avals }}</span>
+        <span class="patient-date">
+          {% with ul=p.avaliacoes.first %}
+            {% if ul %}
+              {{ ul.data|date:"d/m" }}
+            {% else %}
+              {% with ulv=p.avaliacoes_vineland.first %}
+                {% if ulv %}{{ ulv.data|date:"d/m" }}{% else %}—{% endif %}
+              {% endwith %}
+            {% endif %}
+          {% endwith %}
+        </span>
+      </div>
+      <div class="patient-arrow"><i data-lucide="chevron-right"></i></div>
+    </a>
     {% endfor %}
-    </tbody>
-  </table></div>
+  </div>
   {% if pacientes.count > 6 %}
   <div style="text-align:center; margin-top:1rem;">
     <a href="{% url 'lista_pacientes' %}" class="btn btn-secondary btn-sm">Ver todos os {{ pacientes.count }} pacientes</a>
@@ -132,7 +286,7 @@
   {% endif %}
 </div>
 {% else %}
-<div class="card" style="text-align:center; padding:3rem;">
+<div class="card reveal" style="text-align:center; padding:3rem;">
   <p style="margin-bottom:.5rem;"><i data-lucide="users" style="width:2rem;height:2rem;color:var(--text-muted);"></i></p>
   <p style="color:var(--text-muted); margin-bottom:1.5rem;">Você ainda não tem pacientes cadastrados.</p>
   <a href="{% url 'gerar_link' %}" class="btn btn-primary"><i data-lucide="link" style="width:16px;height:16px;"></i> Gerar primeiro link</a>
@@ -140,24 +294,34 @@
 {% endif %}
 
 {% if ultimas_avaliacoes %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title"><i data-lucide="check-circle" style="width:18px;height:18px;"></i> Últimas Avaliações Concluídas</div>
-  <div class="table-responsive"><table>
-    <thead><tr><th>Paciente</th><th>Data</th><th>EX</th><th>EV</th><th>SN</th><th>OB</th><th></th></tr></thead>
-    <tbody>
+  <div class="evals-list">
     {% for av in ultimas_avaliacoes %}
-    <tr>
-      <td><strong>{{ av.paciente.nome }}</strong></td>
-      <td>{{ av.data|date:"d/m/Y" }}</td>
-      <td>{{ av.pont_ex|default:"—" }}</td>
-      <td>{{ av.pont_ev|default:"—" }}</td>
-      <td>{{ av.pont_sn|default:"—" }}</td>
-      <td>{{ av.pont_ob|default:"—" }}</td>
-      <td><a href="{% url 'dashboard' av.uuid %}" class="btn btn-sm btn-primary">Ver</a></td>
-    </tr>
+    <a href="{% url 'dashboard' av.uuid %}" class="eval-row">
+      <div class="eval-icon"><i data-lucide="check-circle"></i></div>
+      <div class="eval-info">
+        <div class="eval-name" title="{{ av.paciente.nome }}">{{ av.paciente.nome }}</div>
+        <div class="eval-date"><i data-lucide="calendar"></i> {{ av.data|date:"d/m/Y" }}</div>
+      </div>
+      <div class="eval-scores">
+        <div class="eval-score" style="background:var(--ex);" title="Exploração">
+          <span class="es-label">EX</span><span class="es-value">{{ av.pont_ex|default:"—" }}</span>
+        </div>
+        <div class="eval-score" style="background:var(--ev);" title="Esquiva">
+          <span class="es-label">EV</span><span class="es-value">{{ av.pont_ev|default:"—" }}</span>
+        </div>
+        <div class="eval-score" style="background:var(--sn);" title="Sensibilidade">
+          <span class="es-label">SN</span><span class="es-value">{{ av.pont_sn|default:"—" }}</span>
+        </div>
+        <div class="eval-score" style="background:var(--ob);" title="Observação">
+          <span class="es-label">OB</span><span class="es-value">{{ av.pont_ob|default:"—" }}</span>
+        </div>
+      </div>
+      <div class="eval-arrow"><i data-lucide="chevron-right"></i></div>
+    </a>
     {% endfor %}
-    </tbody>
-  </table></div>
+  </div>
 </div>
 {% endif %}
 
@@ -185,6 +349,71 @@
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  // Reveal on scroll
+  var revObs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var d = parseInt(e.target.dataset.delay || 0);
+      setTimeout(function () { e.target.classList.add('visible'); }, d);
+      revObs.unobserve(e.target);
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(function (el, i) {
+    el.dataset.delay = (i % 5) * 80;
+    revObs.observe(el);
+  });
+
+  // Animated stat counters
+  var countObs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var el = e.target, target = parseInt(el.dataset.target || 0, 10);
+      var t0 = performance.now();
+      function run(now) {
+        var p = Math.min((now - t0) / 1100, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(run);
+      }
+      requestAnimationFrame(run);
+      countObs.unobserve(el);
+    });
+  }, { threshold: 0.4 });
+  document.querySelectorAll('.stat-value[data-target]').forEach(function (el) { countObs.observe(el); });
+
+  // 3D tilt + shine on cards
+  if (!window.matchMedia('(hover:none)').matches) {
+    document.querySelectorAll('.tilt').forEach(function (card) {
+      var shine = document.createElement('div');
+      shine.className = 'tilt-shine';
+      card.style.position = 'relative';
+      card.appendChild(shine);
+      var timer;
+      card.addEventListener('mouseenter', function () { clearTimeout(timer); });
+      card.addEventListener('mousemove', function (e) {
+        clearTimeout(timer);
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width - 0.5;
+        var y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transition = 'transform .08s ease, box-shadow .3s ease';
+        card.style.transform = 'perspective(800px) rotateX(' + (-y * 6) + 'deg) rotateY(' + (x * 6) + 'deg) translateZ(6px)';
+        shine.style.opacity = '1';
+        shine.style.setProperty('--sx', ((x + .5) * 100) + '%');
+        shine.style.setProperty('--sy', ((y + .5) * 100) + '%');
+      });
+      card.addEventListener('mouseleave', function () {
+        card.style.transition = 'transform .5s cubic-bezier(.23,1,.32,1), box-shadow .4s ease';
+        card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) translateZ(0)';
+        shine.style.opacity = '0';
+        timer = setTimeout(function () { card.style.transform = ''; card.style.transition = ''; }, 520);
+      });
+    });
+  }
+})();
+</script>
 
 <script>
   function abrirModalAvaliar(uuid, nome) {

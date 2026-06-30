@@ -2,6 +2,18 @@
 {% block title %}Nova Anamnese{% endblock %}
 {% block extra_css %}
 <style>
+  .na-header { position:relative;overflow:hidden;border-radius:16px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;color:#fff;background:linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 55%,#39abcb 100%);box-shadow:0 14px 40px rgba(12,60,123,.24); }
+  .na-header-bg { position:absolute;inset:0;overflow:hidden;pointer-events:none; }
+  .na-blob { position:absolute;border-radius:50%;filter:blur(50px);opacity:.5;animation:na-drift ease-in-out infinite; }
+  .na-blob-1 { width:200px;height:200px;background:radial-gradient(circle,rgba(106,204,220,.5),transparent 70%);top:-70px;right:-40px;animation-duration:14s; }
+  @keyframes na-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-12px,10px)}}
+  .na-header-inner { position:relative;z-index:1;display:flex;align-items:center;gap:.75rem; }
+  .na-header-icon { width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .na-header-icon i { width:22px;height:22px; }
+  .na-header h2 { font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.15rem; }
+  .na-header p { font-size:.82rem;opacity:.78; }
+  .btn-na-submit { background:linear-gradient(135deg,#39abcb,#6accdc);color:#0c3c7b;font-weight:800;border:none;box-shadow:0 4px 18px rgba(57,171,203,.38);gap:.4rem; }
+  .btn-na-submit:hover { opacity:.9;transform:translateY(-1px); }
   @media (max-width: 600px) {
     .form-actions { flex-direction: column; }
     .form-actions .btn { width: 100%; justify-content: center; }
@@ -11,10 +23,16 @@
 {% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Pacientes</a>{% endblock %}
 {% block content %}
 <div style="max-width:600px; margin:0 auto;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.5rem;"><i data-lucide="clipboard" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Nova Anamnese</h2>
-  <p style="color:var(--text-muted); font-size:.88rem; margin-bottom:1.5rem;">
-    Preencha os dados de identificação para começar. Se já existir um paciente com este nome e data de nascimento, ele será reaproveitado em vez de duplicado.
-  </p>
+  <div class="na-header">
+    <div class="na-header-bg"><div class="na-blob na-blob-1"></div></div>
+    <div class="na-header-inner">
+      <div class="na-header-icon"><i data-lucide="clipboard"></i></div>
+      <div>
+        <h2>Nova Anamnese</h2>
+        <p>Se o paciente já existir pelo nome e data de nascimento, será reaproveitado</p>
+      </div>
+    </div>
+  </div>
   <div class="card">
     {% if erro %}
     <div class="alert alert-error" style="margin-bottom:1.2rem;">{{ erro }}</div>
@@ -56,7 +74,9 @@
       </div>
       <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
         <a href="{% url 'lista_pacientes' %}" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Iniciar Anamnese <i data-lucide="chevrons-right" style="width:14px;height:14px;"></i></button>
+        <button type="submit" class="btn btn-na-submit">
+          <i data-lucide="chevrons-right" style="width:15px;height:15px;"></i> Iniciar Anamnese
+        </button>
       </div>
     </form>
   </div>

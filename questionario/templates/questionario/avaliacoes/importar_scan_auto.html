@@ -105,7 +105,7 @@
   <!-- PASSO 1: UPLOAD -->
   <div class="step ativo" id="step1">
     <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <div class="drop-icon">📄</div>
+      <div class="drop-icon"><i data-lucide="file-up" style="width:2.5rem;height:2.5rem;color:var(--imp);"></i></div>
       <p>Clique ou arraste as páginas do formulário aqui</p>
       <small>JPG · PNG · WebP · PDF &nbsp;·&nbsp; Máximo 10 arquivos</small>
     </div>
@@ -185,8 +185,8 @@
       Confirmar e extrair respostas
     </button>
 
-    <button type="button" onclick="voltarStep1()" style="width:100%;margin-top:.75rem;padding:.6rem;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:.85rem;color:var(--text-muted);">
-      ← Trocar arquivos
+    <button type="button" onclick="voltarStep1()" style="width:100%;margin-top:.75rem;padding:.6rem;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:.85rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:.4rem;font-family:inherit;transition:border-color .2s,color .2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+      <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Trocar arquivos
     </button>
   </div>
 

@@ -2,6 +2,21 @@
 {% block title %}Novo Paciente{% endblock %}
 {% block extra_css %}
 <style>
+  .np-header { position:relative; overflow:hidden; border-radius:16px; padding:1.5rem 1.75rem; margin-bottom:1.5rem; color:#fff; background:linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 55%,#39abcb 100%); box-shadow:0 14px 40px rgba(12,60,123,.24); }
+  .np-header-bg { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .np-blob { position:absolute; border-radius:50%; filter:blur(50px); opacity:.5; animation:np-drift ease-in-out infinite; }
+  .np-blob-1 { width:220px;height:220px;background:radial-gradient(circle,rgba(106,204,220,.5),transparent 70%);top:-80px;right:-50px;animation-duration:14s; }
+  .np-blob-2 { width:160px;height:160px;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 70%);bottom:-60px;left:5%;animation-duration:18s;animation-delay:-5s; }
+  @keyframes np-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-14px,12px)}}
+  .np-header-inner { position:relative; z-index:1; display:flex; align-items:center; gap:.75rem; }
+  .np-header-icon { width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .np-header-icon i { width:22px;height:22px; }
+  .np-header h2 { font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.15rem; }
+  .np-header p { font-size:.82rem;opacity:.78; }
+  .btn-np-submit { background:linear-gradient(135deg,#39abcb,#6accdc);color:#0c3c7b;font-weight:800;border:none;box-shadow:0 4px 18px rgba(57,171,203,.38);gap:.4rem; }
+  .btn-np-submit:hover { opacity:.9;transform:translateY(-1px); }
+  .tipo-toggle { display:flex;background:var(--bg);border-radius:10px;padding:4px;gap:4px;margin-bottom:1.5rem; }
+  .tipo-toggle button { flex:1;border:none;border-radius:7px;padding:.55rem 1rem;font-size:.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:all .2s;font-family:inherit; }
   @media (max-width: 600px) {
     .form-actions { flex-direction: column; }
     .form-actions .btn { width: 100%; justify-content: center; }
@@ -11,7 +26,13 @@
 {% block back_button %}<a href="{% url 'lista_pacientes' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Pacientes</a>{% endblock %}
 {% block content %}
 <div style="max-width:600px; margin:0 auto;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:1.5rem;"><i data-lucide="users" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Dados do Paciente</h2>
+  <div class="np-header">
+    <div class="np-header-bg"><div class="np-blob np-blob-1"></div><div class="np-blob np-blob-2"></div></div>
+    <div class="np-header-inner">
+      <div class="np-header-icon"><i data-lucide="user-plus"></i></div>
+      <div><h2>Novo Paciente</h2><p>Preencha os dados para cadastrar e gerar a avaliação</p></div>
+    </div>
+  </div>
   <div class="card">
     {% if link %}
       <div id="tour-np-link" style="margin-bottom:1.5rem; padding:1.1rem 1.2rem; border-radius:10px; background:#D1FAE5; border-left:4px solid #10B981;">
@@ -46,11 +67,11 @@
       {% csrf_token %}
       <input type="hidden" name="tipo_paciente" id="tipo_paciente" value="{{ post.tipo_paciente|default:'crianca' }}">
 
-      <div style="display:flex; background:var(--bg); border-radius:10px; padding:4px; gap:4px; margin-bottom:1.5rem;">
-        <button type="button" id="btn-crianca" onclick="setTipo('crianca')" style="flex:1; border:none; border-radius:7px; padding:.55rem 1rem; font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all .2s;">
+      <div class="tipo-toggle">
+        <button type="button" id="btn-crianca" onclick="setTipo('crianca')">
           <i data-lucide="baby" style="width:14px;height:14px;"></i> Criança
         </button>
-        <button type="button" id="btn-adulto" onclick="setTipo('adulto')" style="flex:1; border:none; border-radius:7px; padding:.55rem 1rem; font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all .2s;">
+        <button type="button" id="btn-adulto" onclick="setTipo('adulto')">
           <i data-lucide="user" style="width:14px;height:14px;"></i> Adulto
         </button>
       </div>
@@ -80,8 +101,10 @@
         </div>
       </div>
       <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
-        <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Cadastrar Paciente <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg></button>
+        <a href="{% url 'lista_pacientes' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-np-submit">
+          <i data-lucide="user-plus" style="width:15px;height:15px;"></i> Cadastrar Paciente
+        </button>
       </div>
     </form>
     <script>

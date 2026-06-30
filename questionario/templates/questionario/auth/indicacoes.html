@@ -4,21 +4,41 @@
 
 {% block extra_css %}
 <style>
-  .ind-link-box { display: flex; gap: .6rem; align-items: center; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: .75rem 1rem; }
-  .ind-link-box input { flex: 1; min-width: 0; border: none; background: transparent; color: var(--primary-dark); font-size: .85rem; font-weight: 600; outline: none; }
-  .ind-step { display: flex; gap: .7rem; align-items: flex-start; padding: .6rem 0; }
-  .ind-step-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
-  .ind-step-text strong { color: var(--primary-dark); }
-  .ind-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid var(--bg); }
-  .ind-row:last-child { border-bottom: none; }
-  .ind-status { font-size: .74rem; font-weight: 700; padding: .2rem .6rem; border-radius: 20px; white-space: nowrap; }
-  .ind-status.ok { background: #f0fdf4; color: #16a34a; }
-  .ind-status.pendente { background: #fffbeb; color: #d97706; }
-  .ind-share-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .9rem; }
-  .ind-btn-whatsapp { background: #25D366; color: #fff; border: none; }
-  .ind-btn-whatsapp:hover { background: #1ebe5a; }
-  .ind-btn-email { background: #3E73D1; color: #fff; border: none; }
-  .ind-btn-email:hover { background: #2f5bb0; }
+  /* ── HERO ── */
+  .ind-hero { position:relative;overflow:hidden;border-radius:18px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;color:#fff;background:linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 55%,#39abcb 100%);box-shadow:0 14px 40px rgba(12,60,123,.24); }
+  .ind-hero-bg { position:absolute;inset:0;overflow:hidden;pointer-events:none; }
+  .ind-blob { position:absolute;border-radius:50%;filter:blur(55px);opacity:.5;animation:ind-drift ease-in-out infinite; }
+  .ind-blob-1 { width:230px;height:230px;background:radial-gradient(circle,rgba(106,204,220,.5),transparent 70%);top:-80px;right:-50px;animation-duration:16s; }
+  @keyframes ind-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-14px,12px)}}
+  .ind-hero-inner { position:relative;z-index:1;display:flex;align-items:flex-start;gap:.9rem; }
+  .ind-hero-icon { width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem; }
+  .ind-hero-icon i { width:22px;height:22px; }
+  .ind-hero h2 { font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.2rem; }
+  .ind-hero p { font-size:.84rem;opacity:.85; }
+  .ind-hero strong { color:#6accdc; }
+  /* ── LINK BOX ── */
+  .ind-link-box { display:flex;gap:.6rem;align-items:center;background:rgba(57,171,203,.07);border:1.5px solid rgba(57,171,203,.3);border-radius:12px;padding:.85rem 1rem; }
+  .ind-link-box input { flex:1;min-width:0;border:none;background:transparent;color:var(--primary-dark);font-size:.85rem;font-weight:600;outline:none;font-family:monospace; }
+  .btn-copy-ind { background:linear-gradient(135deg,#39abcb,#6accdc);color:#0c3c7b;font-weight:800;border:none;box-shadow:0 3px 12px rgba(57,171,203,.35);gap:.4rem;flex-shrink:0; }
+  .btn-copy-ind:hover { opacity:.9; }
+  /* ── PASSOS ── */
+  .ind-step { display:flex;gap:.75rem;align-items:flex-start;padding:.65rem 0;position:relative; }
+  .ind-step:not(:last-child)::after { content:'';position:absolute;left:13px;top:30px;bottom:-8px;width:2px;background:linear-gradient(to bottom,rgba(57,171,203,.4),transparent); }
+  .ind-step-num { flex-shrink:0;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#39abcb,#0c3c7b);color:#fff;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(57,171,203,.35);position:relative;z-index:1; }
+  .ind-step-text { font-size:.88rem;color:var(--text-muted);line-height:1.5;padding-top:.3rem; }
+  .ind-step-text strong { color:var(--primary-dark); }
+  /* ── LISTA ── */
+  .ind-row { display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--border); }
+  .ind-row:last-child { border-bottom:none; }
+  .ind-status { font-size:.72rem;font-weight:700;padding:.22rem .65rem;border-radius:8px;white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem; }
+  .ind-status.ok { background:#d1fae5;color:#065f46; }
+  .ind-status.pendente { background:#fef3c7;color:#92400e; }
+  /* ── SHARE BUTTONS ── */
+  .ind-share-row { display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem; }
+  .ind-btn-whatsapp { background:linear-gradient(135deg,#25D366,#1ebe5a);color:#fff;border:none;box-shadow:0 4px 12px rgba(37,211,102,.3); }
+  .ind-btn-whatsapp:hover { opacity:.9;transform:translateY(-1px); }
+  .ind-btn-email { background:linear-gradient(135deg,#3E73D1,#2f5bb0);color:#fff;border:none;box-shadow:0 4px 12px rgba(62,115,209,.28); }
+  .ind-btn-email:hover { opacity:.9;transform:translateY(-1px); }
   /* Modal */
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
@@ -42,20 +62,23 @@
 
 {% block content %}
 <div style="max-width:680px; margin:0 auto;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark); margin-bottom:.4rem;">
-    <i data-lucide="gift" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>Programa de Indicação
-  </h2>
-  <p style="color:var(--text-muted); font-size:.92rem; margin-bottom:1.5rem;">
-    Indique colegas para o IntegraMente e ganhe <strong style="color:var(--primary-dark);">{{ recompensa_dias }} dias extras</strong>
-    de plano sempre que um indicado seu se tornar cliente pagante. Sem limite de indicações.
-  </p>
+  <div class="ind-hero">
+    <div class="ind-hero-bg"><div class="ind-blob ind-blob-1"></div></div>
+    <div class="ind-hero-inner">
+      <div class="ind-hero-icon"><i data-lucide="gift"></i></div>
+      <div>
+        <h2>Programa de Indicação</h2>
+        <p>Indique colegas e ganhe <strong>{{ recompensa_dias }} dias extras</strong> de plano sempre que um indicado assinar. Sem limite.</p>
+      </div>
+    </div>
+  </div>
 
   <div class="card" style="margin-bottom:1.5rem;">
-    <h3 style="font-size:1rem; color:var(--primary-dark); margin-bottom:.6rem;">Seu link de indicação</h3>
+    <div class="card-title"><i data-lucide="link" style="width:16px;height:16px;"></i> Seu link de indicação</div>
     <div class="ind-link-box">
       <input type="text" id="linkIndicacao" value="{{ link_indicacao }}" readonly>
-      <button type="button" class="btn btn-primary" style="flex-shrink:0;" onclick="copiarLinkIndicacao()">
-        <i data-lucide="copy" style="width:15px;height:15px;"></i> Copiar
+      <button type="button" class="btn btn-copy-ind" onclick="copiarLinkIndicacao()">
+        <i data-lucide="copy" style="width:14px;height:14px;"></i> Copiar
       </button>
     </div>
     <p id="copiadoMsg" style="display:none; color:#16a34a; font-size:.8rem; font-weight:600; margin-top:.5rem;">

@@ -7,22 +7,32 @@
 <style>
   /* ── layout ── */
   .plano-wrap{max-width:780px;margin:0 auto}
-  .page-header{text-align:center;margin-bottom:2rem}
-  .page-header h1{font-size:1.5rem;font-weight:800;color:var(--primary-dark);margin-bottom:.35rem}
-  .page-header p{color:#4a7a9b;font-size:.92rem}
+  /* ── HERO ── */
+  .sp-hero{position:relative;overflow:hidden;border-radius:18px;padding:1.6rem 1.75rem;margin-bottom:2rem;color:#fff;background:linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 55%,#39abcb 100%);box-shadow:0 14px 40px rgba(12,60,123,.24);}
+  .sp-hero-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .sp-blob{position:absolute;border-radius:50%;filter:blur(55px);opacity:.5;animation:sp-drift ease-in-out infinite;}
+  .sp-blob-1{width:260px;height:260px;background:radial-gradient(circle,rgba(106,204,220,.5),transparent 70%);top:-90px;right:-60px;animation-duration:16s;}
+  .sp-blob-2{width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 70%);bottom:-60px;left:5%;animation-duration:20s;animation-delay:-8s;}
+  @keyframes sp-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-16px,12px)}}
+  .sp-hero-inner{position:relative;z-index:1;text-align:center;}
+  .sp-hero-inner h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.35rem;display:flex;align-items:center;justify-content:center;gap:.5rem;}
+  .sp-hero-inner p{font-size:.9rem;opacity:.82;}
 
   /* ── grid de planos ── */
   .planos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.75rem}
   @media(max-width:640px){.planos-grid{grid-template-columns:1fr}}
-  .plano-card{border:2px solid var(--border);border-radius:14px;padding:1.3rem;cursor:pointer;
-              transition:all .2s;position:relative;background:#fff}
-  .plano-card:hover,.plano-card.ativo{border-color:var(--primary-dark);
-              box-shadow:0 8px 24px rgba(12,60,123,.13)}
+  .plano-card{border:1.5px solid var(--border);border-radius:14px;padding:1.3rem;cursor:pointer;
+              transition:border-color .22s,box-shadow .22s,transform .2s;position:relative;background:#fff;overflow:hidden;will-change:transform;}
+  .plano-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(135deg,#39abcb,#6accdc);transform:scaleX(0);transform-origin:left;transition:transform .3s ease;}
+  .plano-card:hover{border-color:var(--primary);box-shadow:0 10px 28px rgba(12,60,123,.13);transform:translateY(-2px);}
+  .plano-card:hover::before,.plano-card.ativo::before{transform:scaleX(1);}
+  .plano-card.ativo{border-color:var(--primary-dark);box-shadow:0 8px 24px rgba(12,60,123,.18);}
   .plano-card.ativo::after{content:'✓';position:absolute;top:.6rem;right:.7rem;
               background:var(--primary-dark);color:#fff;width:22px;height:22px;border-radius:50%;
               display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800}
   .plano-card input[type=radio]{display:none}
-  .plano-popular{background:#0c3c7b;border-color:#0c3c7b}
+  .plano-popular{background:linear-gradient(145deg,#0c3c7b,#1a5a9a);border-color:#0c3c7b}
+  .plano-popular::before{background:linear-gradient(135deg,#6accdc,#39abcb);}
   .plano-popular .plano-nome,.plano-popular .plano-preco,.plano-popular .plano-modulos li{color:#fff}
   .plano-popular .plano-desc{color:rgba(255,255,255,.7)}
   .plano-nome{font-size:1.05rem;font-weight:800;color:var(--primary-dark);margin-bottom:.25rem}
@@ -222,9 +232,12 @@
   </div>
   {% endif %}
 
-  <div class="page-header">
-    <h1><i data-lucide="credit-card" style="width:28px;height:28px;vertical-align:middle;margin-right:.35rem;color:var(--primary-dark)"></i>Escolha seu plano</h1>
-    <p>Selecione o plano, realize o pagamento via PIX e solicite a ativação.</p>
+  <div class="sp-hero">
+    <div class="sp-hero-bg"><div class="sp-blob sp-blob-1"></div><div class="sp-blob sp-blob-2"></div></div>
+    <div class="sp-hero-inner">
+      <h1><i data-lucide="credit-card" style="width:24px;height:24px;"></i> Escolha seu plano</h1>
+      <p>Selecione o plano, realize o pagamento via PIX e solicite a ativação.</p>
+    </div>
   </div>
 
   {% if solicitacao_pendente %}

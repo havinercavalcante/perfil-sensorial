@@ -3,23 +3,63 @@
 {% block back_button %}<a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>{% endblock %}
 {% block extra_css %}
 <style>
-  .search-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; }
-  .search-bar input { flex:1; }
-  .search-bar button { flex-shrink:0; }
-  .pagination { display:flex; align-items:center; justify-content:center; gap:.4rem; margin-top:1.25rem; margin-bottom:1rem; flex-wrap:wrap; }
-  .pagination a, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:2rem; height:2rem; padding:0 .6rem; border-radius:6px; font-size:.82rem; font-weight:600; text-decoration:none; border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; }
-  .pagination a:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
-  .pagination span.current { background:var(--primary); color:#fff; border-color:var(--primary); }
-  .pagination span.disabled { opacity:.4; cursor:default; }
+  .search-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; align-items:center; }
+  .search-wrap { position:relative; flex:1; }
+  .search-wrap .s-icon { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; width:16px; height:16px; }
+  .search-wrap input { padding-left:2.5rem; border-radius:10px; }
+  .search-bar .btn-clear { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border-radius:9px; flex-shrink:0; }
+  .search-bar .btn-submit { background:linear-gradient(135deg,#39abcb,#6accdc); color:#0c3c7b; font-weight:800; border:none; box-shadow:0 4px 14px rgba(57,171,203,.35); flex-shrink:0; gap:.4rem; }
+  .search-bar .btn-submit:hover { opacity:.9; transform:translateY(-1px); }
+  .pagination { display:flex; align-items:center; justify-content:center; gap:.35rem; margin-top:1.25rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .pagination a, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:2.1rem; height:2.1rem; padding:0 .65rem; border-radius:10px; font-size:.82rem; font-weight:600; text-decoration:none; border:1.5px solid var(--border); color:var(--text-muted); background:#fff; transition:all .2s; }
+  .pagination a:hover { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 4px 14px rgba(57,171,203,.28); transform:translateY(-1px); }
+  .pagination span.current { background:linear-gradient(135deg,#39abcb,#6accdc); color:#0c3c7b; border-color:transparent; font-weight:800; box-shadow:0 4px 14px rgba(57,171,203,.35); }
+  .pagination span.disabled { opacity:.28; cursor:default; background:transparent; }
   @media (max-width: 600px) {
     .page-header h2 { font-size: 1rem !important; }
-    .table-responsive table { font-size: .72rem; }
-    .table-responsive th, .table-responsive td { padding: .4rem .4rem; }
-    .table-responsive th:nth-child(2), .table-responsive td:nth-child(2),
-    .table-responsive th:nth-child(3), .table-responsive td:nth-child(3),
-    .table-responsive th:nth-child(4), .table-responsive td:nth-child(4) { display: none; }
-    .table-responsive .btn-sm { padding: .4rem .7rem; font-size: .76rem; }
-    .table-responsive td:last-child { display: flex; gap: .3rem; align-items: center; white-space: nowrap; }
+    .btn-label { display:none; }
+    .btn-icon-only { padding:.5rem .65rem !important; min-width:0; }
+  }
+
+  /* ── LISTA DE PACIENTES — cartões ── */
+  .patients-list { display:flex; flex-direction:column; gap:.55rem; }
+  .patient-row {
+    display:flex; align-items:center; gap:.9rem;
+    padding:.7rem .9rem; border-radius:13px;
+    border:1px solid var(--border); background:#fff;
+    text-decoration:none; position:relative; overflow:hidden;
+    transition:border-color .25s, box-shadow .25s, transform .2s;
+  }
+  .patient-row::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--pc,var(--primary)); transform:scaleY(0); transform-origin:center;
+    transition:transform .25s ease;
+  }
+  .patient-row:hover { border-color:var(--pc,var(--primary)); box-shadow:0 12px 28px rgba(12,60,123,.12); transform:translateX(3px); }
+  .patient-row:hover::before { transform:scaleY(1); }
+  .patient-avatar {
+    flex-shrink:0; width:42px; height:42px; border-radius:50%;
+    background:linear-gradient(135deg,var(--pc,var(--primary)),var(--primary-dark));
+    color:#fff; font-weight:800; font-size:.92rem;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px color-mix(in srgb,var(--pc,var(--primary)) 40%,transparent);
+  }
+  .patient-info { flex:1; min-width:0; }
+  .patient-name { font-weight:700; color:var(--primary-dark); font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .patient-resp { font-size:.76rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:.3rem; }
+  .patient-resp i { width:11px; height:11px; flex-shrink:0; opacity:.7; }
+  .patient-meta { display:flex; align-items:center; gap:.4rem; flex-shrink:0; }
+  .patient-count { display:flex; align-items:center; gap:.3rem; font-size:.74rem; font-weight:700; color:var(--pc,var(--primary)); background:color-mix(in srgb,var(--pc,var(--primary)) 10%,#fff); border:1px solid color-mix(in srgb,var(--pc,var(--primary)) 22%,#fff); border-radius:8px; padding:.28rem .55rem; white-space:nowrap; }
+  .patient-count i { width:11px; height:11px; }
+  .patient-count-done { color:#10B981; background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.25); }
+  .patient-arrow { flex-shrink:0; color:var(--text-muted); transition:transform .25s,color .25s; }
+  .patient-arrow i { width:16px; height:16px; }
+  .patient-row:hover .patient-arrow { color:var(--pc,var(--primary)); transform:translateX(4px); }
+  @media (max-width:600px) {
+    .patient-row { padding:.6rem .7rem; gap:.6rem; }
+    .patient-avatar { width:36px; height:36px; font-size:.78rem; }
+    .patient-resp { display:none; }
+    .patient-count { padding:.24rem .42rem; font-size:.7rem; }
   }
   .modal-overlay {
     display:none; position:fixed; inset:0;
@@ -37,17 +77,23 @@
   .escolha-card {
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     gap:.45rem; text-align:center;
-    padding:1rem .75rem; border-radius:12px;
-    border:2px solid var(--border); background:#fff;
-    cursor:pointer; text-decoration:none;
-    transition:border-color .2s, background .2s, transform .15s;
-    height:100%;
+    padding:1rem .75rem; border-radius:13px;
+    border:1.5px solid var(--border); background:#fff;
+    cursor:pointer; text-decoration:none; position:relative; overflow:hidden;
+    transition:border-color .22s, box-shadow .22s, transform .2s;
+    height:100%; will-change:transform;
+  }
+  .escolha-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(135deg, var(--qc,var(--primary)), color-mix(in srgb, var(--qc,var(--primary)) 60%, #6accdc));
+    transform:scaleX(0); transform-origin:left; transition:transform .3s ease;
   }
   .escolha-card:hover {
     border-color:var(--qc, var(--primary));
-    background:color-mix(in srgb, var(--qc, var(--primary)) 7%, #fff);
-    transform:translateY(-2px);
+    box-shadow:0 10px 28px rgba(12,60,123,.12);
+    transform:translateY(-3px);
   }
+  .escolha-card:hover::before { transform:scaleX(1); }
   .escolha-card .ec-icon { font-size:2rem; line-height:1; }
   .escolha-card .ec-titulo { font-size:.88rem; font-weight:700; color:var(--text); line-height:1.3; }
   .escolha-card .ec-desc { font-size:.75rem; color:var(--text-muted); line-height:1.35; word-break:break-word; }
@@ -87,15 +133,22 @@
 </style>
 {% endblock %}
 {% block content %}
-<div id="tour-lp-header" class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1.25rem;">
+<div id="tour-lp-header" class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:nowrap; gap:.75rem; margin-bottom:1.25rem;">
   <h2 style="font-size:1.4rem; color:var(--primary-dark);">
     <i data-lucide="users" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>
     {% if filtro == "andamento" %}Avaliações em Andamento{% else %}Pacientes Cadastrados{% endif %}
   </h2>
-  <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-    <a href="{% url 'novo_paciente' %}" class="btn btn-secondary">+ Novo Paciente</a>
-    <a href="{% url 'nova_anamnese' %}" class="btn btn-secondary">+ Nova Anamnese</a>
-    <button type="button" class="btn btn-primary" onclick="abrirModalEscolha()">+ Nova Avaliação</button>
+  <div style="display:flex; gap:.5rem; flex-shrink:0;">
+    <a href="{% url 'novo_paciente' %}" class="btn btn-secondary btn-icon-only" style="gap:.4rem;" title="Novo Paciente">
+      <i data-lucide="user-plus" style="width:15px;height:15px;"></i><span class="btn-label"> Novo Paciente</span>
+    </a>
+    <a href="{% url 'nova_anamnese' %}" class="btn btn-secondary btn-icon-only" style="gap:.4rem;" title="Nova Anamnese">
+      <i data-lucide="file-plus" style="width:15px;height:15px;"></i><span class="btn-label"> Nova Anamnese</span>
+    </a>
+    <button type="button" class="btn btn-icon-only" onclick="abrirModalEscolha()" title="Nova Avaliação"
+      style="background:linear-gradient(135deg,#39abcb,#6accdc);color:#0c3c7b;font-weight:800;box-shadow:0 4px 18px rgba(57,171,203,.38);gap:.4rem;border:none;">
+      <i data-lucide="plus-circle" style="width:15px;height:15px;"></i><span class="btn-label"> Nova Avaliação</span>
+    </button>
   </div>
 </div>
 
@@ -110,35 +163,44 @@
 {% endif %}
 
 <form id="tour-lp-busca" method="get" class="search-bar">
-  <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nome…">
-  {% if filtro %}<input type="hidden" name="filtro" value="{{ filtro }}">{% endif %}
-  <button type="submit" class="btn btn-primary">Buscar</button>
-  {% if q %}<a href="?{% if filtro %}filtro={{ filtro }}{% endif %}" class="btn btn-secondary">✕</a>{% endif %}
+  <div class="search-wrap">
+    <i data-lucide="search" class="s-icon"></i>
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nome…" autocomplete="off">
+    {% if filtro %}<input type="hidden" name="filtro" value="{{ filtro }}">{% endif %}
+  </div>
+  <button type="submit" class="btn btn-submit">
+    <i data-lucide="search" style="width:15px;height:15px;"></i> Buscar
+  </button>
+  {% if q %}
+  <a href="?{% if filtro %}filtro={{ filtro }}{% endif %}" class="btn btn-secondary btn-clear" title="Limpar busca">
+    <i data-lucide="x" style="width:15px;height:15px;"></i>
+  </a>
+  {% endif %}
 </form>
 
 {% if pacientes %}
-<div id="tour-lp-tabela" class="card" style="padding:0; overflow:hidden;">
-  <div class="table-responsive">
-    <table>
-    <thead><tr><th>Nome</th><th>Responsável</th><th>Avaliações</th><th>Concluídas</th><th></th></tr></thead>
-    <tbody>
+<div id="tour-lp-tabela" class="card">
+  <div class="patients-list">
     {% for p in pacientes %}
-    <tr>
-      <td><strong>{{ p.nome }}</strong></td>
-      <td>{{ p.responsavel }}</td>
-      <td style="text-align:center;">{{ p.total_avals }}</td>
-      <td style="text-align:center;">{{ p.total_concs }}</td>
-      <td>
-        <a href="{% url 'detalhe_paciente' p.uuid %}" class="btn btn-sm btn-primary" style="margin-left:.4rem;">Detalhes</a>
-      </td>
-    </tr>
+    <a href="{% url 'detalhe_paciente' p.uuid %}" class="patient-row" style="--pc:{% cycle 'var(--primary)' '#3E73D1' '#10B981' '#F59E0B' '#9B59B6' '#16A085' %};">
+      <div class="patient-avatar">{{ p.nome|first|upper }}</div>
+      <div class="patient-info">
+        <div class="patient-name">{{ p.nome }}</div>
+        <div class="patient-resp"><i data-lucide="user"></i> {{ p.responsavel }}</div>
+      </div>
+      <div class="patient-meta">
+        <span class="patient-count"><i data-lucide="clipboard-list"></i> {{ p.total_avals }}</span>
+        {% if p.total_concs > 0 %}
+        <span class="patient-count patient-count-done"><i data-lucide="check-circle"></i> {{ p.total_concs }}</span>
+        {% endif %}
+      </div>
+      <div class="patient-arrow"><i data-lucide="chevron-right"></i></div>
+    </a>
     {% endfor %}
-    </tbody>
-    </table>
   </div>
 
   {% if pacientes.paginator.num_pages > 1 %}
-  <div class="pagination">
+  <div class="pagination" style="margin-top:1rem;">
     {% if pacientes.has_previous %}
       <a href="?q={{ q }}{% if filtro %}&filtro={{ filtro }}{% endif %}&page=1">«</a>
       <a href="?q={{ q }}{% if filtro %}&filtro={{ filtro }}{% endif %}&page={{ pacientes.previous_page_number }}">‹</a>

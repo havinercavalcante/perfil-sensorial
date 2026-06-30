@@ -4,149 +4,192 @@
 
 {% block extra_css %}
 <style>
-  .filtros-bar {
-    display: flex; gap: .5rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+  /* ── HEADER ── */
+  .pend-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:nowrap; gap:.75rem; margin-bottom:1.25rem; }
+  .pend-header h2 { font-size:1.4rem; color:var(--primary-dark); display:flex; align-items:center; gap:.5rem; white-space:nowrap; }
+  .pend-total { font-size:.78rem; font-weight:700; color:#92400E; background:#FEF3C7; padding:.15rem .6rem; border-radius:20px; }
+  .btn-nova { background:linear-gradient(135deg,#39abcb,#6accdc); color:#0c3c7b; font-weight:800; border:none; box-shadow:0 4px 18px rgba(57,171,203,.38); gap:.4rem; flex-shrink:0; }
+  .btn-nova:hover { opacity:.9; transform:translateY(-1px); }
+  .btn-label-mobile { }
+  @media (max-width:600px) {
+    .pend-header h2 { font-size:1rem; }
+    .btn-label-mobile { display:none; }
+    .btn-nova { padding:.5rem .65rem; }
   }
-  .filtros-bar input { flex: 1; min-width: 160px; }
 
-  .badge-tipo {
-    display: inline-block; padding: 2px 8px; border-radius: 20px;
-    font-size: .72rem; font-weight: 700; white-space: nowrap;
-    background: var(--badge-bg, #e8edf5); color: var(--badge-fg, var(--primary-dark));
+  /* ── BUSCA ── */
+  .search-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; align-items:center; }
+  .search-wrap { position:relative; flex:1; }
+  .search-wrap .s-icon { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; width:16px; height:16px; }
+  .search-wrap input { padding-left:2.5rem; border-radius:10px; }
+  .btn-search { background:linear-gradient(135deg,#39abcb,#6accdc); color:#0c3c7b; font-weight:800; border:none; box-shadow:0 4px 14px rgba(57,171,203,.35); flex-shrink:0; gap:.4rem; }
+  .btn-search:hover { opacity:.9; transform:translateY(-1px); }
+  .btn-clear { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border-radius:9px; flex-shrink:0; }
+
+  /* ── LISTA DE PENDENTES ── */
+  .pend-list { display:flex; flex-direction:column; gap:.55rem; }
+  .pend-row {
+    display:flex; align-items:center; gap:.9rem;
+    padding:.7rem .9rem; border-radius:13px;
+    border:1px solid var(--border); background:#fff;
+    text-decoration:none; position:relative; overflow:hidden;
+    transition:border-color .25s, box-shadow .25s, transform .2s;
   }
-  .badge-link-sim { background: #D1FAE5; color: #065F46; }
-  .badge-link-nao { background: #FEF3C7; color: #92400E; }
+  .pend-row::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--pt-fg, var(--primary)); transform:scaleY(0); transform-origin:center;
+    transition:transform .25s ease;
+  }
+  .pend-row:hover { border-color:var(--pt-fg, var(--primary)); box-shadow:0 12px 28px rgba(12,60,123,.12); transform:translateX(3px); }
+  .pend-row:hover::before { transform:scaleY(1); }
 
-  .pagination { display:flex; align-items:center; justify-content:center; gap:.4rem; margin:1.25rem 0 1rem; flex-wrap:wrap; }
-  .pagination a, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:2rem; height:2rem; padding:0 .6rem; border-radius:6px; font-size:.82rem; font-weight:600; text-decoration:none; border:1.5px solid var(--border); color:var(--text-muted); transition:all .15s; }
-  .pagination a:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
-  .pagination span.current { background:var(--primary); color:#fff; border-color:var(--primary); }
-  .pagination span.disabled { opacity:.4; cursor:default; }
+  .pend-type-icon {
+    flex-shrink:0; width:42px; height:42px; border-radius:12px;
+    background:var(--pt-bg, #dbeafe); color:var(--pt-fg, #1e40af);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.7rem; font-weight:800; text-align:center; line-height:1.2;
+    padding:.2rem;
+  }
+  .pend-info { flex:1; min-width:0; }
+  .pend-name { font-weight:700; color:var(--primary-dark); font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pend-meta { display:flex; align-items:center; gap:.5rem; margin-top:.18rem; flex-wrap:wrap; }
+  .pend-badge { display:inline-flex; align-items:center; gap:.25rem; padding:.18rem .55rem; border-radius:6px; font-size:.68rem; font-weight:700; background:var(--pt-bg,#dbeafe); color:var(--pt-fg,#1e40af); white-space:nowrap; }
+  .pend-date { font-size:.72rem; color:var(--text-muted); white-space:nowrap; }
+  .pend-date i { width:10px; height:10px; }
+
+  .pend-right { display:flex; align-items:center; gap:.55rem; flex-shrink:0; }
+  .status-chip { display:inline-flex; align-items:center; gap:.28rem; padding:.24rem .6rem; border-radius:8px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+  .status-enviado { background:#D1FAE5; color:#065F46; }
+  .status-aguardando { background:#FEF3C7; color:#92400E; }
+  .pend-arrow { flex-shrink:0; color:var(--text-muted); transition:transform .25s,color .25s; }
+  .pend-arrow i { width:16px; height:16px; }
+  .pend-row:hover .pend-arrow { color:var(--pt-fg, var(--primary)); transform:translateX(4px); }
 
   /* Cores por tipo */
-  .tipo-sensorial      { --badge-bg:#dbeafe; --badge-fg:#1e40af; }
-  .tipo-vineland       { --badge-bg:#e0e7ff; --badge-fg:#3730a3; }
-  .tipo-escolar        { --badge-bg:#ffedd5; --badge-fg:#9a3412; }
-  .tipo-bebe           { --badge-bg:#fce7f3; --badge-fg:#9d174d; }
-  .tipo-spm            { --badge-bg:#dbeafe; --badge-fg:#1e3a8a; }
-  .tipo-vineland3      { --badge-bg:#cffafe; --badge-fg:#164e63; }
-  .tipo-portage        { --badge-bg:#f3e8ff; --badge-fg:#6b21a8; }
-  .tipo-sdq            { --badge-bg:#e2e8f0; --badge-fg:#1e293b; }
-  .tipo-snap_iv        { --badge-bg:#ede9fe; --badge-fg:#4c1d95; }
-  .tipo-mchat          { --badge-bg:#e0f2fe; --badge-fg:#0c4a6e; }
-  .tipo-cars           { --badge-bg:#fef3c7; --badge-fg:#78350f; }
-  .tipo-linguagem      { --badge-bg:#d1fae5; --badge-fg:#064e3b; }
-  .tipo-alimentacao    { --badge-bg:#fee2e2; --badge-fg:#7f1d1d; }
-  .tipo-habitos_orais  { --badge-bg:#fef9c3; --badge-fg:#713f12; }
-  .tipo-voz_infantil   { --badge-bg:#e0f2fe; --badge-fg:#075985; }
-  .tipo-proc_auditivo  { --badge-bg:#f0fdf4; --badge-fg:#14532d; }
-  .tipo-idv10          { --badge-bg:#f1f5f9; --badge-fg:#334155; }
-  .tipo-desenvolvimento{ --badge-bg:#dbeafe; --badge-fg:#1e3a8a; }
-  .tipo-sono           { --badge-bg:#e0e7ff; --badge-fg:#3730a3; }
-  .tipo-habilidades    { --badge-bg:#ecfdf5; --badge-fg:#065f46; }
-  .tipo-comportamento  { --badge-bg:#fff7ed; --badge-fg:#c2410c; }
-  .tipo-cognitivo      { --badge-bg:#fdf4ff; --badge-fg:#701a75; }
-  .tipo-psicopedagogica{ --badge-bg:#f0fdf4; --badge-fg:#166534; }
+  .tipo-sensorial      { --pt-bg:#dbeafe; --pt-fg:#1e40af; }
+  .tipo-vineland       { --pt-bg:#e0e7ff; --pt-fg:#3730a3; }
+  .tipo-escolar        { --pt-bg:#ffedd5; --pt-fg:#9a3412; }
+  .tipo-bebe           { --pt-bg:#fce7f3; --pt-fg:#9d174d; }
+  .tipo-spm            { --pt-bg:#dbeafe; --pt-fg:#1e3a8a; }
+  .tipo-ps2_bebe       { --pt-bg:#fdf2f8; --pt-fg:#86198f; }
+  .tipo-adulto_sensorial { --pt-bg:#eff6ff; --pt-fg:#1d4ed8; }
+  .tipo-vineland3      { --pt-bg:#cffafe; --pt-fg:#164e63; }
+  .tipo-portage        { --pt-bg:#f3e8ff; --pt-fg:#6b21a8; }
+  .tipo-sdq            { --pt-bg:#e2e8f0; --pt-fg:#1e293b; }
+  .tipo-snap_iv        { --pt-bg:#ede9fe; --pt-fg:#4c1d95; }
+  .tipo-mchat          { --pt-bg:#e0f2fe; --pt-fg:#0c4a6e; }
+  .tipo-cars           { --pt-bg:#fef3c7; --pt-fg:#78350f; }
+  .tipo-linguagem      { --pt-bg:#d1fae5; --pt-fg:#064e3b; }
+  .tipo-alimentacao    { --pt-bg:#fee2e2; --pt-fg:#7f1d1d; }
+  .tipo-habitos_orais  { --pt-bg:#fef9c3; --pt-fg:#713f12; }
+  .tipo-voz_infantil   { --pt-bg:#e0f2fe; --pt-fg:#075985; }
+  .tipo-proc_auditivo  { --pt-bg:#f0fdf4; --pt-fg:#14532d; }
+  .tipo-idv10          { --pt-bg:#f1f5f9; --pt-fg:#334155; }
+  .tipo-desenvolvimento{ --pt-bg:#dbeafe; --pt-fg:#1e3a8a; }
+  .tipo-sono           { --pt-bg:#e0e7ff; --pt-fg:#3730a3; }
+  .tipo-habilidades    { --pt-bg:#ecfdf5; --pt-fg:#065f46; }
+  .tipo-comportamento  { --pt-bg:#fff7ed; --pt-fg:#c2410c; }
+  .tipo-cognitivo      { --pt-bg:#fdf4ff; --pt-fg:#701a75; }
+  .tipo-psicopedagogica{ --pt-bg:#f0fdf4; --pt-fg:#166534; }
+  .tipo-vbmapp         { --pt-bg:#ede9fe; --pt-fg:#5b21b6; }
+  .tipo-vbmapp_barreiras { --pt-bg:#fdf4ff; --pt-fg:#6b21a8; }
+  .tipo-vbmapp_transicao { --pt-bg:#f5f3ff; --pt-fg:#4c1d95; }
+  .tipo-vbmapp_task_analysis { --pt-bg:#ede9fe; --pt-fg:#3730a3; }
+  .tipo-proade         { --pt-bg:#fef3c7; --pt-fg:#92400e; }
+  .tipo-bdi { --pt-bg:#fee2e2; --pt-fg:#991b1b; }
+  .tipo-bai { --pt-bg:#fef3c7; --pt-fg:#b45309; }
+  .tipo-dass21 { --pt-bg:#fdf4ff; --pt-fg:#7e22ce; }
+  .tipo-had { --pt-bg:#f0fdf4; --pt-fg:#166534; }
+  .tipo-bsl23 { --pt-bg:#fce7f3; --pt-fg:#831843; }
+  .tipo-aq10_adulto,.tipo-aq10_child { --pt-bg:#eff6ff; --pt-fg:#1e40af; }
+  .tipo-dep_emocional { --pt-bg:#fff1f2; --pt-fg:#9f1239; }
+  .tipo-scq { --pt-bg:#e0f2fe; --pt-fg:#0c4a6e; }
+  .tipo-conners { --pt-bg:#ede9fe; --pt-fg:#4c1d95; }
+  .tipo-etdah { --pt-bg:#fdf4ff; --pt-fg:#701a75; }
+  .tipo-auqei { --pt-bg:#fef3c7; --pt-fg:#78350f; }
+  .tipo-scared { --pt-bg:#e0e7ff; --pt-fg:#3730a3; }
+  .tipo-masc { --pt-bg:#f0fdf4; --pt-fg:#14532d; }
+  .tipo-bpq { --pt-bg:#fdf2f8; --pt-fg:#86198f; }
+  .tipo-denver { --pt-bg:#dbeafe; --pt-fg:#1e3a8a; }
+  .tipo-qmpi { --pt-bg:#ecfdf5; --pt-fg:#065f46; }
+  .tipo-quest_dislexia,.tipo-checklist_dislexia,.tipo-prot_dislexia_prof,.tipo-inventario_dislexia { --pt-bg:#fef9c3; --pt-fg:#713f12; }
 
-  @media (max-width: 600px) {
-    /* Esconde Data (col 3) e Link (col 4) — sobra: Paciente, Tipo, Ação */
-    .table-responsive th:nth-child(3),
-    .table-responsive td:nth-child(3),
-    .table-responsive th:nth-child(4),
-    .table-responsive td:nth-child(4) { display: none; }
+  /* ── PAGINAÇÃO ── */
+  .pagination { display:flex; align-items:center; justify-content:center; gap:.35rem; margin:1.25rem 0 1rem; flex-wrap:wrap; }
+  .pagination a, .pagination span { display:inline-flex; align-items:center; justify-content:center; min-width:2.1rem; height:2.1rem; padding:0 .65rem; border-radius:10px; font-size:.82rem; font-weight:600; text-decoration:none; border:1.5px solid var(--border); color:var(--text-muted); background:#fff; transition:all .2s; }
+  .pagination a:hover { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 4px 14px rgba(57,171,203,.28); transform:translateY(-1px); }
+  .pagination span.current { background:linear-gradient(135deg,#39abcb,#6accdc); color:#0c3c7b; border-color:transparent; font-weight:800; box-shadow:0 4px 14px rgba(57,171,203,.35); }
+  .pagination span.disabled { opacity:.28; cursor:default; background:transparent; }
 
-    /* Nome truncado em 1 linha */
-    .table-responsive td:nth-child(1) {
-      max-width: 140px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* Tipo badge — fonte menor */
-    .table-responsive td:nth-child(2) { max-width: 110px; }
-
-    /* Botão da última coluna */
-    .table-responsive td:last-child .btn-sm {
-      padding: .35rem .6rem;
-      font-size: .75rem;
-      white-space: nowrap;
-    }
-
-    /* Busca empilhada */
-    .filtros-bar { flex-direction: column; }
-    .filtros-bar input,
-    .filtros-bar button,
-    .filtros-bar a { width: 100%; box-sizing: border-box; text-align: center; }
-
-    /* Header empilhado */
-    .pendentes-header { flex-direction: column; align-items: flex-start !important; }
-    .pendentes-header a.btn { width: 100%; text-align: center; }
+  @media (max-width:600px) {
+    .pend-date { display:none; }
+    .pend-right { gap:.35rem; }
+    .status-chip span { display:none; }
+    .pend-row { padding:.6rem .7rem; gap:.65rem; }
+    .pend-type-icon { width:36px; height:36px; border-radius:10px; font-size:.6rem; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header pendentes-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1.25rem;">
-  <h2 style="font-size:1.4rem; color:var(--primary-dark);">
-    <i data-lucide="clock" style="width:20px;height:20px;vertical-align:middle;margin-right:.35rem;"></i>
+
+<div class="pend-header">
+  <h2>
+    <i data-lucide="clock" style="width:20px;height:20px;"></i>
     Avaliações Pendentes
-    {% if total > 0 %}
-    <span style="font-size:.85rem; font-weight:600; color:#92400E; background:#FEF3C7; padding:2px 10px; border-radius:20px; margin-left:.5rem;">{{ total }}</span>
-    {% endif %}
+    {% if total > 0 %}<span class="pend-total">{{ total }}</span>{% endif %}
   </h2>
-  <a href="{% url 'gerar_link' %}" class="btn btn-primary">+ Nova Avaliação</a>
+  <a href="{% url 'gerar_link' %}" class="btn btn-nova">
+    <i data-lucide="plus-circle" style="width:15px;height:15px;"></i>
+    <span class="btn-label-mobile">Nova Avaliação</span>
+  </a>
 </div>
 
-<form method="get" class="filtros-bar">
-  <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nome do paciente…">
-  <button type="submit" class="btn btn-primary">Buscar</button>
+<form method="get" class="search-bar">
+  <div class="search-wrap">
+    <i data-lucide="search" class="s-icon"></i>
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nome do paciente…" autocomplete="off">
+  </div>
+  <button type="submit" class="btn btn-search">
+    <i data-lucide="search" style="width:15px;height:15px;"></i> Buscar
+  </button>
   {% if q %}
-  <a href="{% url 'avaliacoes_pendentes' %}" class="btn btn-secondary">✕ Limpar</a>
+  <a href="{% url 'avaliacoes_pendentes' %}" class="btn btn-secondary btn-clear" title="Limpar busca">
+    <i data-lucide="x" style="width:15px;height:15px;"></i>
+  </a>
   {% endif %}
 </form>
 
 {% if pendentes %}
-<div class="card" style="padding:0; overflow:hidden;">
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Paciente</th>
-          <th>Tipo de Avaliação</th>
-          <th style="text-align:center;">Data</th>
-          <th style="text-align:center;">Link</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for av in pendentes %}
-      <tr>
-        <td><strong>{{ av.paciente_nome }}</strong></td>
-        <td>
-          <span class="badge-tipo tipo-{{ av.tipo_slug }}">{{ av.tipo }}</span>
-        </td>
-        <td style="text-align:center; color:var(--text-muted); font-size:.85rem;">
-          {{ av.data|date:"d/m/Y" }}
-        </td>
-        <td style="text-align:center;">
-          {% if av.tem_token %}
-            <span class="badge-tipo badge-link-sim">
-              <i data-lucide="send" style="width:10px;height:10px;"></i> Enviado
-            </span>
-          {% else %}
-            <span class="badge-tipo badge-link-nao">
-              <i data-lucide="clock" style="width:10px;height:10px;"></i> Aguardando
-            </span>
-          {% endif %}
-        </td>
-        <td>
-          <a href="{% url 'detalhe_paciente' av.paciente_uuid %}#avaliacao-{{ av.uuid }}" class="btn btn-sm btn-primary">Ver paciente</a>
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+<div class="card">
+  <div class="pend-list">
+    {% for av in pendentes %}
+    <a href="{% url 'detalhe_paciente' av.paciente_uuid %}#avaliacao-{{ av.uuid }}"
+       class="pend-row tipo-{{ av.tipo_slug }}">
+      <div class="pend-type-icon">{{ av.tipo|slice:":6" }}</div>
+      <div class="pend-info">
+        <div class="pend-name">{{ av.paciente_nome }}</div>
+        <div class="pend-meta">
+          <span class="pend-badge">{{ av.tipo }}</span>
+          <span class="pend-date"><i data-lucide="calendar"></i> {{ av.data|date:"d/m/Y" }}</span>
+        </div>
+      </div>
+      <div class="pend-right">
+        {% if av.tem_token %}
+        <span class="status-chip status-enviado">
+          <i data-lucide="send" style="width:11px;height:11px;"></i>
+          <span>Enviado</span>
+        </span>
+        {% else %}
+        <span class="status-chip status-aguardando">
+          <i data-lucide="clock" style="width:11px;height:11px;"></i>
+          <span>Aguardando</span>
+        </span>
+        {% endif %}
+        <div class="pend-arrow"><i data-lucide="chevron-right"></i></div>
+      </div>
+    </a>
+    {% endfor %}
   </div>
 
   {% if pendentes.paginator.num_pages > 1 %}
@@ -158,7 +201,6 @@
       <span class="disabled">«</span>
       <span class="disabled">‹</span>
     {% endif %}
-
     {% for num in pendentes.paginator.page_range %}
       {% if num == pendentes.number %}
         <span class="current">{{ num }}</span>
@@ -166,7 +208,6 @@
         <a href="?q={{ q }}&page={{ num }}">{{ num }}</a>
       {% endif %}
     {% endfor %}
-
     {% if pendentes.has_next %}
       <a href="?q={{ q }}&page={{ pendentes.next_page_number }}">›</a>
       <a href="?q={{ q }}&page={{ pendentes.paginator.num_pages }}">»</a>
@@ -180,14 +221,14 @@
 
 {% else %}
 <div class="card" style="text-align:center; padding:3rem;">
-  <i data-lucide="check-circle-2" style="width:48px;height:48px; color:#10B981; margin-bottom:1rem;"></i>
+  <i data-lucide="check-circle-2" style="width:48px;height:48px; color:#10B981; display:block; margin:0 auto 1rem;"></i>
   {% if q %}
-  <p style="color:var(--text-muted); margin-bottom:1.5rem;">Nenhuma avaliação pendente encontrada para "<strong>{{ q }}</strong>".</p>
+  <p style="color:var(--text-muted); margin-bottom:1.5rem;">Nenhuma avaliação pendente para "<strong>{{ q }}</strong>".</p>
   <a href="{% url 'avaliacoes_pendentes' %}" class="btn btn-secondary">Limpar busca</a>
   {% else %}
-  <p style="color:var(--text-muted); margin-bottom:.5rem; font-size:1rem; font-weight:600;">Tudo em dia!</p>
+  <p style="color:var(--primary-dark); font-size:1rem; font-weight:700; margin-bottom:.4rem;">Tudo em dia!</p>
   <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:1.5rem;">Nenhuma avaliação em andamento no momento.</p>
-  <a href="{% url 'gerar_link' %}" class="btn btn-primary">+ Criar nova avaliação</a>
+  <a href="{% url 'gerar_link' %}" class="btn btn-nova"><i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Criar nova avaliação</a>
   {% endif %}
 </div>
 {% endif %}
