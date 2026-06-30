@@ -1,97 +1,148 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login – IntegraMente</title>
+<link rel="icon" type="image/png" href="{% static 'logotop.png' %}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --primary: #39abcb; --primary-light: #6accdc; --primary-dark: #0c3c7b;
-    --border: #85cde2; --bg: #d5eef5;
-    --text: #0c3c7b; --text-muted: #39abcb;
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --blue:#39abcb;--blue-lt:#6accdc;--navy:#0c3c7b;
+    --dark:#060e1f;--dark2:#0b1a35;
+    --grad-b:linear-gradient(135deg,#39abcb 0%,#6accdc 100%);
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-  .login-box { background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-  .logo { text-align: center; margin-bottom: 2rem; }
-  .logo-icon { font-size: 2.5rem; display: block; margin-bottom: .5rem; }
-  .logo h1 { font-size: 1.3rem; color: var(--primary-dark); font-weight: 800; }
-  .logo p { color: var(--primary); font-size: .85rem; margin-top: .3rem; }
-  .form-group { margin-bottom: 1rem; }
-  label { display: block; font-size: .83rem; font-weight: 700; color: var(--text-muted); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .4px; }
-  input { width: 100%; padding: .7rem 1rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .95rem; color: var(--text); transition: border-color .2s; }
-  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(57,171,203,.12); }
-  .btn { width: 100%; padding: .75rem; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: .5rem; transition: background .2s; }
-  .btn:hover { background: var(--primary-dark); }
-  .link-row { text-align: center; margin-top: 1.2rem; font-size: .87rem; color: var(--text-muted); }
-  .link-row a { color: var(--primary); font-weight: 600; text-decoration: none; }
-  .link-row a:hover { text-decoration: underline; }
-  .alert { padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .87rem; background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444; }
+  body{
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    background:var(--dark);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:1.5rem;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* ── BACKGROUND ── */
+  .bg{position:fixed;inset:0;z-index:0;overflow:hidden}
+  .bg::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(57,171,203,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(57,171,203,.04) 1px,transparent 1px);background-size:56px 56px}
+  .blob{position:absolute;border-radius:50%;filter:blur(80px);animation:blob-drift ease-in-out infinite}
+  .blob-1{width:700px;height:700px;background:radial-gradient(circle,rgba(12,60,123,.55) 0%,transparent 70%);top:-220px;right:-160px;animation-duration:18s}
+  .blob-2{width:500px;height:500px;background:radial-gradient(circle,rgba(57,171,203,.28) 0%,transparent 70%);bottom:-140px;left:-120px;animation-duration:14s;animation-delay:-5s}
+  .blob-3{width:360px;height:360px;background:radial-gradient(circle,rgba(106,204,220,.18) 0%,transparent 70%);top:45%;left:60%;animation-duration:22s;animation-delay:-10s}
+  @keyframes blob-drift{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-40px) scale(1.05)}50%{transform:translate(-20px,-60px) scale(.95)}75%{transform:translate(-40px,20px) scale(1.02)}}
+
+  .btn-back{position:fixed;top:1.5rem;left:1.5rem;z-index:10;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .2rem;background:none;border:none;color:rgba(255,255,255,.75);font-size:.88rem;font-weight:600;text-decoration:none;border-bottom:1.5px solid rgba(255,255,255,.25);transition:color .2s,transform .2s,border-color .2s}
+  .btn-back:hover{color:#fff;border-bottom-color:var(--blue-lt);transform:translateX(-2px)}
+  .btn-back svg{flex-shrink:0;opacity:.85}
+
+  .float-badge{position:absolute;z-index:5;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;backdrop-filter:blur(12px);padding:.55rem .9rem;display:flex;align-items:center;gap:.5rem;font-size:.74rem;font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.3);animation:fb1 5s ease-in-out infinite}
+  .fb-1{top:14%;left:8%}
+  .fb-2{bottom:14%;right:8%;animation-delay:1s}
+  @keyframes fb1{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @media(max-width:700px){.float-badge{display:none}}
+
+  /* ── LOGIN CARD ── */
+  .login-wrap{position:relative;z-index:1;width:100%;max-width:420px;perspective:1200px}
+  .login-box{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:24px;
+    backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+    padding:2.5rem 2.1rem;
+    box-shadow:0 40px 100px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.06);
+    animation:card-in .65s cubic-bezier(.23,1,.32,1) both, card-float 7s ease-in-out 1s infinite;
+    will-change:transform;
+  }
+  @keyframes card-in{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes card-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+  .logo{text-align:center;margin-bottom:1.8rem}
+  .logo img{height:64px;width:auto;border-radius:14px;margin:0 auto .9rem;display:block}
+  .logo h1{font-size:1.25rem;color:#fff;font-weight:800;letter-spacing:-.01em}
+  .logo p{color:rgba(255,255,255,.45);font-size:.8rem;margin-top:.3rem}
+
+  .form-group{margin-bottom:1.1rem}
+  label{display:block;font-size:.73rem;font-weight:700;color:var(--blue-lt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.06em}
+  input{width:100%;padding:.72rem 1rem;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:.95rem;font-family:inherit;color:rgba(255,255,255,.92);background:rgba(255,255,255,.05);transition:border-color .2s,box-shadow .2s,background .2s;outline:none}
+  input::placeholder{color:rgba(255,255,255,.3)}
+  input:focus{border-color:var(--blue);background:rgba(57,171,203,.08);box-shadow:0 0 0 3px rgba(57,171,203,.15)}
+
+  .btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem;border:none;border-radius:10px;background:var(--grad-b);color:#040d1e;font-size:.96rem;font-weight:800;cursor:pointer;margin-top:.6rem;font-family:inherit;box-shadow:0 8px 28px rgba(57,171,203,.4);transition:transform .2s,box-shadow .2s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(57,171,203,.55)}
+
+  .link-row{text-align:center;margin-top:1.3rem;font-size:.85rem;color:rgba(255,255,255,.45)}
+  .link-row a{color:var(--blue-lt);font-weight:600;text-decoration:none}
+  .link-row a:hover{text-decoration:underline}
+
+  .alert{padding:.7rem 1rem;border-radius:10px;margin-bottom:1rem;font-size:.85rem;background:rgba(239,68,68,.12);color:#fca5a5;border-left:3px solid #ef4444}
 </style>
 </head>
 <body>
-<style>
-  .btn-back {
-    position: fixed;
-    top: 1.25rem;
-    left: 1.25rem;
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem .2rem;
-    background: none;
-    border: none;
-    color: rgba(255,255,255,.9);
-    font-size: .88rem;
-    font-weight: 600;
-    text-decoration: none;
-    border-bottom: 1.5px solid rgba(255,255,255,.4);
-    transition: color .2s, transform .2s;
-  }
-  .btn-back:hover {
-    color: #fff;
-    border-bottom-color: #fff;
-    transform: translateX(-2px);
-  }
-  .btn-back svg { flex-shrink: 0; opacity: .85; }
-</style>
+
+<div class="bg">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<div class="float-badge float-b1 fb-1">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6accdc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  Dados seguros
+</div>
+<div class="float-badge float-b2 fb-2">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6accdc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+  Resultado automático
+</div>
 
 <a href="{% url 'index' %}" class="btn-back">
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
   Voltar
 </a>
-<div class="login-box">
-  <div class="logo">
-    <img src="/static/logo.png" alt="Logo" style="height:130px; width:auto; display:block; margin:0 auto 1.2rem auto; border-radius:14px; background:#fff; padding:6px;">
-  </div>
-  {% for msg in messages %}
-  <div class="alert">{{ msg }}</div>
-  {% endfor %}
-  <form method="post">
-    {% csrf_token %}
-    <div class="form-group">
-      <label>Usuário</label>
-      <input type="text" name="username" autofocus autocomplete="username" placeholder="Seu nome de usuário">
+
+<div class="login-wrap">
+  <div class="login-box" id="loginCard">
+    <div class="logo">
+      <img src="/static/logo.png" alt="Logo">
+      <h1>Acessar plataforma</h1>
+      <p>Entre com seus dados para continuar</p>
     </div>
-    <div class="form-group">
-      <label>Senha</label>
-      <div style="position:relative;">
-        <input type="password" name="password" id="password" autocomplete="current-password" placeholder="••••••••" style="padding-right:2.8rem;">
-        <button type="button" onclick="toggleSenha()" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#39abcb;padding:0;display:flex;align-items:center;">
-          <svg id="icon-eye" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <svg id="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        </button>
+    {% for msg in messages %}
+    <div class="alert">{{ msg }}</div>
+    {% endfor %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Usuário</label>
+        <input type="text" name="username" autofocus autocomplete="username" placeholder="Seu nome de usuário">
       </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div style="position:relative;">
+          <input type="password" name="password" id="password" autocomplete="current-password" placeholder="••••••••" style="padding-right:2.8rem;">
+          <button type="button" onclick="toggleSenha()" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6accdc;padding:0;display:flex;align-items:center;">
+            <svg id="icon-eye" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn">
+        Entrar
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="13 5 20 12 13 19"/></svg>
+      </button>
+    </form>
+    <div class="link-row" style="margin-top:0.7rem;">
+      <a href="{% url 'password_reset' %}">Esqueceu a senha?</a>
     </div>
-    <button type="submit" class="btn">Entrar</button>
-  </form>
-  <div class="link-row" style="margin-top:0.7rem;">
-    <a href="{% url 'password_reset' %}">Esqueceu a senha?</a>
-  </div>
-  <div class="link-row">
-    Não tem conta? <a href="{% url 'registrar' %}">Criar conta</a>
+    <div class="link-row">
+      Não tem conta? <a href="{% url 'registrar' %}">Criar conta</a>
+    </div>
   </div>
 </div>
+
 <script>
   function toggleSenha() {
     var input = document.getElementById('password');
@@ -107,6 +158,29 @@
       eyeOff.style.display = 'none';
     }
   }
+
+  // 3D tilt on the card
+  (function() {
+    if (window.matchMedia('(hover:none)').matches) return;
+    const card = document.getElementById('loginCard');
+    let timer;
+    card.addEventListener('mousemove', e => {
+      clearTimeout(timer);
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.animation = 'none';
+      card.style.transition = 'transform .08s ease';
+      card.style.transform = `perspective(1200px) rotateX(${-y * 6}deg) rotateY(${x * 6}deg) scale(1.01)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transition = 'transform .5s cubic-bezier(.23,1,.32,1)';
+      card.style.transform = 'perspective(1200px) rotateX(0) rotateY(0) scale(1)';
+      timer = setTimeout(() => {
+        card.style.animation = 'card-float 7s ease-in-out infinite';
+      }, 500);
+    });
+  })();
 </script>
 </body>
 </html>

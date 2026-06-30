@@ -61,8 +61,13 @@
   @keyframes dash-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.55; transform:scale(1.4); } }
   .dash-hero-text h1 { font-size:1.55rem; font-weight:800; letter-spacing:-.02em; margin-bottom:.3rem; }
   .dash-hero-text p { font-size:.86rem; opacity:.78; }
-  .dash-hero-date { display:flex; align-items:center; gap:.4rem; font-size:.78rem; font-weight:600; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); padding:.45rem .8rem; border-radius:10px; white-space:nowrap; }
-  .dash-hero-date i { width:14px; height:14px; }
+  .dash-plan-chip { display:flex; align-items:center; gap:.45rem; font-size:.78rem; font-weight:700; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); padding:.5rem .9rem; border-radius:10px; white-space:nowrap; color:#fff; text-decoration:none; transition:background .2s, border-color .2s, transform .2s; }
+  .dash-plan-chip:hover { background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.32); transform:translateY(-1px); color:#fff; }
+  .dash-plan-chip i { width:15px; height:15px; flex-shrink:0; }
+  .dash-plan-chip .dpc-sub { display:block; white-space:normal; font-size:.66rem; font-weight:600; color:rgba(255,255,255,.6); margin-top:.05rem; }
+  .dash-plan-chip.warn { background:rgba(245,158,11,.18); border-color:rgba(245,158,11,.45); }
+  .dash-plan-chip.warn:hover { background:rgba(245,158,11,.28); }
+  .dash-plan-chip.warn .dpc-sub { color:#fde9c4; }
 
   /* ── STAT CARDS ── */
   .dash-stats { perspective:1000px; }
@@ -191,10 +196,40 @@
       <h1>Olá, {{ user.get_full_name|default:user.username }}</h1>
       <p>{% if user.perfil.especialidade %}{{ user.perfil.especialidade }}{% if user.perfil.registro_profissional %} · {{ user.perfil.registro_profissional }}{% endif %}{% endif %}</p>
     </div>
-    <div class="dash-hero-date">
-      <i data-lucide="calendar-days"></i>
-      <span>{% now "d \d\e F \d\e Y" %}</span>
-    </div>
+    {% with perfil=user.perfil %}
+    {% if perfil %}
+      {% if perfil.plano == 'trial' %}
+        {% if perfil.trial_ativo %}
+        <a href="{% url 'solicitar_plano' %}" class="dash-plan-chip">
+          <i data-lucide="gift"></i>
+          <span>Trial grátis<span class="dpc-sub">{{ perfil.trial_dias_restantes }} dia{{ perfil.trial_dias_restantes|pluralize }} restante{{ perfil.trial_dias_restantes|pluralize }}</span></span>
+        </a>
+        {% else %}
+        <a href="{% url 'solicitar_plano' %}" class="dash-plan-chip warn">
+          <i data-lucide="alert-triangle"></i>
+          <span>Trial expirado<span class="dpc-sub">Assine um plano para continuar</span></span>
+        </a>
+        {% endif %}
+      {% else %}
+        {% if perfil.plano_vencido %}
+        <a href="{% url 'solicitar_plano' %}" class="dash-plan-chip warn">
+          <i data-lucide="alert-triangle"></i>
+          <span>Plano {{ perfil.get_plano_display }}<span class="dpc-sub">Expirado — renove agora</span></span>
+        </a>
+        {% elif perfil.plano_vencendo_breve %}
+        <a href="{% url 'solicitar_plano' %}" class="dash-plan-chip warn">
+          <i data-lucide="alert-triangle"></i>
+          <span>Plano {{ perfil.get_plano_display }}<span class="dpc-sub">Vence em {{ perfil.plano_dias_restantes }} dia{{ perfil.plano_dias_restantes|pluralize }}</span></span>
+        </a>
+        {% else %}
+        <a href="{% url 'solicitar_plano' %}" class="dash-plan-chip">
+          <i data-lucide="{% if perfil.plano == 'start' %}rocket{% elif perfil.plano == 'plus' %}star{% else %}gem{% endif %}"></i>
+          <span>Plano {{ perfil.get_plano_display }}<span class="dpc-sub">Ativo</span></span>
+        </a>
+        {% endif %}
+      {% endif %}
+    {% endif %}
+    {% endwith %}
   </div>
 </div>
 

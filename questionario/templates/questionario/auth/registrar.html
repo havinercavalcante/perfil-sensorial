@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12,58 +13,112 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Criar Conta – IntegraMente</title>
+<link rel="icon" type="image/png" href="{% static 'logotop.png' %}" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --primary: #39abcb; --primary-light: #6accdc; --primary-dark: #0c3c7b;
-    --border: #85cde2; --bg: #d5eef5;
-    --text: #0c3c7b; --text-muted: #39abcb;
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --blue:#39abcb;--blue-lt:#6accdc;--navy:#0c3c7b;
+    --dark:#060e1f;
+    --grad-b:linear-gradient(135deg,#39abcb 0%,#6accdc 100%);
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: "Segoe UI", system-ui, sans-serif; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-  .box { position: relative; background: #fff; border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-  .logo { text-align: center; margin-bottom: 1.2rem; }
-  .logo h1 { font-size: 1.2rem; color: var(--primary-dark); font-weight: 800; }
-  .logo p { color: var(--text-muted); font-size: .85rem; margin-top: .25rem; }
-  .trial-badge { display: flex; align-items: center; justify-content: center; gap: .5rem; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 10px; padding: .6rem 1rem; margin-bottom: 1.4rem; color: #065F46; font-size: .88rem; font-weight: 700; }
-  .form-group { margin-bottom: .9rem; }
-  label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .3px; }
-  label .req { color: #DC2626; }
-  input[type=text], input[type=email], input[type=password], input[type=tel] { width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: .92rem; color: var(--text); transition: border-color .2s; background: #fff; }
-  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(57,171,203,.1); }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-  @media(max-width:480px) {
-    .form-row { grid-template-columns: 1fr; }
-    .box { padding: 1.5rem 1rem; }
-    .confirm-box { padding: 1.2rem .5rem; }
-    .confirm-box h2 { font-size: 1.1rem; }
-    .confirm-box p { font-size: .85rem; }
-    .confirm-box .btn { max-width: 100% !important; }
+  body{
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    background:var(--dark);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:1.5rem;
+    position:relative;
+    overflow-x:hidden;
   }
-  .btn { width: 100%; padding: .8rem; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: .6rem; transition: background .2s; }
-  .btn:hover { background: var(--primary-dark); }
-  .btn-back { position: absolute; top: 1rem; left: 1.2rem; display: inline-flex; align-items: center; gap: .35rem; color: var(--text-muted); font-size: .82rem; font-weight: 600; text-decoration: none; padding: .3rem .1rem; border-radius: 6px; transition: color .2s; opacity: .7; }
-  .btn-back:hover { color: var(--primary-dark); opacity: 1; }
-  .link-row { text-align: center; margin-top: 1rem; font-size: .87rem; color: var(--text-muted); }
-  .link-row a { color: var(--primary); font-weight: 600; text-decoration: none; }
-  .alert { padding: .7rem 1rem; border-radius: 8px; margin-bottom: .7rem; font-size: .85rem; background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444; }
-  .alert-warning { background: #FEF3C7; color: #92400E; border-left-color: #F59E0B; }
-  .confirm-box { text-align: center; padding: 2rem 1rem; }
-  .confirm-box .icon { font-size: 3rem; margin-bottom: 1rem; }
-  .confirm-box h2 { color: var(--primary-dark); font-size: 1.3rem; margin-bottom: .6rem; }
-  .confirm-box p { color: var(--text-muted); font-size: .92rem; line-height: 1.6; margin-bottom: 1.2rem; overflow-wrap: break-word; word-break: break-word; }
-  .confirm-box strong { color: var(--text); overflow-wrap: break-word; word-break: break-all; }
-  .lgpd-box { display: flex; align-items: flex-start; gap: .6rem; background: #f0f9ff; border: 1.5px solid var(--border); border-radius: 8px; padding: .75rem .9rem; margin-top: .4rem; }
-  .lgpd-box input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--primary); flex-shrink: 0; margin-top: 2px; cursor: pointer; }
-  .lgpd-box span { font-size: .82rem; color: var(--text); line-height: 1.5; }
-  .lgpd-box a { color: var(--primary); font-weight: 600; text-decoration: none; }
-  .lgpd-box a:hover { text-decoration: underline; }
-  .divider { border: none; border-top: 1px solid #e5e7eb; margin: 1.2rem 0; }
+
+  /* ── BACKGROUND ── */
+  .bg{position:fixed;inset:0;z-index:0;overflow:hidden}
+  .bg::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(57,171,203,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(57,171,203,.04) 1px,transparent 1px);background-size:56px 56px}
+  .blob{position:absolute;border-radius:50%;filter:blur(80px);animation:blob-drift ease-in-out infinite}
+  .blob-1{width:700px;height:700px;background:radial-gradient(circle,rgba(12,60,123,.55) 0%,transparent 70%);top:-220px;right:-160px;animation-duration:18s}
+  .blob-2{width:500px;height:500px;background:radial-gradient(circle,rgba(57,171,203,.28) 0%,transparent 70%);bottom:-140px;left:-120px;animation-duration:14s;animation-delay:-5s}
+  .blob-3{width:360px;height:360px;background:radial-gradient(circle,rgba(106,204,220,.18) 0%,transparent 70%);top:45%;left:60%;animation-duration:22s;animation-delay:-10s}
+  @keyframes blob-drift{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-40px) scale(1.05)}50%{transform:translate(-20px,-60px) scale(.95)}75%{transform:translate(-40px,20px) scale(1.02)}}
+
+  .box{
+    position:relative;z-index:1;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:24px;
+    backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+    padding:2.5rem 2.1rem;
+    width:100%;max-width:480px;
+    box-shadow:0 40px 100px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.06);
+    animation:card-in .65s cubic-bezier(.23,1,.32,1) both;
+  }
+  @keyframes card-in{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+  .logo{text-align:center;margin-bottom:1.4rem}
+  .logo h1{font-size:1.2rem;color:#fff;font-weight:800;letter-spacing:-.01em}
+  .logo p{color:rgba(255,255,255,.45);font-size:.85rem;margin-top:.3rem}
+
+  .trial-badge{display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(16,185,129,.12);border:1.5px solid rgba(110,231,183,.35);border-radius:10px;padding:.6rem 1rem;margin-bottom:1.4rem;color:#6ee7b7;font-size:.86rem;font-weight:700}
+
+  .form-group{margin-bottom:.9rem}
+  label{display:block;font-size:.73rem;font-weight:700;color:var(--blue-lt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.06em}
+  label .req{color:#f87171}
+  input[type=text],input[type=email],input[type=password],input[type=tel]{width:100%;padding:.7rem .9rem;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:.92rem;font-family:inherit;color:rgba(255,255,255,.92);background:rgba(255,255,255,.05);transition:border-color .2s,box-shadow .2s,background .2s;outline:none}
+  input::placeholder{color:rgba(255,255,255,.3)}
+  input:focus{border-color:var(--blue);background:rgba(57,171,203,.08);box-shadow:0 0 0 3px rgba(57,171,203,.15)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  @media(max-width:480px){
+    .form-row{grid-template-columns:1fr}
+    .box{padding:1.5rem 1rem}
+    .confirm-box{padding:1.2rem .5rem}
+    .confirm-box h2{font-size:1.1rem}
+    .confirm-box p{font-size:.85rem}
+    .confirm-box .btn{max-width:100% !important}
+  }
+
+  .btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem;border:none;border-radius:10px;background:var(--grad-b);color:#040d1e;font-size:1rem;font-weight:800;cursor:pointer;margin-top:.6rem;font-family:inherit;box-shadow:0 8px 28px rgba(57,171,203,.4);transition:transform .2s,box-shadow .2s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(57,171,203,.55)}
+
+  .btn-back{position:fixed;top:1.5rem;left:1.5rem;z-index:10;display:inline-flex;align-items:center;gap:.4rem;color:rgba(255,255,255,.75);font-size:.85rem;font-weight:600;text-decoration:none;padding:.4rem .2rem;border-bottom:1.5px solid rgba(255,255,255,.25);transition:color .2s,transform .2s,border-color .2s}
+  .btn-back:hover{color:#fff;border-bottom-color:var(--blue-lt);transform:translateX(-2px)}
+
+  .link-row{text-align:center;margin-top:1.2rem;font-size:.85rem;color:rgba(255,255,255,.45)}
+  .link-row a{color:var(--blue-lt);font-weight:600;text-decoration:none}
+  .link-row a:hover{text-decoration:underline}
+
+  .alert{padding:.7rem 1rem;border-radius:10px;margin-bottom:.8rem;font-size:.85rem;background:rgba(239,68,68,.12);color:#fca5a5;border-left:3px solid #ef4444}
+  .alert-warning{background:rgba(245,158,11,.12);color:#fcd34d;border-left-color:#f59e0b}
+
+  .confirm-box{text-align:center;padding:2rem 1rem}
+  .confirm-box .icon{font-size:3rem;margin-bottom:1rem}
+  .confirm-box h2{color:#fff;font-size:1.3rem;margin-bottom:.6rem}
+  .confirm-box p{color:rgba(255,255,255,.55);font-size:.92rem;line-height:1.6;margin-bottom:1.2rem;overflow-wrap:break-word;word-break:break-word}
+  .confirm-box strong{color:#fff;overflow-wrap:break-word;word-break:break-all}
+
+  .lgpd-box{display:flex;align-items:flex-start;gap:.6rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.75rem .9rem;margin-top:.4rem}
+  .lgpd-box input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);flex-shrink:0;margin-top:2px;cursor:pointer}
+  .lgpd-box span{font-size:.82rem;color:rgba(255,255,255,.6);line-height:1.5}
+  .lgpd-box a{color:var(--blue-lt);font-weight:600;text-decoration:none}
+  .lgpd-box a:hover{text-decoration:underline}
+
+  .divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:1.2rem 0}
+
+  small{color:rgba(255,255,255,.45) !important}
 </style>
 </head>
 <body>
-<div class="box">
-  <a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>
 
+<div class="bg">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<a href="{% url 'index' %}" class="btn-back"><i data-lucide="chevrons-left" style="width:14px;height:14px;"></i> Início</a>
+
+<div class="box">
   <div class="logo">
     <h1><i data-lucide="user-plus" style="width:22px;height:22px;vertical-align:middle;margin-right:.4rem;"></i>Criar Conta</h1>
     <p>Comece a usar gratuitamente</p>
@@ -74,8 +129,8 @@
     <div class="icon">📧</div>
     <h2>Verifique seu e-mail</h2>
     <p>Enviamos um link de confirmação para <strong>{{ email_destino }}</strong>.<br>Clique no link para ativar sua conta e acessar o sistema.</p>
-    <p style="font-size:.82rem;color:var(--text-muted);">Não recebeu? Verifique a caixa de spam.</p>
-    <a href="{% url 'login' %}" class="btn" style="display:inline-block;text-decoration:none;max-width:220px;">Ir para o Login</a>
+    <p style="font-size:.82rem;color:rgba(255,255,255,.4);">Não recebeu? Verifique a caixa de spam.</p>
+    <a href="{% url 'login' %}" class="btn" style="display:inline-flex;text-decoration:none;max-width:220px;">Ir para o Login</a>
   </div>
 
   {% elif link_invalido %}
@@ -88,22 +143,22 @@
 
   {% if plano_selecionado == 'trial' or not plano_selecionado %}
   <div class="trial-badge">
-    <i data-lucide="gift" style="width:16px;height:16px;color:#10B981;"></i>
+    <i data-lucide="gift" style="width:16px;height:16px;color:#6ee7b7;"></i>
     7 dias grátis &mdash; sem cartão de crédito
   </div>
   {% elif plano_selecionado == 'start' %}
-  <div class="trial-badge" style="background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;">
-    <i data-lucide="rocket" style="width:16px;height:16px;color:#3b82f6;"></i>
+  <div class="trial-badge" style="background:rgba(59,130,246,.12);border-color:rgba(147,197,253,.35);color:#93c5fd;">
+    <i data-lucide="rocket" style="width:16px;height:16px;color:#60a5fa;"></i>
     Plano START &mdash; R$&nbsp;39,90/mês &mdash; 7 dias grátis para começar
   </div>
   {% elif plano_selecionado == 'plus' %}
-  <div class="trial-badge" style="background:#f0f9ff;border-color:#38bdf8;color:#0c3c7b;">
-    <i data-lucide="star" style="width:16px;height:16px;color:#0ea5e9;"></i>
+  <div class="trial-badge" style="background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.35);color:#7dd3fc;">
+    <i data-lucide="star" style="width:16px;height:16px;color:#38bdf8;"></i>
     Plano PLUS &mdash; R$&nbsp;79,90/mês &mdash; 7 dias grátis para começar
   </div>
   {% elif plano_selecionado == 'elite' %}
-  <div class="trial-badge" style="background:#f5f3ff;border-color:#a78bfa;color:#4c1d95;">
-    <i data-lucide="gem" style="width:16px;height:16px;color:#7c3aed;"></i>
+  <div class="trial-badge" style="background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.35);color:#c4b5fd;">
+    <i data-lucide="gem" style="width:16px;height:16px;color:#a78bfa;"></i>
     Plano ELITE &mdash; R$&nbsp;149,90/mês &mdash; 7 dias grátis para começar
   </div>
   {% endif %}
@@ -111,7 +166,7 @@
   {% for msg in messages %}<div class="alert">{{ msg }}</div>{% endfor %}
 
   {% if ref_code %}
-  <div class="alert" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0;margin-bottom:.9rem;">
+  <div class="alert" style="background:rgba(34,197,94,.12);color:#86efac;border-color:#22c55e;margin-bottom:.9rem;">
     <i data-lucide="gift" style="width:15px;height:15px;vertical-align:-2px;margin-right:.3rem;"></i>
     Você foi convidado(a) por um colega — ao confirmar seu cadastro, vocês dois aproveitam os benefícios da indicação.
   </div>
@@ -140,7 +195,7 @@
     <div class="form-group">
       <label for="username">Nome de usuário <span class="req">*</span></label>
       <input type="text" name="username" id="username" value="{{ post.username|default:'' }}" required placeholder="Ex: dra.ana" autocomplete="username">
-      <small id="username-hint" style="display:none;margin-top:.3rem;color:#6B7280;font-size:.78rem;">Será salvo como: <strong id="username-preview"></strong></small>
+      <small id="username-hint" style="display:none;margin-top:.3rem;font-size:.78rem;">Será salvo como: <strong id="username-preview" style="color:var(--blue-lt);"></strong></small>
     </div>
 
     <hr class="divider">
@@ -150,7 +205,7 @@
         <label for="password">Senha <span class="req">*</span></label>
         <div style="position:relative;">
           <input type="password" name="password" id="password" required placeholder="Mínimo 8 caracteres" autocomplete="new-password" style="padding-right:2.8rem;">
-          <button type="button" onclick="toggleSenha('password','eye1','eye-off1')" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#39abcb;padding:0;display:flex;align-items:center;">
+          <button type="button" onclick="toggleSenha('password','eye1','eye-off1')" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6accdc;padding:0;display:flex;align-items:center;">
             <svg id="eye1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg id="eye-off1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
@@ -160,7 +215,7 @@
         <label for="password2">Confirmar senha <span class="req">*</span></label>
         <div style="position:relative;">
           <input type="password" name="password2" id="password2" required placeholder="Repita a senha" autocomplete="new-password" style="padding-right:2.8rem;">
-          <button type="button" onclick="toggleSenha('password2','eye2','eye-off2')" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#39abcb;padding:0;display:flex;align-items:center;">
+          <button type="button" onclick="toggleSenha('password2','eye2','eye-off2')" title="Mostrar/ocultar senha" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6accdc;padding:0;display:flex;align-items:center;">
             <svg id="eye2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg id="eye-off2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>

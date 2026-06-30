@@ -79,16 +79,20 @@
   .bebe-faixa-btn:hover { background: #E91E8C; color: #fff; }
   .btn-wa, .btn-email, .btn-copy, .btn-resultado, .btn-ver-respostas {
     display: inline-flex; align-items: center; gap: .3rem;
-    border: none; border-radius: 6px;
-    padding: .32rem .6rem; font-size: .78rem; font-weight: 600;
-    cursor: pointer; transition: background .2s; line-height: 1;
+    border: none; border-radius: 8px;
+    padding: .34rem .65rem; font-size: .78rem; font-weight: 700;
+    cursor: pointer; transition: background .2s, transform .15s, box-shadow .2s; line-height: 1;
     color: #fff; text-decoration: none; vertical-align: middle;
+    box-shadow: 0 2px 8px rgba(12,60,123,.18);
   }
-  .btn-wa  { background: #25D366; }
-  .btn-wa:hover  { background: #1ebe5d; color: #fff; }
-  .btn-email { background: #3E73D1; }
-  .btn-email:hover { background: #2f5bb0; color: #fff; }
-  .btn-email:disabled { background: #7ca3e0; cursor: not-allowed; opacity: .85; }
+  .btn-wa:hover, .btn-email:hover, .btn-copy:hover, .btn-resultado:hover, .btn-ver-respostas:hover {
+    transform: translateY(-1px); box-shadow: 0 5px 14px rgba(12,60,123,.26);
+  }
+  .btn-wa  { background: linear-gradient(135deg,#25D366,#1ebe5d); }
+  .btn-wa:hover  { background: linear-gradient(135deg,#1ebe5d,#179c4b); color: #fff; }
+  .btn-email { background: linear-gradient(135deg,#3E73D1,#2f5bb0); }
+  .btn-email:hover { background: linear-gradient(135deg,#2f5bb0,#234890); color: #fff; }
+  .btn-email:disabled { background: #7ca3e0; cursor: not-allowed; opacity: .85; box-shadow: none; transform: none; }
   @keyframes btn-spin { to { transform: rotate(360deg); } }
   .btn-email-loading .btn-spinner {
     display: inline-block; width: 14px; height: 14px;
@@ -96,21 +100,23 @@
     border-radius: 50%; animation: btn-spin .7s linear infinite; flex-shrink: 0;
   }
   .btn-email-loading .btn-txt { display: inline !important; }
-  .btn-copy { background: #39abcb; }
-  .btn-copy:hover { background: #0c3c7b; color: #fff; }
-  .btn-resultado { background: #3E73D1; }
-  .btn-resultado:hover { background: #2f5bb0; color: #fff; }
+  .btn-copy { background: linear-gradient(135deg,#39abcb,#0c3c7b); }
+  .btn-copy:hover { background: linear-gradient(135deg,#2c8aa8,#0c3c7b); color: #fff; }
+  .btn-resultado { background: linear-gradient(135deg,#3E73D1,#2f5bb0); }
+  .btn-resultado:hover { background: linear-gradient(135deg,#2f5bb0,#234890); color: #fff; }
   .btn-del {
     display: inline-flex; align-items: center; justify-content: center;
     background: #FEE2E2; border: 1.5px solid #FECACA; color: #DC2626;
     padding: .35rem .45rem; border-radius: 8px; cursor: pointer; line-height: 1;
-    transition: background .2s, border-color .2s, color .2s;
+    transition: background .2s, border-color .2s, color .2s, transform .15s, box-shadow .2s;
   }
-  .btn-del:hover { background: #DC2626; border-color: #DC2626; color: #fff; }
+  .btn-del:hover { background: #DC2626; border-color: #DC2626; color: #fff; transform: translateY(-1px); box-shadow: 0 5px 14px rgba(220,38,38,.3); }
 
   /* ── Tabelas ── */
   .avaliacoes-table th:nth-child(2),
   .avaliacoes-table td:nth-child(2) { text-align: center; }
+  .avaliacoes-table .badge { box-shadow: 0 1px 4px rgba(0,0,0,.08); padding: 3px 11px; }
+  .avaliacoes-table tbody tr { transition: background .2s; }
   .avaliacoes-table td { vertical-align: middle; }
   .acoes-td { display: flex; align-items: center; gap: .3rem; white-space: nowrap; }
   .acoes-td .btn-del { margin-left: auto; }
@@ -125,7 +131,7 @@
   #importarMenu { right:0; left:auto; }
   @media (max-width: 600px) {
     .cabecalho-acoes { width: 100%; }
-    .cabecalho-acoes .btn { flex: 1 1 0; justify-content: center; }
+    .cabecalho-acoes .btn, .cabecalho-acoes .btn-ph { flex: 1 1 0; justify-content: center; }
     .btn-nova-avaliacao { width: 100%; justify-content: center; }
     .escolha-grid { grid-template-columns: repeat(2, 1fr); }
     .ec-titulo { font-size: .75rem !important; }
@@ -169,6 +175,68 @@
     100% { background: transparent; }
   }
   tr.av-destaque td { animation: av-highlight 2.2s ease forwards; }
+
+  /* ── CARDS DE INSTRUMENTOS / DOCUMENTOS ── */
+  .card.reveal {
+    position: relative; overflow: hidden;
+    transition: box-shadow .3s ease, border-color .3s ease, transform .2s ease;
+  }
+  .card.reveal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--card-accent, var(--primary));
+    opacity: .9;
+  }
+  .card.reveal:hover {
+    border-color: color-mix(in srgb, var(--card-accent, var(--primary)) 45%, var(--border));
+    box-shadow: 0 14px 36px rgba(12,60,123,.12);
+  }
+
+  /* ── HERO DO PACIENTE ── */
+  .patient-hero {
+    position: relative; z-index: 5; border-radius: 18px;
+    padding: 1.75rem 1.75rem; margin-bottom: 1.5rem; color: #fff;
+    background: linear-gradient(135deg,#0c3c7b 0%,#1a6fa0 55%,#39abcb 100%);
+    box-shadow: 0 18px 50px rgba(12,60,123,.28);
+  }
+  .patient-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
+  .ph-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; animation: ph-blob-drift ease-in-out infinite; }
+  .ph-blob-1 { width: 280px; height: 280px; background: radial-gradient(circle,rgba(106,204,220,.55),transparent 70%); top: -90px; right: -60px; animation-duration: 16s; }
+  .ph-blob-2 { width: 220px; height: 220px; background: radial-gradient(circle,rgba(255,255,255,.25),transparent 70%); bottom: -80px; left: 10%; animation-duration: 20s; animation-delay: -6s; }
+  @keyframes ph-blob-drift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-18px,16px); } }
+  .patient-hero-inner { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 1.25rem; flex-wrap: wrap; }
+  .patient-hero-id { display: flex; align-items: flex-start; gap: 1rem; min-width: 0; }
+  .patient-hero-avatar {
+    width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,.16); border: 1.5px solid rgba(255,255,255,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; font-weight: 800; color: #fff; backdrop-filter: blur(6px);
+  }
+  .patient-hero-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; margin-bottom: .5rem; }
+  .patient-hero-meta { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .ph-chip { display: inline-flex; align-items: center; gap: .35rem; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 100px; padding: .3rem .7rem; font-size: .74rem; font-weight: 600; white-space: nowrap; }
+  .ph-chip i { width: 12px; height: 12px; flex-shrink: 0; opacity: .85; }
+  .patient-hero-actions { display: flex; gap: .5rem; flex-wrap: wrap; position: relative; z-index: 2; }
+  .btn-ph { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 8px; font-size: .83rem; font-weight: 600; cursor: pointer; text-decoration: none; border: 1.5px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; transition: background .2s, border-color .2s; }
+  .btn-ph:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.5); color: #fff; }
+  .btn-ph-cta { background: linear-gradient(135deg,#39abcb,#6accdc); color: #072044; font-weight: 800; border: none; box-shadow: 0 6px 20px rgba(57,171,203,.45); }
+  .btn-ph-cta:hover { background: linear-gradient(135deg,#39abcb,#6accdc); transform: translateY(-1px); box-shadow: 0 8px 26px rgba(57,171,203,.6); color: #072044; }
+  .btn-ph-del { background: rgba(220,38,38,.55); border: 1.5px solid rgba(252,165,165,.55); color: #fff; }
+  .btn-ph-del:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
+  @media (max-width: 600px) {
+    .patient-hero { padding: 2.5rem 1.1rem 1.4rem; border-radius: 14px; }
+    .patient-hero-name { font-size: 1.08rem; }
+    .patient-hero-actions { width: 100%; }
+    .patient-hero-meta {
+      flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      gap: .35rem; padding-bottom: .15rem; scrollbar-width: none;
+    }
+    .patient-hero-meta::-webkit-scrollbar { display: none; }
+    .ph-chip { font-size: .68rem; padding: .28rem .6rem; flex-shrink: 0; }
+  }
+
+  /* ── REVEAL ON SCROLL ── */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 </style>
 {% endblock %}
 
@@ -176,32 +244,37 @@
 {% block content %}
 
 <!-- Cabeçalho do paciente -->
-<div id="tour-dp-cabecalho" class="card" style="position:relative;">
+<div id="tour-dp-cabecalho" class="patient-hero reveal">
+  <div class="patient-hero-bg">
+    <div class="ph-blob ph-blob-1"></div>
+    <div class="ph-blob ph-blob-2"></div>
+  </div>
   <button type="button" onclick="abrirModalDeletarPaciente()" title="Excluir paciente"
-    style="position:absolute; top:.75rem; right:.75rem; background:#FEE2E2; border:1.5px solid #FECACA; cursor:pointer; color:#DC2626; padding:.35rem .45rem; border-radius:8px; line-height:1; transition:background .2s, border-color .2s;"
-    onmouseover="this.style.background='#DC2626';this.style.color='#fff';this.style.borderColor='#DC2626'"
-    onmouseout="this.style.background='#FEE2E2';this.style.color='#DC2626';this.style.borderColor='#FECACA'">
+    class="btn-ph btn-ph-del" style="position:absolute; top:1.1rem; right:1.1rem; padding:.4rem .5rem; z-index:3;">
     <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
   </button>
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.75rem;">
-    <div>
-      <div class="card-title"><i data-lucide="user-round" style="width:18px;height:18px;"></i> {{ paciente.nome }}</div>
-      <p style="color:var(--text-muted); font-size:.9rem;">
-        <i data-lucide="calendar" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.data_nascimento|date:"d/m/Y" }} &nbsp;·&nbsp; {{ paciente.idade }} anos &nbsp;·&nbsp;
-        <i data-lucide="user" style="width:14px;height:14px;vertical-align:middle;"></i> Responsável: {{ paciente.responsavel }}
-        {% if paciente.email_responsavel %} &nbsp;·&nbsp; <i data-lucide="mail" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.email_responsavel }}{% endif %}
-        {% if paciente.telefone %} &nbsp;·&nbsp; <i data-lucide="phone" style="width:14px;height:14px;vertical-align:middle;"></i> {{ paciente.telefone }}{% endif %}
-      </p>
+  <div class="patient-hero-inner">
+    <div class="patient-hero-id">
+      <div class="patient-hero-avatar">{{ paciente.nome|first|upper }}</div>
+      <div>
+        <div class="patient-hero-name">{{ paciente.nome }}</div>
+        <div class="patient-hero-meta">
+          <span class="ph-chip"><i data-lucide="calendar"></i> {{ paciente.data_nascimento|date:"d/m/Y" }} · {{ paciente.idade }} anos</span>
+          <span class="ph-chip"><i data-lucide="user"></i> {{ paciente.responsavel }}</span>
+          {% if paciente.email_responsavel %}<span class="ph-chip"><i data-lucide="mail"></i> {{ paciente.email_responsavel }}</span>{% endif %}
+          {% if paciente.telefone %}<span class="ph-chip"><i data-lucide="phone"></i> {{ paciente.telefone }}</span>{% endif %}
+        </div>
+      </div>
     </div>
-    <div class="cabecalho-acoes">
-      <a href="{% url 'editar_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
+    <div class="patient-hero-actions cabecalho-acoes">
+      <a href="{% url 'editar_paciente' paciente.uuid %}" class="btn-ph">
         <i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar
       </a>
-      <a href="{% url 'evolucao_paciente' paciente.uuid %}" class="btn btn-secondary btn-sm">
+      <a href="{% url 'evolucao_paciente' paciente.uuid %}" class="btn-ph">
         <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Prontuário
       </a>
       <div class="dropdown-proc">
-        <button class="btn btn-secondary btn-sm" onclick="toggleProcMenu(event)">
+        <button class="btn-ph" onclick="toggleProcMenu(event)">
           <i data-lucide="file-text" style="width:14px;height:14px;"></i> Documentos
           <i data-lucide="chevron-down" style="width:12px;height:12px;margin-left:.15rem;"></i>
         </button>
@@ -217,10 +290,10 @@
           <a href="{% url 'atestado' paciente.uuid %}"><i data-lucide="shield-check" style="width:13px;height:13px;"></i> Atestado</a>
         </div>
       </div>
-      <a href="{% url 'importar_scan_auto' paciente.uuid %}" class="btn btn-secondary btn-sm">
+      <a href="{% url 'importar_scan_auto' paciente.uuid %}" class="btn-ph">
         <i data-lucide="scan-text" style="width:14px;height:14px;"></i> Importar
       </a>
-      <button id="tour-dp-nova-aval" type="button" class="btn btn-primary btn-sm btn-nova-avaliacao" onclick="abrirModalEscolha()">
+      <button id="tour-dp-nova-aval" type="button" class="btn-ph btn-ph-cta btn-nova-avaliacao" onclick="abrirModalEscolha()">
         + Nova Avaliação
       </button>
     </div>
@@ -229,7 +302,7 @@
 
 <!-- Documentos do Prontuário — um card por tipo de documento -->
 {% for grupo in procedimentos_por_tipo %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title">
     <i data-lucide="file-text" style="width:18px;height:18px;"></i> {{ grupo.label }}
   </div>
@@ -259,7 +332,7 @@
 
 <!-- Perfil Sensorial -->
 {% if avaliacoes %}
-<div id="tour-dp-avaliacoes" class="card">
+<div id="tour-dp-avaliacoes" class="card reveal">
   <div class="card-title"><i data-lucide="brain" style="width:18px;height:18px;"></i> Perfil Sensorial</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -315,7 +388,7 @@
 
 <!-- Escala Vineland -->
 {% if avaliacoes_vineland %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title"><i data-lucide="puzzle" style="width:18px;height:18px;"></i> Escala Vineland</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -372,7 +445,7 @@
 <!-- ══ Seções das novas avaliações (exibidas apenas quando existirem registros) ══ -->
 
 {% if avaliacoes_escolar %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E67E22;"><i data-lucide="school" style="width:18px;height:18px;"></i> Questionário Sensorial Escolar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -427,7 +500,7 @@
 {% endif %}
 
 {% if avaliacoes_bebe %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E91E8C;"><i data-lucide="baby" style="width:18px;height:18px;"></i> Perfil Sensorial Bebê / Criança Pequena</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Faixa</th><th>Status</th><th></th></tr></thead>
@@ -483,7 +556,7 @@
 {% endif %}
 
 {% if avaliacoes_spm %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#3E73D1;"><i data-lucide="house" style="width:18px;height:18px;"></i> SPM — Sensory Processing Measure</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Instrumento</th><th>Status</th><th></th></tr></thead>
@@ -539,7 +612,7 @@
 {% endif %}
 
 {% if avaliacoes_ps2_bebe %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#3D9B6B;"><i data-lucide="brain" style="width:18px;height:18px;"></i> PS2 Bebê / Criança Pequena (Winnie Dunn)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Instrumento</th><th>Status</th><th></th></tr></thead>
@@ -593,7 +666,7 @@
 {% endif %}
 
 {% if avaliacoes_adulto_sensorial %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#6B48C8;"><i data-lucide="brain" style="width:18px;height:18px;"></i> Perfil Sensorial do Adulto / Adolescente</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -646,7 +719,7 @@
 {% endif %}
 
 {% if avaliacoes_vineland3 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1D6FA4;"><i data-lucide="puzzle" style="width:18px;height:18px;"></i> Vineland-3 — Formulário de Pais/Cuidadores</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -701,7 +774,7 @@
 {% endif %}
 
 {% if avaliacoes_portage %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#9B59B6;"><i data-lucide="baby" style="width:18px;height:18px;"></i> Guia Portage de Avaliação Pré-Escolar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -756,7 +829,7 @@
 {% endif %}
 
 {% if avaliacoes_vbmapp %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7C3AED;"><i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i> VB-MAPP — Avaliação de Marcos</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -790,7 +863,7 @@
 {% endif %}
 
 {% if avaliacoes_vbmapp_barreiras %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7C3AED;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> VB-MAPP — Avaliação de Barreiras Linguísticas</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -824,7 +897,7 @@
 {% endif %}
 
 {% if avaliacoes_vbmapp_transicao %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7C3AED;"><i data-lucide="arrow-right-circle" style="width:18px;height:18px;"></i> VB-MAPP — Transition Assessment</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -858,7 +931,7 @@
 {% endif %}
 
 {% if avaliacoes_vbmapp_task_analysis %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7C3AED;"><i data-lucide="list-checks" style="width:18px;height:18px;"></i> VB-MAPP — Task Analysis</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Nível</th><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -893,7 +966,7 @@
 {% endif %}
 
 {% if avaliacoes_sdq %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2C3E50;"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> SDQ — Questionário de Capacidades e Dificuldades</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Respondente</th><th>Status</th><th></th></tr></thead>
@@ -949,7 +1022,7 @@
 {% endif %}
 
 {% if avaliacoes_snap_iv %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#6C3483;"><i data-lucide="brain" style="width:18px;height:18px;"></i> SNAP-IV — Escala de Avaliação de TDAH</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Respondente</th><th>Status</th><th></th></tr></thead>
@@ -1005,7 +1078,7 @@
 {% endif %}
 
 {% if avaliacoes_mchat %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> M-CHAT-R — Rastreio de Autismo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th>Risco</th><th></th></tr></thead>
@@ -1061,7 +1134,7 @@
 {% endif %}
 
 {% if avaliacoes_cars %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#784212;"><i data-lucide="alert-circle" style="width:18px;height:18px;"></i> CARS-2 — Escala de Avaliação do Autismo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th>Pontuação</th><th>Classificação</th><th></th></tr></thead>
@@ -1118,7 +1191,7 @@
 {% endif %}
 
 {% if avaliacoes_linguagem %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#117A65;"><i data-lucide="message-circle" style="width:18px;height:18px;"></i> Avaliação de Linguagem</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1173,7 +1246,7 @@
 {% endif %}
 
 {% if avaliacoes_alimentacao %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#CB4335;"><i data-lucide="utensils" style="width:18px;height:18px;"></i> Triagem de Alimentação Seletiva</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1228,7 +1301,7 @@
 {% endif %}
 
 {% if avaliacoes_habitos_orais %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2E86C1;"><i data-lucide="smile" style="width:18px;height:18px;"></i> Hábitos Orais Deletérios</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1283,7 +1356,7 @@
 {% endif %}
 
 {% if avaliacoes_voz_infantil %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#8E44AD;"><i data-lucide="mic" style="width:18px;height:18px;"></i> Triagem de Voz Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1338,7 +1411,7 @@
 {% endif %}
 
 {% if avaliacoes_processamento_auditivo %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#16A085;"><i data-lucide="ear" style="width:18px;height:18px;"></i> Triagem de Processamento Auditivo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1393,7 +1466,7 @@
 {% endif %}
 
 {% if avaliacoes_idv10 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="volume-2" style="width:18px;height:18px;"></i> IDV-10 — Índice de Desvantagem Vocal</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1448,7 +1521,7 @@
 {% endif %}
 
 {% if avaliacoes_desenvolvimento %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1F618D;"><i data-lucide="trending-up" style="width:18px;height:18px;"></i> Marcos de Desenvolvimento</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1503,7 +1576,7 @@
 {% endif %}
 
 {% if avaliacoes_sono %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1B4F72;"><i data-lucide="moon" style="width:18px;height:18px;"></i> Avaliação de Sono Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1558,7 +1631,7 @@
 {% endif %}
 
 {% if avaliacoes_habilidades %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#6E2F8A;"><i data-lucide="check-square" style="width:18px;height:18px;"></i> Habilidades Adaptativas</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1613,7 +1686,7 @@
 {% endif %}
 
 {% if avaliacoes_comportamento %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#145A32;"><i data-lucide="activity" style="width:18px;height:18px;"></i> Análise de Comportamento Funcional</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1668,7 +1741,7 @@
 {% endif %}
 
 {% if avaliacoes_cognitivo %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7E5109;"><i data-lucide="cpu" style="width:18px;height:18px;"></i> Rastreio Cognitivo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1723,7 +1796,7 @@
 {% endif %}
 
 {% if avaliacoes_psicopedagogica %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#512E5F;"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Avaliação Psicopedagógica</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -1778,7 +1851,7 @@
 {% endif %}
 
 {% if avaliacoes_proade %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1E3F7A;"><i data-lucide="graduation-cap" style="width:18px;height:18px;"></i> PROADE — Avaliação do Desempenho Escolar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Ano</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1817,7 +1890,7 @@
 {% endif %}
 
 {% if avaliacoes_k10 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1D6A96;"><i data-lucide="activity" style="width:18px;height:18px;"></i> K-10 — Escala de Kessler</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1847,7 +1920,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_ucla %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7B241C;"><i data-lucide="heart-crack" style="width:18px;height:18px;"></i> UCLA — Escala de Solidão</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1877,7 +1950,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_msi_bpd %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#6C3483;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> MSI-BPD — Triagem de Borderline</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1907,7 +1980,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_gds15 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="user" style="width:18px;height:18px;"></i> GDS-15 — Depressão Geriátrica</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1937,7 +2010,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_rosenberg %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1A5276;"><i data-lucide="star" style="width:18px;height:18px;"></i> Rosenberg — Escala de Autoestima</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1967,7 +2040,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_audit %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E67E22;"><i data-lucide="wine" style="width:18px;height:18px;"></i> AUDIT — Uso de Álcool</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -1997,7 +2070,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_bis11 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#8E44AD;"><i data-lucide="zap" style="width:18px;height:18px;"></i> BIS-11 — Impulsividade de Barratt</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2027,7 +2100,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_iar %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#16A085;"><i data-lucide="baby" style="width:18px;height:18px;"></i> IAR — Ansiedade Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2057,7 +2130,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_pas %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#D35400;"><i data-lucide="smile" style="width:18px;height:18px;"></i> PAS — Ansiedade Pré-Escolar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2087,7 +2160,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_cdi %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2980B9;"><i data-lucide="cloud-rain" style="width:18px;height:18px;"></i> CDI — Depressão Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2117,7 +2190,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_hama %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#884EA0;"><i data-lucide="thermometer" style="width:18px;height:18px;"></i> HAM-A — Ansiedade de Hamilton</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2147,7 +2220,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_lsas %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2471A3;"><i data-lucide="users" style="width:18px;height:18px;"></i> LSAS — Ansiedade Social</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2177,7 +2250,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_risco_suicidio %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#922B21;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> Triagem de Risco de Suicídio</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2207,7 +2280,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_agorafobia %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#784212;"><i data-lucide="map-pin-off" style="width:18px;height:18px;"></i> Rastreio de Agorafobia</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2237,7 +2310,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_panico %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1B2631;"><i data-lucide="wind" style="width:18px;height:18px;"></i> Rastreio de Transtorno de Pânico</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2267,7 +2340,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_phq9 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1D6A96;"><i data-lucide="frown" style="width:18px;height:18px;"></i> PHQ-9 — Questionário de Saúde do Paciente</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2305,7 +2378,7 @@
 {% endif %}
 
 {% if avaliacoes_gad7 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1A7F4B;"><i data-lucide="zap" style="width:18px;height:18px;"></i> GAD-7 — Transtorno de Ansiedade Generalizada</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2343,7 +2416,7 @@
 {% endif %}
 
 {% if avaliacoes_ebai %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E67E22;"><i data-lucide="utensils" style="width:18px;height:18px;"></i> EBAI — Escala Brasileira de Alimentação Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Escore Bruto</th><th>Escore T</th><th>Status</th><th></th></tr></thead>
@@ -2382,7 +2455,7 @@
 {% endif %}
 
 {% if avaliacoes_seps %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#8E44AD;"><i data-lucide="utensils" style="width:18px;height:18px;"></i> SEPS — Escala de Problemas Sensoriais na Alimentação</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -2419,7 +2492,7 @@
 {% endif %}
 
 {% if avaliacoes_eca %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#27AE60;"><i data-lucide="clipboard-list" style="width:18px;height:18px;"></i> ECA — Escala de Avaliação do Comportamento Alimentar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -2456,7 +2529,7 @@
 {% endif %}
 
 {% if avaliacoes_tod %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> TOD — Escala de Comportamentos Disruptivos</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Itens corte+</th><th>Status</th><th></th></tr></thead>
@@ -2495,7 +2568,7 @@
 {% endif %}
 
 {% if avaliacoes_epds %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="heart" style="width:18px;height:18px;"></i> EPDS — Depressão Pós-Parto de Edinburgh</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2533,7 +2606,7 @@
 {% endif %}
 
 {% if avaliacoes_pcl5 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#7F1D1D;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> PCL-5 — Lista de Verificação de PTSD (DSM-5)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2571,7 +2644,7 @@
 {% endif %}
 
 {% if avaliacoes_ghq12 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#16A085;"><i data-lucide="activity" style="width:18px;height:18px;"></i> GHQ-12 — Questionário de Saúde Geral</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2608,7 +2681,7 @@
 </div>
 {% endif %}
 {% if avaliacoes_bdi %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#6C3483;"><i data-lucide="cloud-rain" style="width:18px;height:18px;"></i> BDI — Inventário de Depressão de Beck</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2643,7 +2716,7 @@
 {% endif %}
 
 {% if avaliacoes_bai %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> BAI — Inventário de Ansiedade de Beck</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2678,7 +2751,7 @@
 {% endif %}
 
 {% if avaliacoes_dass21 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2C3E50;"><i data-lucide="thermometer" style="width:18px;height:18px;"></i> DASS-21 — Depressão, Ansiedade e Estresse</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Dep.</th><th>Ans.</th><th>Est.</th><th>Status</th><th></th></tr></thead>
@@ -2716,7 +2789,7 @@
 {% endif %}
 
 {% if avaliacoes_had %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2C3E50;"><i data-lucide="thermometer" style="width:18px;height:18px;"></i> HAD — Ansiedade e Depressão Hospitalar</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Ansiedade</th><th>Depressão</th><th>Status</th><th></th></tr></thead>
@@ -2753,7 +2826,7 @@
 {% endif %}
 
 {% if avaliacoes_bsl23 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#8E44AD;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> BSL-23 — Sintomas Borderline</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Média</th><th>Status</th><th></th></tr></thead>
@@ -2789,7 +2862,7 @@
 {% endif %}
 
 {% if avaliacoes_aq10_adulto %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> AQ-10 Adulto — Rastreio de Autismo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2825,7 +2898,7 @@
 {% endif %}
 
 {% if avaliacoes_aq10_child %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1A5276;"><i data-lucide="search" style="width:18px;height:18px;"></i> AQ-10 Criança — Rastreio de Autismo</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2861,7 +2934,7 @@
 {% endif %}
 
 {% if avaliacoes_dep_emocional %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E74C3C;"><i data-lucide="heart-crack" style="width:18px;height:18px;"></i> Dependência Emocional</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -2896,7 +2969,7 @@
 {% endif %}
 
 {% if avaliacoes_scq %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1A5276;"><i data-lucide="message-circle" style="width:18px;height:18px;"></i> SCQ — Comunicação Social</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2932,7 +3005,7 @@
 {% endif %}
 
 {% if avaliacoes_conners_pais %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2471A3;"><i data-lucide="clipboard-check" style="width:18px;height:18px;"></i> Conners-3 — Avaliação TDAH (Pais)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -2967,7 +3040,7 @@
 {% endif %}
 
 {% if avaliacoes_conners_prof %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1F618D;"><i data-lucide="clipboard-check" style="width:18px;height:18px;"></i> Conners-3 — Avaliação TDAH (Professor)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3002,7 +3075,7 @@
 {% endif %}
 
 {% if avaliacoes_etdah_pais %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E67E22;"><i data-lucide="zap" style="width:18px;height:18px;"></i> ETDAH — Avaliação TDAH (Pais)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Média</th><th>Status</th><th></th></tr></thead>
@@ -3037,7 +3110,7 @@
 {% endif %}
 
 {% if avaliacoes_etdah_prof %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#D35400;"><i data-lucide="zap" style="width:18px;height:18px;"></i> ETDAH — Avaliação TDAH (Professor)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Média</th><th>Status</th><th></th></tr></thead>
@@ -3072,7 +3145,7 @@
 {% endif %}
 
 {% if avaliacoes_auqei %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#1ABC9C;"><i data-lucide="heart" style="width:18px;height:18px;"></i> AUQEI — Qualidade de Vida Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3107,7 +3180,7 @@
 {% endif %}
 
 {% if avaliacoes_scared %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#C0392B;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> SCARED — Ansiedade Infantil (Pais)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3142,7 +3215,7 @@
 {% endif %}
 
 {% if avaliacoes_masc %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#9B59B6;"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> MASC — Ansiedade Multidimensional</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3177,7 +3250,7 @@
 {% endif %}
 
 {% if avaliacoes_bpq %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#922B21;"><i data-lucide="shield-alert" style="width:18px;height:18px;"></i> BPQ — Personalidade Borderline</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3212,7 +3285,7 @@
 {% endif %}
 
 {% if avaliacoes_denver %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E74C3C;"><i data-lucide="baby" style="width:18px;height:18px;"></i> Checklist Denver II — Desenvolvimento</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>P-Social</th><th>M.Fino</th><th>Ling.</th><th>M.Gross.</th><th>Status</th><th></th></tr></thead>
@@ -3250,7 +3323,7 @@
 {% endif %}
 
 {% if avaliacoes_qmpi %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#9B59B6;"><i data-lucide="brain" style="width:18px;height:18px;"></i> QMPI — Morbidade Psiquiátrica Infantil</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Ans.</th><th>Dep.</th><th>TDAH</th><th>Cond.</th><th>TEA</th><th>Status</th><th></th></tr></thead>
@@ -3289,7 +3362,7 @@
 {% endif %}
 
 {% if avaliacoes_quest_dislexia %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#3498DB;"><i data-lucide="book-open" style="width:18px;height:18px;"></i> Questionário de Dislexia (Pais)</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3324,7 +3397,7 @@
 {% endif %}
 
 {% if avaliacoes_checklist_dislexia %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#E74C3C;"><i data-lucide="check-square" style="width:18px;height:18px;"></i> Checklist de Dislexia</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Total</th><th>Status</th><th></th></tr></thead>
@@ -3359,7 +3432,7 @@
 {% endif %}
 
 {% if avaliacoes_prot_dislexia_prof %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2980B9;"><i data-lucide="graduation-cap" style="width:18px;height:18px;"></i> Protocolo Dislexia — Professor</div>
   <div class="table-responsive"><table class="avaliacoes-table">
     <thead><tr><th>Data</th><th>Leit.</th><th>Escr.</th><th>Mat.</th><th>Org.</th><th>Status</th><th></th></tr></thead>
@@ -3398,7 +3471,7 @@
 
 
 {% if avaliacoes_edm %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#27AE60;"><i data-lucide="activity" style="width:18px;height:18px;"></i> EDM — Escala de Desenvolvimento Motor</div>
   <div class="table-responsive"><table class="avaliacoes-table table-scores">
     <thead><tr><th>Data</th><th>Quociente Motor</th><th></th></tr></thead>
@@ -3424,7 +3497,7 @@
 {% endif %}
 
 {% if avaliacoes_mabc2 %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#8E44AD;"><i data-lucide="target" style="width:18px;height:18px;"></i> MABC-2 — Bateria de Avaliação do Movimento</div>
   <div class="table-responsive"><table class="avaliacoes-table table-scores">
     <thead><tr><th>Data</th><th>Faixa</th><th>Percentil</th><th></th></tr></thead>
@@ -3451,7 +3524,7 @@
 {% endif %}
 
 {% if avaliacoes_beery %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#2980B9;"><i data-lucide="pencil" style="width:18px;height:18px;"></i> Beery VMI — Integração Visomotora</div>
   <div class="table-responsive"><table class="avaliacoes-table table-scores">
     <thead><tr><th>Data</th><th>Escore VMI</th><th>Percentil VMI</th><th></th></tr></thead>
@@ -3478,7 +3551,7 @@
 {% endif %}
 
 {% if avaliacoes_pedi %}
-<div class="card">
+<div class="card reveal">
   <div class="card-title" style="color:#16A085;"><i data-lucide="accessibility" style="width:18px;height:18px;"></i> PEDI — Inventário de Avaliação Pediátrica</div>
   <div class="table-responsive"><table class="avaliacoes-table table-scores">
     <thead><tr><th>Data</th><th>Status</th><th></th></tr></thead>
@@ -3666,6 +3739,32 @@
   </div>
 </div>
 
+
+<script>
+  // Reveal on scroll
+  (function () {
+    var revObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.dataset.delay || 0);
+        setTimeout(function () { e.target.classList.add('visible'); }, d);
+        revObs.unobserve(e.target);
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(function (el, i) {
+      el.dataset.delay = (i % 5) * 60;
+      revObs.observe(el);
+    });
+  })();
+
+  // Cor de destaque do card herdada do ícone/título do instrumento
+  (function () {
+    document.querySelectorAll('.card.reveal > .card-title').forEach(function (title) {
+      var color = title.style.color;
+      if (color) title.closest('.card').style.setProperty('--card-accent', color);
+    });
+  })();
+</script>
 
 <script>
   const csrfToken = '{{ csrf_token }}';
