@@ -213,8 +213,9 @@
   }
   .patient-hero-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; margin-bottom: .5rem; }
   .patient-hero-meta { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .ph-meta-break { display: none; }
   .ph-chip { display: inline-flex; align-items: center; gap: .35rem; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 100px; padding: .3rem .7rem; font-size: .74rem; font-weight: 600; white-space: nowrap; }
-  .ph-chip i { width: 12px; height: 12px; flex-shrink: 0; opacity: .85; }
+  .ph-chip svg { width: 12px; height: 12px; flex-shrink: 0; opacity: .85; }
   .patient-hero-actions { display: flex; gap: .5rem; flex-wrap: wrap; position: relative; z-index: 2; }
   .btn-ph { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 8px; font-size: .83rem; font-weight: 600; cursor: pointer; text-decoration: none; border: 1.5px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; transition: background .2s, border-color .2s; }
   .btn-ph:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.5); color: #fff; }
@@ -226,12 +227,9 @@
     .patient-hero { padding: 2.5rem 1.1rem 1.4rem; border-radius: 14px; }
     .patient-hero-name { font-size: 1.08rem; }
     .patient-hero-actions { width: 100%; }
-    .patient-hero-meta {
-      flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      gap: .35rem; padding-bottom: .15rem; scrollbar-width: none;
-    }
-    .patient-hero-meta::-webkit-scrollbar { display: none; }
-    .ph-chip { font-size: .68rem; padding: .28rem .6rem; flex-shrink: 0; }
+    .patient-hero-meta { flex-wrap: wrap; gap: .35rem; }
+    .ph-chip { font-size: .68rem; padding: .28rem .6rem; }
+    .ph-meta-break { display: block; flex-basis: 100%; height: 0; }
   }
 
   /* ── REVEAL ON SCROLL ── */
@@ -261,6 +259,7 @@
         <div class="patient-hero-meta">
           <span class="ph-chip"><i data-lucide="calendar"></i> {{ paciente.data_nascimento|date:"d/m/Y" }} · {{ paciente.idade }} anos</span>
           <span class="ph-chip"><i data-lucide="user"></i> {{ paciente.responsavel }}</span>
+          <span class="ph-meta-break"></span>
           {% if paciente.email_responsavel %}<span class="ph-chip"><i data-lucide="mail"></i> {{ paciente.email_responsavel }}</span>{% endif %}
           {% if paciente.telefone %}<span class="ph-chip"><i data-lucide="phone"></i> {{ paciente.telefone }}</span>{% endif %}
         </div>

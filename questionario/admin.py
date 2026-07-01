@@ -11,9 +11,7 @@ from .models import (
     Paciente, Avaliacao, Resposta, PerfilMedico, ModuloAvaliacao,
     Especialidade, MODULOS_POR_ESPECIALIDADE, HistoricoLogin,
     SolicitacaoPlano, MODULOS_POR_PLANO, PainelPagamentos, PainelRecebimento,
-    Indicacao, get_modulos_para_plano, PageVisit, StatusIncident,
-    AvaliacaoPS2Bebe, RespostaPS2Bebe,
-    AvaliacaoAdultoSensorial, RespostaAdultoSensorial,
+    Indicacao, get_modulos_para_plano, PageVisit,
 )
 
 
@@ -1000,51 +998,3 @@ class PageVisitAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
-
-
-@admin.register(StatusIncident)
-class StatusIncidentAdmin(admin.ModelAdmin):
-    list_display  = ("titulo", "impacto", "status", "iniciado_em", "resolvido_em")
-    list_filter   = ("status", "impacto")
-    search_fields = ("titulo", "descricao")
-    list_editable = ("status",)
-    ordering      = ("-iniciado_em",)
-    fieldsets = (
-        (None, {"fields": ("titulo", "descricao", "impacto", "status")}),
-        ("Datas", {"fields": ("iniciado_em", "resolvido_em")}),
-    )
-
-
-# ── PS2 Bebê / Criança Pequena (Winnie Dunn) ─────────────────────────────────
-
-class RespostaPS2BebeInline(admin.TabularInline):
-    model   = RespostaPS2Bebe
-    extra   = 0
-    fields  = ("numero_item", "valor")
-
-@admin.register(AvaliacaoPS2Bebe)
-class AvaliacaoPS2BebeAdmin(admin.ModelAdmin):
-    list_display   = ("paciente", "faixa", "data", "status",
-                      "pont_ex", "pont_ev", "pont_sn", "pont_ob")
-    list_filter    = ("faixa", "status")
-    search_fields  = ("paciente__nome",)
-    ordering       = ("-data",)
-    inlines        = [RespostaPS2BebeInline]
-
-
-# ── Perfil Sensorial do Adulto / Adolescente ──────────────────────────────────
-
-class RespostaAdultoSensorialInline(admin.TabularInline):
-    model   = RespostaAdultoSensorial
-    extra   = 0
-    fields  = ("numero_item", "valor")
-
-@admin.register(AvaliacaoAdultoSensorial)
-class AvaliacaoAdultoSensorialAdmin(admin.ModelAdmin):
-    list_display   = ("paciente", "data", "status",
-                      "pont_baixo_registro", "pont_procura_sensacao",
-                      "pont_sensitividade", "pont_evita_sensacao")
-    list_filter    = ("status",)
-    search_fields  = ("paciente__nome",)
-    ordering       = ("-data",)
-    inlines        = [RespostaAdultoSensorialInline]
